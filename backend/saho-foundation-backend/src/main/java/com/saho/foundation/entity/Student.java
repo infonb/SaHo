@@ -28,22 +28,22 @@ public class Student {
     @Column(name = "last_name", nullable = false, length = 20)
     private String lastName;
 
-    @Column(name = "email_id", nullable = false, unique = true, length = 100)
+    @Column(name = "email_id", nullable = false, unique = true, length = 50)
     private String emailId;
 
     @Column(nullable = false)
     private LocalDate dob;
 
-    @Column(nullable = false)
+    @Column(name = "gender", nullable = false, length = 10)
     private String gender;
 
     @Column(name = "aadhaar_number", nullable = false, unique = true, length = 12)
     private String aadhaarNumber;
 
-    @Column(length = 20)
-    private String caste;
+    @Column(name = "caste_id")
+    private Integer casteId;
 
-    @Column(length = 20)
+    @Column(name = "religion", length = 10)
     private String religion;
 
     @Column(name = "blood_group", length = 5)
@@ -55,15 +55,21 @@ public class Student {
     @Column(name = "class_id", nullable = false)
     private Integer classId;
 
-    @Column(name = "guardian_id", nullable = false)
-    private Integer guardianId;
+    // Stores sibling student ids as CSV like "2,3,5". If no siblings, it stays null.
+    @Column(name = "sibling_id")
+    private String siblingId;
 
-    @Column(name = "orphan_status")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "guardian_id", nullable = false)
+    private Guardian guardian;
+
+    @Column(name = "orphan_status", length = 10)
     private String orphanStatus;
 
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Builder.Default
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
@@ -71,11 +77,11 @@ public class Student {
     private LocalDateTime createdAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    private Integer createdBy;
 
     @Column(name = "modified_at")
     private LocalDateTime modifiedAt;
 
     @Column(name = "modified_by")
-    private String modifiedBy;
+    private Integer modifiedBy;
 }
