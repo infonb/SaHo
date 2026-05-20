@@ -9,11 +9,15 @@ export const getStudents = async (filters?: Partial<StudentFilters>): Promise<St
   let views = result.map(buildStudentView);
   if (filters?.dist_id) views = views.filter(v => v.dist_id === Number(filters.dist_id));
   if (filters?.st_id) views = views.filter(v => v.st_id === Number(filters.st_id));
+  if (filters?.mndl_id) views = views.filter(v => v.mndl_id === Number(filters.mndl_id));
+  if (filters?.vil_id) views = views.filter(v => v.vil_id === Number(filters.vil_id));
+  if (filters?.sch_id) views = views.filter(v => v.sch_id === Number(filters.sch_id));
+  if (filters?.orphan_status) views = views.filter(v => v.orphan_status === filters.orphan_status);
   if (filters?.sponsor_status === 'assigned') views = views.filter(v => v.sponsor_id !== null);
   if (filters?.sponsor_status === 'unassigned') views = views.filter(v => v.sponsor_id === null);
   if (filters?.search) {
     const q = filters.search.toLowerCase();
-    views = views.filter(v => v.full_name.toLowerCase().includes(q) || v.guardian_full_name.toLowerCase().includes(q) || v.sch_name.toLowerCase().includes(q) || v.aadhaar_number.includes(q));
+    views = views.filter(v => v.full_name.toLowerCase().includes(q) || v.email.toLowerCase().includes(q) || v.guardian_full_name.toLowerCase().includes(q) || v.sch_name.toLowerCase().includes(q) || v.aadhaar_number.includes(q));
   }
   return views;
 };
@@ -25,7 +29,7 @@ export const getStudentById = async (id: number): Promise<StudentView | undefine
 };
 
 export interface CreateStudentPayload {
-  first_name: string; middle_name?: string | null; last_name: string; dob: string; gender: 'Male' | 'Female' | 'Other'; aadhaar_number: string; caste: string; religion?: string | null; blood_group?: string | null; sch_id: number; class_id: string; guardian_id: number; orphan_status?: string | null; created_by: string;
+  first_name: string; middle_name?: string | null; last_name: string; email: string; dob: string; gender: 'Male' | 'Female' | 'Other'; aadhaar_number: string; caste: string; religion?: string | null; blood_group?: string | null; sch_id: number; class_id: string; guardian_id: number; orphan_status?: string | null; image_url?: string | null; created_by: string;
 }
 
 export const createGuardian = async (payload: Omit<Guardian, 'guardian_id' | 'created_at' | 'updated_at'>): Promise<Guardian> => {
@@ -36,9 +40,15 @@ export const createGuardian = async (payload: Omit<Guardian, 'guardian_id' | 'cr
 
 export const createStudent = async (payload: CreateStudentPayload): Promise<Student> => {
   await delay();
-  const student: Student = { ...payload, student_id: Math.max(0, ...MOCK_STUDENTS.map(s => s.student_id)) + 1, middle_name: payload.middle_name ?? null, religion: payload.religion ?? null, blood_group: payload.blood_group ?? null, orphan_status: payload.orphan_status ?? null, image_url: null, is_active: true, created_at: new Date().toISOString(), modified_at: null, modified_by: null };
+  const student: Student = { ...payload, student_id: Math.max(0, ...MOCK_STUDENTS.map(s => s.student_id)) + 1, middle_name: payload.middle_name ?? null, religion: payload.religion ?? null, blood_group: payload.blood_group ?? null, orphan_status: payload.orphan_status ?? null, image_url: payload.image_url ?? null, is_active: true, created_at: new Date().toISOString(), modified_at: null, modified_by: null };
   MOCK_STUDENTS.push(student);
   return student;
+};
+
+export const findStudentByAadhaar = async (aadhaar: string): Promise<StudentView | undefined> => {
+  await delay(250);
+  const student = MOCK_STUDENTS.find(s => s.is_active && s.aadhaar_number === aadhaar);
+  return student ? buildStudentView(student) : undefined;
 };
 
 export const updateStudent = async (id: number, payload: Partial<Student>): Promise<Student> => {
@@ -56,4 +66,8 @@ export const deactivateStudent = async (id: number, modified_by: string): Promis
   MOCK_STUDENTS[idx].is_active = false;
   MOCK_STUDENTS[idx].modified_at = new Date().toISOString();
   MOCK_STUDENTS[idx].modified_by = modified_by;
+};
+
+export const deactivateStudents = async (ids: number[], modified_by: string): Promise<void> => {
+  await Promise.all(ids.map(id => deactivateStudent(id, modified_by)));
 };
