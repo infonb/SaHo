@@ -24,7 +24,7 @@ public class SponsorRequestDto {
 
     private String loc;
 
-    private BigDecimal contribAmt;
+    private BigDecimal contrib;
 
     private Integer createdBy;
 

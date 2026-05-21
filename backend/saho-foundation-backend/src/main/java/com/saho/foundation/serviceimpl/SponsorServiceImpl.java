@@ -57,7 +57,7 @@ public class SponsorServiceImpl
 
                 request.getLoc(),
 
-                request.getContribAmt(),
+                request.getContrib(),
 
                 request.getCreatedBy(),
 
@@ -167,8 +167,8 @@ public class SponsorServiceImpl
         response.setPhNo(resultSet.getString("ph_no"));
         response.setLoc(resultSet.getString("loc"));
 
-        BigDecimal contribAmt = resultSet.getBigDecimal("contrib_amt");
-        response.setContribAmt(contribAmt);
+        BigDecimal contrib = resultSet.getBigDecimal("contrib");
+        response.setContrib(contrib);
 
         return response;
     }

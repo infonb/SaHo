@@ -38,8 +38,8 @@ public class Sponsor {
     @Column(name = "loc")
     private String location;
 
-    @Column(name = "contrib_amt")
-    private BigDecimal contributionAmount;
+    @Column(name = "contrib")
+    private BigDecimal contribution;
 
     @Column(name = "is_deleted")
     private Boolean isDeleted;

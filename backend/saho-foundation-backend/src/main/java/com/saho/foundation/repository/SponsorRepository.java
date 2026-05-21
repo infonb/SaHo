@@ -34,7 +34,7 @@ public interface SponsorRepository extends JpaRepository<Sponsor, Integer> {
 
             @Param("p_loc") String loc,
 
-            @Param("p_contrib_amt") BigDecimal contribAmt,
+            @Param("p_contrib") BigDecimal contrib,
 
             @Param("p_created_by") Integer createdBy,
 
