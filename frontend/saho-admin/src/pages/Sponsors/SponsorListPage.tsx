@@ -27,6 +27,7 @@ export default function SponsorListPage() {
   const [selected, setSelected] = useState<SponsorView | null>(null);
   const [checked, setChecked] = useState<number[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [singleDelete, setSingleDelete] = useState<number | null>(null);
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -42,9 +43,100 @@ export default function SponsorListPage() {
   const togglePage = () => setChecked(ids => allPageChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]);
   const confirmBulkDelete = async () => { await deactivateSponsors(checked, user?.username ?? 'admin'); setBulkOpen(false); toast(`${checked.length} sponsors removed.`, 'success'); load(); };
 
-  const rows = pager.current.map(s => [<input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.sponsor_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.sponsor_id)} />, <div className="rowFlex"><Avatar name={s.full_name} /><div><button type="button" className="linkButton strong sponsorNameCell" onClick={() => setSelected(s)}>{s.full_name}</button></div></div>, <Badge variant={s.type === 'Organisation' ? 'organisation' : 'individual'}>{s.type}</Badge>, s.nationality, s.ph_no, <strong>{contribution(s.contrib_amt)}</strong>, <Badge variant="assigned">{s.students_count}</Badge>, <div className="actions" onClick={e => e.stopPropagation()}><Button size="sm" variant="outline" onClick={() => setSelected(s)}>View</Button><Button size="sm" onClick={() => nav(`/sponsors/edit/${s.sponsor_id}`)}>Edit</Button></div>]);
+  const confirmSingleDelete = async () => {
+    if (!singleDelete) return;
+    await deactivateSponsors([singleDelete], user?.username ?? 'admin');
+    setSingleDelete(null);
+    toast('Sponsor removed.', 'success');
+    load();
+  };
 
-  return <div><PageHeader title="Sponsors" subtitle="Individuals and organisations supporting students" actions={<><Button variant="outline">Export CSV</Button><Button variant="success" onClick={() => nav('/sponsors/assign')}>Assign to Student</Button><Button onClick={() => nav('/sponsors/add')}>Add Sponsor</Button></>} /><div className="statGrid" style={{ gridTemplateColumns: 'repeat(2, minmax(0,1fr))', marginBottom: 14 }}><StatCard label="TOTAL SPONSORS" value={totalSponsors} note="All sponsors" /><StatCard label="STUDENTS SPONSORED" value={totalStudentsSponsored} note="Across all sponsors" /></div><FilterBar className="filterBarInline" onGo={() => { setApplied({ ...pending }); pager.setPage(1); }} onClear={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); }} extraAction={<Button size="sm" variant="danger" disabled={checked.length === 0} onClick={() => setBulkOpen(true)}>Delete</Button>}><input className="input" style={{ minWidth: 260, maxWidth: 420, width: '100%' }} placeholder="Search sponsors" value={pending.search} onChange={e => setPending({ ...pending, search: e.target.value })} /><select className="select" style={{ minWidth: 180, maxWidth: 220 }} value={pending.nationality} onChange={e => setPending({ ...pending, nationality: e.target.value })}><option value="">All Nationality</option>{nationalities.map(n => <option key={n}>{n}</option>)}</select><select className="select" style={{ minWidth: 180, maxWidth: 220 }} value={pending.type} onChange={e => setPending({ ...pending, type: e.target.value })}><option value="">All Types</option><option>Individual</option><option>Organisation</option></select></FilterBar><DataTable loading={loading} columns={[{ key: 'select', label: '', width: '44px' }, { key: 's', label: 'Sponsor' }, { key: 't', label: 'Type' }, { key: 'n', label: 'Nationality' }, { key: 'p', label: 'Phone' }, { key: 'c', label: 'Contribution' }, { key: 'st', label: 'Students' }, { key: 'v', label: 'Actions' }]} rows={rows} /><div className="tableSelectAll"><label><input type="checkbox" checked={allPageChecked} onChange={togglePage} /> Select all on this page</label></div><Pagination total={items.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} /><SponsorModal sponsor={selected} onClose={() => setSelected(null)} /><ConfirmModal open={bulkOpen} onClose={() => setBulkOpen(false)} onConfirm={confirmBulkDelete} title="Delete Selected Sponsors" message={`Delete ${checked.length} selected sponsors?`} /></div>;
+  const rows = pager.current.map(s => [
+    <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.sponsor_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.sponsor_id)} />,
+    <div className="rowFlex">
+      <Avatar name={s.full_name} />
+      <div>
+        <button type="button" className="linkButton strong sponsorNameCell" onClick={() => setSelected(s)}>{s.full_name}</button>
+      </div>
+    </div>,
+    <Badge variant={s.type === 'Organisation' ? 'organisation' : 'individual'}>{s.type}</Badge>,
+    s.nationality,
+    s.ph_no,
+    <strong>{contribution(s.contrib_amt)}</strong>,
+    <Badge variant="assigned">{s.students_count}</Badge>,
+    <div className="actions tableRowActions" onClick={e => e.stopPropagation()}>
+      <Button size="sm" variant="outline" className="iconBtn" onClick={() => nav(`/sponsors/edit/${s.sponsor_id}`)} aria-label="Edit sponsor">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </Button>
+      <Button size="sm" variant="danger" className="iconBtn" style={{ marginLeft: 8 }} onClick={(e) => { e.stopPropagation(); setSingleDelete(s.sponsor_id); }} aria-label={`Delete ${s.full_name}`}>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </Button>
+    </div>
+  ]);
+
+  return (
+    <div>
+      <PageHeader
+        title="Sponsors"
+        subtitle="Individuals and organisations supporting students"
+        actions={<><Button variant="outline">Export CSV</Button><Button variant="success" onClick={() => nav('/sponsors/assign')}>Assign to Student</Button><Button onClick={() => nav('/sponsors/add')}>Add Sponsor</Button></>}
+      />
+
+      <div className="statGrid" style={{ gridTemplateColumns: 'repeat(2, minmax(0,1fr))', marginBottom: 14 }}>
+        <StatCard label="TOTAL SPONSORS" value={totalSponsors} note="All sponsors" />
+        <StatCard label="STUDENTS SPONSORED" value={totalStudentsSponsored} note="Across all sponsors" />
+      </div>
+
+      <FilterBar
+        className="filterBarInline"
+        onGo={() => { setApplied({ ...pending }); pager.setPage(1); }}
+        onClear={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); }}
+      >
+        <input className="input" style={{ minWidth: 260, maxWidth: 420, width: '100%' }} placeholder="Search sponsors" value={pending.search} onChange={e => setPending({ ...pending, search: e.target.value })} />
+        <select className="select" style={{ minWidth: 180, maxWidth: 220 }} value={pending.nationality} onChange={e => setPending({ ...pending, nationality: e.target.value })}>
+          <option value="">All Nationality</option>
+          {nationalities.map(n => <option key={n}>{n}</option>)}
+        </select>
+        <select className="select" style={{ minWidth: 180, maxWidth: 220 }} value={pending.type} onChange={e => setPending({ ...pending, type: e.target.value })}>
+          <option value="">All Types</option>
+          <option>Individual</option>
+          <option>Organisation</option>
+        </select>
+      </FilterBar>
+
+      <div className="panel">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '12px' }}>
+          <h3 className="panelTitle">Sponsor Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{items.length} results</span></h3>
+        </div>
+
+        <div className="selectHeaderRow" style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}><input type="checkbox" checked={allPageChecked} onChange={togglePage} /> <span style={{ fontWeight: 800, color: 'var(--color-text2)' }}>Select all on this page</span></label>
+            <div className="selectedCount" style={{ marginLeft: 8, color: 'var(--color-text3)', fontWeight: 800 }}>Selected {checked.length} of {items.length}</div>
+          </div>
+          <div>
+            <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)} disabled={checked.length === 0} style={{ borderColor: checked.length ? 'var(--green-border)' : 'var(--color-border)', color: checked.length ? 'var(--green)' : 'var(--color-text3)' }}>Delete selected</Button>
+          </div>
+        </div>
+
+        <DataTable loading={loading} columns={[{ key: 'select', label: '', width: '44px' }, { key: 's', label: 'Sponsor' }, { key: 't', label: 'Type' }, { key: 'n', label: 'Nationality' }, { key: 'p', label: 'Phone' }, { key: 'c', label: 'Contribution' }, { key: 'st', label: 'Students' }, { key: 'v', label: 'Actions' }]} rows={rows} />
+        <Pagination total={items.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
+      </div>
+
+      <SponsorModal sponsor={selected} onClose={() => setSelected(null)} />
+      <ConfirmModal open={singleDelete !== null} onClose={() => setSingleDelete(null)} onConfirm={confirmSingleDelete} title="Delete Sponsor" message="Delete selected sponsor?" />
+      <ConfirmModal open={bulkOpen} onClose={() => setBulkOpen(false)} onConfirm={confirmBulkDelete} title="Delete Selected Sponsors" message={`Delete ${checked.length} selected sponsors?`} />
+    </div>
+  );
 }
 
 function SponsorModal({ sponsor, onClose }: { sponsor: SponsorView | null; onClose: () => void }) {

@@ -8,11 +8,8 @@ import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import DataTable from '../../components/common/DataTable';
-import FilterBar from '../../components/common/FilterBar';
-import Modal from '../../components/common/Modal';
 import PageHeader from '../../components/common/PageHeader';
 import Pagination from '../../components/common/Pagination';
-import StatCard from '../../components/common/StatCard';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import { usePagination } from '../../hooks/usePagination';
@@ -25,10 +22,12 @@ export default function AssignSponsorPage() {
   const [sponsors, setSponsors] = useState<SponsorView[]>([]);
   const [selectedSponsor, setSelectedSponsor] = useState<SponsorView | null>(null);
   const [sponsorSearch, setSponsorSearch] = useState('');
-  const [sponsorType, setSponsorType] = useState('All');
+  const [sponsorType, setSponsorType] = useState<'All' | 'Individual' | 'Organisation'>('All');
   const [checkedStudents, setCheckedStudents] = useState<number[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentFilters, setStudentFilters] = useState({ gender: '', class_id: '', orphan_status: '', sponsor_status: '', dist_id: '' });
 
   const nav = useNavigate();
   const { user } = useAuth();
@@ -44,8 +43,25 @@ export default function AssignSponsorPage() {
   // sponsor list filtered locally
   const visibleSponsors = useMemo(() => sponsors.filter(s => (sponsorType === 'All' || s.type === sponsorType) && (!sponsorSearch || s.full_name.toLowerCase().includes(sponsorSearch.toLowerCase()))), [sponsors, sponsorSearch, sponsorType]);
 
+  const classOptions = useMemo(() => [...new Set(students.map(s => s.class_id))], [students]);
+  const districtOptions = useMemo(() => [...new Map(students.map(s => [String(s.dist_id), s.dist_name])).entries()], [students]);
+
+  const visibleStudents = useMemo(() => {
+    const q = studentSearch.trim().toLowerCase();
+    return students.filter(s => {
+      if (q && !(s.full_name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || s.aadhaar_number.includes(q))) return false;
+      if (studentFilters.gender && s.gender !== studentFilters.gender) return false;
+      if (studentFilters.class_id && s.class_id !== studentFilters.class_id) return false;
+      if (studentFilters.orphan_status && (s.orphan_status ?? '') !== studentFilters.orphan_status) return false;
+      if (studentFilters.sponsor_status === 'assigned' && s.sponsor_id === null) return false;
+      if (studentFilters.sponsor_status === 'unassigned' && s.sponsor_id !== null) return false;
+      if (studentFilters.dist_id && String(s.dist_id) !== studentFilters.dist_id) return false;
+      return true;
+    });
+  }, [students, studentSearch, studentFilters]);
+
   // student list pagination
-  const pager = usePagination(students, 10);
+  const pager = usePagination(visibleStudents, 10);
   const pageStudents = pager.current;
 
   const toggleStudent = (id: number) => setCheckedStudents(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -55,18 +71,41 @@ export default function AssignSponsorPage() {
     setCheckedStudents(ids => allChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]);
   };
 
-  const totalSponsors = sponsors.length;
-  const totalStudentsSponsored = sponsors.reduce((sum, s) => sum + Number(s.students_count), 0);
+  const selectedStudentsPreview = useMemo(() => {
+    const map = new Map(students.map(s => [s.student_id, s.full_name]));
+    const names = checkedStudents.map(id => ({ id, name: map.get(id) ?? `Student ${id}` }));
+    return names;
+  }, [students, checkedStudents]);
 
   const sponsorRows = visibleSponsors.map(s => [
-    <div className="rowFlex"><Avatar name={s.full_name} /><div><div className="strong" style={{ cursor: 'pointer' }} onClick={() => setSelectedSponsor(s)}>{s.full_name}</div><div className="sub">{s.type} • {contribution(s.contrib_amt)}</div></div></div>,
+    <div
+      className="rowFlex"
+      style={{
+        padding: '6px 6px',
+        borderRadius: 10,
+        border: selectedSponsor?.sponsor_id === s.sponsor_id ? '1px solid var(--green-border)' : '1px solid transparent',
+        background: selectedSponsor?.sponsor_id === s.sponsor_id ? 'var(--green-bg)' : 'transparent',
+        cursor: 'pointer'
+      }}
+      onClick={() => setSelectedSponsor(s)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedSponsor(s); }}
+      aria-label={`Select sponsor ${s.full_name}`}
+    >
+      <Avatar name={s.full_name} />
+      <div>
+        <div className="strong">{s.full_name}</div>
+        <div className="sub">{s.type} • {contribution(s.contrib_amt)}</div>
+      </div>
+    </div>,
     <Badge variant={s.type === 'Organisation' ? 'organisation' : 'individual'}>{s.type}</Badge>,
     s.students_count
   ]);
 
   const studentRows = pageStudents.map(st => [
     <input aria-label={`Select ${st.full_name}`} type="checkbox" checked={checkedStudents.includes(st.student_id)} onClick={e => e.stopPropagation()} onChange={() => toggleStudent(st.student_id)} />, 
-    st.student_code || st.student_id,
+    st.student_id,
     <div className="rowFlex"><Avatar name={st.full_name} size="md" /><div><div className="strong">{st.full_name}</div><div className="sub">{st.gender}</div></div></div>,
     st.class_id,
     st.sch_name || '-',
@@ -89,69 +128,134 @@ export default function AssignSponsorPage() {
 
   return (
     <div>
-      <PageHeader title="Assign Sponsor" subtitle="Select students and assign them to a sponsor" actions={<><Button variant="outline" onClick={() => nav('/sponsors')}>Back</Button><Button variant="ghost">Assignment History</Button></>} />
+      <PageHeader title="Assign Sponsor" subtitle="Select a sponsor, select students, then assign" actions={<Button variant="outline" onClick={() => nav('/sponsors')}>Back</Button>} />
 
       <div className="bottomGrid" style={{ gridTemplateColumns: '1fr 360px', gap: 18 }}>
         <div>
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <input className="input" placeholder="Search and select sponsor" value={sponsorSearch} onChange={e => setSponsorSearch(e.target.value)} style={{ flex: 1 }} />
-              <select className="select" value={sponsorType} onChange={e => setSponsorType(e.target.value)} style={{ width: 160 }}>
-                <option>All</option>
-                <option>Individual</option>
-                <option>Organisation</option>
-              </select>
+          <div className="panel" style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+              <h3 className="panelTitle" style={{ margin: 0 }}>Select Sponsor</h3>
+              <Button size="sm" variant="outline" disabled={!selectedSponsor} onClick={() => setSelectedSponsor(null)}>Clear Sponsor</Button>
             </div>
-          </div>
-
-          <div style={{ border: '1px solid var(--color-border)', borderRadius: 8, padding: 8, marginBottom: 14 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
+              <input className="input" placeholder="Search sponsors by name" value={sponsorSearch} onChange={e => setSponsorSearch(e.target.value)} style={{ flex: 1, minWidth: 220 }} />
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Button size="sm" variant={sponsorType === 'All' ? 'success' : 'outline'} onClick={() => setSponsorType('All')}>All</Button>
+                <Button size="sm" variant={sponsorType === 'Individual' ? 'success' : 'outline'} onClick={() => setSponsorType('Individual')}>Individual</Button>
+                <Button size="sm" variant={sponsorType === 'Organisation' ? 'success' : 'outline'} onClick={() => setSponsorType('Organisation')}>Organisation</Button>
+              </div>
+            </div>
             <DataTable loading={loading} columns={[{ key: 'n', label: 'Sponsor' }, { key: 't', label: 'Type' }, { key: 'c', label: 'Students' }]} rows={sponsorRows} />
           </div>
 
-          <div style={{ marginTop: 8, marginBottom: 8 }}>
-            <h4 style={{ margin: '8px 0' }}>Filter Students (Optional)</h4>
-            <FilterBar onGo={() => {}} onClear={() => {}} className="filterBarInline" extraAction={<Button size="sm" variant="ghost">Apply Filters</Button>}>
-              <input className="input" placeholder="State" />
-              <input className="input" placeholder="District" />
-              <input className="input" placeholder="Mandal" />
-              <input className="input" placeholder="Village" />
-            </FilterBar>
-          </div>
+          <div className="panel">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+              <h3 className="panelTitle" style={{ margin: 0 }}>Select Students</h3>
+              <Button size="sm" variant="outline" disabled={checkedStudents.length === 0} onClick={() => setCheckedStudents([])}>Clear Students</Button>
+            </div>
 
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}><input type="checkbox" checked={pageStudents.length > 0 && pageStudents.every(s => checkedStudents.includes(s.student_id))} onChange={togglePage} /> Select all on this page</label>
-                <div className="selectedCount">Selected {checkedStudents.length} of {students.length}</div>
+            <div className="filterBar filterBarInline" style={{ marginBottom: 12 }}>
+              <div className="filterFields">
+                <input className="input" placeholder="Search student name / email / Aadhaar" value={studentSearch} onChange={e => { setStudentSearch(e.target.value); pager.setPage(1); }} />
+                <select className="select" value={studentFilters.class_id} onChange={e => { setStudentFilters(f => ({ ...f, class_id: e.target.value })); pager.setPage(1); }}>
+                  <option value="">All Classes</option>
+                  {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select className="select" value={studentFilters.gender} onChange={e => { setStudentFilters(f => ({ ...f, gender: e.target.value })); pager.setPage(1); }}>
+                  <option value="">All Gender</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </select>
+                <select className="select" value={studentFilters.orphan_status} onChange={e => { setStudentFilters(f => ({ ...f, orphan_status: e.target.value })); pager.setPage(1); }}>
+                  <option value="">Orphan Status</option>
+                  <option>Orphan</option>
+                  <option>Semi Orphan</option>
+                </select>
+                <select className="select" value={studentFilters.sponsor_status} onChange={e => { setStudentFilters(f => ({ ...f, sponsor_status: e.target.value })); pager.setPage(1); }}>
+                  <option value="">Sponsor Status</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="unassigned">Unassigned</option>
+                </select>
+                <select className="select" value={studentFilters.dist_id} onChange={e => { setStudentFilters(f => ({ ...f, dist_id: e.target.value })); pager.setPage(1); }}>
+                  <option value="">All Districts</option>
+                  {districtOptions.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                </select>
               </div>
-              <div>
-                <Button size="sm" variant="success" onClick={() => setConfirmOpen(true)} disabled={!selectedSponsor || checkedStudents.length === 0}>Assign Selected</Button>
+              <div className="filterActions">
+                <Button size="sm" variant="ghost" onClick={() => { setStudentFilters({ gender: '', class_id: '', orphan_status: '', sponsor_status: '', dist_id: '' }); setStudentSearch(''); pager.setPage(1); }}>x Clear</Button>
               </div>
             </div>
 
-            <DataTable loading={loading} columns={[{ key: 'sel', label: '', width: '44px' }, { key: 'id', label: 'Student ID' }, { key: 's', label: 'Student' }, { key: 'class', label: 'Class' }, { key: 'sch', label: 'School' }, { key: 'loc', label: 'Location' }, { key: 'cur', label: 'Current Sponsor' }]} rows={studentRows} />
-            <Pagination total={students.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}><input type="checkbox" checked={pageStudents.length > 0 && pageStudents.every(s => checkedStudents.includes(s.student_id))} onChange={togglePage} /> Select all on this page</label>
+                <div className="selectedCount">Selected {checkedStudents.length} of {visibleStudents.length}</div>
+              </div>
+              <div>
+                <Button size="sm" variant="success" onClick={() => setConfirmOpen(true)} disabled={!selectedSponsor || checkedStudents.length === 0}>Assign Sponsor</Button>
+              </div>
+            </div>
+
+            <DataTable
+              loading={loading}
+              columns={[{ key: 'sel', label: '', width: '44px' }, { key: 'id', label: 'Student ID' }, { key: 's', label: 'Student' }, { key: 'class', label: 'Class' }, { key: 'sch', label: 'School' }, { key: 'loc', label: 'Location' }, { key: 'cur', label: 'Current Sponsor' }]}
+              rows={studentRows}
+              onRowClick={(index) => toggleStudent(pageStudents[index].student_id)}
+            />
+            <Pagination total={visibleStudents.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
           </div>
         </div>
 
         <div>
-          <div style={{ border: '1px solid var(--color-border)', borderRadius: 8, padding: 16, minHeight: 200 }}>
+          <div className="panel" style={{ position: 'sticky', top: 88 }}>
+            <h3 className="panelTitle" style={{ marginTop: 0 }}>Confirmation</h3>
+
             {selectedSponsor ? (
-              <div>
-                <div className="rowFlex"><Avatar name={selectedSponsor.full_name} size="lg" /><div style={{ marginLeft: 12 }}><h3 style={{ margin: 0 }}>{selectedSponsor.full_name}</h3><div className="sub">{selectedSponsor.type} • {selectedSponsor.nationality}</div></div></div>
-                <div style={{ marginTop: 12 }}><div className="sub">Email</div><div className="strong">{selectedSponsor.email}</div></div>
-                <div style={{ marginTop: 8 }}><div className="sub">Phone</div><div className="strong">{selectedSponsor.ph_no}</div></div>
-                <div style={{ marginTop: 12 }}><Badge variant="assigned">{selectedSponsor.students_count} Students</Badge></div>
-                <div style={{ marginTop: 16 }}><Button onClick={() => setSelectedSponsor(null)} variant="outline">Clear</Button></div>
+              <div style={{ marginBottom: 14 }}>
+                <div className="sub">Selected Sponsor</div>
+                <div className="rowFlex" style={{ marginTop: 8 }}>
+                  <Avatar name={selectedSponsor.full_name} size="lg" />
+                  <div>
+                    <div className="strong">{selectedSponsor.full_name}</div>
+                    <div className="sub">{selectedSponsor.type} • {selectedSponsor.nationality}</div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--color-text3)' }}>No sponsor selected</div>
+            )}
+
+            <div style={{ marginBottom: 14 }}>
+              <div className="sub">Selected Students</div>
+              <div className="strong" style={{ marginTop: 6 }}>{checkedStudents.length}</div>
+            </div>
+
+            <Button variant="success" style={{ width: '100%' }} disabled={!selectedSponsor || checkedStudents.length === 0} onClick={() => setConfirmOpen(true)}>
+              Assign Now
+            </Button>
+
+            {checkedStudents.length > 0 && (
+              <div style={{ marginTop: 14 }}>
+                <div className="sub">Selected List</div>
+                <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>
+                  {selectedStudentsPreview.slice(0, 5).map(s => (
+                    <div key={s.id} className="quickRow" style={{ padding: '10px 12px', marginBottom: 0 }}>
+                      <div style={{ fontWeight: 800 }}>{s.name}</div>
+                      <div className="sub" style={{ marginTop: 0 }}>ID {s.id}</div>
+                    </div>
+                  ))}
+                  {checkedStudents.length > 5 && (
+                    <div className="sub">+ {checkedStudents.length - 5} more</div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      <ConfirmModal open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={confirmAssign} title="Confirm Assignment" message={`Assign ${checkedStudents.length} students to ${selectedSponsor?.full_name}?`} />
+      <ConfirmModal open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={confirmAssign} title="Confirm Assignment" icon="Assign" confirmLabel="Yes, Assign" danger={false} message={`Assign ${checkedStudents.length} students to ${selectedSponsor?.full_name}?`} />
     </div>
   );
 }
