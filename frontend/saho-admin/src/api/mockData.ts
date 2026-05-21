@@ -60,7 +60,8 @@ const BASE_STUDENTS: Student[] = [
   { student_id: 7, first_name: 'Anitha', middle_name: null, last_name: 'Singh', email: 'anitha.singh@example.com', dob: '2011-02-28', gender: 'Female', aadhaar_number: '789012345678', caste: 'BC-C', religion: 'Hindu', blood_group: 'A-', sch_id: 1, class_id: '5th', guardian_id: 5, orphan_status: 'Semi Orphan', image_url: studentGirl2, is_active: true, created_at: '2024-03-07', created_by: 'admin', modified_at: null, modified_by: null },
 ];
 
-const ADDITIONAL_STUDENTS: Omit<Student, 'student_id'>[] = [
+// Some mock rows don't specify `created_by`; we default it when building MOCK_STUDENTS.
+const ADDITIONAL_STUDENTS: Omit<Student, 'student_id' | 'created_by'>[] = [
   { first_name: 'Sneha', middle_name: null, last_name: 'Reddy', email: 'sneha.reddy@example.com', dob: '2010-04-02', gender: 'Female', aadhaar_number: '890123456789', caste: 'BC-B', religion: 'Hindu', blood_group: 'A+', sch_id: 1, class_id: '6th', guardian_id: 1, orphan_status: 'Semi Orphan', image_url: studentGirl, is_active: true, created_at: '2024-03-08', modified_at: null, modified_by: null },
   { first_name: 'Manish', middle_name: null, last_name: 'Kumar', email: 'manish.kumar@example.com', dob: '2009-08-11', gender: 'Male', aadhaar_number: '901234567890', caste: 'OC', religion: 'Hindu', blood_group: 'B+', sch_id: 2, class_id: '7th', guardian_id: 2, orphan_status: 'Orphan', image_url: studentBoy, is_active: true, created_at: '2024-03-09', modified_at: null, modified_by: null },
   { first_name: 'Nithya', middle_name: null, last_name: 'Rao', email: 'nithya.rao@example.com', dob: '2008-12-20', gender: 'Female', aadhaar_number: '012345678901', caste: 'SC', religion: 'Hindu', blood_group: 'O-', sch_id: 3, class_id: '8th', guardian_id: 4, orphan_status: 'Semi Orphan', image_url: studentGirl2, is_active: true, created_at: '2024-03-10', modified_at: null, modified_by: null },
@@ -145,7 +146,7 @@ const ADDITIONAL_STUDENTS: Omit<Student, 'student_id'>[] = [
 
 export let MOCK_STUDENTS: Student[] = [
   ...BASE_STUDENTS,
-  ...ADDITIONAL_STUDENTS.map((s, index) => ({ ...s, student_id: 8 + index })),
+  ...ADDITIONAL_STUDENTS.map((s, index) => ({ ...s, student_id: 8 + index, created_by: 'admin' })),
 ];
 
 export let MOCK_SPONSORS: Sponsor[] = [
@@ -177,7 +178,7 @@ export const buildStudentView = (s: Student): StudentView => {
   return {
     student_id: s.student_id, full_name: [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(' '), email: s.email, dob: s.dob, gender: s.gender, aadhaar_number: s.aadhaar_number, caste: s.caste, religion: s.religion, blood_group: s.blood_group, class_id: s.class_id, orphan_status: s.orphan_status, image_url: s.image_url, is_active: s.is_active, created_at: s.created_at, created_by: s.created_by,
     sch_id: school.sch_id, sch_name: school.sch_name, sch_address: school.sch_address, vil_id: village.vil_id, vil_name: village.vil_name, mndl_id: mandal.mndl_id, mndl_name: mandal.mndl_name, dist_id: district.dist_id, dist_name: district.dist_name, st_id: state.st_id, st_name: state.st_name,
-    guardian_id: guardian.guardian_id, guardian_full_name: [guardian.first_name, guardian.last_name].join(' '), guardian_phone: guardian.phone_number, guardian_relation_name: rel.relationship_name, guardian_occ: guardian.occ,
+    guardian_id: guardian.guardian_id, guardian_full_name: [guardian.first_name, guardian.middle_name, guardian.last_name].filter(Boolean).join(' '), guardian_phone: guardian.phone_number, guardian_relation_name: rel.relationship_name, guardian_occ: guardian.occ,
     sponsor_id: sponsor?.sponsor_id ?? null,
     sponsor_full_name: sponsor ? [sponsor.first_name, sponsor.last_name].join(' ') : 'SaHo Foundation',
     sponsor_type: sponsor?.type ?? 'Organisation',
@@ -196,5 +197,6 @@ export const buildSponsorView = (sp: Sponsor): SponsorView => ({
   contrib_amt: sp.contrib_amt,
   is_active: sp.is_active,
   created_at: sp.created_at,
+  image_url: sp.image_url,
   students_count: MOCK_STUDENT_SPONSORS.filter(ss => ss.spn_id === sp.sponsor_id && ss.is_active).length,
 });

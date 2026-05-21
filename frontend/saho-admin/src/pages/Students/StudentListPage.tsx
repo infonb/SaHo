@@ -83,13 +83,12 @@ export default function StudentListPage() {
       <div>{s.class_id}</div>,
       <div>
         {s.sponsor_id ? (
-          <button className="photoButton" onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }} title={s.sponsor_full_name}>
+          <button className="photoButton" onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }} title={s.sponsor_full_name ?? undefined}>
             <Avatar name={s.sponsor_full_name ?? 'SP'} size="sm" />
           </button>
         ) : (
-          <div className="rowFlex" style={{ gap: '10px' }}>
-            <Avatar name="SaHo Foundation" size="sm" />
-            <span className="sub" style={{ color: 'var(--color-text)', fontWeight: 700 }}>SaHo Foundation</span>
+          <div title="Saho Foundation">
+            <Avatar name="Saho Foundation" size="sm" />
           </div>
         )}
       </div>,

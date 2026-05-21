@@ -80,7 +80,7 @@
 .filterBar{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--r-lg);padding:12px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:flex-start;margin-bottom:14px;box-shadow:var(--shadow-sm)}
 .filterFields{display:flex;flex-wrap:wrap;gap:12px;width:100%;align-items:center;}
 .filterActions{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
-.filterBarInline .filterFields{flex-wrap:nowrap;gap:12px;align-items:center;}
+.filterBarInline .filterFields{flex-wrap:wrap;gap:12px;align-items:center;}
 .filterBarInline .filterFields > *{flex:1 1 auto;min-width:180px;}
 .filterBarInline .filterFields .input,.filterBarInline .filterFields .select{width:auto;}
 .filterGroup{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 160px}
@@ -113,10 +113,11 @@
 .textarea{resize:vertical;min-height:86px}
 .field{display:flex;flex-direction:column;gap:6px}
 .field label{font-size:12px;color:var(--color-text3);font-weight:800}
-.uploadBox{min-height:92px;border:1px dashed var(--color-divider);border-radius:var(--r-md);display:grid;place-items:center;text-align:center;color:var(--color-text3);font-weight:800;background:#f8fafc;overflow:hidden;cursor:pointer}
+.uploadBox{min-height:92px;border:1px dashed var(--color-divider);border-radius:var(--r-md);display:grid;place-items:center;text-align:center;color:var(--color-text3);font-weight:800;background:#f8fafc;overflow:hidden;cursor:pointer;position:relative}
 .uploadBox input{display:none}
 .uploadBox img,.detailPhoto{width:58px;height:58px;border-radius:50%;object-fit:cover;border:1px solid var(--color-border)}
 .uploadBox img{width:100%;height:110px;border-radius:var(--r-md);border:0}
+.uploadDeleteBtn{position:absolute;top:10px;right:10px;z-index:2;box-shadow:var(--shadow-sm)}
 .radioRow{display:flex;align-items:center;gap:18px;min-height:40px}
 .radioRow label{display:flex;align-items:center;gap:7px;color:var(--color-text2);font-weight:800}
 .siblingSearch{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
@@ -143,11 +144,11 @@ tr.clickable:hover{background:#f8fafc;cursor:pointer}
 .pageBtn:hover,.pageNav:hover{background:var(--br-100);color:var(--color-text)}
 .pageBtn:disabled,.pageNav:disabled{opacity:.35;cursor:not-allowed;background:transparent}
 .pageSizeSelect{height:34px;min-width:58px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);color:var(--color-text2);font-weight:800;padding:0 28px 0 11px}
-.modalOverlay{position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:40;display:grid;place-items:center;padding:18px;animation:fadeIn .16s ease}
-.modalCard{background:var(--color-surface);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);max-height:88vh;max-width:calc(100vw - 32px);overflow:auto;animation:slideUp .18s ease both}
+.modalOverlay{position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:80;display:grid;place-items:center;padding:28px 18px;animation:fadeIn .16s ease}
+.modalCard{background:var(--color-surface);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);max-height:calc(100vh - 56px);max-width:calc(100vw - 32px);overflow:hidden;display:flex;flex-direction:column;animation:slideUp .18s ease both}
 .modalHead{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--color-border)}
 .modalHead h2{font-family:var(--font-display);font-size:18px;font-weight:800;margin:0}
-.modalBody{padding:20px}
+.modalBody{padding:20px;overflow-y:auto;flex:1;min-height:0}
 .modalFooter{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--color-border)}
 .toastStack{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:60}
 .toast{padding:12px 14px;border-radius:var(--r-md);box-shadow:var(--shadow-md);background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);animation:toastIn .2s ease}
@@ -155,6 +156,14 @@ tr.clickable:hover{background:#f8fafc;cursor:pointer}
 .empty{padding:34px;text-align:center;color:var(--color-text3)}
 .formGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .sectionTitle{font-family:var(--font-display);font-weight:800;margin:22px 0 12px;padding-top:18px;border-top:1px solid var(--color-divider)}
+.studentProfileModal{font-size:13px}
+.studentProfileModal h2{font-size:18px}
+.studentProfileModal .sub{font-size:11px;margin-top:2px}
+.studentProfileModal .formGrid{gap:10px}
+.studentProfileModal .sectionTitle{margin:16px 0 10px;padding-top:12px;font-size:16px}
+.studentProfileModal .panelTitle{margin-bottom:10px}
+.tableRowActions{justify-content:flex-end;flex-wrap:nowrap;gap:8px}
+.tableRowActions .btn{flex:0 0 auto}
 .loginShell{min-height:100vh;display:grid;place-items:center;padding:30px}
 .loginCard{width:min(900px,100%);display:flex;border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-lg);background:var(--color-surface);border:1px solid var(--color-border)}
 .loginLeft{width:340px;background:linear-gradient(160deg,#0f172a 0%,#0f766e 100%);color:#ffffff;padding:36px;display:flex;flex-direction:column}

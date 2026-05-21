@@ -42,7 +42,7 @@ const groups = [
     items: [
       { icon: <StudentsIcon />, label: 'Students', to: '/students', children: [{ label: 'View Students', to: '/students' }, { label: 'Add Student', to: '/students/add' }] },
       { icon: <SponsorsIcon />, label: 'Sponsors', to: '/sponsors', children: [{ label: 'View Sponsors', to: '/sponsors' }, { label: 'Add Sponsor', to: '/sponsors/add' }, { label: 'Assign to Student', to: '/sponsors/assign' }] },
-      { icon: <RemindersIcon />, label: 'Reminders', to: '/reminders' },
+      { icon: <RemindersIcon />, label: 'Reminders', to: '/reminders', children: [{ label: 'View Events', to: '/reminders' }, { label: 'Create Event', to: '/reminders/create' }] },
       { icon: <AdminIcon />, label: 'Admin Access', to: '/admins' },
     ],
   },

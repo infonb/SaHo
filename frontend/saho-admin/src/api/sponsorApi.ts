@@ -18,10 +18,10 @@ export const getSponsorById = async (id: number): Promise<SponsorView | undefine
   const s = MOCK_SPONSORS.find(x => x.sponsor_id === id);
   return s ? buildSponsorView(s) : undefined;
 };
-export interface CreateSponsorPayload { first_name: string; middle_name?: string | null; last_name: string; email: string; dob: string; ph_no: string; loc?: string | null; type: 'Individual' | 'Organisation'; nationality: string; contrib_amt: string; created_by: string; }
+export interface CreateSponsorPayload { first_name: string; middle_name?: string | null; last_name: string; email: string; dob: string; ph_no: string; loc?: string | null; type: 'Individual' | 'Organisation'; nationality: string; contrib_amt: string; image_url?: string | null; created_by: string; }
 export const createSponsor = async (payload: CreateSponsorPayload): Promise<Sponsor> => {
   await delay();
-  const sponsor: Sponsor = { ...payload, sponsor_id: Math.max(0, ...MOCK_SPONSORS.map(s => s.sponsor_id)) + 1, middle_name: payload.middle_name ?? null, loc: payload.loc ?? null, is_active: true, created_at: new Date().toISOString(), modified_at: null, modified_by: null };
+  const sponsor: Sponsor = { ...payload, sponsor_id: Math.max(0, ...MOCK_SPONSORS.map(s => s.sponsor_id)) + 1, middle_name: payload.middle_name ?? null, loc: payload.loc ?? null, image_url: payload.image_url ?? null, is_active: true, created_at: new Date().toISOString(), modified_at: null, modified_by: null };
   MOCK_SPONSORS.push(sponsor);
   return sponsor;
 };
