@@ -36,7 +36,7 @@ export default function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: 
   return (
     <header className="topbar">
       <div className="topbarLeft">
-        <button className="sidebarToggle" type="button" aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} onClick={onToggleSidebar}>
+        <button className="sidebarToggle topbarSidebarToggle" type="button" aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} onClick={onToggleSidebar}>
           <span />
           <span />
           <span />

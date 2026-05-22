@@ -6,9 +6,8 @@ import com.saho.foundation.dto.response.SponsorListResponseDto;
 import com.saho.foundation.dto.response.SponsorResponseDto;
 import com.saho.foundation.service.ISponsorService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseEntity; 
 import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequestMapping("/api/sponsors")
 @RequiredArgsConstructor
