@@ -73,14 +73,17 @@ export default function StudentListPage() {
 
   const rows = pager.current.map(s => {
     const dob = new Date(s.dob);
-    const age = new Date().getFullYear() - dob.getFullYear();
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+    if (!hasBirthdayPassed) age -= 1;
     return [
       <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.student_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.student_id)} />,
       <div className="rowFlex"><Avatar name={s.full_name} size="md" /><div><div className="strong studentNameCell" onClick={() => setSelected(s)}>{s.full_name}</div><div className="sub">{s.gender}</div></div></div>,
       <div>{age}</div>,
-      <div><div className="strong">{s.guardian_full_name}</div><div className="sub">{s.guardian_relation_name} - {s.guardian_occ || 'N/A'}</div></div>,
-      <div><div className="strong">{s.vil_name}</div><div className="sub">{s.dist_name}</div></div>,
       <div>{s.class_id}</div>,
+      <div><div className="strong">{s.sch_name}</div><div className="sub">{s.vil_name}, {s.dist_name}</div></div>,
+      <div><div className="strong">{s.guardian_full_name}</div><div className="sub">{s.guardian_relation_name} - {s.guardian_occ || 'N/A'}</div></div>,
       <div>
         {s.sponsor_id ? (
           <button className="photoButton" onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }} title={s.sponsor_full_name ?? undefined}>
@@ -192,7 +195,7 @@ export default function StudentListPage() {
         </div>
       </div>
 
-      <DataTable loading={loading} columns={[{ key: 'select', label: '', width: '44px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'location', label: 'LOCATION' }, { key: 'grade', label: 'GRADE' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: 'ACTIONS' }]} rows={rows} />
+      <DataTable loading={loading} columns={[{ key: 'select', label: '', width: '44px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE' }, { key: 'grade', label: 'GRADE' }, { key: 'location', label: 'LOCATION' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: 'ACTIONS' }]} rows={rows} />
       <Pagination total={students.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
     </div>
     <StudentDetailModal student={selected} onClose={() => setSelected(null)} />

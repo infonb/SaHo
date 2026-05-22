@@ -39,7 +39,9 @@
   --blue-border:    #bfdbfe;
   --purple:         #7c3aed;
   --purple-bg:      #ede9fe;
-  --sidebar-w: 248px;
+  --sidebar-expanded-w: 248px;
+  --sidebar-collapsed-w: 76px;
+  --sidebar-w: var(--sidebar-expanded-w);
   --topbar-h: 64px;
   --font-body: 'Inter', sans-serif;
   --font-display: 'Plus Jakarta Sans', sans-serif;

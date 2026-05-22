@@ -4,6 +4,7 @@
 .sidebarToggle{width:40px;height:40px;border:1px solid var(--color-border);border-radius:var(--r-md);background:var(--color-surface);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--color-text2);box-shadow:var(--shadow-sm)}
 .sidebarToggle:hover{border-color:var(--color-primary-border);color:var(--color-primary)}
 .sidebarToggle span{width:17px;height:2px;border-radius:999px;background:currentColor}
+.topbarSidebarToggle{display:none}
 .brand{display:flex;align-items:center;gap:10px}
 .brandMark{width:34px;height:34px}
 .brandName{font-family:var(--font-display);font-weight:800;font-size:20px;line-height:1}
@@ -11,28 +12,39 @@
 .userPill{display:flex;align-items:center;gap:9px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text2);border-radius:999px;padding:6px 10px;box-shadow:var(--shadow-sm)}
 .userPill:hover{border-color:var(--color-primary-border);color:var(--color-primary)}
 .dropdown{position:absolute;right:0;top:52px;background:var(--color-surface);color:var(--color-text);border:1px solid var(--color-border);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:min(280px,calc(100vw - 32px));padding:16px;animation:slideUp .16s ease both}
-.sidebar{position:fixed;top:0;bottom:0;left:0;width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#13233f 100%);border-right:1px solid rgba(255,255,255,.08);padding:0;display:flex;flex-direction:column;z-index:30;color:#e5e7eb;transition:transform .22s ease}
-.sidebar.closed{transform:translateX(-100%)}
-.sidebarLogo{height:var(--topbar-h);display:flex;align-items:center;padding:0 26px;color:#ffffff;font-family:var(--font-display);font-weight:800;font-size:26px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar{position:fixed;top:0;bottom:0;left:0;width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#13233f 100%);border-right:1px solid rgba(255,255,255,.08);padding:0;display:flex;flex-direction:column;z-index:30;color:#e5e7eb;transition:width .22s ease;overflow:hidden}
+.sidebarLogo{height:var(--topbar-h);display:flex;align-items:center;padding:0 18px;color:#ffffff;font-family:var(--font-display);font-weight:800;font-size:26px;border-bottom:1px solid rgba(255,255,255,.08);gap:14px}
+.sidebarBrand{display:flex;align-items:center;min-width:0}
+.sidebarLogoText{display:block}
 .sidebarLogoSprout{position:relative;width:14px;height:18px;margin-left:3px}
 .sidebarLogoSprout:before,.sidebarLogoSprout:after{content:"";position:absolute;background:#2dd4bf;border-radius:100% 0 100% 0}
 .sidebarLogoSprout:before{width:11px;height:7px;left:2px;top:2px;transform:rotate(40deg)}
 .sidebarLogoSprout:after{width:10px;height:6px;left:0;top:9px;transform:rotate(-35deg)}
-.navSection{font-size:11px;text-transform:uppercase;color:#94a3b8;font-weight:800;letter-spacing:2px;margin:26px 24px 10px}
+.sidebarToggleInline{flex:0 0 auto;border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#e2e8f0}
+.sidebarToggleInline:hover{border-color:rgba(94,234,212,.45);color:#ffffff}
+.navSection{font-size:11px;text-transform:uppercase;color:#94a3b8;font-weight:800;letter-spacing:2px;margin:26px 24px 10px;transition:opacity .14s ease}
 .navItem,.navParent,.navSub{width:100%;border:0;background:transparent;color:#cbd5e1;display:flex;align-items:center;gap:12px;padding:11px 20px;text-align:left;font-size:14px;transition:.16s ease}
 .navItem:hover,.navParent:hover,.navSub:hover{background:rgba(255,255,255,.06);color:#ffffff}
 .navItem.active,.navParent.active{background:rgba(45,212,191,.14);color:#ffffff;font-weight:800;border-right:3px solid #2dd4bf}
 .navIcon{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.08);display:inline-grid;place-items:center;font-size:11px;font-weight:800;flex:0 0 auto;color:#ccfbf1}
 .navItem.active .navIcon,.navParent.active .navIcon{background:#ccfbf1;color:#0f766e}
-.navChevron{margin-left:auto;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid currentColor;opacity:.75}
+.navLabel{white-space:nowrap}
+.navChevron{margin-left:auto;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid currentColor;opacity:.75;transition:transform .16s ease}
+.navChevron.open{transform:rotate(180deg)}
 .navSub{padding:9px 10px 9px 66px;font-size:13px;gap:9px;color:#94a3b8}
 .navSub.active{color:#5eead4;font-weight:800}
 .navSub .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.65}
 .layoutMain{margin-left:var(--sidebar-w);padding:calc(var(--topbar-h) + 28px) clamp(18px,3vw,36px) 36px;min-height:100vh;transition:margin-left .22s ease}
-.sidebarClosed .topbar{left:0}
-.sidebarClosed .layoutMain{margin-left:0}
+.sidebarExpanded{--sidebar-w:var(--sidebar-expanded-w)}
+.sidebarCollapsed{--sidebar-w:var(--sidebar-collapsed-w)}
 .sidebarSignOut{margin-top:auto;border:0;border-top:1px solid rgba(255,255,255,.08);background:transparent;color:#fecaca;display:flex;align-items:center;gap:12px;padding:18px 20px;font-size:14px;text-align:left}
 .sidebarSignOut .navIcon{background:rgba(254,202,202,.12);border:1px solid rgba(254,202,202,.22);color:#fecaca}
+.sidebar.collapsed .sidebarLogo{padding-left:18px;padding-right:18px;justify-content:center}
+.sidebar.collapsed .sidebarBrand,.sidebar.collapsed .navSection,.sidebar.collapsed .navLabel,.sidebar.collapsed .navChevron,.sidebar.collapsed .navSub{display:none}
+.sidebar.collapsed .navItem,.sidebar.collapsed .navParent,.sidebar.collapsed .sidebarSignOut{justify-content:center;padding-left:0;padding-right:0}
+.sidebar.collapsed .navItem.active,.sidebar.collapsed .navParent.active{border-right:0}
+.sidebar.collapsed .navItem.active .navIcon,.sidebar.collapsed .navParent.active .navIcon{outline:2px solid rgba(45,212,191,.25)}
+.sidebar.collapsed .sidebarSignOut{padding-top:16px;padding-bottom:16px}
 .btn{border-radius:var(--r-md);border:1px solid transparent;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:.15s ease;white-space:nowrap;box-shadow:none}
 .btn.sm{height:32px;padding:0 12px;font-size:12px}
 .btn.md{height:40px;padding:0 16px;font-size:14px}
@@ -183,5 +195,5 @@ tr.clickable:hover{background:#f8fafc;cursor:pointer}
 .barFill{height:100%;background:linear-gradient(90deg,var(--color-primary),#14b8a6);border-radius:999px}
 svg{max-width:100%}
 @media (max-width:1100px){.layoutMain{padding-left:20px;padding-right:20px}.bottomGrid{grid-template-columns:1fr}}
-@media (max-width:900px){:root{--topbar-h:60px}.topbar{left:0;padding:0 16px}.topbarTitle{font-size:16px}.sidebar{display:none}.layoutMain{margin-left:0;padding:calc(var(--topbar-h) + 18px) 16px 24px}.chartGrid,.bottomGrid,.formGrid{grid-template-columns:1fr}.loginCard{flex-direction:column}.loginLeft{width:auto}.filterBar{align-items:stretch;flex-direction:column}.filterFields{display:grid;grid-template-columns:1fr}.filterActions{justify-content:flex-end;flex-wrap:wrap}.input,.select,.textarea{width:100%}.actions{width:100%}.actions .btn{flex:1}.pageHeader{flex-direction:column}.pageHeader .actions{justify-content:flex-start}.pagination{align-items:flex-start;flex-direction:column}.pageControls{width:100%;overflow-x:auto;padding-bottom:4px}.modalFooter{flex-wrap:wrap}.modalFooter .btn{flex:1}}
+@media (max-width:900px){:root{--topbar-h:60px;--sidebar-expanded-w:248px;--sidebar-collapsed-w:72px}.topbar{padding:0 16px}.topbarTitle{font-size:16px}.layoutMain{padding:calc(var(--topbar-h) + 18px) 16px 24px}.chartGrid,.bottomGrid,.formGrid{grid-template-columns:1fr}.loginCard{flex-direction:column}.loginLeft{width:auto}.filterBar{align-items:stretch;flex-direction:column}.filterFields{display:grid;grid-template-columns:1fr}.filterActions{justify-content:flex-end;flex-wrap:wrap}.input,.select,.textarea{width:100%}.actions{width:100%}.actions .btn{flex:1}.pageHeader{flex-direction:column}.pageHeader .actions{justify-content:flex-start}.pagination{align-items:flex-start;flex-direction:column}.pageControls{width:100%;overflow-x:auto;padding-bottom:4px}.modalFooter{flex-wrap:wrap}.modalFooter .btn{flex:1}}
 @media (max-width:520px){.layoutMain{padding-left:12px;padding-right:12px}.topbarTitle{display:none}.userPill{max-width:180px;overflow:hidden}.statCard{min-height:104px;padding:15px}.panel{padding:15px}.rowFlex{align-items:flex-start}.paginationSummary{font-size:12px}.pageControls{gap:6px}.pageBtns{gap:5px}.pageBtn,.pageNav{min-width:28px;height:28px}.loginRight,.loginLeft{padding:28px}.toastStack{left:12px;right:12px;bottom:12px}}

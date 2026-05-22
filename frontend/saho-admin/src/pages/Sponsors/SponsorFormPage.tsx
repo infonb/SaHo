@@ -1,6 +1,6 @@
 import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createSponsor, getSponsorById, updateSponsor } from '../../api/sponsorApi';
+import { createSponsor, getSponsorById, updateSponsor, setCurrentUserId } from '../../api/sponsorApi';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
@@ -27,6 +27,13 @@ export default function SponsorFormPage() {
   const nationalityOptions = ['Indian', 'American', 'British', 'Canadian', 'Australian', 'Other'];
   const MIN_IMAGE_BYTES = 5 * 1024;
   const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
+
+  // Set user ID in API module when component mounts or user changes
+  useEffect(() => {
+    if (user?.user_id) {
+      setCurrentUserId(user.user_id);
+    }
+  }, [user?.user_id]);
 
   useEffect(() => {
     if (id) getSponsorById(Number(id)).then(s => s && setForm({ name: s.full_name, email: s.email, dob: s.dob, ph_no: s.ph_no, type: s.type, nationality: s.nationality, contrib_amt: String(s.contrib_amt), loc: s.loc ?? '', image_url: s.image_url ?? '' }));

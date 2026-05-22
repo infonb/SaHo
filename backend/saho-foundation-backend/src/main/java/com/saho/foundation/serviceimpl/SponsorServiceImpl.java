@@ -39,30 +39,25 @@ public class SponsorServiceImpl
     public void createOrUpdateSponsor(
             SponsorRequestDto request) {
 
-        sponsorRepository.createOrUpdateSponsor(
+        entityManager.unwrap(Session.class).doWork(connection -> {
+            try (CallableStatement statement =
+                         connection.prepareCall("{ call createorupdatesponsor(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }")) {
 
-                request.getSponsorId(),
+                statement.setInt(1, request.getSponsorId() != null ? request.getSponsorId() : 0);
+                statement.setString(2, request.getSponsorName());
+                statement.setString(3, request.getNationality());
+                statement.setString(4, request.getSponsorType());
+                statement.setString(5, request.getEmail());
+                statement.setDate(6, request.getDob() != null ? java.sql.Date.valueOf(request.getDob()) : null);
+                statement.setString(7, request.getPhNo());
+                statement.setString(8, request.getLoc());
+                statement.setString(9, request.getContrib() != null ? request.getContrib().toString() : null);
+                statement.setInt(10, request.getCreatedBy() != null ? request.getCreatedBy() : 0);
+                statement.setInt(11, request.getModifiedBy() != null ? request.getModifiedBy() : 0);
 
-                request.getSponsorName(),
-
-                request.getNationality(),
-
-                request.getSponsorType(),
-
-                request.getEmail(),
-
-                request.getDob(),
-
-                request.getPhNo(),
-
-                request.getLoc(),
-
-                request.getContrib(),
-
-                request.getCreatedBy(),
-
-                request.getModifiedBy()
-        );
+                statement.execute();
+            }
+        });
     }
 
     @Override
