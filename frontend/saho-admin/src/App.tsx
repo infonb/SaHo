@@ -12,7 +12,8 @@ import VolunteerListPage from './pages/Volunteers/VolunteerListPage';
 import VolunteerFormPage from './pages/Volunteers/VolunteerFormPage';
 import AdminsPage from './pages/Admins/AdminsPage';
 import ToastContainer from './components/common/ToastContainer';
-import RemindersPage from './pages/Reminders/RemindersPage';
+import ViewEvents from './pages/Reminders/ViewEvents';
+import CreateEvent from './pages/Reminders/CreateEvent';
 
 function Guard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -35,7 +36,8 @@ export default function App() {
             <Route path="sponsors/add" element={<SponsorFormPage />} />
             <Route path="sponsors/edit/:id" element={<SponsorFormPage />} />
             <Route path="sponsors/assign" element={<AssignSponsorPage />} />
-            <Route path="reminders" element={<RemindersPage />} />
+            <Route path="reminders" element={<ViewEvents />} />
+            <Route path="reminders/create" element={<CreateEvent />} />
             <Route path="volunteers" element={<VolunteerListPage />} />
             <Route path="volunteers/add" element={<VolunteerFormPage />} />
             <Route path="volunteers/edit/:id" element={<VolunteerFormPage />} />
