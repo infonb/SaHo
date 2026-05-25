@@ -1,13 +1,31 @@
-import axios from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 
+/**
+ * API Client Configuration for SaHo Foundation Admin
+ *
+ * Handles:
+ * - Base URL configuration
+ * - Request/Response interceptors
+ * - CORS-friendly headers
+ * - Token-based authentication
+ */
+
+// Determine API base URL from environment or default to localhost:8080
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
 const DEBUG_DISABLE_AUTH = true;
 const DEBUG_DISABLE_401_REDIRECT = true;
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    // Explicitly set headers that trigger CORS preflight
+    // These are needed for CORS to work properly
+    'Accept': 'application/json',
+  },
   timeout: 12000,
+  // withCredentials is crucial for CORS when using authentication
+  withCredentials: true,
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -20,6 +38,7 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor - runs after each response
 apiClient.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -31,6 +50,10 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('saho_user');
       window.location.href = '/login';
     }
-    return Promise.reject(err);
+
+    return Promise.reject(error);
   }
 );
+
+// Export default for use in other API modules
+export default apiClient;

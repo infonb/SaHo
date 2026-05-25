@@ -6,12 +6,15 @@ import { getDistricts, getMandals, getSchools, getStates, getVillages } from '..
 import { getClasses } from '../../api/masterApi';
 import { createReminder, getReminderById, updateReminder } from '../../api/remindersApi';
 
+const EVENT_CLASS_OPTIONS = ['5th', '6th', '7th', '8th', '9th', '10th'];
+
 // Form state interface
 interface EventFormState {
   title: string;
   description: string;
   eventDate: string;
   venue: string;
+  classId: string;
   stateId: string;
   districtIds: number[];
   mandalIds: number[];
@@ -84,6 +87,7 @@ const initialFormState: EventFormState = {
   description: '',
   eventDate: '',
   venue: '',
+  classId: '',
   stateId: '',
   districtIds: [],
   mandalIds: [],
@@ -321,6 +325,23 @@ export default function CreateEvent() {
                   onChange={e => handleInputChange('venue', e.target.value)}
                 />
                 {errors.venue && <span className="form-error">{errors.venue}</span>}
+              </div>
+
+              {/* Class */}
+              <div className="form-group">
+                <label className="form-label">Class</label>
+                <select
+                  className="form-input"
+                  value={form.classId}
+                  onChange={e => handleInputChange('classId', e.target.value)}
+                >
+                  <option value="">Select Class</option>
+                  {EVENT_CLASS_OPTIONS.map(className => (
+                    <option key={className} value={className}>
+                      {className}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Description */}

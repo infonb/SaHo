@@ -141,7 +141,10 @@ export default function StudentListPage() {
 
   const rows = students.map(s => {
     const dob = new Date(s.dob);
-    const age = new Date().getFullYear() - dob.getFullYear();
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+    if (!hasBirthdayPassed) age -= 1;
     return [
       <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.student_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.student_id)} />,
       <div className="rowFlex"><Avatar name={s.full_name} size="md" /><div><div className="strong studentNameCell" onClick={async () => { setLoading(true); try { const full = await getStudentById(s.student_id); setSelected(full ?? s); } finally { setLoading(false); } }}>{s.full_name}</div><div className="sub">{s.gender}</div></div></div>,
