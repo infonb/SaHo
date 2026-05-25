@@ -1,31 +1,145 @@
+import { apiClient } from './client';
 import { buildStudentView, delay, MOCK_GUARDIANS, MOCK_STUDENTS } from './mockData';
 import type { Guardian, Student, StudentFilters, StudentView } from '../types';
 
-export const getStudents = async (filters?: Partial<StudentFilters>): Promise<StudentView[]> => {
-  await delay();
-  let result = filters?.is_active === 'false' ? MOCK_STUDENTS.filter(s => !s.is_active) : MOCK_STUDENTS.filter(s => s.is_active);
-  if (filters?.gender) result = result.filter(s => s.gender === filters.gender);
-  if (filters?.class_id) result = result.filter(s => s.class_id === filters.class_id);
-  let views = result.map(buildStudentView);
-  if (filters?.dist_id) views = views.filter(v => v.dist_id === Number(filters.dist_id));
-  if (filters?.st_id) views = views.filter(v => v.st_id === Number(filters.st_id));
-  if (filters?.mndl_id) views = views.filter(v => v.mndl_id === Number(filters.mndl_id));
-  if (filters?.vil_id) views = views.filter(v => v.vil_id === Number(filters.vil_id));
-  if (filters?.sch_id) views = views.filter(v => v.sch_id === Number(filters.sch_id));
-  if (filters?.orphan_status) views = views.filter(v => v.orphan_status === filters.orphan_status);
-  if (filters?.sponsor_status === 'assigned') views = views.filter(v => v.sponsor_id !== null);
-  if (filters?.sponsor_status === 'unassigned') views = views.filter(v => v.sponsor_id === null);
-  if (filters?.search) {
-    const q = filters.search.toLowerCase();
-    views = views.filter(v => v.full_name.toLowerCase().includes(q) || v.email.toLowerCase().includes(q) || v.guardian_full_name.toLowerCase().includes(q) || v.sch_name.toLowerCase().includes(q) || v.aadhaar_number.includes(q));
+export interface StudentsResponse {
+  pageNumber: number;
+  pageSize: number;
+  students: StudentView[];
+  total: number;
+  hasMore: boolean;
+}
+
+export const getStudents = async ({
+  pageNumber = 1,
+  pageSize = 10,
+  filters,
+}: {
+  pageNumber?: number;
+  pageSize?: number;
+  filters?: Partial<StudentFilters>;
+} = {}): Promise<StudentsResponse> => {
+  try {
+    const params: any = { pageNumber, pageSize };
+    if (filters?.search?.trim()) params.search = filters.search.trim();
+    if (filters?.gender) params.gender = filters.gender;
+    if (filters?.class_id) params.classId = filters.class_id;
+    if (filters?.orphan_status) params.orphanStatus = filters.orphan_status;
+    if (filters?.st_id) params.stId = filters.st_id;
+    if (filters?.dist_id) params.distId = filters.dist_id;
+    if (filters?.mndl_id) params.mndlId = filters.mndl_id;
+    if (filters?.vil_id) params.vilId = filters.vil_id;
+    if (filters?.sch_id) params.schId = filters.sch_id;
+    const res = await apiClient.get('/students', { params });
+    const students = (res.data?.students ?? []).map((s: any) => ({
+      student_id: s.studentId,
+      full_name: s.name ?? '',
+      email: s.emailId ?? '',
+      dob: s.dob ?? '',
+      gender: s.gender ?? 'Other',
+      aadhaar_number: s.aadhaarNumber ?? '',
+      caste: s.casteId ? String(s.casteId) : '',
+      religion: s.religion ?? null,
+      blood_group: s.bloodGroup ?? null,
+      class_id: s.className ? String(s.className) : (s.classId ? String(s.classId) : ''),
+      orphan_status: s.orphanStatus ?? null,
+      image_url: s.imageUrl ?? null,
+      is_active: true,
+      created_at: s.createdAt ?? new Date().toISOString(),
+      created_by: s.createdBy ?? 'system',
+      modified_at: s.modifiedAt ?? null,
+      modified_by: s.modifiedBy ?? null,
+      sch_id: s.schId ?? 0,
+      sch_name: s.schName ?? '',
+      sch_address: s.schAddress ?? '',
+      vil_id: 0,
+      mndl_id: 0,
+      dist_id: 0,
+      st_id: 0,
+      guardian_id: s.guardianId ?? 0,
+      guardian_full_name: s.guardianName ?? '',
+      guardian_phone: s.guardianPhone ?? '',
+      guardian_relation_name: s.guardianRelationName ?? '',
+      guardian_occ: null,
+      sponsor_id: null,
+      sponsor_full_name: null,
+      sponsor_type: null,
+      vil_name: s.vilName ?? '',
+      mndl_name: s.mndlName ?? '',
+      dist_name: s.distName ?? '',
+      st_name: s.stName ?? '',
+    } as StudentView));
+
+    const inferredTotal = Number(res.data?.total ?? res.data?.totalCount ?? (res.data?.students?.[0]?.totalCount ?? res.data?.students?.[0]?.total_count));
+    const hasMore = students.length === pageSize;
+
+    return {
+      pageNumber: res.data?.pageNumber ?? pageNumber,
+      pageSize: res.data?.pageSize ?? pageSize,
+      students,
+      total: Number.isFinite(inferredTotal) ? inferredTotal : ((pageNumber - 1) * pageSize) + students.length + (hasMore ? 1 : 0),
+      hasMore,
+    };
+  } catch (err) {
+    console.error('[studentApi] getStudents failed', { pageNumber, pageSize, filters }, err);
+    throw err;
   }
-  return views;
 };
 
 export const getStudentById = async (id: number): Promise<StudentView | undefined> => {
-  await delay();
-  const s = MOCK_STUDENTS.find(x => x.student_id === id);
-  return s ? buildStudentView(s) : undefined;
+  // Try backend first
+  try {
+    const res = await apiClient.get(`/students/${id}`);
+    const s: any = res.data;
+    // normalize codes to labels when necessary
+    const mapGender = (g: any) => (g === '1' ? 'Male' : g === '2' ? 'Female' : g === '3' ? 'Other' : g ?? 'Other');
+    const mapReligion = (r: any) => (r === '1' ? 'Hindu' : r === '2' ? 'Muslim' : r === '3' ? 'Christian' : r === '4' ? 'Buddhist' : r === '5' ? 'Jain' : r === '6' ? 'Sikh' : r === '7' ? 'Other' : r ?? null);
+    const mapOrphan = (o: any) => (o === '1' ? 'None' : o === '2' ? 'Single Parent' : o === '3' ? 'Orphan' : o ?? null);
+
+    const view: StudentView = {
+      student_id: s.studentId ?? s.student_id,
+      full_name: s.studentName ?? s.name ?? '',
+      email: s.emailId ?? s.email ?? '',
+      dob: s.dob ?? '',
+      gender: mapGender(s.gender ?? s.gender_code ?? s.gender_label),
+      aadhaar_number: s.aadhaarNumber ?? s.aadhaar_number ?? '',
+      caste: s.casteName ?? (s.casteId ? String(s.casteId) : ''),
+      religion: mapReligion(s.religion ?? s.religion_code ?? s.religion_label),
+      blood_group: s.bloodGroup ?? s.blood_group ?? null,
+      class_id: s.classId ? String(s.classId) : '',
+      orphan_status: mapOrphan(s.orphanStatus ?? s.orphan_status ?? s.orphan_status_code),
+      image_url: s.imageUrl ?? s.image_url ?? null,
+      is_active: true,
+      created_at: s.createdAt ?? s.created_at ?? new Date().toISOString(),
+      created_by: s.createdBy ?? s.created_by ?? 'system',
+      modified_at: s.modifiedAt ?? s.modified_at ?? null,
+      modified_by: s.modifiedBy ?? s.modified_by ?? null,
+      sch_id: s.schId ?? s.sch_id ?? 0,
+      sch_name: s.schName ?? s.sch_name ?? '',
+      sch_address: s.schAddress ?? s.sch_address ?? '',
+      vil_id: s.vilId ?? s.vil_id ?? 0,
+      vil_name: s.vilName ?? s.vil_name ?? '',
+      mndl_id: s.mndlId ?? s.mndl_id ?? 0,
+      mndl_name: s.mndlName ?? s.mndl_name ?? '',
+      dist_id: s.distId ?? s.dist_id ?? 0,
+      dist_name: s.distName ?? s.dist_name ?? '',
+      st_id: s.stId ?? s.st_id ?? 0,
+      st_name: s.stName ?? s.st_name ?? '',
+      guardian_id: 0,
+      guardian_full_name: s.guardianName ?? s.guardian_full_name ?? '',
+      guardian_phone: s.phoneNumber ?? s.phone_number ?? '',
+      guardian_relation_name: s.guardianRelationName ?? s.guardian_relation_name ?? '',
+      guardian_occ: s.occ ?? null,
+      sponsor_id: null,
+      sponsor_full_name: null,
+      sponsor_type: null,
+    } as StudentView;
+
+    return view;
+  } catch (err) {
+    console.error('[studentApi] getStudentById failed', id, err);
+    return undefined;
+  }
 };
 
 export interface CreateStudentPayload {
@@ -60,14 +174,12 @@ export const updateStudent = async (id: number, payload: Partial<Student>): Prom
 };
 
 export const deactivateStudent = async (id: number, modified_by: string): Promise<void> => {
-  await delay();
-  const idx = MOCK_STUDENTS.findIndex(s => s.student_id === id);
-  if (idx < 0) throw new Error('Student not found');
-  MOCK_STUDENTS[idx].is_active = false;
-  MOCK_STUDENTS[idx].modified_at = new Date().toISOString();
-  MOCK_STUDENTS[idx].modified_by = modified_by;
+  // Backend performs soft-delete via DELETE /api/students/{id}.
+  // `modified_by` is currently handled server-side; kept for API compatibility.
+  await apiClient.delete(`/students/${id}`);
 };
 
 export const deactivateStudents = async (ids: number[], modified_by: string): Promise<void> => {
+  // No bulk-delete endpoint yet; fan out to single deletes.
   await Promise.all(ids.map(id => deactivateStudent(id, modified_by)));
 };

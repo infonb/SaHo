@@ -36,12 +36,19 @@ export interface StudentFormState {
   sibling_aadhaar: string;
 }
 
+interface StudentSiblingResult {
+  studentId: number;
+  studentName: string;
+  classId: number;
+  schoolName: string;
+}
+
 interface StudentProfileSectionsProps {
   mode: 'create' | 'edit' | 'view';
   form?: StudentFormState;
   set?: (key: keyof StudentFormState, value: string) => void;
-  chooseImage?: (e: ChangeEvent<HTMLInputElement>) => void;
-  sibling?: StudentView | null;
+  chooseImage?: (file: File | Blob) => void;
+  sibling?: StudentSiblingResult | null;
   siblingChecked?: boolean;
   searchSibling?: () => void;
   student?: StudentView | null;
@@ -51,10 +58,36 @@ interface StudentProfileSectionsProps {
   mandals?: [string, string][];
   villages?: [string, string][];
   relationships?: [string, string][];
+  castes?: [string, string][];
+  classes?: [string, string][];
+  aadhaarStatus?: string;
+  loading?: boolean;
 }
 
 const mask = (aadhaar: string) => `........${aadhaar.slice(-4)}`;
 const isViewMode = (mode: StudentProfileSectionsProps['mode']) => mode === 'view';
+
+export const GENDER_OPTIONS: [string, string][] = [
+  ['1', 'Male'],
+  ['2', 'Female'],
+  ['3', 'Other'],
+];
+
+export const RELIGION_OPTIONS: [string, string][] = [
+  ['1', 'Hindu'],
+  ['2', 'Muslim'],
+  ['3', 'Christian'],
+  ['4', 'Buddhist'],
+  ['5', 'Jain'],
+  ['6', 'Sikh'],
+  ['7', 'Other'],
+];
+
+export const ORPHAN_STATUS_OPTIONS: [string, string][] = [
+  ['1', 'None'],
+  ['2', 'Single Parent'],
+  ['3', 'Orphan'],
+];
 
 export default function StudentProfileSections(props: StudentProfileSectionsProps) {
   const { mode, form, set, chooseImage, sibling, siblingChecked, searchSibling, student, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [] } = props;
@@ -142,9 +175,10 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
 
   if (!form || !set) return null;
 
-  const religionOptions = ['Hindu', 'Muslim', 'Christian', 'Sikh', 'Jain', 'Buddhist', 'Other'];
-  const casteOptions = ['SC', 'ST', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'OC', 'Other'];
-  const classOptions = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+  const religionOptions = RELIGION_OPTIONS;
+  const casteOptions = props.castes ?? ['SC', 'ST', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'OC', 'Other'];
+  const classOptions = props.classes ?? [['1', '6TH CLASS'], ['2', '7TH CLASS'], ['3', '8TH CLASS'], ['4', '9TH CLASS'], ['5', '10TH CLASS']];
+  const orphanStatusOptions = ORPHAN_STATUS_OPTIONS;
   const MIN_IMAGE_BYTES = 5 * 1024;
   const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
 
@@ -218,7 +252,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
       try { URL.revokeObjectURL(form.image_url); } catch { /* ignore */ }
     }
 
-    if (chooseImage) chooseImage(e);
+    if (chooseImage) chooseImage(file);
     else set('image_url', URL.createObjectURL(file));
     e.target.value = '';
   };
@@ -274,10 +308,18 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
     setCameraOpen(false);
   };
 
-  const useCapturedPhoto = () => {
+  const useCapturedPhoto = async () => {
     if (!capturedUrl) return;
     setUploadError(null);
-    set('image_url', capturedUrl);
+
+    const response = await fetch(capturedUrl);
+    const blob = await response.blob();
+    if (chooseImage) {
+      chooseImage(blob);
+    } else {
+      set('image_url', capturedUrl);
+    }
+
     setCapturedUrl(null);
     setCameraOpen(false);
   };
@@ -308,13 +350,13 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
         <Field label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} />
         <Field label="Email ID*" type="email" value={form.email} onChange={v => set('email', v)} />
         <Field label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} />
-        <Select label="Gender*" value={form.gender} onChange={v => set('gender', v)} options={['Male', 'Female', 'Other']} />
-        <Field label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} maxLength={12} />
+        <Select label="Gender*" value={form.gender} onChange={v => set('gender', v)} options={GENDER_OPTIONS} />
+        <Field label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} maxLength={12} subText={props.aadhaarStatus} />
         <Select label="Blood Group" value={form.blood_group} onChange={v => set('blood_group', v)} options={['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']} />
         <Select label="Religion*" value={form.religion} onChange={v => set('religion', v)} options={religionOptions} />
         <Select label="Caste*" value={form.caste} onChange={v => set('caste', v)} options={casteOptions} />
         <Select label="Class*" value={form.class_id} onChange={v => set('class_id', v)} options={classOptions} />
-        <Select label="Orphan / Semi Orphan*" value={form.orphan_status} onChange={v => set('orphan_status', v)} options={['Orphan', 'Semi Orphan']} />
+        <Select label="Orphan / Semi Orphan*" value={form.orphan_status} onChange={v => set('orphan_status', v)} options={orphanStatusOptions} />
         <label className="field">
           <span>Student Photo</span>
           <div className="uploadBox" style={{ gap: 10, padding: 12 }}>
@@ -412,12 +454,12 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
             </div>
             {sibling ? (
               <div className="foundCard">
-                <Avatar name={sibling.full_name} size="lg" />
+                <Avatar name={sibling.studentName} size="lg" />
                 <div>
-                  <strong>{sibling.full_name}</strong>
-                  <Badge variant="success">Student ID: {sibling.student_id}</Badge>
-                  <div className="sub">Class: {sibling.class_id}</div>
-                  <div className="sub">School: {sibling.sch_name}</div>
+                  <strong>{sibling.studentName}</strong>
+                  <Badge variant="success">Student ID: {sibling.studentId}</Badge>
+                  <div className="sub">Class: {sibling.classId}</div>
+                  <div className="sub">School: {sibling.schoolName}</div>
                 </div>
               </div>
             ) : siblingChecked ? (
@@ -450,12 +492,27 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   );
 }
 
-function Field({ label, value, onChange, type = 'text', maxLength }: { label: string; value: string; onChange: (v: string) => void; type?: string; maxLength?: number }) {
-  return <label className="field"><span>{label}</span><input required={label.includes('*')} maxLength={maxLength} type={type} className="input" value={value} onChange={e => onChange(e.target.value)} /></label>;
+function Field({ label, value, onChange, type = 'text', maxLength, subText }: { label: string; value: string; onChange: (v: string) => void; type?: string; maxLength?: number; subText?: string }) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <input required={label.includes('*')} maxLength={maxLength} type={type} className="input" value={value} onChange={e => onChange(e.target.value)} />
+      {subText ? <div className="sub" style={{ marginTop: 6 }}>{subText}</div> : null}
+    </label>
+  );
 }
 
-function Select({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: (string | [string, string])[] }) {
-  return <label className="field"><span>{label}</span><select required={label.includes('*')} className="select" value={value} onChange={e => onChange(e.target.value)}><option value="">Select</option>{options.map(o => Array.isArray(o) ? <option key={o[0]} value={o[0]}>{o[1]}</option> : <option key={o} value={o}>{o}</option>)}</select></label>;
+function Select({ label, value, onChange, options, subText }: { label: string; value: string; onChange: (v: string) => void; options: (string | [string, string])[]; subText?: string }) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <select required={label.includes('*')} className="select" value={value} onChange={e => onChange(e.target.value)}>
+        <option value="">Select</option>
+        {options.map(o => Array.isArray(o) ? <option key={o[0]} value={o[0]}>{o[1]}</option> : <option key={o} value={o}>{o}</option>)}
+      </select>
+      {subText ? <div className="sub" style={{ marginTop: 6 }}>{subText}</div> : null}
+    </label>
+  );
 }
 
 function Info({ label, value }: { label: string; value?: string | number | null }) {

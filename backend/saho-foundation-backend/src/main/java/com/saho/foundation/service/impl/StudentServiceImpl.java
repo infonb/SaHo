@@ -92,18 +92,49 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional(readOnly = true)
-    public StudentPaginationResponseDto getAllStudents(Integer pageNumber, Integer pageSize) {
-        List<StudentListResponseDto> students = studentRepository.getAllStudentsWithPagination(pageNumber, pageSize)
-                .stream()
-                .map(this::mapStudentListResponse)
-                .toList();
+        public StudentPaginationResponseDto getAllStudents(
+                String search,
+                Integer pageNumber,
+                Integer pageSize,
+                String gender,
+                String classId,
+                String orphanStatus,
+                String stId,
+                String distId,
+                String mndlId,
+                String vilId,
+                String schId
+        ) {
+        List<StudentListResponseDto> students = studentRepository.getAllStudentsWithPagination(
+                search,
+                pageNumber,
+                pageSize,
+                gender,
+                classId,
+                orphanStatus,
+                stId,
+                distId,
+                mndlId,
+                vilId,
+                schId
+        )
+            .stream()
+            .map(this::mapStudentListResponse)
+            .toList();
+
+        int resolvedTotalCount = 0;
+        if (!students.isEmpty()) {
+            Integer firstRowTotalCount = students.get(0).getTotalCount();
+            resolvedTotalCount = firstRowTotalCount != null ? firstRowTotalCount : students.size();
+        }
 
         return StudentPaginationResponseDto.builder()
-                .pageNumber(pageNumber)
-                .pageSize(pageSize)
-                .students(students)
-                .build();
-    }
+            .pageNumber(pageNumber)
+            .pageSize(pageSize)
+            .totalCount(resolvedTotalCount)
+            .students(students)
+            .build();
+        }
 
     @Override
     public StudentProfileResponseDto getStudentById(Integer studentId) {
@@ -273,9 +304,19 @@ public class StudentServiceImpl implements StudentService {
                 .bloodGroup(student.getBloodGroup())
                 .schId(student.getSchId())
                 .classId(student.getClassId())
+                .schAddress(student.getSchAddress())
+                .schName(student.getSchName())
+                .className(student.getClassName())
+                .guardianName(student.getGuardianName())
                 .guardianId(student.getGuardianId())
+                .guardianRelationName(student.getGuardianRelationName())
+                .vilName(student.getVilName())
+                .mndlName(student.getMndlName())
+                .distName(student.getDistName())
+                .stName(student.getStName())
                 .siblingId(student.getSiblingId())
                 .orphanStatus(resolveOrphanStatusLabel(student.getOrphanStatus()))
+                .totalCount(student.getTotalCount())
                 .imageUrl(student.getImageUrl())
                 .createdAt(student.getCreatedAt())
                 .createdBy(student.getCreatedBy())
