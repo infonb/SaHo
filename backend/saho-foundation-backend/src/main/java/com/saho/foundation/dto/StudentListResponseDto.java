@@ -26,8 +26,18 @@ public class StudentListResponseDto {
     private Integer schId;
     private Integer classId;
     private Integer guardianId;
+    private String schName;
+    private String schAddress;
+    private String className;
+    private String guardianName;
+    private String guardianRelationName;
+    private String vilName;
+    private String mndlName;
+    private String distName;
+    private String stName;
     private String siblingId;
     private String orphanStatus;
+    private Integer totalCount;
     private String imageUrl;
     private LocalDateTime createdAt;
     private Integer createdBy;

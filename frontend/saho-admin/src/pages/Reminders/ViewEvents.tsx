@@ -1,15 +1,9 @@
-import { useState, useMemo, type ChangeEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
 import PageHeader from '../../components/common/PageHeader';
-import {
-  MOCK_EVENT_STATES,
-  MOCK_EVENT_DISTRICTS,
-  MOCK_EVENT_MANDALS,
-  MOCK_EVENT_VILLAGES,
-  getDistrictsByState,
-} from '../../api/mockEventData';
-import type { StateMaster, DistrictMaster, MandalMaster, VillageMaster } from '../../types';
+import { getDistricts, getMandals, getStates, getVillages } from '../../api/locationApi';
+import { cancelReminder, getReminders, type ReminderDto } from '../../api/remindersApi';
 
 // Event status type
 type EventStatus = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
@@ -27,75 +21,15 @@ interface EventData {
   status: EventStatus;
 }
 
-// Mock events data
-const MOCK_EVENTS: EventData[] = [
-  {
-    id: 1,
-    title: 'Annual Sports Day',
-    date: '2026-06-15',
-    venue: 'ZPHS Chunchuluru',
-    state: 'Andhra Pradesh',
-    district: 'Nellore',
-    mandal: 'Marripadu',
-    village: 'Chunchuluru',
-    status: 'upcoming',
-  },
-  {
-    id: 2,
-    title: 'Health Checkup Camp',
-    date: '2026-05-10',
-    venue: 'Community Hall',
-    state: 'Andhra Pradesh',
-    district: 'Nellore',
-    mandal: 'Marripadu',
-    village: 'Brahmanapalli',
-    status: 'completed',
-  },
-  {
-    id: 3,
-    title: 'Parent Teacher Meeting',
-    date: '2026-05-25',
-    venue: 'ZPHS Brahmanapalli',
-    state: 'Andhra Pradesh',
-    district: 'Nellore',
-    mandal: 'Marripadu',
-    village: 'Brahmanapalli',
-    status: 'ongoing',
-  },
-  {
-    id: 4,
-    title: 'Science Exhibition',
-    date: '2026-07-01',
-    venue: 'Govt High School Chunchuluru',
-    state: 'Andhra Pradesh',
-    district: 'Nellore',
-    mandal: 'Marripadu',
-    village: 'Chunchuluru',
-    status: 'upcoming',
-  },
-  {
-    id: 5,
-    title: 'Books Distribution',
-    date: '2026-04-20',
-    venue: 'ZPHS Thummalapenta',
-    state: 'Andhra Pradesh',
-    district: 'Nellore',
-    mandal: 'Atmakur',
-    village: 'Thummalapenta',
-    status: 'completed',
-  },
-  {
-    id: 6,
-    title: 'Yoga Training',
-    date: '2026-05-22',
-    venue: 'Dharmasagar',
-    state: 'Telangana',
-    district: 'Warangal',
-    mandal: 'Hanamkonda',
-    village: 'Dharmasagar',
-    status: 'ongoing',
-  },
-];
+const inferStatus = (eventDate: string): EventStatus => {
+  const today = new Date();
+  const d = new Date(eventDate);
+  const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  if (d0.getTime() === t0.getTime()) return 'ongoing';
+  if (d0.getTime() > t0.getTime()) return 'upcoming';
+  return 'completed';
+};
 
 // Filter state interface
 interface EventFilters {
@@ -130,20 +64,21 @@ function StatusBadge({ status }: { status: EventStatus }) {
 }
 
 // Action buttons component
-function ActionButtons({ event }: { event: EventData }) {
-  const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to cancel the event "${event.title}"?`)) {
-      console.log('Delete/Cancel event:', event.id);
-      alert(`Event "${event.title}" has been cancelled.`);
-    }
-  };
-
+function ActionButtons({
+  event,
+  onEdit,
+  onDelete,
+}: {
+  event: EventData;
+  onEdit: (id: number) => void;
+  onDelete: (id: number) => void;
+}) {
   return (
     <div className="action-buttons">
       <button
         className="action-btn edit"
         title="Edit Event"
-        onClick={() => console.log('Edit event:', event.id)}
+        onClick={() => onEdit(event.id)}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -153,7 +88,7 @@ function ActionButtons({ event }: { event: EventData }) {
       <button
         className="action-btn delete"
         title="Cancel Event"
-        onClick={handleDelete}
+        onClick={() => onDelete(event.id)}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -172,51 +107,105 @@ const initialFilters: EventFilters = {
 };
 
 export default function ViewEvents() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<EventFilters>(initialFilters);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reminders, setReminders] = useState<ReminderDto[]>([]);
+
+  const [states, setStates] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [mandals, setMandals] = useState<any[]>([]);
+  const [villages, setVillages] = useState<any[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    getStates().then(data => { if (mounted) setStates(data); }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!filters.stateId) {
+      setDistricts([]);
+      return;
+    }
+    getDistricts(Number(filters.stateId)).then(d => setDistricts(d)).catch(() => setDistricts([]));
+  }, [filters.stateId]);
+
+  useEffect(() => {
+    if (!filters.districtId) {
+      setMandals([]);
+      return;
+    }
+    getMandals(Number(filters.districtId)).then(m => setMandals(m)).catch(() => setMandals([]));
+  }, [filters.districtId]);
+
+  useEffect(() => {
+    if (!filters.mandalId) {
+      setVillages([]);
+      return;
+    }
+    getVillages(Number(filters.mandalId)).then(v => setVillages(v)).catch(() => setVillages([]));
+  }, [filters.mandalId]);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getReminders();
+      setReminders(data);
+    } catch {
+      setError('Unable to load events from the database.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const handleEdit = (id: number) => {
+    navigate(`/reminders/create?remId=${id}`);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Cancel this event?')) return;
+    try {
+      await cancelReminder(id, 1);
+      await load();
+    } catch (e) {
+      console.error('Cancel reminder failed', e);
+      alert('Failed to cancel reminder.');
+    }
+  };
 
   // Filtered events based on selection
   const filteredEvents = useMemo(() => {
-    return MOCK_EVENTS.filter(event => {
-      // State filter
-      if (filters.stateId && event.state !== MOCK_EVENT_STATES.find(s => s.st_id === Number(filters.stateId))?.st_name) {
-        return false;
-      }
-      // District filter
-      if (filters.districtId && event.district !== MOCK_EVENT_DISTRICTS.find(d => d.dist_id === Number(filters.districtId))?.dist_name) {
-        return false;
-      }
-      // Mandal filter
-      if (filters.mandalId && event.mandal !== MOCK_EVENT_MANDALS.find(m => m.mndl_id === Number(filters.mandalId))?.mndl_name) {
-        return false;
-      }
-      // Village filter
-      if (filters.villageId && event.village !== MOCK_EVENT_VILLAGES.find(v => v.vil_id === Number(filters.villageId))?.vil_name) {
-        return false;
-      }
-      // Status filter
-      if (filters.status && event.status !== filters.status) {
-        return false;
-      }
+    const events: EventData[] = reminders.map(r => ({
+      id: r.remId,
+      title: r.title,
+      date: r.eventDate,
+      venue: r.venue,
+      state: r.stIdCsv ?? '',
+      district: r.distIdsCsv ?? '',
+      mandal: r.mndlIdsCsv ?? '',
+      village: r.vilIdsCsv ?? '',
+      status: r.status === false ? 'cancelled' : inferStatus(r.eventDate),
+    }));
+
+    const includesId = (csv: string, id: string) =>
+      csv.split(',').map(s => s.trim()).filter(Boolean).includes(id);
+
+    return events.filter(event => {
+      if (filters.stateId && !includesId(event.state ?? '', filters.stateId)) return false;
+      if (filters.districtId && !includesId(event.district ?? '', filters.districtId)) return false;
+      if (filters.mandalId && !includesId(event.mandal ?? '', filters.mandalId)) return false;
+      if (filters.villageId && !includesId(event.village ?? '', filters.villageId)) return false;
+      if (filters.status && event.status !== (filters.status as EventStatus)) return false;
       return true;
     });
-  }, [filters]);
-
-  // Options for dropdowns
-  const districts = useMemo(() => {
-    if (!filters.stateId) return [];
-    return getDistrictsByState(Number(filters.stateId));
-  }, [filters.stateId]);
-
-  const mandals = useMemo(() => {
-    if (!filters.districtId) return [];
-    return MOCK_EVENT_MANDALS.filter(m => m.dist_id === Number(filters.districtId));
-  }, [filters.districtId]);
-
-  const villages = useMemo(() => {
-    if (!filters.mandalId) return [];
-    return MOCK_EVENT_VILLAGES.filter(v => v.mndl_id === Number(filters.mandalId));
-  }, [filters.mandalId]);
+  }, [filters, reminders]);
 
   // Handle filter changes
   const handleFilterChange = (key: keyof EventFilters, value: string) => {
@@ -276,9 +265,9 @@ export default function ViewEvents() {
               onChange={e => handleFilterChange('stateId', e.target.value)}
             >
               <option value="">All States</option>
-              {MOCK_EVENT_STATES.map(state => (
-                <option key={state.st_id} value={state.st_id}>
-                  {state.st_name}
+              {states.map((state: any) => (
+                <option key={state.stId ?? state.st_id} value={state.stId ?? state.st_id}>
+                  {state.stName ?? state.st_name}
                 </option>
               ))}
             </select>
@@ -295,8 +284,8 @@ export default function ViewEvents() {
             >
               <option value="">All Districts</option>
               {districts.map(district => (
-                <option key={district.dist_id} value={district.dist_id}>
-                  {district.dist_name}
+                <option key={district.distId ?? district.dist_id} value={district.distId ?? district.dist_id}>
+                  {district.distName ?? district.dist_name}
                 </option>
               ))}
             </select>
@@ -313,8 +302,8 @@ export default function ViewEvents() {
             >
               <option value="">All Mandals</option>
               {mandals.map(mandal => (
-                <option key={mandal.mndl_id} value={mandal.mndl_id}>
-                  {mandal.mndl_name}
+                <option key={mandal.mndlId ?? mandal.mndl_id} value={mandal.mndlId ?? mandal.mndl_id}>
+                  {mandal.mndlName ?? mandal.mndl_name}
                 </option>
               ))}
             </select>
@@ -331,8 +320,8 @@ export default function ViewEvents() {
             >
               <option value="">All Villages</option>
               {villages.map(village => (
-                <option key={village.vil_id} value={village.vil_id}>
-                  {village.vil_name}
+                <option key={village.vilId ?? village.vil_id} value={village.vilId ?? village.vil_id}>
+                  {village.vilName ?? village.vil_name}
                 </option>
               ))}
             </select>
@@ -362,6 +351,8 @@ export default function ViewEvents() {
           <h3 className="panelTitle">Events</h3>
           <span className="event-count">{filteredEvents.length} event(s) found</span>
         </div>
+
+        {error ? <div className="toast error" style={{ position: 'static', marginBottom: 12 }}>{error}</div> : null}
 
         {loading ? (
           <div className="table-loading">
@@ -405,7 +396,7 @@ export default function ViewEvents() {
                       <StatusBadge status={event.status} />
                     </td>
                     <td>
-                      <ActionButtons event={event} />
+                      <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />
                     </td>
                   </tr>
                 ))}

@@ -15,5 +15,6 @@ public class StudentPaginationResponseDto {
 
     private Integer pageNumber;
     private Integer pageSize;
+    private Integer totalCount;
     private List<StudentListResponseDto> students;
 }

@@ -1,10 +1,13 @@
 package com.saho.foundation.service.impl;
 
 import com.saho.foundation.dto.CasteResponseDto;
+import com.saho.foundation.dto.ClassResponseDto;
 import com.saho.foundation.dto.RelationshipResponseDto;
 import com.saho.foundation.entity.CasteMaster;
+import com.saho.foundation.entity.ClassMaster;
 import com.saho.foundation.entity.RelationshipMaster;
 import com.saho.foundation.repository.CasteRepository;
+import com.saho.foundation.repository.ClassRepository;
 import com.saho.foundation.repository.RelationshipRepository;
 import com.saho.foundation.service.iservices.MasterService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,7 @@ public class MasterServiceImpl implements MasterService {
 
     private final CasteRepository casteRepository;
     private final RelationshipRepository relationshipRepository;
+    private final ClassRepository classRepository;
 
     @Override
     public List<CasteResponseDto> getAllCastes() {
@@ -38,6 +42,17 @@ public class MasterServiceImpl implements MasterService {
                 .map(rel -> RelationshipResponseDto.builder()
                         .relationshipId(rel.getRelationshipId())
                         .relationshipName(rel.getRelationshipName())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ClassResponseDto> getAllClasses() {
+        return classRepository.findByIsDeletedFalseOrderByClassOrderAsc()
+                .stream()
+                .map(cls -> ClassResponseDto.builder()
+                        .classId(cls.getClassId())
+                        .className(cls.getClassName())
                         .build())
                 .collect(Collectors.toList());
     }
