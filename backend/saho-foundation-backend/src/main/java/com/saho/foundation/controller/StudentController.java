@@ -7,7 +7,12 @@ import com.saho.foundation.dto.StudentResponseDto;
 import com.saho.foundation.dto.StudentSiblingSearchResponseDto;
 import com.saho.foundation.service.iservices.StudentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.Base64;
 
 @RestController
 @RequestMapping("/api/students")
@@ -16,17 +21,37 @@ public class StudentController {
 
     private final StudentService studentService;
 
-    @PostMapping
-    public StudentResponseDto createStudent(@RequestBody StudentRequestDto requestDto) {
-        return studentService.createStudent(requestDto);
+    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public StudentResponseDto createStudent(
+            @RequestPart(value = "request", required = false) StudentRequestDto requestDto,
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestBody(required = false) StudentRequestDto requestDtoJson
+    ) throws IOException {
+        StudentRequestDto dto = requestDto != null ? requestDto : requestDtoJson;
+        if (dto == null) {
+            throw new IllegalArgumentException("Student request data is required");
+        }
+        if (image != null && !image.isEmpty()) {
+            dto.setImageUrl(encodeImageToBase64(image));
+        }
+        return studentService.createStudent(dto);
     }
 
     @GetMapping
     public StudentPaginationResponseDto getAllStudents(
+            @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "1") Integer pageNumber,
-            @RequestParam(defaultValue = "10") Integer pageSize
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) String classId,
+            @RequestParam(required = false) String orphanStatus,
+            @RequestParam(required = false) String stId,
+            @RequestParam(required = false) String distId,
+            @RequestParam(required = false) String mndlId,
+            @RequestParam(required = false) String vilId,
+            @RequestParam(required = false) String schId
     ) {
-        return studentService.getAllStudents(pageNumber, pageSize);
+        return studentService.getAllStudents(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId);
     }
 
     @GetMapping("/{studentId}")
@@ -39,14 +64,31 @@ public class StudentController {
         return studentService.getStudentByAadhaarNumber(aadhaarNumber);
     }
 
-    @PutMapping("/{studentId}")
-    public StudentResponseDto updateStudent(@PathVariable Integer studentId, @RequestBody StudentRequestDto requestDto) {
-        return studentService.updateStudent(studentId, requestDto);
+    @PutMapping(value = "/{studentId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public StudentResponseDto updateStudent(
+            @PathVariable Integer studentId,
+            @RequestPart(value = "request", required = false) StudentRequestDto requestDto,
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestBody(required = false) StudentRequestDto requestDtoJson
+    ) throws IOException {
+        StudentRequestDto dto = requestDto != null ? requestDto : requestDtoJson;
+        if (dto == null) {
+            throw new IllegalArgumentException("Student request data is required");
+        }
+        if (image != null && !image.isEmpty()) {
+            dto.setImageUrl(encodeImageToBase64(image));
+        }
+        return studentService.updateStudent(studentId, dto);
     }
 
     @DeleteMapping("/{studentId}")
     public String deleteStudent(@PathVariable Integer studentId) {
         studentService.deleteStudent(studentId);
         return "Student soft deleted successfully";
+    }
+
+    private String encodeImageToBase64(MultipartFile file) throws IOException {
+        String contentType = file.getContentType() != null ? file.getContentType() : "image/jpeg";
+        return "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(file.getBytes());
     }
 }

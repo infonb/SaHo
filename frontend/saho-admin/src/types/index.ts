@@ -1,8 +1,8 @@
-export interface StateMaster { st_id: number; st_name: string; created_at: string; updated_at: string | null; }
-export interface DistrictMaster { dist_id: number; dist_name: string; st_id: number; created_at: string; updated_at: string | null; }
-export interface MandalMaster { mndl_id: number; mndl_name: string; dist_id: number; created_at: string; updated_at: string | null; }
-export interface VillageMaster { vil_id: number; vil_name: string; vil_pincode: number; mndl_id: number; created_at: string; updated_at: string | null; }
-export interface SchoolMaster { sch_id: number; sch_name: string; sch_address: string; vil_id: number; created_at: string; updated_at: string | null; }
+export interface StateMaster { stId: number; stName: string; createdAt: string; updatedAt: string | null; }
+export interface DistrictMaster { distId: number; distName: string; stId: number; createdAt: string; updatedAt: string | null; }
+export interface MandalMaster { mndlId: number; mndlName: string; distId: number; createdAt: string; updatedAt: string | null; }
+export interface VillageMaster { vilId: number; vilName: string; vilPincode: number; mndlId: number; createdAt: string; updatedAt: string | null; }
+export interface SchoolMaster { schId: number; schName: string; schAddress: string; vilId: number; createdAt: string; updatedAt: string | null; }
 export interface RelationshipMaster { relationship_id: number; relationship_name: string; relationship_code: string | null; description: string | null; is_active: boolean; created_at: string; updated_at: string | null; }
 export interface User { user_id: number; username: string; password: string; email_id: string; role: 'Admin' | 'Student' | 'Sponsor' | 'Volunteer'; is_active: boolean; created_at: string; created_by: string; modified_at: string | null; modified_by: string | null; }
 export interface Guardian { guardian_id: number; first_name: string; middle_name: string | null; last_name: string; phone_number: string; relation: number; occ: string | null; addr: string | null; created_at: string; updated_at: string | null; }

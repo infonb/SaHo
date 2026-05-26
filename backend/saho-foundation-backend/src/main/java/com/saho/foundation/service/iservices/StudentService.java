@@ -11,7 +11,19 @@ import java.util.List;
 public interface StudentService {
     StudentResponseDto createStudent(StudentRequestDto requestDto);
 
-    StudentPaginationResponseDto getAllStudents(Integer pageNumber, Integer pageSize);
+    StudentPaginationResponseDto getAllStudents(
+            String search,
+            Integer pageNumber,
+            Integer pageSize,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId
+    );
 
     StudentProfileResponseDto getStudentById(Integer studentId);
 

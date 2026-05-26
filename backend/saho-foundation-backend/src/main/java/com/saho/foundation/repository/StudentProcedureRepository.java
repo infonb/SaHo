@@ -8,7 +8,19 @@ import java.util.Optional;
 
 public interface StudentProcedureRepository {
 
-    List<StudentListResponseDto> getAllStudentsWithPagination(Integer pageNumber, Integer pageSize);
+    List<StudentListResponseDto> getAllStudentsWithPagination(
+            String search,
+            Integer pageNumber,
+            Integer pageSize,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId
+    );
 
     Optional<StudentProfileResponseDto> getStudentProfileById(Integer studentId);
 }

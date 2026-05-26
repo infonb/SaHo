@@ -3,9 +3,14 @@ package com.saho.foundation.repository;
 import com.saho.foundation.dto.StudentListResponseDto;
 import com.saho.foundation.dto.StudentProfileResponseDto;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,32 +25,20 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
 
     @Override
     @Transactional(readOnly = true)
-    public List<StudentListResponseDto> getAllStudentsWithPagination(Integer pageNumber, Integer pageSize) {
-        int offset = (pageNumber - 1) * pageSize;
-        return jdbcTemplate.query(
-                "SELECT * FROM students WHERE is_deleted = false ORDER BY student_id DESC LIMIT " + pageSize + " OFFSET " + offset,
-                (rs, rowNum) -> StudentListResponseDto.builder()
-                        .studentId(rs.getInt("student_id"))
-                        .name(rs.getString("first_name") + " " + (rs.getString("middle_name") != null ? rs.getString("middle_name") + " " : "") + rs.getString("last_name"))
-                        .emailId(rs.getString("email_id"))
-                        .dob(rs.getDate("dob") != null ? rs.getDate("dob").toLocalDate() : null)
-                        .gender(rs.getString("gender"))
-                        .aadhaarNumber(rs.getString("aadhaar_number"))
-                        .casteId((Integer) rs.getObject("caste_id"))
-                        .religion(rs.getString("religion"))
-                        .bloodGroup(rs.getString("blood_group"))
-                        .schId((Integer) rs.getObject("sch_id"))
-                        .classId((Integer) rs.getObject("class_id"))
-                        .guardianId((Integer) rs.getObject("guardian_id"))
-                        .siblingId(rs.getString("sibling_id"))
-                        .orphanStatus(rs.getString("orphan_status"))
-                        .imageUrl(rs.getString("image_url"))
-                        .createdAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
-                        .createdBy(toInteger(rs.getObject("created_by")))
-                        .modifiedAt(rs.getTimestamp("modified_at") != null ? rs.getTimestamp("modified_at").toLocalDateTime() : null)
-                        .modifiedBy(toInteger(rs.getObject("modified_by")))
-                        .build()
-        );
+    public List<StudentListResponseDto> getAllStudentsWithPagination(
+            String search,
+            Integer pageNumber,
+            Integer pageSize,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId
+    ) {
+        return getStudentsFromProcedure(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId);
     }
 
     @Override
@@ -55,14 +48,16 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
             SELECT
                 s.student_id,
                 CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) AS student_name,
-                s.email_id, s.dob, s.gender, s.aadhaar_number, s.religion, s.blood_group,
+                s.email_id, s.dob, s.gender, s.aadhaar_number, s.caste_id, cm.caste_name, s.religion, s.blood_group,
                 s.class_id, s.sibling_id, s.orphan_status, s.image_url,
                 CONCAT(g.first_name, ' ', COALESCE(g.middle_name, ''), ' ', g.last_name) AS guardian_name,
-                g.phone_number, g.occ, g.addr,
+                g.phone_number, rm.relationship_name, g.occ, g.addr,
                 sc.sch_name, sc.sch_address,
                 v.vil_name, v.vil_pincode, m.mndl_name, d.dist_name, st.st_name
             FROM students s
+            LEFT JOIN caste_master cm ON s.caste_id = cm.caste_id
             LEFT JOIN guardians g ON s.guardian_id = g.guardian_id
+            LEFT JOIN relationship_master rm ON g.relationship_id = rm.relationship_id
             LEFT JOIN school_master sc ON s.sch_id = sc.sch_id
             LEFT JOIN village_master v ON sc.vil_id = v.vil_id
             LEFT JOIN mandal_master m ON v.mndl_id = m.mndl_id
@@ -71,35 +66,165 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
             WHERE s.student_id = ? AND s.is_deleted = false
             """;
 
-        List<StudentProfileResponseDto> results = jdbcTemplate.query(sql, (rs, rowNum) ->
-                StudentProfileResponseDto.builder()
-                        .studentId(rs.getInt("student_id"))
-                        .studentName(rs.getString("student_name"))
-                        .emailId(rs.getString("email_id"))
-                        .dob(rs.getDate("dob") != null ? rs.getDate("dob").toLocalDate() : null)
-                        .gender(rs.getString("gender"))
-                        .aadhaarNumber(rs.getString("aadhaar_number"))
-                        .religion(rs.getString("religion"))
-                        .bloodGroup(rs.getString("blood_group"))
-                        .classId((Integer) rs.getObject("class_id"))
-                        .siblingId(rs.getString("sibling_id"))
-                        .orphanStatus(rs.getString("orphan_status"))
-                        .imageUrl(rs.getString("image_url"))
-                        .guardianName(rs.getString("guardian_name"))
-                        .phoneNumber(rs.getString("phone_number"))
-                        .occ(rs.getString("occ"))
-                        .addr(rs.getString("addr"))
-                        .schName(rs.getString("sch_name"))
-                        .schAddress(rs.getString("sch_address"))
-                        .vilName(rs.getString("vil_name"))
-                        .vilPincode(rs.getString("vil_pincode"))
-                        .mndlName(rs.getString("mndl_name"))
-                        .distName(rs.getString("dist_name"))
-                        .stName(rs.getString("st_name"))
-                        .build(),
-                studentId);
+        List<StudentProfileResponseDto> results = jdbcTemplate.query(
+                sql,
+                (rs, rowNum) -> mapStudentProfileResponse(rs),
+                studentId
+        );
 
-        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        return results == null || results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+    }
+
+    private StudentProfileResponseDto mapStudentProfileResponse(ResultSet rs) throws java.sql.SQLException {
+        return StudentProfileResponseDto.builder()
+                .studentId(rs.getInt("student_id"))
+                .studentName(rs.getString("student_name"))
+                .emailId(rs.getString("email_id"))
+                .dob(rs.getDate("dob") != null ? rs.getDate("dob").toLocalDate() : null)
+                .gender(rs.getString("gender"))
+                .aadhaarNumber(rs.getString("aadhaar_number"))
+                .casteId((Integer) rs.getObject("caste_id"))
+                .casteName(rs.getString("caste_name"))
+                .religion(rs.getString("religion"))
+                .bloodGroup(rs.getString("blood_group"))
+                .classId((Integer) rs.getObject("class_id"))
+                .siblingId(rs.getString("sibling_id"))
+                .orphanStatus(rs.getString("orphan_status"))
+                .imageUrl(rs.getString("image_url"))
+                .guardianName(rs.getString("guardian_name"))
+                .phoneNumber(rs.getString("phone_number"))
+                .guardianRelationName(rs.getString("relationship_name"))
+                .occ(rs.getString("occ"))
+                .addr(rs.getString("addr"))
+                .schName(rs.getString("sch_name"))
+                .schAddress(rs.getString("sch_address"))
+                .vilName(rs.getString("vil_name"))
+                .vilPincode(rs.getString("vil_pincode"))
+                .mndlName(rs.getString("mndl_name"))
+                .distName(rs.getString("dist_name"))
+                .stName(rs.getString("st_name"))
+                .build();
+    }
+
+    private StudentListResponseDto mapStudentListResponse(ResultSet rs) throws java.sql.SQLException {
+        return StudentListResponseDto.builder()
+                .studentId(rs.getInt("student_id"))
+                .name(rs.getString("student_name"))
+                .emailId(getOptionalColumn(rs, "email_id"))
+                .dob(rs.getDate("dob") != null ? rs.getDate("dob").toLocalDate() : null)
+                .gender(rs.getString("gender"))
+                .aadhaarNumber(getOptionalColumn(rs, "aadhaar_number"))
+                .casteId((Integer) getOptionalObject(rs, "caste_id"))
+                .religion(getOptionalColumn(rs, "religion"))
+                .bloodGroup(getOptionalColumn(rs, "blood_group"))
+                .schId((Integer) getOptionalObject(rs, "sch_id"))
+                .classId((Integer) getOptionalObject(rs, "class_id"))
+                .guardianId((Integer) getOptionalObject(rs, "guardian_id"))
+                .schName(getOptionalColumn(rs, "sch_name"))
+                .schAddress(getOptionalColumn(rs, "sch_address"))
+                .className(getOptionalColumn(rs, "class_name"))
+                .guardianName(getOptionalColumn(rs, "guardian_name"))
+                .guardianRelationName(getOptionalColumn(rs, "relationship_name"))
+                .vilName(getOptionalColumn(rs, "vil_name"))
+                .mndlName(getOptionalColumn(rs, "mndl_name"))
+                .distName(getOptionalColumn(rs, "dist_name"))
+                .stName(getOptionalColumn(rs, "st_name"))
+                .siblingId(getOptionalColumn(rs, "sibling_id"))
+                .orphanStatus(getOptionalColumn(rs, "orphan_status"))
+                .totalCount((Integer) getOptionalObject(rs, "total_count"))
+                .imageUrl(getOptionalColumn(rs, "image_url"))
+                .createdAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
+                .createdBy(toInteger(getOptionalObject(rs, "created_by")))
+                .modifiedAt(rs.getTimestamp("modified_at") != null ? rs.getTimestamp("modified_at").toLocalDateTime() : null)
+                .modifiedBy(toInteger(getOptionalObject(rs, "modified_by")))
+                .build();
+    }
+
+    private String getOptionalColumn(ResultSet rs, String columnName) {
+        try {
+            rs.findColumn(columnName);
+            return rs.getString(columnName);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private Object getOptionalObject(ResultSet rs, String columnName) {
+        try {
+            rs.findColumn(columnName);
+            return rs.getObject(columnName);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private List<StudentListResponseDto> getStudentsFromProcedure(
+            String search,
+            Integer pageNumber,
+            Integer pageSize,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId
+    ) {
+        return jdbcTemplate.execute((ConnectionCallback<List<StudentListResponseDto>>) con -> {
+            String cursorName = "student_list_ref";
+            int resolvedPageNumber = pageNumber != null && pageNumber > 0 ? pageNumber : 1;
+            int resolvedPageSize = pageSize != null && pageSize > 0 ? pageSize : 10;
+
+            try (PreparedStatement ps = con.prepareStatement(
+                    """
+                    CALL public.getallstudents_v3(
+                        CAST(? AS text),
+                        CAST(? AS integer),
+                        CAST(? AS integer),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS refcursor)
+                    )
+                    """)) {
+                ps.setString(1, emptyToNull(search));
+                ps.setInt(2, resolvedPageNumber);
+                ps.setInt(3, resolvedPageSize);
+                ps.setString(4, emptyToNull(gender));
+                ps.setString(5, emptyToNull(classId));
+                ps.setString(6, emptyToNull(orphanStatus));
+                ps.setString(7, emptyToNull(stId));
+                ps.setString(8, emptyToNull(distId));
+                ps.setString(9, emptyToNull(mndlId));
+                ps.setString(10, emptyToNull(vilId));
+                ps.setString(11, emptyToNull(schId));
+                ps.setString(12, "student_id");
+                ps.setString(13, "DESC");
+                ps.setString(14, cursorName);
+                ps.execute();
+            }
+
+            try (Statement statement = con.createStatement();
+                 ResultSet rs = statement.executeQuery("FETCH ALL IN \"" + cursorName + "\"")) {
+                List<StudentListResponseDto> students = new ArrayList<>();
+                while (rs.next()) {
+                    students.add(mapStudentListResponse(rs));
+                }
+                return students;
+            }
+        });
+    }
+
+    private String emptyToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private Integer toInteger(Object value) {
