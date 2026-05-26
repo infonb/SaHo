@@ -24,5 +24,5 @@ public class SponsorResponseDto {
 
     private String loc;
 
-    private BigDecimal contrib;
+    private String contrib;
 }

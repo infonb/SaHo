@@ -43,7 +43,7 @@ The React frontend (Vite - port 3000/5173) is now fully integrated with the Spri
 | `ph_no` | `phNo` | String | Phone number |
 | `type` | `sponsorType` | Enum | 'Individual' or 'Organisation' |
 | `nationality` | `nationality` | String | Nationality |
-| `contrib_amt` | `contrib` | String (BigDecimal) | Contribution amount |
+| `contrib` | `contrib` | String (BigDecimal) | Contribution amount |
 | `loc` | `loc` | String | Location |
 | `image_url` | *(separate)* | - | Image handling separate from sponsor data |
 | `created_by` | `createdBy` | Number | Mapped from user_id via context |
