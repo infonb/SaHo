@@ -12,19 +12,19 @@
   --br-50:  #f8fafc;
   --br-0:   #ffffff;
   --color-primary:        #0f766e;
-  --color-primary-hover:  #115e59;
-  --color-primary-light:  #ccfbf1;
-  --color-primary-border: #5eead4;
-  --color-bg:      #f8fafc;
+  --color-primary-hover:  #0f5f59;
+  --color-primary-light:  #d7f7ef;
+  --color-primary-border: #8ddfd2;
+  --color-bg:      #f6f8fb;
   --color-surface: #ffffff;
-  --color-sidebar: #0f172a;
+  --color-sidebar: #111827;
   --color-topbar:  #ffffff;
-  --color-text:    #111827;
-  --color-text2:   #334155;
-  --color-text3:   #64748b;
+  --color-text:    #172033;
+  --color-text2:   #3f4b5f;
+  --color-text3:   #6b778c;
   --color-muted:   #94a3b8;
-  --color-border:  #e2e8f0;
-  --color-divider: #cbd5e1;
+  --color-border:  #e5e9f0;
+  --color-divider: #d8dee8;
   --green:          #15803d;
   --green-bg:       #dcfce7;
   --green-border:   #86efac;
@@ -39,15 +39,15 @@
   --blue-border:    #bfdbfe;
   --purple:         #7c3aed;
   --purple-bg:      #ede9fe;
-  --sidebar-expanded-w: 248px;
-  --sidebar-collapsed-w: 76px;
+  --sidebar-expanded-w: 232px;
+  --sidebar-collapsed-w: 68px;
   --sidebar-w: var(--sidebar-expanded-w);
-  --topbar-h: 64px;
+  --topbar-h: 58px;
   --font-body: 'Inter', sans-serif;
   --font-display: 'Plus Jakarta Sans', sans-serif;
-  --shadow-sm: 0 1px 2px rgba(15,23,42,.05);
-  --shadow-md: 0 10px 24px rgba(15,23,42,.08);
-  --shadow-lg: 0 24px 60px rgba(15,23,42,.16);
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.04);
+  --shadow-md: 0 8px 22px rgba(15,23,42,.07);
+  --shadow-lg: 0 20px 54px rgba(15,23,42,.14);
   --r-sm: 6px;
   --r-md: 10px;
   --r-lg: 14px;
@@ -55,7 +55,7 @@
 }
 * { box-sizing: border-box; }
 html { overflow-x: hidden; }
-body { margin: 0; background: radial-gradient(circle at top left, #eefcf9 0, transparent 34%), var(--color-bg); color: var(--color-text); font-family: var(--font-body); overflow-x: hidden; }
+body { margin: 0; background: linear-gradient(180deg,#f7fafc 0%,#f4f7fb 100%); color: var(--color-text); font-family: var(--font-body); overflow-x: hidden; }
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }

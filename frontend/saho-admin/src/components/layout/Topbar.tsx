@@ -14,7 +14,7 @@ export const LeafLogo = () => (
   </svg>
 );
 
-export default function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onToggleSidebar: () => void }) {
+export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: boolean; onSidebarToggle: () => void }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -34,19 +34,26 @@ export default function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: 
   };
 
   return (
-    <header className="topbar">
+    <header className="dashboard-header topbar">
       <div className="topbarLeft">
-        <button className="sidebarToggle topbarSidebarToggle" type="button" aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} onClick={onToggleSidebar}>
+        <button className="sidebarToggle headerSidebarToggle" type="button" aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} aria-expanded={sidebarOpen} title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} onClick={onSidebarToggle}>
           <span />
           <span />
           <span />
         </button>
+        <div className="topbarBrand">
+          <LeafLogo />
+          <div>
+            <div className="brandName">SaHo</div>
+            <div className="brandSub">Foundation</div>
+          </div>
+        </div>
         <div className="topbarTitle">Admin Dashboard</div>
       </div>
       <div ref={ref} style={{ position: 'relative' }}>
         <button className="userPill" onClick={() => setOpen(value => !value)}>
           <Avatar name={user?.username ?? 'Admin'} size="sm" />
-          {user?.username}
+          <span className="userPillName">{user?.username}</span>
         </button>
         {open && (
           <div className="dropdown">

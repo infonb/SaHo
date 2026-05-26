@@ -135,7 +135,6 @@ const mapFrontendToBackend = (
     contrib: String(payload.contrib),
     loc: payload.loc || null,
     createdBy: userId,
-    modifiedBy: null,
   };
 };
 

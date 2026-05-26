@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deactivateStudents, getStudents, getStudentById } from '../../api/studentApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
@@ -7,9 +7,7 @@ import Button from '../../components/common/Button';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import DataTable from '../../components/common/DataTable';
 import FilterBar from '../../components/common/FilterBar';
-import PageHeader from '../../components/common/PageHeader';
 import Pagination from '../../components/common/Pagination';
-import StatCard from '../../components/common/StatCard';
 import Avatar from '../../components/common/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
@@ -145,6 +143,7 @@ export default function StudentListPage() {
     let age = today.getFullYear() - dob.getFullYear();
     const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
     if (!hasBirthdayPassed) age -= 1;
+    const serialNumber = (pager.page - 1) * pager.pageSize + index + 1;
     return [
       <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.student_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.student_id)} />,
       <div className="rowFlex"><Avatar name={s.full_name} size="md" /><div><div className="strong studentNameCell" onClick={async () => { setLoading(true); try { const full = await getStudentById(s.student_id); setSelected(full ?? s); } finally { setLoading(false); } }}>{s.full_name}</div><div className="sub">{s.gender}</div></div></div>,
@@ -155,16 +154,16 @@ export default function StudentListPage() {
       <div>
         {s.sponsor_id ? (
           <button className="photoButton" onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }} title={s.sponsor_full_name ?? undefined}>
-            <Avatar name={s.sponsor_full_name ?? 'SP'} size="sm" />
+            <Avatar name={s.sponsor_full_name ?? 'SP'} size="md" />
           </button>
         ) : (
           <div title="Saho Foundation">
-            <Avatar name="Saho Foundation" size="sm" />
+            <Avatar name="Saho Foundation" size="md" />
           </div>
         )}
       </div>,
-      <div className="actions" onClick={e => e.stopPropagation()}>
-        <Button size="sm" variant="outline" className="iconBtn" onClick={() => nav(`/students/edit/${s.student_id}`)} aria-label="Edit student">
+      <div className="student-actions actions" onClick={e => e.stopPropagation()}>
+        <Button size="sm" variant="outline" className="iconBtn" onClick={(e) => { e.stopPropagation(); nav(`/students/edit/${s.student_id}`); }} aria-label="Edit student">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
             <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -172,16 +171,19 @@ export default function StudentListPage() {
         </Button>
         <Button size="sm" variant="danger" className="iconBtn" style={{ marginLeft: 8 }} onClick={(e) => { e.stopPropagation(); setSingleDelete(s.student_id); }} aria-label={`Delete ${s.full_name}`}>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-            <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </Button>
       </div>
     ];
   });
+
+  const totalBoysPct = totalStudents ? `${Math.round((totalBoys / totalStudents) * 100)}%` : '0%';
+  const totalGirlsPct = totalStudents ? `${Math.round((totalGirls / totalStudents) * 100)}%` : '0%';
 
   return <div>
     <PageHeader title="Students" subtitle={`All enrolled single-parent students - ${total} total`} actions={<><Button variant="outline">Export CSV</Button><Button onClick={() => nav('/students/add')}>Add Student</Button></>} />
@@ -246,9 +248,68 @@ export default function StudentListPage() {
             {allClasses.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
-      </FilterBar>
+      </div>
+      <div className="studentFilterGlow" aria-hidden />
+      <div className="studentFilterInner">
+        <FilterBar onGo={() => { setApplied({ ...pending }); pager.setPage(1); }} onClear={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); }}>
+          <div className="filterGroup filterGroupWide">
+            <input className="filterSearch" placeholder="Search students" value={pending.search} onChange={e => setPending({ ...pending, search: e.target.value })} />
+          </div>
+          <div className="filterGroup filterGroupCompact">
+            <select className="select compact" value={pending.st_id} onChange={e => setPending({ ...pending, st_id: e.target.value, dist_id: '', mndl_id: '', vil_id: '', sch_id: '' })}>
+              <option value="">All States</option>
+              {filteredStates.map(s => <option value={s.st_id} key={s.st_id}>{s.st_name}</option>)}
+            </select>
+          </div>
+          <div className="filterGroup filterGroupCompact">
+            <select className="select compact" value={pending.dist_id} onChange={e => setPending({ ...pending, dist_id: e.target.value, mndl_id: '', vil_id: '', sch_id: '' })}>
+              <option value="">All Districts</option>
+              {districts.map(d => <option value={d.dist_id} key={d.dist_id}>{d.dist_name}</option>)}
+            </select>
+          </div>
+          <div className="filterGroup filterGroupCompact">
+            <select className="select compact" value={pending.mndl_id} onChange={e => setPending({ ...pending, mndl_id: e.target.value, vil_id: '', sch_id: '' })}>
+              <option value="">All Mandals</option>
+              {mandals.map(m => <option value={m.mndl_id} key={m.mndl_id}>{m.mndl_name}</option>)}
+            </select>
+          </div>
+          <div className="filterGroup filterGroupCompact">
+            <select className="select compact" value={pending.vil_id} onChange={e => setPending({ ...pending, vil_id: e.target.value, sch_id: '' })}>
+              <option value="">All Villages</option>
+              {villages.map(v => <option value={v.vil_id} key={v.vil_id}>{v.vil_name}</option>)}
+            </select>
+          </div>
+          <div className="filterGroup filterGroupCompact">
+            <select className="select compact" value={pending.sch_id} onChange={e => setPending({ ...pending, sch_id: e.target.value })}>
+              <option value="">All Schools</option>
+              {schools.map(s => <option value={s.sch_id} key={s.sch_id}>{s.sch_name}</option>)}
+            </select>
+          </div>
+          <div className="filterGroup filterGroupCompact">
+            <select className="select compact" value={pending.gender} onChange={e => setPending({ ...pending, gender: e.target.value })}>
+              <option value="">All Gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div className="filterGroup filterGroupCompact">
+            <select className="select compact" value={pending.orphan_status} onChange={e => setPending({ ...pending, orphan_status: e.target.value })}>
+              <option value="">Orphan / Semi Orphan</option>
+              <option>Orphan</option>
+              <option>Semi Orphan</option>
+            </select>
+          </div>
+          <div className="filterGroup filterGroupCompact">
+            <select className="select compact" value={pending.class_id} onChange={e => setPending({ ...pending, class_id: e.target.value })}>
+              <option value="">All Classes</option>
+              {allClasses.map(c => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+        </FilterBar>
+      </div>
     </div>
-    <div className="panel">
+    <div className={`panel studentRecordsPanel ${hasSelection ? 'bulkModeActive' : ''}`}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '12px' }}>
         <h3 className="panelTitle">Student Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{total} results</span></h3>
       </div>
@@ -285,4 +346,36 @@ export default function StudentListPage() {
     <ConfirmModal open={singleDelete !== null} onClose={() => setSingleDelete(null)} onConfirm={confirmSingleDelete} title="Delete Student" message="Delete selected student?" />
     <ConfirmModal open={bulkOpen} onClose={() => setBulkOpen(false)} onConfirm={confirmBulkDelete} title="Delete Selected Students" message={`Delete ${checked.length} selected students?`} />
   </div>;
+}
+
+function HeroMetricCard({ tone, label, value, note, delta, deltaLabel, icon, wavePath }: { tone: 'teal' | 'blue' | 'purple'; label: string; value: string | number; note: string; delta: string; deltaLabel: string; icon: ReactNode; wavePath: string }) {
+  return (
+    <article className={`heroMetricCard ${tone}`}>
+      <div className="heroMetricGlow" aria-hidden />
+      <div className="heroMetricTop">
+        <div className="heroMetricIcon">{icon}</div>
+        <div className="heroMetricMeta">
+          <span>{label}</span>
+          <strong>{value}</strong>
+          <small>{note}</small>
+        </div>
+        <div className="heroMetricDelta">
+          <b>{delta}</b>
+          <small>{deltaLabel}</small>
+        </div>
+      </div>
+      <div className="heroMetricChart" aria-hidden>
+        <svg viewBox="0 0 174 62" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id={`hero-gradient-${tone}`} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0.28" />
+            </linearGradient>
+          </defs>
+          <path d={`${wavePath}L164 62L10 62Z`} fill={`url(#hero-gradient-${tone})`} />
+          <path d={wavePath} fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
+        </svg>
+      </div>
+    </article>
+  );
 }

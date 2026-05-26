@@ -231,18 +231,37 @@ export default function ViewEvents() {
   };
 
   const hasActiveFilters = filters.stateId || filters.districtId || filters.mandalId || filters.villageId || filters.status;
+  const upcomingCount = filteredEvents.filter(event => event.status === 'upcoming').length;
+  const ongoingCount = filteredEvents.filter(event => event.status === 'ongoing').length;
+  const completedCount = filteredEvents.filter(event => event.status === 'completed').length;
+  const monthDays = Array.from({ length: 30 }, (_, index) => index + 1);
+  const eventsByDay = filteredEvents.reduce<Record<number, EventData[]>>((acc, event) => {
+    const day = new Date(event.date).getDate();
+    acc[day] = [...(acc[day] ?? []), event];
+    return acc;
+  }, {});
+  const nextReminders = filteredEvents
+    .filter(event => event.status !== 'completed' && event.status !== 'cancelled')
+    .slice(0, 4);
 
   return (
     <div className="page-enter">
       <PageHeader
-        title="View Events"
-        subtitle="Manage and view all scheduled events"
+        title="Events"
+        subtitle="Calendar, reminders, and community event planning"
         actions={
           <Link to="/reminders/create">
             <Button variant="primary" size="sm">Create Event</Button>
           </Link>
         }
       />
+
+      <div className="statGrid eventStatsGrid" style={{ marginBottom: 14 }}>
+        <div className="statCard eventStatCard"><div className="statLabel">TOTAL EVENTS</div><div className="statValue">{filteredEvents.length}</div><div className="statNote">Matching current filters</div></div>
+        <div className="statCard eventStatCard"><div className="statLabel">UPCOMING</div><div className="statValue">{upcomingCount}</div><div className="statNote">Scheduled ahead</div></div>
+        <div className="statCard eventStatCard"><div className="statLabel">ONGOING</div><div className="statValue">{ongoingCount}</div><div className="statNote">Active programs</div></div>
+        <div className="statCard eventStatCard"><div className="statLabel">COMPLETED</div><div className="statValue">{completedCount}</div><div className="statNote">Finished events</div></div>
+      </div>
 
       {/* Filters Section */}
       <div className="panel">
@@ -345,69 +364,84 @@ export default function ViewEvents() {
         </div>
       </div>
 
-      {/* Events Table */}
-      <div className="panel">
+      <div className="eventsWorkspace">
+        <section className="panel eventCalendarPanel">
+          <div className="table-header">
+            <h3 className="panelTitle">Event Calendar</h3>
+            <span className="event-count">May 2026</span>
+          </div>
+          <div className="eventCalendarGrid">
+            {monthDays.map(day => (
+              <div key={day} className={`eventCalendarDay ${eventsByDay[day]?.length ? 'hasEvent' : ''}`}>
+                <span>{day}</span>
+                {eventsByDay[day]?.slice(0, 2).map(event => <small key={event.id}>{event.title}</small>)}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <aside className="panel reminderPanel">
+          <div className="table-header">
+            <h3 className="panelTitle">Reminders</h3>
+            <span className="event-count">{nextReminders.length} active</span>
+          </div>
+          {nextReminders.length ? nextReminders.map(event => (
+            <div key={event.id} className="reminderItem">
+              <div>
+                <strong>{event.title}</strong>
+                <span>{event.date} - {event.venue}</span>
+              </div>
+              <StatusBadge status={event.status} />
+            </div>
+          )) : <div className="empty-state"><p>No active reminders.</p></div>}
+        </aside>
+      </div>
+
+      <div className="panel eventCardsPanel">
         <div className="table-header">
-          <h3 className="panelTitle">Events</h3>
+          <h3 className="panelTitle">Event Cards</h3>
           <span className="event-count">{filteredEvents.length} event(s) found</span>
         </div>
 
         {error ? <div className="toast error" style={{ position: 'static', marginBottom: 12 }}>{error}</div> : null}
 
         {loading ? (
-          <div className="table-loading">
-            <div className="skeleton" style={{ height: '40px', marginBottom: '8px' }} />
-            <div className="skeleton" style={{ height: '40px', marginBottom: '8px' }} />
-            <div className="skeleton" style={{ height: '40px', marginBottom: '8px' }} />
+          <div className="eventCardGrid">
+            {[0, 1, 2].map(i => <div key={i} className="eventCard"><div className="skeleton" style={{ height: 160 }} /></div>)}
           </div>
         ) : filteredEvents.length === 0 ? (
           <div className="empty-state">
             <p>No events found matching your filters.</p>
-            {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={handleClearFilters}>
-                Clear Filters
-              </Button>
-            )}
+            {hasActiveFilters && <Button variant="outline" size="sm" onClick={handleClearFilters}>Clear Filters</Button>}
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Date</th>
-                  <th>Venue</th>
-                  <th>Location</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredEvents.map(event => (
-                  <tr key={event.id}>
-                    <td className="event-title">{event.title}</td>
-                    <td>{event.date}</td>
-                    <td>{event.venue}</td>
-                    <td className="location-cell">
-                      <span>{event.village}</span>
-                      <span className="location-detail">{event.mandal}, {event.district}</span>
-                    </td>
-                    <td>
-                      <StatusBadge status={event.status} />
-                    </td>
-                    <td>
-                      <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="eventCardGrid">
+            {filteredEvents.map(event => (
+              <article key={event.id} className="eventCard">
+                <div className="eventCardHeader">
+                  <div className="eventDateBadge">
+                    <strong>{new Date(event.date).getDate()}</strong>
+                    <span>{new Date(event.date).toLocaleString('en-US', { month: 'short' })}</span>
+                  </div>
+                  <StatusBadge status={event.status} />
+                </div>
+                <h3>{event.title}</h3>
+                <p>{event.venue}</p>
+                <div className="eventMeta">
+                  <span>{event.village}</span>
+                  <span>{event.mandal}, {event.district}</span>
+                </div>
+                <div className="eventCardFooter">
+                  <span>{event.state}</span>
+                  <ActionButtons event={event} />
+                </div>
+              </article>
+            ))}
           </div>
         )}
       </div>
 
-      {/* Styles */}
-      <style>{`
+      {false && <style>{`
         .filters-header {
           display: flex;
           justify-content: space-between;
@@ -619,7 +653,7 @@ export default function ViewEvents() {
             grid-template-columns: 1fr;
           }
         }
-      `}</style>
+      `}</style>}
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -40,31 +39,18 @@ const groups = [
   {
     title: 'Modules',
     items: [
-      { icon: <StudentsIcon />, label: 'Students', to: '/students', children: [{ label: 'View Students', to: '/students' }, { label: 'Add Student', to: '/students/add' }] },
-      { icon: <SponsorsIcon />, label: 'Sponsors', to: '/sponsors', children: [{ label: 'View Sponsor', to: '/sponsors' }, { label: 'Add Sponsor', to: '/sponsors/add' }, { label: 'Assign to Student', to: '/sponsors/assign' }] },
-      { icon: <RemindersIcon />, label: 'Reminders', to: '/reminders', children: [{ label: 'View Events', to: '/reminders' }, { label: 'Create Events', to: '/reminders/create' }] },
+      { icon: <StudentsIcon />, label: 'Students', to: '/view-students' },
+      { icon: <SponsorsIcon />, label: 'Sponsors', to: '/sponsors' },
+      { icon: <RemindersIcon />, label: 'Events', to: '/reminders' },
       { icon: <AdminIcon />, label: 'Admin Access', to: '/admins' },
     ],
   },
 ];
 
-export default function Sidebar({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+export default function Sidebar({ open }: { open: boolean }) {
   const { pathname } = useLocation();
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const [submenuOpen, setSubmenuOpen] = useState<Record<string, boolean>>(() => ({
-    Students: pathname.startsWith('/students'),
-    Sponsors: pathname.startsWith('/sponsors'),
-    Reminders: pathname.startsWith('/reminders'),
-  }));
-
-  useEffect(() => {
-    setSubmenuOpen({
-      Students: pathname.startsWith('/students'),
-      Sponsors: pathname.startsWith('/sponsors'),
-      Reminders: pathname.startsWith('/reminders'),
-    });
-  }, [pathname]);
 
   const signOut = () => {
     logout();
@@ -72,56 +58,21 @@ export default function Sidebar({ open, onToggle }: { open: boolean; onToggle: (
   };
 
   return (
-    <aside className={`sidebar ${open ? 'expanded' : 'collapsed'}`}>
-      <div className="sidebarLogo">
-        <button className="sidebarToggle sidebarToggleInline" type="button" aria-label={open ? 'Close sidebar' : 'Open sidebar'} title={open ? 'Close sidebar' : 'Open sidebar'} onClick={onToggle}>
-          <span />
-          <span />
-          <span />
-        </button>
-        <div className="sidebarBrand">
-          <span className="sidebarLogoText">SaHo</span>
-          <span className="sidebarLogoSprout" />
-        </div>
-      </div>
+    <aside className={`mobile-sidebar sidebar ${open ? 'expanded' : 'collapsed'}`}>
+      <div className="sidebarHead" />
       {groups.map(group => (
         <div key={group.title}>
           <div className="navSection">{group.title}</div>
           {group.items.map(item => {
-            const active = pathname === item.to || (item.to !== '/dashboard' && pathname.startsWith(`${item.to}/`));
-            const hasChildren = Boolean(item.children?.length);
-            const submenuIsOpen = item.children ? submenuOpen[item.label] : false;
+            const active = item.label === 'Students'
+              ? pathname === '/view-students' || pathname.startsWith('/students')
+              : pathname === item.to || (item.to !== '/dashboard' && pathname.startsWith(`${item.to}/`));
             return (
-              <div key={item.label}>
-                {hasChildren ? (
-                  <button
-                    className={`navParent ${active ? 'active' : ''}`}
-                    type="button"
-                    title={!open ? item.label : undefined}
-                    onClick={() => {
-                      if (open) {
-                        setSubmenuOpen(prev => ({ ...prev, [item.label]: !prev[item.label] }));
-                      } else {
-                        navigate(item.to);
-                      }
-                    }}
-                  >
-                    <span className="navIcon">{item.icon}</span>
-                    <span className="navLabel">{item.label}</span>
-                    {open && <span className={`navChevron ${submenuIsOpen ? 'open' : ''}`} />}
-                  </button>
-                ) : (
-                  <Link className={`navItem ${active ? 'active' : ''}`} to={item.to} title={!open ? item.label : undefined}>
-                    <span className="navIcon">{item.icon}</span>
-                    <span className="navLabel">{item.label}</span>
-                  </Link>
-                )}
-                {item.children && open && submenuIsOpen && item.children.map(sub => (
-                  <Link key={sub.to} className={`navSub ${pathname === sub.to ? 'active' : ''}`} to={sub.to}>
-                    <span className="dot" />
-                    {sub.label}
-                  </Link>
-                ))}
+              <div className="nav-item" key={item.label}>
+                <Link className={`nav-link navItem ${active ? 'active' : ''}`} to={item.to} title={!open ? item.label : undefined}>
+                  <span className="navIcon">{item.icon}</span>
+                  <span className="navLabel">{item.label}</span>
+                </Link>
               </div>
             );
           })}

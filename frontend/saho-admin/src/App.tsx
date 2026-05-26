@@ -29,6 +29,7 @@ export default function App() {
           <Route path="/" element={<Guard><AppLayout /></Guard>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="view-students" element={<StudentListPage />} />
             <Route path="students" element={<StudentListPage />} />
             <Route path="students/add" element={<StudentFormPage />} />
             <Route path="students/edit/:id" element={<StudentFormPage />} />
