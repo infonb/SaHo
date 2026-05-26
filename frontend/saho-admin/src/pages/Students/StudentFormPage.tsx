@@ -1,4 +1,4 @@
-import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createGuardian, createStudent, findStudentByAadhaar, getStudentById, updateStudent } from '../../api/studentApi';
 import { MOCK_DISTRICTS, MOCK_GUARDIANS, MOCK_MANDALS, MOCK_RELATIONSHIPS, MOCK_SCHOOLS, MOCK_STATES, MOCK_VILLAGES } from '../../api/mockData';
@@ -9,7 +9,7 @@ import { useToast } from '../../hooks/useToast';
 import type { StudentView } from '../../types';
 import StudentProfileSections, { type StudentFormState } from './StudentProfileSections';
 
-const init: StudentFormState = { first_name: '', middle_name: '', last_name: '', email: '', dob: '', gender: '', aadhaar_number: '', caste: '', religion: '', blood_group: '', class_id: '', orphan_status: '', image_url: '', st_id: '1', dist_id: '', mndl_id: '', vil_id: '', sch_id: '', guardian_first: '', guardian_middle: '', guardian_last: '', relation: '1', phone: '', occ: '', addr: '', has_sibling: 'No', sibling_aadhaar: '' };
+const init: StudentFormState = { first_name: '', middle_name: '', last_name: '', father_name: '', mother_name: '', guardian_source: 'manual', email: '', dob: '', gender: '', aadhaar_number: '', caste: '', religion: '', blood_group: '', class_id: '', orphan_status: '', image_url: '', st_id: '1', dist_id: '', mndl_id: '', vil_id: '', sch_id: '', guardian_first: '', guardian_middle: '', guardian_last: '', relation: '1', phone: '', occ: '', addr: '', has_sibling: 'No', sibling_aadhaar: '' };
 
 export default function StudentFormPage() {
   const { id } = useParams();
@@ -33,6 +33,9 @@ export default function StudentFormPage() {
         first_name: first,
         last_name: rest.pop() ?? '',
         middle_name: rest.join(' '),
+        father_name: '',
+        mother_name: '',
+        guardian_source: 'manual',
         email: s.email,
         dob: s.dob,
         gender: s.gender,
@@ -72,11 +75,6 @@ export default function StudentFormPage() {
     });
   };
 
-  const chooseImage = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) set('image_url', URL.createObjectURL(file));
-  };
-
   const searchSibling = async () => {
     setSiblingChecked(true);
     setSibling(null);
@@ -89,13 +87,38 @@ export default function StudentFormPage() {
     if (!found) toast('No matching student found.', 'error');
   };
 
+  const splitName = (name: string) => {
+    const [first = '', ...rest] = name.trim().split(/\s+/).filter(Boolean);
+    const last = rest.length > 0 ? rest.pop() ?? '' : '';
+    return { first, middle: rest.join(' '), last };
+  };
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      let guardianId = Number(MOCK_GUARDIANS.find(g => g.first_name === form.guardian_first && (g.middle_name ?? '') === form.guardian_middle && g.last_name === form.guardian_last)?.guardian_id ?? 0);
+      const selectedParent = form.guardian_source === 'father' ? splitName(form.father_name) : form.guardian_source === 'mother' ? splitName(form.mother_name) : null;
+      if (selectedParent && !selectedParent.first) {
+        toast(`Enter ${form.guardian_source === 'father' ? 'Father' : 'Mother'} Name before marking as guardian.`, 'error');
+        return;
+      }
+      const selectedRelation = form.guardian_source === 'father'
+        ? MOCK_RELATIONSHIPS.find(r => r.relationship_name.toLowerCase() === 'father')?.relationship_id
+        : form.guardian_source === 'mother'
+          ? MOCK_RELATIONSHIPS.find(r => r.relationship_name.toLowerCase() === 'mother')?.relationship_id
+          : undefined;
+      const guardianPayload = {
+        first_name: selectedParent?.first || form.guardian_first,
+        middle_name: selectedParent ? selectedParent.middle || null : form.guardian_middle || null,
+        last_name: selectedParent?.last || form.guardian_last,
+        phone_number: form.phone,
+        relation: selectedRelation ?? Number(form.relation),
+        occ: form.occ || null,
+        addr: form.addr || null
+      };
+      let guardianId = Number(MOCK_GUARDIANS.find(g => g.first_name === guardianPayload.first_name && (g.middle_name ?? '') === (guardianPayload.middle_name ?? '') && g.last_name === guardianPayload.last_name)?.guardian_id ?? 0);
       if (!guardianId && !isEdit) {
-        const g = await createGuardian({ first_name: form.guardian_first, middle_name: form.guardian_middle || null, last_name: form.guardian_last, phone_number: form.phone, relation: Number(form.relation), occ: form.occ || null, addr: form.addr || null });
+        const g = await createGuardian(guardianPayload);
         guardianId = g.guardian_id;
       }
       const payload = { first_name: form.first_name, middle_name: form.middle_name || null, last_name: form.last_name, email: form.email, dob: form.dob, gender: form.gender as 'Male' | 'Female' | 'Other', aadhaar_number: form.aadhaar_number, caste: form.caste, religion: form.religion || null, blood_group: form.blood_group || null, sch_id: Number(form.sch_id), class_id: form.class_id, guardian_id: guardianId || 1, orphan_status: form.orphan_status || null, image_url: form.image_url || null };
@@ -109,31 +132,68 @@ export default function StudentFormPage() {
       setLoading(false);
     }
   };
+//----------------MY OLD CODE------------------
+  // return (
+  //   <form onSubmit={submit}>
+  //     <PageHeader title={isEdit ? 'Edit Student' : 'Add Student'} subtitle="Student, sibling, school, and guardian information" actions={<Button type="button" variant="outline" onClick={() => nav(-1)}>Back</Button>} />
+  //     <div className="panel">
+  //       <StudentProfileSections
+  //         mode={isEdit ? 'edit' : 'create'}
+  //         form={form}
+  //         set={set}
+  //         sibling={sibling}
+  //         siblingChecked={siblingChecked}
+  //         searchSibling={searchSibling}
+  //         schools={MOCK_SCHOOLS.map(s => [String(s.sch_id), s.sch_name])}
+  //         states={MOCK_STATES.map(s => [String(s.st_id), s.st_name])}
+  //         districts={districts.map(d => [String(d.dist_id), d.dist_name])}
+  //         mandals={mandals.map(m => [String(m.mndl_id), m.mndl_name])}
+  //         villages={villages.map(v => [String(v.vil_id), v.vil_name])}
+  //         relationships={MOCK_RELATIONSHIPS.map(r => [String(r.relationship_id), r.relationship_name])}
+  //       />
+  //       <div className="modalFooter" style={{ paddingInline: 0 }}>
+  //         <Button type="button" variant="outline" onClick={() => nav('/students')}>Cancel</Button>
+  //         <Button loading={loading}>{isEdit ? 'Save Changes' : 'Register Student'}</Button>
+  //       </div>
+  //     </div>
+  //   </form>
+  // );
 
   return (
-    <form onSubmit={submit}>
-      <PageHeader title={isEdit ? 'Edit Student' : 'Add Student'} subtitle="Student, sibling, school, and guardian information" actions={<Button type="button" variant="outline" onClick={() => nav(-1)}>Back</Button>} />
-      <div className="panel">
-        <StudentProfileSections
-          mode={isEdit ? 'edit' : 'create'}
-          form={form}
-          set={set}
-          chooseImage={chooseImage}
-          sibling={sibling}
-          siblingChecked={siblingChecked}
-          searchSibling={searchSibling}
-          schools={MOCK_SCHOOLS.map(s => [String(s.sch_id), s.sch_name])}
-          states={MOCK_STATES.map(s => [String(s.st_id), s.st_name])}
-          districts={districts.map(d => [String(d.dist_id), d.dist_name])}
-          mandals={mandals.map(m => [String(m.mndl_id), m.mndl_name])}
-          villages={villages.map(v => [String(v.vil_id), v.vil_name])}
-          relationships={MOCK_RELATIONSHIPS.map(r => [String(r.relationship_id), r.relationship_name])}
-        />
-        <div className="modalFooter" style={{ paddingInline: 0 }}>
-          <Button type="button" variant="outline" onClick={() => nav('/students')}>Cancel</Button>
-          <Button loading={loading}>{isEdit ? 'Save Changes' : 'Register Student'}</Button>
-        </div>
+  <form onSubmit={submit} className="formPageShell">
+    <PageHeader
+      title={isEdit ? 'Edit Student' : 'Add Student'}
+      subtitle="Student, sibling, school, and guardian information"
+      actions={
+        <Button type="button" variant="outline" onClick={() => nav(-1)}>
+          Back
+        </Button>
+      }
+    />
+    <div className="panel">
+      <StudentProfileSections
+        mode={isEdit ? 'edit' : 'create'}
+        form={form}
+        set={set}
+        sibling={sibling}
+        siblingChecked={siblingChecked}
+        searchSibling={searchSibling}
+        schools={MOCK_SCHOOLS.map(s => [String(s.sch_id), s.sch_name])}
+        states={MOCK_STATES.map(s => [String(s.st_id), s.st_name])}
+        districts={districts.map(d => [String(d.dist_id), d.dist_name])}
+        mandals={mandals.map(m => [String(m.mndl_id), m.mndl_name])}
+        villages={villages.map(v => [String(v.vil_id), v.vil_name])}
+        relationships={MOCK_RELATIONSHIPS.map(r => [String(r.relationship_id), r.relationship_name])}
+      />
+      <div className="formPageFooter">
+        <Button type="button" variant="outline" onClick={() => nav('/students')}>
+          Cancel
+        </Button>
+        <Button loading={loading} className="register-btn">
+          {isEdit ? 'Save Changes' : 'Register Student'}
+        </Button>
       </div>
-    </form>
-  );
+    </div>
+  </form>
+);
 }

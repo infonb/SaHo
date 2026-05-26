@@ -1,7 +1,6 @@
-import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from 'react';
+import { type ChangeEvent, type FormEvent, type PointerEvent, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createSponsor, getSponsorById, updateSponsor, setCurrentUserId } from '../../api/sponsorApi';
-import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import PageHeader from '../../components/common/PageHeader';
@@ -19,6 +18,13 @@ export default function SponsorFormPage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null);
+  const [photoOpen, setPhotoOpen] = useState(false);
+  const [cropUrl, setCropUrl] = useState<string | null>(null);
+  const [cropScale, setCropScale] = useState(1);
+  const [cropOffset, setCropOffset] = useState({ x: 0, y: 0 });
+  const [cropDragStart, setCropDragStart] = useState<{ pointerX: number; pointerY: number; offsetX: number; offsetY: number } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cropFrameRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const nav = useNavigate();
@@ -87,18 +93,20 @@ export default function SponsorFormPage() {
     };
   }, [cameraOpen, capturedUrl]);
 
-  useEffect(() => {
-    return () => {
-      if (capturedUrl) URL.revokeObjectURL(capturedUrl);
-    };
-  }, [capturedUrl]);
-
   const uploadPhoto = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size < MIN_IMAGE_BYTES || file.size > MAX_IMAGE_BYTES) {
       const msg = 'Upload photo size must be between 5KB and 1MB.';
+      setUploadError(msg);
+      toast(msg, 'error');
+      e.target.value = '';
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      const msg = 'Please upload a valid image file.';
       setUploadError(msg);
       toast(msg, 'error');
       e.target.value = '';
@@ -113,6 +121,77 @@ export default function SponsorFormPage() {
 
     set('image_url', URL.createObjectURL(file));
     e.target.value = '';
+  };
+
+  const closeCrop = () => {
+    setCropUrl(null);
+    setCropScale(1);
+    setCropOffset({ x: 0, y: 0 });
+    setCropDragStart(null);
+  };
+
+  const openCrop = () => {
+    if (!form.image_url) return;
+    setUploadError(null);
+    setCropScale(1);
+    setCropOffset({ x: 0, y: 0 });
+    setCropUrl(form.image_url);
+  };
+
+  const startCropDrag = (e: PointerEvent<HTMLImageElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setCropDragStart({ pointerX: e.clientX, pointerY: e.clientY, offsetX: cropOffset.x, offsetY: cropOffset.y });
+  };
+
+  const moveCropDrag = (e: PointerEvent<HTMLImageElement>) => {
+    if (!cropDragStart) return;
+    setCropOffset({
+      x: cropDragStart.offsetX + e.clientX - cropDragStart.pointerX,
+      y: cropDragStart.offsetY + e.clientY - cropDragStart.pointerY,
+    });
+  };
+
+  const endCropDrag = () => setCropDragStart(null);
+
+  const resetCrop = () => {
+    setCropScale(1);
+    setCropOffset({ x: 0, y: 0 });
+  };
+
+  const useCroppedPhoto = () => {
+    if (!cropUrl) return;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const frameSize = cropFrameRef.current?.clientWidth ?? 360;
+      const outputSize = 640;
+      const baseScale = Math.max(frameSize / img.naturalWidth, frameSize / img.naturalHeight) * cropScale;
+      const drawnWidth = img.naturalWidth * baseScale;
+      const drawnHeight = img.naturalHeight * baseScale;
+      const dx = (frameSize - drawnWidth) / 2 + cropOffset.x;
+      const dy = (frameSize - drawnHeight) / 2 + cropOffset.y;
+      const outputRatio = outputSize / frameSize;
+      const canvas = document.createElement('canvas');
+      canvas.width = outputSize;
+      canvas.height = outputSize;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, outputSize, outputSize);
+      ctx.drawImage(img, dx * outputRatio, dy * outputRatio, drawnWidth * outputRatio, drawnHeight * outputRatio);
+      canvas.toBlob(blob => {
+        if (!blob) return;
+        if (form.image_url?.startsWith('blob:')) {
+          try { URL.revokeObjectURL(form.image_url); } catch { /* ignore */ }
+        }
+        set('image_url', URL.createObjectURL(blob));
+        closeCrop();
+      }, 'image/jpeg', 0.88);
+    };
+    img.onerror = () => setUploadError('Unable to crop this photo. Try uploading the image again.');
+    img.src = cropUrl;
   };
 
   const capturePhoto = async () => {
@@ -213,39 +292,46 @@ export default function SponsorFormPage() {
     <form onSubmit={submit}>
       <PageHeader title={isEdit ? 'Edit Sponsor' : 'Add Sponsor'} subtitle="Sponsor profile and contribution details" actions={<Button type="button" variant="outline" onClick={() => nav(-1)}>Back</Button>} />
       <div className="panel">
-        <div style={{ display: 'grid', placeItems: 'center', marginBottom: 18 }}>
-          <div style={{ width: 'min(520px, 100%)' }}>
-            <div className="sub" style={{ fontWeight: 900, marginBottom: 8 }}>Sponsor Photo</div>
-            <div className="uploadBox" style={{ gap: 10, padding: 14 }}>
-              {form.image_url ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="danger"
-                  className="iconBtn uploadDeleteBtn"
-                  onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); clearPhoto(); }}
-                  aria-label="Remove sponsor photo"
-                  title="Remove photo"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </Button>
-              ) : null}
-              {form.image_url ? <img src={form.image_url} alt="Sponsor" /> : <Avatar name={form.name || 'SP'} size="lg" />}
-              <div className="rowFlex" style={{ justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <Button type="button" variant="outline" onClick={openCamera}>Take Photo</Button>
-                <label className="btn outline md" style={{ cursor: 'pointer' }}>
-                  Upload Photo
-                  <input accept="image/*" type="file" onChange={uploadPhoto} style={{ display: 'none' }} />
-                </label>
+        <div className="sponsorPhotoDock">
+          <div className="field">
+            <span>Sponsor Photo</span>
+            <div className={`studentPhotoUpload ${form.image_url ? 'hasImage' : ''}`}>
+              <input ref={fileInputRef} className="photoFileInput" accept="image/*" type="file" onChange={uploadPhoto} />
+              <button type="button" className="studentPhotoAvatarButton" onClick={() => form.image_url ? setPhotoOpen(true) : fileInputRef.current?.click()} aria-label={form.image_url ? 'Preview sponsor photo' : 'Upload sponsor photo'}>
+                {form.image_url ? (
+                  <img src={form.image_url} alt="Selected sponsor" />
+                ) : (
+                  <div className="studentPhotoPlaceholder" aria-hidden>
+                    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="32" cy="22" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path d="M14 52c0-11 8-18 18-18s18 7 18 18H14Z" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+              <div className="studentPhotoMeta">
+                <div className="studentPhotoTitle">{form.image_url ? 'Photo selected' : 'No photo selected'}</div>
+                <div className={`studentPhotoHelp ${uploadError ? 'isError' : ''}`}>
+                  {uploadError ?? 'JPG or PNG, 5KB to 1MB.'}
+                </div>
               </div>
-              <div className="sub" style={{ marginTop: 2 }}>
-                {uploadError ? <span style={{ color: 'var(--red)' }}>{uploadError}</span> : 'Upload size: 5KB to 1MB'}
+              <div className="studentPhotoActions">
+                <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                  <span aria-hidden>📁</span>
+                  {form.image_url ? 'Change' : 'Upload'}
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={openCamera}>
+                  <span aria-hidden>📷</span>
+                  Take Photo
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={openCrop} disabled={!form.image_url}>
+                  <span aria-hidden>✂</span>
+                  Crop
+                </Button>
+                <Button type="button" size="sm" variant="ghost" className="photoRemoveButton" onClick={clearPhoto} disabled={!form.image_url}>
+                  <span aria-hidden>🗑</span>
+                  Remove
+                </Button>
               </div>
             </div>
           </div>
@@ -277,6 +363,58 @@ export default function SponsorFormPage() {
           <Button type="button" variant="outline" onClick={() => nav('/sponsors')}>Cancel</Button>
           <Button loading={loading}>{isEdit ? 'Save Changes' : 'Add Sponsor'}</Button>
         </div>
+
+        <Modal
+          open={photoOpen && !!form.image_url}
+          onClose={() => setPhotoOpen(false)}
+          title="Sponsor Photo"
+          width={520}
+          footer={<><Button type="button" variant="outline" onClick={() => setPhotoOpen(false)}>Close</Button><Button type="button" onClick={() => { setPhotoOpen(false); openCrop(); }}>Crop Photo</Button></>}
+        >
+          <div className="photoPreviewWrap">
+            {form.image_url ? <img className="photoPreview" src={form.image_url} alt="Sponsor preview" /> : null}
+          </div>
+        </Modal>
+
+        <Modal
+          open={!!cropUrl}
+          onClose={closeCrop}
+          title="Crop Sponsor Photo"
+          width={560}
+          footer={
+            <>
+              <Button type="button" variant="outline" onClick={() => { closeCrop(); fileInputRef.current?.click(); }}>Choose Another</Button>
+              <Button type="button" onClick={useCroppedPhoto}>Use Photo</Button>
+            </>
+          }
+        >
+          <div className="photoCropModal">
+            <div className="photoCropFrame" ref={cropFrameRef}>
+              {cropUrl ? (
+                <img
+                  src={cropUrl}
+                  alt="Crop preview"
+                  draggable={false}
+                  style={{ transform: `translate(${cropOffset.x}px, ${cropOffset.y}px) scale(${cropScale})` }}
+                  onDragStart={e => e.preventDefault()}
+                  onPointerDown={startCropDrag}
+                  onPointerMove={moveCropDrag}
+                  onPointerUp={endCropDrag}
+                  onPointerCancel={endCropDrag}
+                />
+              ) : null}
+              <div className="photoCropOverlay" aria-hidden />
+            </div>
+            <div className="photoCropControls">
+              <label>
+                Zoom
+                <input type="range" min="1" max="2.4" step="0.05" value={cropScale} onChange={e => setCropScale(Number(e.target.value))} />
+              </label>
+              <Button type="button" size="sm" variant="outline" onClick={resetCrop}>Reset</Button>
+            </div>
+            <div className="sub">Drag the photo to position it inside the square crop area.</div>
+          </div>
+        </Modal>
 
         <Modal
           open={cameraOpen}

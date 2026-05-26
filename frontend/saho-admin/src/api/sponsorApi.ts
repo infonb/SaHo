@@ -66,10 +66,9 @@ const mapFrontendToBackend = (
     phNo: payload.ph_no,
     sponsorType: payload.type,
     nationality: payload.nationality,
-    contrib: payload.contrib_amt ? String(payload.contrib_amt) : null,
+    contrib: payload.contrib_amt ? String(payload.contrib_amt) : '0',
     loc: payload.loc || null,
     createdBy: userId,
-    modifiedBy: null,
   };
 };
 
@@ -90,9 +89,6 @@ const mapBackendToFrontend = (sponsor: any): SponsorView => {
     image_url: sponsor.imageUrl,
     is_active: sponsor.isActive ?? true,
     created_at: sponsor.createdAt,
-    created_by: sponsor.createdBy,
-    modified_at: sponsor.modifiedAt,
-    modified_by: sponsor.modifiedBy,
     students_count: sponsor.studentsCount ?? 0,
   };
 };
@@ -107,23 +103,23 @@ export const getSponsors = async (filters?: Partial<SponsorFilters>): Promise<Sp
     const response = await apiClient.get<ApiResponse<any>>('/sponsors', { params });
 
     if (response.data?.data?.sponsors) {
-      const sponsors = response.data.data.sponsors.map(mapBackendToFrontend);
+      const sponsors: SponsorView[] = response.data.data.sponsors.map((sponsor: any) => mapBackendToFrontend(sponsor));
 
       // Apply frontend filters
       let filtered = sponsors;
       if (filters?.is_active !== undefined) {
-        filtered = filtered.filter(s => s.is_active === (filters.is_active !== 'false'));
+        filtered = filtered.filter((s: SponsorView) => s.is_active === (filters.is_active !== 'false'));
       }
       if (filters?.type) {
-        filtered = filtered.filter(s => s.type === filters.type);
+        filtered = filtered.filter((s: SponsorView) => s.type === filters.type);
       }
       if (filters?.nationality) {
-        filtered = filtered.filter(s => s.nationality === filters.nationality);
+        filtered = filtered.filter((s: SponsorView) => s.nationality === filters.nationality);
       }
       if (filters?.search) {
         const q = filters.search.toLowerCase();
         filtered = filtered.filter(
-          v => v.full_name.toLowerCase().includes(q) || v.email.toLowerCase().includes(q)
+          (v: SponsorView) => v.full_name.toLowerCase().includes(q) || v.email.toLowerCase().includes(q)
         );
       }
 
@@ -198,7 +194,7 @@ export const updateSponsor = async (id: number, payload: Partial<Sponsor>): Prom
     const userId = currentUserId;
     const backendPayload: any = {
       sponsorId: id,
-      sponsorName: payload.first_name || payload.full_name,
+      sponsorName: payload.first_name,
       email: payload.email,
       dob: payload.dob,
       phNo: payload.ph_no,
