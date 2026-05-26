@@ -277,7 +277,7 @@ export default function StudentListPage() {
           <div style={{ fontWeight: 800 }}>{sponsorDetails.email}</div>
           <div className="sub">{sponsorDetails.ph_no}</div>
           <div className="sub" style={{ marginTop: 8 }}>{sponsorDetails.loc}</div>
-          <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib_amt}</div></div>
+          <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib}</div></div>
           <div style={{ marginTop: 12 }}><strong>Students Sponsored:</strong> <span className="strong">{sponsorDetails.students_count}</span></div>
         </div>
       </div> : <div>No sponsor information available</div>}

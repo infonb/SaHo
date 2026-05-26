@@ -11,7 +11,6 @@ import Modal from '../../components/common/Modal';
 import PageHeader from '../../components/common/PageHeader';
 import Pagination from '../../components/common/Pagination';
 import StatCard from '../../components/common/StatCard';
-import { useAuth } from '../../context/AuthContext';
 import { usePagination } from '../../hooks/usePagination';
 import { useToast } from '../../hooks/useToast';
 import type { SponsorFilters, SponsorView } from '../../types';
@@ -29,7 +28,6 @@ export default function SponsorListPage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [singleDelete, setSingleDelete] = useState<number | null>(null);
   const nav = useNavigate();
-  const { user } = useAuth();
   const { toast } = useToast();
   const pager = usePagination(items, 5);
   const load = () => { setLoading(true); getSponsors(applied).then(data => { setItems(data); setChecked([]); }).finally(() => setLoading(false)); };
@@ -41,28 +39,28 @@ export default function SponsorListPage() {
   const allPageChecked = pageIds.length > 0 && pageIds.every(id => checked.includes(id));
   const toggle = (id: number) => setChecked(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
   const togglePage = () => setChecked(ids => allPageChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]);
-  const confirmBulkDelete = async () => { await deactivateSponsors(checked, user?.username ?? 'admin'); setBulkOpen(false); toast(`${checked.length} sponsors removed.`, 'success'); load(); };
+  const confirmBulkDelete = async () => { await deactivateSponsors(checked); setBulkOpen(false); toast(`${checked.length} sponsors removed.`, 'success'); load(); };
 
   const confirmSingleDelete = async () => {
     if (!singleDelete) return;
-    await deactivateSponsors([singleDelete], user?.username ?? 'admin');
+    await deactivateSponsors([singleDelete]);
     setSingleDelete(null);
     toast('Sponsor removed.', 'success');
     load();
   };
 
   const rows = pager.current.map(s => [
-    <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.sponsor_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.sponsor_id)} />,
+    <input aria-label={`Select ${s.sponsor_name}`} type="checkbox" checked={checked.includes(s.sponsor_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.sponsor_id)} />,
     <div className="rowFlex">
-      <Avatar name={s.full_name} />
+      <Avatar name={s.sponsor_name} />
       <div>
-        <button type="button" className="linkButton strong sponsorNameCell" onClick={() => setSelected(s)}>{s.full_name}</button>
+        <button type="button" className="linkButton strong sponsorNameCell" onClick={() => setSelected(s)}>{s.sponsor_name}</button>
       </div>
     </div>,
     <Badge variant={s.type === 'Organisation' ? 'organisation' : 'individual'}>{s.type}</Badge>,
     s.nationality,
     s.ph_no,
-    <strong>{contribution(s.contrib_amt)}</strong>,
+    <strong>{contribution(s.contrib)}</strong>,
     <Badge variant="assigned">{s.students_count}</Badge>,
     <div className="actions tableRowActions" onClick={e => e.stopPropagation()}>
       <Button size="sm" variant="outline" className="iconBtn" onClick={() => nav(`/sponsors/edit/${s.sponsor_id}`)} aria-label="Edit sponsor">
@@ -71,7 +69,7 @@ export default function SponsorListPage() {
           <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </Button>
-      <Button size="sm" variant="danger" className="iconBtn" style={{ marginLeft: 8 }} onClick={(e) => { e.stopPropagation(); setSingleDelete(s.sponsor_id); }} aria-label={`Delete ${s.full_name}`}>
+      <Button size="sm" variant="danger" className="iconBtn" style={{ marginLeft: 8 }} onClick={(e) => { e.stopPropagation(); setSingleDelete(s.sponsor_id); }} aria-label={`Delete ${s.sponsor_name}`}>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
           <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -139,10 +137,125 @@ export default function SponsorListPage() {
   );
 }
 
-function SponsorModal({ sponsor, onClose }: { sponsor: SponsorView | null; onClose: () => void }) {
+function SponsorModal({
+  sponsor,
+  onClose
+}: {
+  sponsor: SponsorView | null;
+  onClose: () => void;
+}) {
+
   const nav = useNavigate();
+
   if (!sponsor) return null;
-  return <Modal open={!!sponsor} onClose={onClose} title={sponsor.full_name} width={680} footer={<><Button variant="outline" onClick={onClose}>Close</Button><Button onClick={() => nav(`/sponsors/edit/${sponsor.sponsor_id}`)}>Modify Sponsor</Button></>}><div className="rowFlex" style={{ marginBottom: 18 }}><Avatar name={sponsor.full_name} size="lg" /><div><h2 style={{ margin: 0, fontFamily: 'var(--font-display)' }}>{sponsor.full_name}</h2><div className="actions" style={{ marginTop: 8 }}><Badge variant={sponsor.type === 'Organisation' ? 'organisation' : 'individual'}>{sponsor.type}</Badge><Badge variant="assigned">{sponsor.students_count} Students</Badge></div></div></div><div className="formGrid"><Info label="Email" value={sponsor.email} /><Info label="Phone" value={sponsor.ph_no} /><Info label="Nationality" value={sponsor.nationality} /><Info label="Contribution" value={contribution(sponsor.contrib_amt)} /><Info label="Date of Birth" value={sponsor.dob} /><Info label="Location" value={sponsor.loc} /></div></Modal>;
+
+  return (
+
+    <Modal
+      open={!!sponsor}
+      onClose={onClose}
+      title={sponsor.sponsor_name}
+      width={680}
+      footer={
+        <>
+          <Button
+            variant="outline"
+            onClick={onClose}
+          >
+            Close
+          </Button>
+
+          <Button
+            onClick={() =>
+              nav(`/sponsors/edit/${sponsor.sponsor_id}`)
+            }
+          >
+            Modify Sponsor
+          </Button>
+        </>
+      }
+    >
+
+      <div
+        className="rowFlex"
+        style={{ marginBottom: 18 }}
+      >
+
+        <Avatar
+          name={sponsor.sponsor_name}
+          size="lg"
+        />
+
+        <div>
+
+          <h2
+            style={{
+              margin: 0,
+              fontFamily: 'var(--font-display)'
+            }}
+          >
+            {sponsor.sponsor_name}
+          </h2>
+
+          <div
+            className="actions"
+            style={{ marginTop: 8 }}
+          >
+
+            <Badge
+              variant={
+                sponsor.type === 'Organisation'
+                  ? 'organisation'
+                  : 'individual'
+              }
+            >
+              {sponsor.type}
+            </Badge>
+
+            <Badge variant="assigned">
+              {sponsor.students_count} Students
+            </Badge>
+
+          </div>
+        </div>
+      </div>
+
+      <div className="formGrid">
+
+        <Info
+          label="Email"
+          value={sponsor.email}
+        />
+
+        <Info
+          label="Phone"
+          value={sponsor.ph_no}
+        />
+
+        <Info
+          label="Nationality"
+          value={sponsor.nationality}
+        />
+
+        <Info
+          label="Contribution"
+          value={contribution(sponsor.contrib)}
+        />
+
+        <Info
+          label="Date of Birth"
+          value={sponsor.dob}
+        />
+
+        <Info
+          label="Location"
+          value={sponsor.loc}
+        />
+
+      </div>
+
+    </Modal>
+  );
 }
 
 function Info({ label, value }: { label: string; value?: string | number | null }) {

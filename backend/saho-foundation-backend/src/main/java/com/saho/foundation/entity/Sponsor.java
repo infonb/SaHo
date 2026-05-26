@@ -1,6 +1,7 @@
 package com.saho.foundation.entity;
 
 import jakarta.persistence.*;
+import jakarta.websocket.Decoder.Text;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -39,7 +40,7 @@ public class Sponsor {
     private String location;
 
     @Column(name = "contrib")
-    private BigDecimal contribution;
+    private String contribution;
 
     @Column(name = "is_deleted")
     private Boolean isDeleted;
