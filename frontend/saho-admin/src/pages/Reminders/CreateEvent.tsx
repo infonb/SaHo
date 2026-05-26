@@ -1,19 +1,10 @@
-import { useState, useMemo, type ChangeEvent, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Button from '../../components/common/Button';
 import PageHeader from '../../components/common/PageHeader';
-import {
-  MOCK_EVENT_STATES,
-  MOCK_EVENT_DISTRICTS,
-  MOCK_EVENT_MANDALS,
-  MOCK_EVENT_VILLAGES,
-  MOCK_EVENT_SCHOOLS,
-  getDistrictsByState,
-  getMandalsByDistrict,
-  getVillagesByMandal,
-  getSchoolsByVillage,
-} from '../../api/mockEventData';
-import type { DistrictMaster, MandalMaster, SchoolMaster, StateMaster, VillageMaster } from '../../types';
+import { getDistricts, getMandals, getSchools, getStates, getVillages } from '../../api/locationApi';
+import { getClasses } from '../../api/masterApi';
+import { createReminder, getReminderById, updateReminder } from '../../api/remindersApi';
 
 const EVENT_CLASS_OPTIONS = ['5th', '6th', '7th', '8th', '9th', '10th'];
 
@@ -29,6 +20,7 @@ interface EventFormState {
   mandalIds: number[];
   villageIds: number[];
   schoolIds: number[];
+  classIds: number[];
 }
 
 // Multi-select checkbox component
@@ -101,40 +93,94 @@ const initialFormState: EventFormState = {
   mandalIds: [],
   villageIds: [],
   schoolIds: [],
+  classIds: [],
 };
 
 export default function CreateEvent() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const remIdParam = searchParams.get('remId');
+  const editingRemId = remIdParam ? Number(remIdParam) : null;
   const [form, setForm] = useState<EventFormState>(initialFormState);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // API loading states (for future backend integration)
-  const [statesLoading, setStatesLoading] = useState(false);
-  const [districtsLoading, setDistrictsLoading] = useState(false);
-  const [mandalsLoading, setMandalsLoading] = useState(false);
-  const [villagesLoading, setVillagesLoading] = useState(false);
-  const [schoolsLoading, setSchoolsLoading] = useState(false);
+  const [states, setStates] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [mandals, setMandals] = useState<any[]>([]);
+  const [villages, setVillages] = useState<any[]>([]);
+  const [schools, setSchools] = useState<any[]>([]);
+  const [classes, setClassesState] = useState<{ id: number; name: string }[]>([]);
 
-  // Filtered options based on selection
-  const districts = useMemo(() => {
-    if (!form.stateId) return [];
-    return getDistrictsByState(Number(form.stateId));
+  useEffect(() => {
+    let mounted = true;
+    getStates().then(data => { if (mounted) setStates(data); }).catch(() => {});
+    getClasses().then(data => {
+      if (!mounted) return;
+      setClassesState(data.map(c => ({ id: c.classId, name: c.className })));
+    }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!editingRemId) return;
+    let mounted = true;
+    setLoading(true);
+    getReminderById(editingRemId)
+      .then(r => {
+        if (!mounted || !r) return;
+        const parseCsv = (csv?: string | null) =>
+          (csv ?? '').split(',').map(s => Number(s.trim())).filter(n => Number.isFinite(n) && n > 0);
+
+        setForm({
+          ...initialFormState,
+          title: r.title ?? '',
+          description: r.description ?? '',
+          eventDate: r.eventDate ?? '',
+          venue: r.venue ?? '',
+          stateId: (r.stIdCsv ?? '').split(',')[0] ?? '',
+          districtIds: parseCsv(r.distIdsCsv),
+          mandalIds: parseCsv(r.mndlIdsCsv),
+          villageIds: parseCsv(r.vilIdsCsv),
+          schoolIds: parseCsv(r.schIdsCsv),
+          classIds: parseCsv(r.classIdsCsv),
+        });
+      })
+      .catch((e) => console.error('Failed to load reminder', e))
+      .finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, [editingRemId]);
+
+  useEffect(() => {
+    if (!form.stateId) {
+      setDistricts([]);
+      return;
+    }
+    getDistricts(Number(form.stateId)).then(d => setDistricts(d)).catch(() => setDistricts([]));
   }, [form.stateId]);
 
-  const mandals = useMemo(() => {
-    if (form.districtIds.length === 0) return [];
-    return MOCK_EVENT_MANDALS.filter(m => form.districtIds.includes(m.dist_id));
+  useEffect(() => {
+    if (form.districtIds.length !== 1) {
+      setMandals([]);
+      return;
+    }
+    getMandals(form.districtIds[0]).then(m => setMandals(m)).catch(() => setMandals([]));
   }, [form.districtIds]);
 
-  const villages = useMemo(() => {
-    if (form.mandalIds.length === 0) return [];
-    return MOCK_EVENT_VILLAGES.filter(v => form.mandalIds.includes(v.mndl_id));
+  useEffect(() => {
+    if (form.mandalIds.length !== 1) {
+      setVillages([]);
+      return;
+    }
+    getVillages(form.mandalIds[0]).then(v => setVillages(v)).catch(() => setVillages([]));
   }, [form.mandalIds]);
 
-  const schools = useMemo(() => {
-    if (form.villageIds.length === 0) return [];
-    return MOCK_EVENT_SCHOOLS.filter(s => form.villageIds.includes(s.vil_id));
+  useEffect(() => {
+    if (form.villageIds.length !== 1) {
+      setSchools([]);
+      return;
+    }
+    getSchools(form.villageIds[0]).then(s => setSchools(s)).catch(() => setSchools([]));
   }, [form.villageIds]);
 
   // Handlers
@@ -195,33 +241,33 @@ export default function CreateEvent() {
     }
 
     setLoading(true);
-
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Create payload
-    const payload = {
-      title: form.title,
-      description: form.description,
-      eventDate: form.eventDate,
-      venue: form.venue,
-      classId: form.classId,
-      stateId: form.stateId,
-      districtIds: form.districtIds,
-      mandalIds: form.mandalIds,
-      villageIds: form.villageIds,
-      schoolIds: form.schoolIds,
-    };
-
-    // Log the full form payload
-    console.log('=== CREATE EVENT PAYLOAD ===');
-    console.log(JSON.stringify(payload, null, 2));
-    console.log('=============================');
-
-    setLoading(false);
-
-    // Show success message (using console for now)
-    alert('Event created successfully! Check console for payload.');
+    try {
+      const toCsv = (ids: number[]) => (ids.length ? ids.join(',') : null);
+      const payload = {
+        title: form.title.trim(),
+        description: form.description?.trim() || null,
+        eventDate: form.eventDate,
+        venue: form.venue.trim(),
+        stIdCsv: form.stateId ? String(form.stateId) : null,
+        distIdsCsv: toCsv(form.districtIds),
+        mndlIdsCsv: toCsv(form.mandalIds),
+        vilIdsCsv: toCsv(form.villageIds),
+        schIdsCsv: toCsv(form.schoolIds),
+        classIdsCsv: toCsv(form.classIds),
+        updatedBy: 1,
+      };
+      if (editingRemId) {
+        await updateReminder(editingRemId, payload);
+      } else {
+        await createReminder(payload);
+      }
+      navigate('/reminders/view');
+    } catch (error) {
+      console.error('Error creating event:', error);
+      alert('Failed to create event. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -323,29 +369,25 @@ export default function CreateEvent() {
               {/* State Dropdown */}
               <div className="form-group">
                 <label className="form-label">State</label>
-                {statesLoading ? (
-                  <div className="skeleton form-input" style={{ height: '44px' }} />
-                ) : (
-                  <select
-                    className="form-input"
-                    value={form.stateId}
-                    onChange={handleStateChange}
-                  >
-                    <option value="">Select State</option>
-                    {MOCK_EVENT_STATES.map(state => (
-                      <option key={state.st_id} value={state.st_id}>
-                        {state.st_name}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                <select
+                  className="form-input"
+                  value={form.stateId}
+                  onChange={handleStateChange}
+                >
+                  <option value="">Select State</option>
+                  {states.map((state: any) => (
+                    <option key={state.stId ?? state.st_id} value={state.stId ?? state.st_id}>
+                      {state.stName ?? state.st_name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Districts Multi-Select */}
               <div className="form-group">
                 <MultiSelect
                   label="Districts"
-                  options={districts.map(d => ({ id: d.dist_id, name: d.dist_name }))}
+                  options={districts.map((d: any) => ({ id: d.distId ?? d.dist_id, name: d.distName ?? d.dist_name }))}
                   selectedIds={form.districtIds}
                   onChange={ids => handleMultiSelectChange('districtIds', ids)}
                   placeholder="Select districts"
@@ -356,7 +398,7 @@ export default function CreateEvent() {
               <div className="form-group">
                 <MultiSelect
                   label="Mandals"
-                  options={mandals.map(m => ({ id: m.mndl_id, name: m.mndl_name }))}
+                  options={mandals.map((m: any) => ({ id: m.mndlId ?? m.mndl_id, name: m.mndlName ?? m.mndl_name }))}
                   selectedIds={form.mandalIds}
                   onChange={ids => handleMultiSelectChange('mandalIds', ids)}
                   placeholder="Select mandals"
@@ -367,7 +409,7 @@ export default function CreateEvent() {
               <div className="form-group">
                 <MultiSelect
                   label="Villages"
-                  options={villages.map(v => ({ id: v.vil_id, name: v.vil_name }))}
+                  options={villages.map((v: any) => ({ id: v.vilId ?? v.vil_id, name: v.vilName ?? v.vil_name }))}
                   selectedIds={form.villageIds}
                   onChange={ids => handleMultiSelectChange('villageIds', ids)}
                   placeholder="Select villages"
@@ -378,10 +420,20 @@ export default function CreateEvent() {
               <div className="form-group">
                 <MultiSelect
                   label="Schools"
-                  options={schools.map(s => ({ id: s.sch_id, name: s.sch_name }))}
+                  options={schools.map((s: any) => ({ id: s.schId ?? s.sch_id, name: s.schName ?? s.sch_name }))}
                   selectedIds={form.schoolIds}
                   onChange={ids => handleMultiSelectChange('schoolIds', ids)}
                   placeholder="Select schools"
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <MultiSelect
+                  label="Classes"
+                  options={classes}
+                  selectedIds={form.classIds}
+                  onChange={ids => handleMultiSelectChange('classIds', ids)}
+                  placeholder="Select classes"
                 />
               </div>
             </div>
@@ -401,7 +453,7 @@ export default function CreateEvent() {
               variant="primary"
               loading={loading}
             >
-              Create Event
+              {editingRemId ? 'Update Event' : 'Create Event'}
             </Button>
           </div>
         </form>

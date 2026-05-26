@@ -150,10 +150,10 @@ export let MOCK_STUDENTS: Student[] = [
 ];
 
 export let MOCK_SPONSORS: Sponsor[] = [
-  { sponsor_id: 1, first_name: 'Infosys', middle_name: null, last_name: 'Foundation', email: 'contact@infosys.com', dob: '1981-07-02', ph_no: '8000001111', loc: 'Bengaluru, Karnataka', type: 'Organisation', nationality: 'Indian', contrib_amt: '5000', is_active: true, created_at: '2024-04-01', created_by: 'admin', modified_at: null, modified_by: null, image_url: studentBoy },
-  { sponsor_id: 2, first_name: 'Anjali', middle_name: null, last_name: 'Mehta', email: 'anjali.m@gmail.com', dob: '1985-03-15', ph_no: '9700002222', loc: 'Mumbai, Maharashtra', type: 'Individual', nationality: 'Indian', contrib_amt: 'School bags and books', is_active: true, created_at: '2024-04-02', created_by: 'admin', modified_at: null, modified_by: null, image_url: studentGirl },
-  { sponsor_id: 3, first_name: 'TCS', middle_name: null, last_name: 'Cares Trust', email: 'csr@tcs.com', dob: '1968-04-01', ph_no: '8000003333', loc: 'Mumbai, Maharashtra', type: 'Organisation', nationality: 'Indian', contrib_amt: '3000', is_active: true, created_at: '2024-04-03', created_by: 'admin', modified_at: null, modified_by: null, image_url: studentBoy2 },
-  { sponsor_id: 4, first_name: 'Prakash', middle_name: null, last_name: 'Rao', email: 'prakash.r@yahoo.com', dob: '1972-09-20', ph_no: '9900004444', loc: 'Hyderabad, Telangana', type: 'Individual', nationality: 'Indian', contrib_amt: 'Monthly groceries', is_active: false, created_at: '2024-04-04', created_by: 'admin', modified_at: null, modified_by: null, image_url: studentGirl2 },
+  { sponsor_id: 1, first_name: 'Infosys', middle_name: null, last_name: 'Foundation', email: 'contact@infosys.com', dob: '1981-07-02', ph_no: '8000001111', loc: 'Bengaluru, Karnataka', type: 'Organisation', nationality: 'Indian', contrib: '5000', is_active: true, created_at: '2024-04-01', created_by: 'admin', modified_at: null, modified_by: null, image_url: studentBoy },
+  { sponsor_id: 2, first_name: 'Anjali', middle_name: null, last_name: 'Mehta', email: 'anjali.m@gmail.com', dob: '1985-03-15', ph_no: '9700002222', loc: 'Mumbai, Maharashtra', type: 'Individual', nationality: 'Indian', contrib: 'School bags and books', is_active: true, created_at: '2024-04-02', created_by: 'admin', modified_at: null, modified_by: null, image_url: studentGirl },
+  { sponsor_id: 3, first_name: 'TCS', middle_name: null, last_name: 'Cares Trust', email: 'csr@tcs.com', dob: '1968-04-01', ph_no: '8000003333', loc: 'Mumbai, Maharashtra', type: 'Organisation', nationality: 'Indian', contrib: '3000', is_active: true, created_at: '2024-04-03', created_by: 'admin', modified_at: null, modified_by: null, image_url: studentBoy2 },
+  { sponsor_id: 4, first_name: 'Prakash', middle_name: null, last_name: 'Rao', email: 'prakash.r@yahoo.com', dob: '1972-09-20', ph_no: '9900004444', loc: 'Hyderabad, Telangana', type: 'Individual', nationality: 'Indian', contrib: 'Monthly groceries', is_active: false, created_at: '2024-04-04', created_by: 'admin', modified_at: null, modified_by: null, image_url: studentGirl2 },
 ];
 export let MOCK_STUDENT_SPONSORS: StudentSponsor[] = [
   { id: 1, std_id: 1, spn_id: 1, assigned_date: '2024-05-01', is_active: true, created_at: '2024-05-01', created_by: 'admin', modified_at: null, modified_by: null },
@@ -194,7 +194,7 @@ export const buildSponsorView = (sp: Sponsor): SponsorView => ({
   loc: sp.loc,
   type: sp.type,
   nationality: sp.nationality,
-  contrib_amt: sp.contrib_amt,
+  contrib: sp.contrib,
   is_active: sp.is_active,
   created_at: sp.created_at,
   image_url: sp.image_url,

@@ -7,7 +7,7 @@ import PageHeader from '../../components/common/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 
-const init = { name: '', email: '', dob: '', ph_no: '', type: 'Individual', nationality: 'Indian', contrib_amt: '', loc: '', image_url: '' };
+const init = { name: '', email: '', dob: '', ph_no: '', type: 'Individual', nationality: 'Indian', contrib: '', loc: '', image_url: '' };
 
 export default function SponsorFormPage() {
   const { id } = useParams();
@@ -30,7 +30,7 @@ export default function SponsorFormPage() {
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const nationalityOptions = ['Indian', 'American', 'British', 'Canadian', 'Australian', 'Other'];
+  const nationalityOptions = ['Indian', 'Foreigner'];
   const MIN_IMAGE_BYTES = 5 * 1024;
   const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
 
@@ -42,8 +42,24 @@ export default function SponsorFormPage() {
   }, [user?.user_id]);
 
   useEffect(() => {
-    if (id) getSponsorById(Number(id)).then(s => s && setForm({ name: s.full_name, email: s.email, dob: s.dob, ph_no: s.ph_no, type: s.type, nationality: s.nationality, contrib_amt: String(s.contrib_amt), loc: s.loc ?? '', image_url: s.image_url ?? '' }));
-  }, [id]);
+  if (!id) return;
+
+  getSponsorById(Number(id)).then((s) => {
+    if (!s) return;
+
+    setForm({
+      name: s.sponsor_name ?? '',
+      email: s.email ?? '',
+      dob: s.dob ?? '',
+      ph_no: s.ph_no ?? '',
+      type: s.type ?? 'Individual',
+      nationality: s.nationality ?? 'Indian',
+      contrib: String(s.contrib ?? ''),
+      loc: s.loc ?? '',
+      image_url: s.image_url ?? ''
+    });
+  });
+}, [id]);
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -276,9 +292,30 @@ export default function SponsorFormPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const payload = { first_name: form.name.trim(), middle_name: null, last_name: '', email: form.email, dob: form.dob, ph_no: form.ph_no, loc: form.loc || null, type: form.type as 'Individual' | 'Organisation', nationality: form.nationality, contrib_amt: form.contrib_amt.trim(), image_url: form.image_url || null };
-      if (isEdit) await updateSponsor(Number(id), { ...payload, modified_by: user?.username ?? 'admin' });
-      else await createSponsor({ ...payload, created_by: user?.username ?? 'admin' });
+      const payload = {
+        sponsor_name: form.name.trim(),
+        email: form.email,
+        dob: form.dob,
+        ph_no: form.ph_no,
+        type: form.type as 'Individual' | 'Organisation',
+        nationality: form.nationality,
+        contrib: form.contrib.trim(),
+        loc: form.loc || null,
+        image_url: form.image_url || null
+      };
+if (isEdit) {
+  await updateSponsor(Number(id), {
+    ...payload,
+    modified_by: user?.user_id ?? 1
+  });
+} else {
+  await createSponsor({
+    ...payload,
+    created_by: user?.user_id ?? 1
+  });
+}
+
+      
       toast(isEdit ? 'Sponsor updated.' : 'Sponsor added.', 'success');
       nav('/sponsors');
     } catch {
@@ -348,7 +385,7 @@ export default function SponsorFormPage() {
               {nationalityOptions.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           </label>
-          <Field label="Contribution*" value={form.contrib_amt} onChange={v => set('contrib_amt', v)} />
+          <Field label="Contribution*" value={form.contrib} onChange={v => set('contrib', v)} />
           <label className="field">
             <span>Type*</span>
             <select required className="select" value={form.type} onChange={e => set('type', e.target.value)}>

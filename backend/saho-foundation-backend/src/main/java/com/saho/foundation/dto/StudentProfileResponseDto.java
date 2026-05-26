@@ -20,6 +20,8 @@ public class StudentProfileResponseDto {
     private LocalDate dob;
     private String gender;
     private String aadhaarNumber;
+    private Integer casteId;
+    private String casteName;
     private String religion;
     private String bloodGroup;
     private Integer classId;
@@ -29,6 +31,7 @@ public class StudentProfileResponseDto {
 
     private String guardianName;
     private String phoneNumber;
+    private String guardianRelationName;
     private String occ;
     private String addr;
 

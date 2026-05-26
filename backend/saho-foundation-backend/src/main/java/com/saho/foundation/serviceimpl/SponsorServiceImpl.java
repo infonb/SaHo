@@ -12,7 +12,6 @@ import org.hibernate.Session;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.sql.Array;
 import java.sql.Date;
 import java.sql.CallableStatement;
@@ -45,8 +44,8 @@ public class SponsorServiceImpl
 
                 statement.setInt(1, request.getSponsorId() != null ? request.getSponsorId() : 0);
                 statement.setString(2, request.getSponsorName());
-                statement.setString(3, request.getNationality());
-                statement.setString(4, request.getSponsorType());
+                statement.setString(3, normalizeNationalityForDb(request.getNationality()));
+                statement.setString(4, normalizeSponsorTypeForDb(request.getSponsorType()));
                 statement.setString(5, request.getEmail());
                 statement.setDate(6, request.getDob() != null ? java.sql.Date.valueOf(request.getDob()) : null);
                 statement.setString(7, request.getPhNo());
@@ -152,8 +151,8 @@ public class SponsorServiceImpl
 
         response.setSponsorId(resultSet.getInt("sponsor_id"));
         response.setSponsorName(resultSet.getString("sponsor_name"));
-        response.setNationality(resultSet.getString("nationality"));
-        response.setSponsorType(resultSet.getString("sponsor_type"));
+        response.setNationality(normalizeNationalityForUi(resultSet.getString("nationality")));
+        response.setSponsorType(normalizeSponsorTypeForUi(resultSet.getString("sponsor_type")));
         response.setEmail(resultSet.getString("email"));
 
         Date dob = resultSet.getDate("dob");
@@ -161,12 +160,110 @@ public class SponsorServiceImpl
 
         response.setPhNo(resultSet.getString("ph_no"));
         response.setLoc(resultSet.getString("loc"));
-
-        BigDecimal contrib = resultSet.getBigDecimal("contrib");
-        response.setContrib(contrib);
+      
+        response.setContrib(resultSet.getString("contrib"));
 
         return response;
     }
 
+    private String normalizeNationalityForDb(String nationality) {
+        if (nationality == null) {
+            return "1";
+        }
+
+        String value = nationality.trim();
+        if (value.isEmpty()) {
+            return "1";
+        }
+
+        if ("1".equals(value) || "2".equals(value)) {
+            return value;
+        }
+
+        String lower = value.toLowerCase();
+        if (lower.startsWith("for")) {
+            return "2";
+        }
+
+        return "1";
+    }
+
+    private String normalizeNationalityForUi(String nationality) {
+        if (nationality == null) {
+            return "Indian";
+        }
+
+        String value = nationality.trim();
+        if (value.isEmpty()) {
+            return "Indian";
+        }
+
+        if ("2".equals(value)) {
+            return "Foreigner";
+        }
+        if ("1".equals(value)) {
+            return "Indian";
+        }
+
+        String lower = value.toLowerCase();
+        if (lower.startsWith("for")) {
+            return "Foreigner";
+        }
+        if (lower.startsWith("ind")) {
+            return "Indian";
+        }
+
+        return "Indian";
+    }
+
+    private String normalizeSponsorTypeForDb(String sponsorType) {
+        if (sponsorType == null) {
+            return "1";
+        }
+
+        String value = sponsorType.trim();
+        if (value.isEmpty()) {
+            return "1";
+        }
+
+        if ("1".equals(value) || "2".equals(value)) {
+            return value;
+        }
+
+        String lower = value.toLowerCase();
+        if (lower.startsWith("org")) {
+            return "2";
+        }
+
+        return "1";
+    }
+
+    private String normalizeSponsorTypeForUi(String sponsorType) {
+        if (sponsorType == null) {
+            return "Individual";
+        }
+
+        String value = sponsorType.trim();
+        if (value.isEmpty()) {
+            return "Individual";
+        }
+
+        if ("2".equals(value)) {
+            return "Organisation";
+        }
+        if ("1".equals(value)) {
+            return "Individual";
+        }
+
+        String lower = value.toLowerCase();
+        if (lower.startsWith("org")) {
+            return "Organisation";
+        }
+        if (lower.startsWith("ind")) {
+            return "Individual";
+        }
+
+        return "Individual";
+    }
 
 }

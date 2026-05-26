@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deactivateStudents, getStudents } from '../../api/studentApi';
-import { MOCK_DISTRICTS, MOCK_MANDALS, MOCK_SCHOOLS, MOCK_STATES, MOCK_VILLAGES } from '../../api/mockData';
+import { deactivateStudents, getStudents, getStudentById } from '../../api/studentApi';
+import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
 import { getSponsorById } from '../../api/sponsorApi';
-import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import DataTable from '../../components/common/DataTable';
@@ -11,7 +10,6 @@ import FilterBar from '../../components/common/FilterBar';
 import Pagination from '../../components/common/Pagination';
 import Avatar from '../../components/common/Avatar';
 import { useAuth } from '../../context/AuthContext';
-import { usePagination } from '../../hooks/usePagination';
 import { useToast } from '../../hooks/useToast';
 import type { StudentFilters, StudentView, SponsorView } from '../../types';
 import StudentDetailModal from './StudentDetailModal';
@@ -22,8 +20,17 @@ const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id
 export default function StudentListPage() {
   const [students, setStudents] = useState<StudentView[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
   const [pending, setPending] = useState(defaults);
   const [applied, setApplied] = useState(defaults);
+  const [states, setStates] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [mandals, setMandals] = useState<any[]>([]);
+  const [villages, setVillages] = useState<any[]>([]);
+  const [schools, setSchools] = useState<any[]>([]);
   const [selected, setSelected] = useState<StudentView | null>(null);
   const [checked, setChecked] = useState<number[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -33,33 +40,94 @@ export default function StudentListPage() {
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const pager = usePagination(students, 5);
-  const load = () => { setLoading(true); getStudents(applied).then(data => { setStudents(data); setChecked([]); }).finally(() => setLoading(false)); };
-  useEffect(load, [applied]);
+
+  const load = async (nextPage = page, nextPageSize = pageSize) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getStudents({ pageNumber: nextPage, pageSize: nextPageSize, filters: applied });
+      setStudents(data.students);
+      setTotal(data.total);
+      setChecked([]);
+    } catch {
+      setStudents([]);
+      setTotal(0);
+      setChecked([]);
+      setError('Unable to load students from the database.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load(page, pageSize);
+  }, [page, pageSize, applied]);
+
+  useEffect(() => {
+    let mounted = true;
+    getStates().then(data => { if (mounted) setStates(data); }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!pending.st_id) {
+      setDistricts([]);
+      return;
+    }
+    const id = Number(pending.st_id);
+    getDistricts(id).then(d => setDistricts(d)).catch(() => setDistricts([]));
+  }, [pending.st_id]);
+
+  useEffect(() => {
+    if (!pending.dist_id) {
+      setMandals([]);
+      return;
+    }
+    const id = Number(pending.dist_id);
+    getMandals(id).then(m => setMandals(m)).catch(() => setMandals([]));
+  }, [pending.dist_id]);
+
+  useEffect(() => {
+    if (!pending.mndl_id) {
+      setVillages([]);
+      return;
+    }
+    const id = Number(pending.mndl_id);
+    getVillages(id).then(v => setVillages(v)).catch(() => setVillages([]));
+  }, [pending.mndl_id]);
+
+  useEffect(() => {
+    if (!pending.vil_id) {
+      setSchools([]);
+      return;
+    }
+    const id = Number(pending.vil_id);
+    getSchools(id).then(s => setSchools(s)).catch(() => setSchools([]));
+  }, [pending.vil_id]);
 
   const allClasses = [...new Set(students.map(s => s.class_id))];
-  const districts = useMemo(() => MOCK_DISTRICTS.filter(d => !pending.st_id || d.st_id === Number(pending.st_id)), [pending.st_id]);
-  const mandals = useMemo(() => MOCK_MANDALS.filter(m => !pending.dist_id || m.dist_id === Number(pending.dist_id)), [pending.dist_id]);
-  const villages = useMemo(() => MOCK_VILLAGES.filter(v => !pending.mndl_id || v.mndl_id === Number(pending.mndl_id)), [pending.mndl_id]);
-  const schools = useMemo(() => MOCK_SCHOOLS.filter(s => !pending.vil_id || s.vil_id === Number(pending.vil_id)), [pending.vil_id]);
-  const filteredStates = MOCK_STATES;
-  const pageIds = pager.current.map(s => s.student_id);
-  const hasSelection = checked.length > 0;
-  const selectedStudents = useMemo(() => students.filter(s => checked.includes(s.student_id)), [checked, students]);
+  const filteredStates = states;
+  const pageIds = students.map(s => s.student_id);
   const allPageChecked = pageIds.length > 0 && pageIds.every(id => checked.includes(id));
   const toggle = (id: number) => setChecked(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
   const togglePage = () => setChecked(ids => allPageChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]);
-  const confirmBulkDelete = async () => { await deactivateStudents(checked, user?.username ?? 'admin'); setBulkOpen(false); toast(`${checked.length} students removed.`, 'success'); load(); };
+
+  const confirmBulkDelete = async () => {
+    await deactivateStudents(checked, user?.username ?? 'admin');
+    setBulkOpen(false);
+    toast(`${checked.length} students removed.`, 'success');
+    load(page, pageSize);
+  };
 
   const confirmSingleDelete = async () => {
     if (!singleDelete) return;
     await deactivateStudents([singleDelete], user?.username ?? 'admin');
     setSingleDelete(null);
-    toast(`Student removed.`, 'success');
-    load();
+    toast('Student removed.', 'success');
+    load(page, pageSize);
   };
 
-  const totalStudents = students.length;
+  const totalStudents = total;
   const totalBoys = students.filter(s => s.gender === 'Male').length;
   const totalGirls = students.filter(s => s.gender === 'Female').length;
 
@@ -69,43 +137,7 @@ export default function StudentListPage() {
     setSponsorOpen(true);
   };
 
-  const exportStudentsCsv = () => {
-    const exportRows = hasSelection ? selectedStudents : students;
-    const headers = ['Student ID', 'Name', 'Gender', 'Age', 'Grade', 'School', 'Village', 'District', 'Guardian', 'Guardian Phone', 'Sponsor'];
-    const csvRows = exportRows.map(s => {
-      const dob = new Date(s.dob);
-      const today = new Date();
-      let age = today.getFullYear() - dob.getFullYear();
-      const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
-      if (!hasBirthdayPassed) age -= 1;
-
-      return [
-        s.student_id,
-        s.full_name,
-        s.gender,
-        age,
-        s.class_id,
-        s.sch_name,
-        s.vil_name,
-        s.dist_name,
-        s.guardian_full_name,
-        s.guardian_phone,
-        s.sponsor_full_name ?? 'Saho Foundation'
-      ];
-    });
-
-    const escapeCsvValue = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
-    const csv = [headers, ...csvRows].map(row => row.map(escapeCsvValue).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = hasSelection ? `selected-students-${checked.length}.csv` : 'students.csv';
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const rows = pager.current.map((s, index) => {
+  const rows = students.map(s => {
     const dob = new Date(s.dob);
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
@@ -114,12 +146,11 @@ export default function StudentListPage() {
     const serialNumber = (pager.page - 1) * pager.pageSize + index + 1;
     return [
       <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.student_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.student_id)} />,
-      <span className="recordId">{serialNumber}</span>,
-      <div className="rowFlex"><Avatar name={s.full_name} size="md" /><div><div className="strong studentNameCell" onClick={() => setSelected(s)}>{s.full_name}</div><div className="sub">{s.gender}</div></div></div>,
+      <div className="rowFlex"><Avatar name={s.full_name} size="md" /><div><div className="strong studentNameCell" onClick={async () => { setLoading(true); try { const full = await getStudentById(s.student_id); setSelected(full ?? s); } finally { setLoading(false); } }}>{s.full_name}</div><div className="sub">{s.gender}</div></div></div>,
       <div>{age}</div>,
       <div>{s.class_id}</div>,
-      <div><div className="strong">{s.sch_name}</div><div className="sub">{s.vil_name}, {s.dist_name}</div></div>,
-      <div><div className="strong">{s.guardian_full_name}</div><div className="sub">{s.guardian_relation_name} - {s.guardian_occ || 'N/A'}</div></div>,
+      <div>{s.sch_name || 'N/A'}</div>,
+      <div>{s.guardian_full_name || 'N/A'}</div>,
       <div>
         {s.sponsor_id ? (
           <button className="photoButton" onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }} title={s.sponsor_full_name ?? undefined}>
@@ -138,7 +169,7 @@ export default function StudentListPage() {
             <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </Button>
-        <Button size="sm" variant="danger" className="iconBtn" onClick={(e) => { e.stopPropagation(); setSingleDelete(s.student_id); }} aria-label={`Delete ${s.full_name}`}>
+        <Button size="sm" variant="danger" className="iconBtn" style={{ marginLeft: 8 }} onClick={(e) => { e.stopPropagation(); setSingleDelete(s.student_id); }} aria-label={`Delete ${s.full_name}`}>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
             <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -155,78 +186,67 @@ export default function StudentListPage() {
   const totalGirlsPct = totalStudents ? `${Math.round((totalGirls / totalStudents) * 100)}%` : '0%';
 
   return <div>
-    <section className="studentsHero">
-      <div className="studentsHeroHeader">
-        <div className="studentsHeroIntro">
-          <p className="studentsHeroEyebrow">Student Management</p>
-          <h1>Students</h1>
-          <p>All enrolled single-parent students{' — '}{students.length} total</p>
+    <PageHeader title="Students" subtitle={`All enrolled single-parent students - ${total} total`} actions={<><Button variant="outline">Export CSV</Button><Button onClick={() => nav('/students/add')}>Add Student</Button></>} />
+    <div className="statGrid" style={{ marginBottom: '30px' }}>
+      <StatCard label="TOTAL STUDENTS" value={totalStudents} note="All enrolled" />
+      <StatCard label="TOTAL BOYS" value={totalBoys} note="Percentage of total" />
+      <StatCard label="TOTAL GIRLS" value={totalGirls} note="Percentage of total" />
+    </div>
+    <div className="panel" style={{ marginBottom: '20px' }}>
+      <FilterBar onGo={() => { setApplied({ ...pending }); setPage(1); }} onClear={() => { setPending(defaults); setApplied(defaults); setPage(1); }}>
+        <div className="filterGroup filterGroupWide">
+          <input className="filterSearch" placeholder="Search students" value={pending.search} onChange={e => setPending({ ...pending, search: e.target.value })} />
         </div>
-        <div className="studentsHeroActions">
-          <Button className="heroAddButton" onClick={() => nav('/students/add')}>
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Add Student
-          </Button>
+        <div className="filterGroup filterGroupCompact">
+          <select className="select compact" value={pending.st_id} onChange={e => setPending({ ...pending, st_id: e.target.value, dist_id: '', mndl_id: '', vil_id: '', sch_id: '' })}>
+            <option value="">All States</option>
+            {filteredStates.map(s => <option value={s.stId ?? s.st_id} key={s.stId ?? s.st_id}>{s.stName ?? s.st_name}</option>)}
+          </select>
         </div>
-      </div>
-
-      <div className="studentsHeroStats">
-        <HeroMetricCard
-          tone="teal"
-          label="Total Students"
-          value={totalStudents}
-          note="All enrolled"
-          delta="12%"
-          deltaLabel="vs last month"
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="9.5" cy="7" r="3.5" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M20 8v6M17 11h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          }
-          wavePath="M10 53C22 53 19 34 32 34C45 34 42 49 54 49C66 49 67 31 79 31C92 31 91 46 103 46C115 46 118 24 132 24C145 24 148 36 164 36"
-        />
-        <HeroMetricCard
-          tone="blue"
-          label="Total Boys"
-          value={totalBoys}
-          note={`${totalBoysPct} of total`}
-          delta="8%"
-          deltaLabel="vs last month"
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-              <circle cx="10" cy="10" r="5.2" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M13.6 6.4L19 1M15.4 1H19v3.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          }
-          wavePath="M10 52C21 52 24 51 32 51C40 51 42 34 53 34C63 34 64 47 74 47C84 47 87 30 98 30C109 30 111 43 120 43C130 43 135 23 147 23C157 23 159 30 164 30"
-        />
-        <HeroMetricCard
-          tone="purple"
-          label="Total Girls"
-          value={totalGirls}
-          note={`${totalGirlsPct} of total`}
-          delta="16%"
-          deltaLabel="vs last month"
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-              <circle cx="12" cy="8" r="4.7" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M12 13v8M8.5 17H15.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          }
-          wavePath="M10 53C22 53 22 47 31 47C40 47 41 35 50 35C59 35 60 49 69 49C78 49 84 28 94 28C104 28 106 19 117 19C128 19 129 34 142 34C152 34 154 26 164 26"
-        />
-      </div>
-    </section>
-
-    <div className="panel studentFilterPanel" style={{ marginBottom: '20px' }}>
-      <div className="sectionHeader">
-        <div>
-          <h3 className="panelTitle">Filters</h3>
-          <p className="sub">Refine students by location, demographics, and academic context.</p>
+        <div className="filterGroup filterGroupCompact">
+          <select className="select compact" value={pending.dist_id} onChange={e => setPending({ ...pending, dist_id: e.target.value, mndl_id: '', vil_id: '', sch_id: '' })}>
+            <option value="">All Districts</option>
+            {districts.map(d => <option value={d.distId ?? d.dist_id} key={d.distId ?? d.dist_id}>{d.distName ?? d.dist_name}</option>)}
+          </select>
+        </div>
+        <div className="filterGroup filterGroupCompact">
+          <select className="select compact" value={pending.mndl_id} onChange={e => setPending({ ...pending, mndl_id: e.target.value, vil_id: '', sch_id: '' })}>
+            <option value="">All Mandals</option>
+            {mandals.map(m => <option value={m.mndlId ?? m.mndl_id} key={m.mndlId ?? m.mndl_id}>{m.mndlName ?? m.mndl_name}</option>)}
+          </select>
+        </div>
+        <div className="filterGroup filterGroupCompact">
+          <select className="select compact" value={pending.vil_id} onChange={e => setPending({ ...pending, vil_id: e.target.value, sch_id: '' })}>
+            <option value="">All Villages</option>
+            {villages.map(v => <option value={v.vilId ?? v.vil_id} key={v.vilId ?? v.vil_id}>{v.vilName ?? v.vil_name}</option>)}
+          </select>
+        </div>
+        <div className="filterGroup filterGroupCompact">
+          <select className="select compact" value={pending.sch_id} onChange={e => setPending({ ...pending, sch_id: e.target.value })}>
+            <option value="">All Schools</option>
+            {schools.map(s => <option value={s.schId ?? s.sch_id} key={s.schId ?? s.sch_id}>{s.schName ?? s.sch_name}</option>)}
+          </select>
+        </div>
+        <div className="filterGroup filterGroupCompact">
+          <select className="select compact" value={pending.gender} onChange={e => setPending({ ...pending, gender: e.target.value })}>
+            <option value="">All Gender</option>
+            <option value="1">Male</option>
+            <option value="2">Female</option>
+            <option value="3">Other</option>
+          </select>
+        </div>
+        <div className="filterGroup filterGroupCompact">
+          <select className="select compact" value={pending.orphan_status} onChange={e => setPending({ ...pending, orphan_status: e.target.value })}>
+            <option value="">Orphan / Semi Orphan</option>
+            <option value="3">Orphan</option>
+            <option value="2">Single Parent</option>
+          </select>
+        </div>
+        <div className="filterGroup filterGroupCompact">
+          <select className="select compact" value={pending.class_id} onChange={e => setPending({ ...pending, class_id: e.target.value })}>
+            <option value="">All Classes</option>
+            {allClasses.map(c => <option key={c}>{c}</option>)}
+          </select>
         </div>
       </div>
       <div className="studentFilterGlow" aria-hidden />
@@ -291,55 +311,23 @@ export default function StudentListPage() {
     </div>
     <div className={`panel studentRecordsPanel ${hasSelection ? 'bulkModeActive' : ''}`}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '12px' }}>
-        <h3 className="panelTitle">Student Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{students.length} results</span></h3>
+        <h3 className="panelTitle">Student Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{total} results</span></h3>
       </div>
 
-      <div className={`bulkToolbarShell ${hasSelection ? 'isActive' : ''}`} aria-hidden={!hasSelection}>
-        <div className="selectHeaderRow studentBulkToolbar">
-          <div className="bulkToolbarInfo">
-            <label className="bulkSelectAll">
-              <input type="checkbox" checked={allPageChecked} onChange={togglePage} tabIndex={hasSelection ? 0 : -1} />
-              <span>Select all on this page</span>
-            </label>
-            <div className="selectedCount">
-              <strong>{checked.length}</strong> selected
-              <span>of {students.length}</span>
-            </div>
-          </div>
-          <div className="bulkToolbarActions">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={exportStudentsCsv}
-              tabIndex={hasSelection ? 0 : -1}
-            >
-              Export CSV
-            </Button>
+      {error ? <div className="toast error" style={{ position: 'static', marginBottom: 12 }}>{error}</div> : null}
 
-            <Button
-              size="sm"
-              variant="outline"
-              className="bulkDeleteButton"
-              onClick={() => setBulkOpen(true)}
-              disabled={!hasSelection}
-              tabIndex={hasSelection ? 0 : -1}
-            >
-              Delete selected
-            </Button>
-          </div>
+      <div className="selectHeaderRow" style={{ marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}><input type="checkbox" checked={allPageChecked} onChange={togglePage} /> <span style={{ fontWeight: 800, color: 'var(--color-text2)' }}>Select all on this page</span></label>
+          <div className="selectedCount" style={{ marginLeft: 8, color: 'var(--color-text3)', fontWeight: 800 }}>Selected {checked.length} of {total}</div>
+        </div>
+        <div>
+          <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)} disabled={checked.length === 0} style={{ borderColor: checked.length ? 'var(--green-border)' : 'var(--color-border)', color: checked.length ? 'var(--green)' : 'var(--color-text3)' }}>Delete selected</Button>
         </div>
       </div>
 
-      <DataTable
-        loading={loading}
-        columns={[{ key: 'select', label: '', width: '44px' }, { key: 'studentId', label: 'ID', width: '92px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE' }, { key: 'grade', label: 'GRADE' }, { key: 'location', label: 'LOCATION' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: '', width: '72px' }]}
-        rows={rows}
-        rowClassName={(index) => {
-          const student = pager.current[index];
-          return `student-row studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
-        }}
-      />
-      <Pagination total={students.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
+      <DataTable loading={loading} columns={[{ key: 'select', label: '', width: '44px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE' }, { key: 'grade', label: 'CLASS' }, { key: 'school', label: 'SCHOOL NAME' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: 'ACTIONS' }]} rows={rows} />
+      <Pagination total={total} page={page} pageSize={pageSize} onChange={setPage} onPageSizeChange={(nextPageSize) => { setPageSize(nextPageSize); setPage(1); }} />
     </div>
     <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
     <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.full_name ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
@@ -350,12 +338,12 @@ export default function StudentListPage() {
           <div style={{ fontWeight: 800 }}>{sponsorDetails.email}</div>
           <div className="sub">{sponsorDetails.ph_no}</div>
           <div className="sub" style={{ marginTop: 8 }}>{sponsorDetails.loc}</div>
-          <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib_amt}</div></div>
+          <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib}</div></div>
           <div style={{ marginTop: 12 }}><strong>Students Sponsored:</strong> <span className="strong">{sponsorDetails.students_count}</span></div>
         </div>
       </div> : <div>No sponsor information available</div>}
     </Modal>
-    <ConfirmModal open={singleDelete !== null} onClose={() => setSingleDelete(null)} onConfirm={confirmSingleDelete} title="Delete Student" message={`Delete selected student?`} />
+    <ConfirmModal open={singleDelete !== null} onClose={() => setSingleDelete(null)} onConfirm={confirmSingleDelete} title="Delete Student" message="Delete selected student?" />
     <ConfirmModal open={bulkOpen} onClose={() => setBulkOpen(false)} onConfirm={confirmBulkDelete} title="Delete Selected Students" message={`Delete ${checked.length} selected students?`} />
   </div>;
 }
