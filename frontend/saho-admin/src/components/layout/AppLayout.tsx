@@ -2,21 +2,15 @@ import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import AIAssistantWidget from '../common/AIAssistantWidget';
 
 export default function AppLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(() => localStorage.getItem('saho-sidebar-open') === 'true');
-  const [assistantOpen, setAssistantOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('saho-sidebar-open', String(sidebarOpen));
   }, [sidebarOpen]);
-
-  useEffect(() => {
-    setAssistantOpen(false);
-  }, [location.pathname]);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 900px)');
@@ -34,13 +28,13 @@ export default function AppLayout() {
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className={`appShell ${sidebarOpen ? 'sidebarExpanded sidebar-open' : 'sidebarCollapsed'} ${assistantOpen ? 'aiAssistantOpen' : ''}`}>
+    <div className={`appShell ${sidebarOpen ? 'sidebarExpanded sidebar-open' : 'sidebarCollapsed'}`}>
       <Topbar sidebarOpen={sidebarOpen} onSidebarToggle={toggleSidebar} />
       <button className="sidebar-overlay" type="button" aria-label="Close sidebar" onClick={closeSidebar} />
       <Sidebar open={sidebarOpen} />
       <main className="layoutMain">
         <div key={location.pathname} className="page-enter"><Outlet /></div>
-      </main><AIAssistantWidget open={assistantOpen} onOpenChange={setAssistantOpen} />
+      </main>
     </div>
   );
 }
