@@ -19,6 +19,30 @@ export const getStudents = async ({
   pageSize?: number;
   filters?: Partial<StudentFilters>;
 } = {}): Promise<StudentsResponse> => {
+  const orphanValues = filters?.orphan_status?.split(',').map(value => value.trim()).filter(Boolean) ?? [];
+  if (orphanValues.length > 1) {
+    const responses = await Promise.all(orphanValues.map(orphan_status => getStudents({
+      pageNumber: 1,
+      pageSize: 10000,
+      filters: { ...filters, orphan_status },
+    })));
+    const studentMap = new Map<number, StudentView>();
+    responses.flatMap(response => response.students).forEach(student => {
+      studentMap.set(student.student_id, student);
+    });
+    const students = Array.from(studentMap.values()).sort((a, b) => b.student_id - a.student_id);
+    const start = (pageNumber - 1) * pageSize;
+    const pageStudents = students.slice(start, start + pageSize);
+
+    return {
+      pageNumber,
+      pageSize,
+      students: pageStudents,
+      total: students.length,
+      hasMore: start + pageSize < students.length,
+    };
+  }
+
   try {
     const params: any = { pageNumber, pageSize };
     if (filters?.search?.trim()) params.search = filters.search.trim();

@@ -62,6 +62,7 @@ interface StudentProfileSectionsProps {
   classes?: [string, string][];
   aadhaarStatus?: string;
   loading?: boolean;
+  activeStep?: 'personal' | 'location' | 'guardian';
 }
 
 const mask = (aadhaar: string) => `........${aadhaar.slice(-4)}`;
@@ -90,7 +91,7 @@ export const ORPHAN_STATUS_OPTIONS: [string, string][] = [
 ];
 
 export default function StudentProfileSections(props: StudentProfileSectionsProps) {
-  const { mode, form, set, chooseImage, sibling, siblingChecked, searchSibling, student, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [] } = props;
+  const { mode, form, set, chooseImage, sibling, siblingChecked, searchSibling, student, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal' } = props;
   const [photoOpen, setPhotoOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -343,56 +344,60 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
 
   return (
     <>
-      <h3 className="panelTitle">Basic Student Details</h3>
-      <div className="formGrid">
-        <Field label="First Name*" value={form.first_name} onChange={v => set('first_name', v)} />
-        <Field label="Middle Name" value={form.middle_name} onChange={v => set('middle_name', v)} />
-        <Field label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} />
-        <Field label="Email ID*" type="email" value={form.email} onChange={v => set('email', v)} />
-        <Field label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} />
-        <Select label="Gender*" value={form.gender} onChange={v => set('gender', v)} options={GENDER_OPTIONS} />
-        <Field label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} maxLength={12} subText={props.aadhaarStatus} />
-        <Select label="Blood Group" value={form.blood_group} onChange={v => set('blood_group', v)} options={['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']} />
-        <Select label="Religion*" value={form.religion} onChange={v => set('religion', v)} options={religionOptions} />
-        <Select label="Caste*" value={form.caste} onChange={v => set('caste', v)} options={casteOptions} />
-        <Select label="Class*" value={form.class_id} onChange={v => set('class_id', v)} options={classOptions} />
-        <Select label="Orphan / Semi Orphan*" value={form.orphan_status} onChange={v => set('orphan_status', v)} options={orphanStatusOptions} />
-        <label className="field">
-          <span>Student Photo</span>
-          <div className="uploadBox" style={{ gap: 10, padding: 12 }}>
-            {form.image_url ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="danger"
-                className="iconBtn uploadDeleteBtn"
-                onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); clearPhoto(); }}
-                aria-label="Remove student photo"
-                title="Remove photo"
-              >
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </Button>
-            ) : null}
-            {form.image_url ? <img src={form.image_url} alt="Student" /> : <span>Select photo option<br /><small>Take photo or upload</small></span>}
-            <div className="rowFlex" style={{ justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <Button type="button" variant="outline" onClick={openCamera}>Take Photo</Button>
-              <label className="btn outline md" style={{ cursor: 'pointer' }}>
-                Upload Photo
-                <input accept="image/*" type="file" onChange={handlePhoto} style={{ display: 'none' }} />
-              </label>
-            </div>
-            <div className="sub" style={{ marginTop: 2 }}>
-              {uploadError ? <span style={{ color: 'var(--red)' }}>{uploadError}</span> : 'Upload size: 5KB to 1MB'}
-            </div>
+      {activeStep === 'personal' ? (
+        <section className="studentStepPanel">
+          <h3 className="studentStepTitle"><span className="studentStepIcon">1</span>Personal Information</h3>
+          <div className="formGrid studentStepGrid">
+            <Field label="First Name*" value={form.first_name} onChange={v => set('first_name', v)} />
+            <Field label="Middle Name" value={form.middle_name} onChange={v => set('middle_name', v)} />
+            <Field label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} />
+            <Field label="Email ID*" type="email" value={form.email} onChange={v => set('email', v)} />
+            <Field label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} />
+            <Select label="Gender*" value={form.gender} onChange={v => set('gender', v)} options={GENDER_OPTIONS} />
+            <Select label="Blood Group" value={form.blood_group} onChange={v => set('blood_group', v)} options={['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']} />
+            <Select label="Religion*" value={form.religion} onChange={v => set('religion', v)} options={religionOptions} />
+            <Select label="Caste*" value={form.caste} onChange={v => set('caste', v)} options={casteOptions} />
+            <Select label="Class*" value={form.class_id} onChange={v => set('class_id', v)} options={classOptions} />
+            <Field label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} maxLength={12} subText={props.aadhaarStatus} />
+            <Select label="Orphan / Semi Orphan*" value={form.orphan_status} onChange={v => set('orphan_status', v)} options={orphanStatusOptions} />
+            <label className="field studentPhotoField">
+              <span>Student Photo</span>
+              <div className="uploadBox studentModalUpload">
+                {form.image_url ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="danger"
+                    className="iconBtn uploadDeleteBtn"
+                    onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); clearPhoto(); }}
+                    aria-label="Remove student photo"
+                    title="Remove photo"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                      <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </Button>
+                ) : null}
+                {form.image_url ? <img src={form.image_url} alt="Student" /> : <span>Select photo option<br /><small>Take photo or upload</small></span>}
+                <div className="rowFlex studentModalUploadActions">
+                  <Button type="button" variant="outline" onClick={openCamera}>Take Photo</Button>
+                  <label className="btn outline md" style={{ cursor: 'pointer' }}>
+                    Upload Photo
+                    <input accept="image/*" type="file" onChange={handlePhoto} style={{ display: 'none' }} />
+                  </label>
+                </div>
+                <div className="sub" style={{ marginTop: 2 }}>
+                  {uploadError ? <span style={{ color: 'var(--red)' }}>{uploadError}</span> : 'Upload size: 5KB to 1MB'}
+                </div>
+              </div>
+            </label>
           </div>
-        </label>
-      </div>
+        </section>
+      ) : null}
 
       <Modal
         open={cameraOpen}
@@ -437,57 +442,69 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
         )}
       </Modal>
 
-      <h3 className="sectionTitle">Sibling Information</h3>
-      <div className="formGrid">
-        <label className="field">
-          <span>Does the student have any sibling in this foundation?*</span>
-          <div className="radioRow">
-            <label><input type="radio" checked={form.has_sibling === 'Yes'} onChange={() => set('has_sibling', 'Yes')} /> Yes</label>
-            <label><input type="radio" checked={form.has_sibling === 'No'} onChange={() => set('has_sibling', 'No')} /> No</label>
-          </div>
-        </label>
-        {form.has_sibling === 'Yes' && (
-          <>
-            <div className="siblingSearch">
-              <Field label="Search Existing Student by Aadhaar Number*" value={form.sibling_aadhaar} onChange={v => set('sibling_aadhaar', v)} maxLength={12} />
-              <Button type="button" onClick={searchSibling}>Search</Button>
-            </div>
-            {sibling ? (
-              <div className="foundCard">
-                <Avatar name={sibling.studentName} size="lg" />
-                <div>
-                  <strong>{sibling.studentName}</strong>
-                  <Badge variant="success">Student ID: {sibling.studentId}</Badge>
-                  <div className="sub">Class: {sibling.classId}</div>
-                  <div className="sub">School: {sibling.schoolName}</div>
-                </div>
+      {activeStep === 'personal' ? (
+        <section className="studentStepPanel studentSiblingPanel">
+          <h3 className="studentStepTitle"><span className="studentStepIcon">+</span>Sibling Information</h3>
+          <div className="formGrid studentStepGrid">
+            <label className="field">
+              <span>Does the student have any sibling in this foundation?*</span>
+              <div className="radioRow">
+                <label><input type="radio" checked={form.has_sibling === 'Yes'} onChange={() => set('has_sibling', 'Yes')} /> Yes</label>
+                <label><input type="radio" checked={form.has_sibling === 'No'} onChange={() => set('has_sibling', 'No')} /> No</label>
               </div>
-            ) : siblingChecked ? (
-              <div className="foundCard muted">No existing student selected.</div>
-            ) : null}
-          </>
-        )}
-      </div>
+            </label>
+            {form.has_sibling === 'Yes' && (
+              <>
+                <div className="siblingSearch">
+                  <Field label="Search Existing Student by Aadhaar Number*" value={form.sibling_aadhaar} onChange={v => set('sibling_aadhaar', v)} maxLength={12} />
+                  <Button type="button" onClick={searchSibling}>Search</Button>
+                </div>
+                {sibling ? (
+                  <div className="foundCard">
+                    <Avatar name={sibling.studentName} size="lg" />
+                    <div>
+                      <strong>{sibling.studentName}</strong>
+                      <Badge variant="success">Student ID: {sibling.studentId}</Badge>
+                      <div className="sub">Class: {sibling.classId}</div>
+                      <div className="sub">School: {sibling.schoolName}</div>
+                    </div>
+                  </div>
+                ) : siblingChecked ? (
+                  <div className="foundCard muted">No existing student selected.</div>
+                ) : null}
+              </>
+            )}
+          </div>
+        </section>
+      ) : null}
 
-      <h3 className="sectionTitle">School & Location</h3>
-      <div className="formGrid">
-        <Select label="State*" value={form.st_id} onChange={v => set('st_id', v)} options={states} />
-        <Select label="District*" value={form.dist_id} onChange={v => set('dist_id', v)} options={districts} />
-        <Select label="Mandal*" value={form.mndl_id} onChange={v => set('mndl_id', v)} options={mandals} />
-        <Select label="Village*" value={form.vil_id} onChange={v => set('vil_id', v)} options={villages} />
-        <Select label="School*" value={form.sch_id} onChange={v => set('sch_id', v)} options={schools} />
-      </div>
+      {activeStep === 'location' ? (
+        <section className="studentStepPanel">
+          <h3 className="studentStepTitle"><span className="studentStepIcon">2</span>School & Location</h3>
+          <div className="formGrid studentStepGrid">
+            <Select label="State*" value={form.st_id} onChange={v => set('st_id', v)} options={states} />
+            <Select label="District*" value={form.dist_id} onChange={v => set('dist_id', v)} options={districts} />
+            <Select label="Mandal*" value={form.mndl_id} onChange={v => set('mndl_id', v)} options={mandals} />
+            <Select label="Village*" value={form.vil_id} onChange={v => set('vil_id', v)} options={villages} />
+            <Select label="School*" value={form.sch_id} onChange={v => set('sch_id', v)} options={schools} />
+          </div>
+        </section>
+      ) : null}
 
-      <h3 className="sectionTitle">Guardian Details</h3>
-      <div className="formGrid">
-        <Field label="Guardian First Name*" value={form.guardian_first} onChange={v => set('guardian_first', v)} />
-        <Field label="Guardian Middle Name" value={form.guardian_middle} onChange={v => set('guardian_middle', v)} />
-        <Field label="Guardian Last Name*" value={form.guardian_last} onChange={v => set('guardian_last', v)} />
-        <Select label="Relation*" value={form.relation} onChange={v => set('relation', v)} options={relationships} />
-        <Field label="Phone Number*" value={form.phone} onChange={v => set('phone', v)} />
-        <Field label="Occupation" value={form.occ} onChange={v => set('occ', v)} />
-        <label className="field"><span>Address</span><textarea className="textarea" value={form.addr} onChange={e => set('addr', e.target.value)} /></label>
-      </div>
+      {activeStep === 'guardian' ? (
+        <section className="studentStepPanel">
+          <h3 className="studentStepTitle"><span className="studentStepIcon">3</span>Guardian Information</h3>
+          <div className="formGrid studentStepGrid">
+            <Field label="Guardian First Name*" value={form.guardian_first} onChange={v => set('guardian_first', v)} />
+            <Field label="Guardian Middle Name" value={form.guardian_middle} onChange={v => set('guardian_middle', v)} />
+            <Field label="Guardian Last Name*" value={form.guardian_last} onChange={v => set('guardian_last', v)} />
+            <Select label="Relation*" value={form.relation} onChange={v => set('relation', v)} options={relationships} />
+            <Field label="Phone Number*" value={form.phone} onChange={v => set('phone', v)} />
+            <Field label="Occupation" value={form.occ} onChange={v => set('occ', v)} />
+            <label className="field"><span>Address</span><textarea className="textarea" value={form.addr} onChange={e => set('addr', e.target.value)} /></label>
+          </div>
+        </section>
+      ) : null}
       </>
   );
 }
