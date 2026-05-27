@@ -1087,6 +1087,14 @@ td{padding:11px 12px;font-size:12.5px}
 .studentRecordsPanel .tableWrap td:last-child{
   overflow:visible;
 }
+.studentIdCell{
+  color:var(--color-text2);
+  font-weight:700;
+  white-space:nowrap;
+}
+.studentRecordsPanel .tableWrap tbody tr.studentTableRow > td{
+  transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
 .student-actions.actions{
   width:58px;
   min-width:58px;
@@ -1096,8 +1104,8 @@ td{padding:11px 12px;font-size:12.5px}
   opacity:0;
   visibility:hidden;
   pointer-events:none;
-  transform:translateY(3px);
-  transition:opacity .16s ease,transform .16s ease,visibility .16s ease;
+  transform:none;
+  transition:opacity .18s ease,visibility .18s ease;
 }
 .student-actions .btn.iconBtn{
   flex:0 0 26px;
@@ -1105,6 +1113,11 @@ td{padding:11px 12px;font-size:12.5px}
   height:26px;
   padding:0;
   border-radius:8px;
+  color:var(--color-text3);
+  border-color:transparent;
+  background:transparent;
+  box-shadow:none;
+  transition:background-color .18s ease,border-color .18s ease,color .18s ease,opacity .18s ease;
 }
 .student-actions .btn.iconBtn svg{
   width:14px;
@@ -1115,14 +1128,31 @@ td{padding:11px 12px;font-size:12.5px}
   opacity:1;
   visibility:visible;
   pointer-events:auto;
-  transform:translateY(0);
+}
+.studentTableRow:hover .student-actions .btn.iconBtn,
+.studentTableRow:focus-within .student-actions .btn.iconBtn{
+  color:var(--color-text2);
+  border-color:var(--color-border);
+  background:#ffffff;
+}
+.studentTableRow .student-actions .btn.iconBtn:hover{
+  color:var(--color-text);
+  border-color:var(--color-primary-border);
+  background:#f8fffd;
+  transform:none;
+}
+.btn.iconBtn.deleteActionButton:hover,
+.studentTableRow .student-actions .btn.iconBtn.deleteActionButton:hover{
+  color:#dc2626;
+  border-color:#fecaca;
+  background:#fff7f7;
+  transform:none;
 }
 @media (hover:none){
   .student-actions.actions{
     opacity:1;
     visibility:visible;
     pointer-events:auto;
-    transform:none;
   }
 }
 
