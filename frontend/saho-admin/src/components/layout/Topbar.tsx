@@ -41,13 +41,19 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
   return (
     <header className="dashboard-header topbar">
       <div className="topbarLeft">
-        <div className="topbarSidebarSlot" aria-hidden="true">
-          <button className="sidebarToggle headerSidebarToggle" type="button" aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} aria-expanded={sidebarOpen} title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} onClick={onSidebarToggle}>
-            <span />
-            <span />
-            <span />
-          </button>
-        </div>
+        <button className={`sidebarToggle headerSidebarToggle ${sidebarOpen ? 'closeIcon' : 'menuIcon'}`} type="button" aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} aria-expanded={sidebarOpen} title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} onClick={onSidebarToggle}>
+          {sidebarOpen ? (
+            <svg className="sidebarCancelIcon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          ) : (
+            <>
+              <span />
+              <span />
+              <span />
+            </>
+          )}
+        </button>
         <div className="topbarBrand">
           <button type="button" className="brandLogoButton" aria-label="Go to dashboard" onClick={goDashboard}>
             <img className="brandLogo" src={sahoImg} alt="SaHo" />

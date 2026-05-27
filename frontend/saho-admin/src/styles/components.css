@@ -46,7 +46,8 @@
 .sidebar.collapsed .sidebarHead{padding-left:0;padding-right:0;justify-content:center}
 .sidebar.collapsed .sidebarToggleInline{width:34px;height:34px;border-radius:11px}
 .sidebar.collapsed .sidebarToggleInline span{width:15px}
-.sidebar.collapsed .navSection,.sidebar.collapsed .navLabel,.sidebar.collapsed .navChevron,.sidebar.collapsed .navSub{display:none}
+.sidebar.collapsed .navSection{visibility:hidden;opacity:0;pointer-events:none}
+.sidebar.collapsed .navLabel,.sidebar.collapsed .navChevron,.sidebar.collapsed .navSub{display:none}
 .sidebar.collapsed .navItem,.sidebar.collapsed .navParent,.sidebar.collapsed .sidebarSignOut{justify-content:center;padding-left:0;padding-right:0;width:52px;margin-left:auto;margin-right:auto}
 .sidebar.collapsed .navItem.active .navIcon,.sidebar.collapsed .navParent.active .navIcon{outline:2px solid rgba(45,212,191,.25)}
 .sidebar.collapsed .sidebarSignOut{padding-top:16px;padding-bottom:16px}
@@ -674,8 +675,12 @@ svg{max-width:100%}
 
 @media (max-width: 900px) {
   .appShell{
-    --sidebar-w:0px;
+    --sidebar-w:var(--sidebar-collapsed-w);
     min-height:100vh;
+  }
+  .appShell.sidebarExpanded,
+  .appShell.sidebarCollapsed{
+    --sidebar-w:var(--sidebar-collapsed-w);
   }
   .dashboard-header{
     left:0;
@@ -703,25 +708,30 @@ svg{max-width:100%}
     top:var(--topbar-h);
     bottom:0;
     left:0;
-    width:min(304px,86vw);
+    width:var(--sidebar-collapsed-w);
     height:calc(100vh - var(--topbar-h));
     z-index:60;
-    padding:16px 0 18px;
+    padding:14px 0 18px;
     border-right:1px solid rgba(255,255,255,.12);
-    box-shadow:24px 0 60px rgba(15,23,42,.22);
-    transform:translateX(-105%);
-    visibility:hidden;
-    pointer-events:none;
-    transition:all .3s ease;
-  }
-  .mobile-sidebar.expanded{
+    box-shadow:none;
     transform:translateX(0);
     visibility:visible;
     pointer-events:auto;
+    transition:all .3s ease;
+  }
+  .mobile-sidebar.expanded{
+    width:min(304px,86vw);
+    transform:translateX(0);
+    visibility:visible;
+    pointer-events:auto;
+    padding-top:16px;
+    box-shadow:24px 0 60px rgba(15,23,42,.22);
   }
   .mobile-sidebar.collapsed{
-    transform:translateX(-105%);
-    width:min(304px,86vw);
+    transform:translateX(0);
+    width:var(--sidebar-collapsed-w);
+    visibility:visible;
+    pointer-events:auto;
   }
   .mobile-sidebar .sidebarHead{display:none}
   .mobile-sidebar .navSection{
@@ -761,7 +771,7 @@ svg{max-width:100%}
     padding-right:13px;
   }
   .layoutMain{
-    margin-left:0;
+    margin-left:var(--sidebar-collapsed-w);
     padding:calc(var(--topbar-h) + 18px) 16px 24px;
     transition:all .3s ease;
   }
@@ -1075,6 +1085,255 @@ td{padding:11px 12px;font-size:12.5px}
 .nav-item .navItem .navChevron,
 .nav-item .navParent .navChevron,
 .navSub{display:none}
+
+/* ChatGPT-style sidebar collapse: keep the icon rail visible, hide only text. */
+.sidebar[data-sidebar-state="collapsed"]{
+  width:var(--sidebar-collapsed-w);
+}
+.sidebar[data-sidebar-state="expanded"]{
+  width:var(--sidebar-expanded-w);
+}
+.sidebar[data-sidebar-state="collapsed"] .navSection{
+  visibility:hidden;
+  opacity:0;
+}
+.sidebar[data-sidebar-state="collapsed"] .navLabel,
+.sidebar[data-sidebar-state="collapsed"] .navChevron,
+.sidebar[data-sidebar-state="collapsed"] .navSub{
+  display:none;
+}
+.sidebar[data-sidebar-state="collapsed"] .navItem,
+.sidebar[data-sidebar-state="collapsed"] .navParent,
+.sidebar[data-sidebar-state="collapsed"] .sidebarSignOut{
+  width:calc(100% - 18px);
+  justify-content:flex-start;
+  padding-left:10px;
+  padding-right:10px;
+  margin-left:9px;
+  margin-right:9px;
+}
+.sidebar[data-sidebar-state="collapsed"] .navIcon{
+  margin:0;
+}
+.sidebar .navItem,
+.sidebar .navParent,
+.sidebar .sidebarSignOut{
+  justify-content:flex-start;
+  padding-left:10px;
+  padding-right:10px;
+  margin-left:9px;
+  margin-right:9px;
+}
+.sidebar .navIcon{
+  flex:0 0 30px;
+}
+.sidebar .navGroup{
+  margin:0;
+}
+.sidebar .navGroup + .navGroup{
+  margin-top:0;
+}
+.sidebar .navItem,
+.sidebar .navParent{
+  margin-top:7px;
+  margin-bottom:7px;
+}
+.sidebar[data-sidebar-state="collapsed"] .navItem,
+.sidebar[data-sidebar-state="collapsed"] .navParent{
+  margin-top:7px;
+  margin-bottom:7px;
+}
+
+@media (max-width:900px){
+  .mobile-sidebar[data-sidebar-state="collapsed"]{
+    width:var(--sidebar-collapsed-w);
+    transform:translateX(0);
+    visibility:visible;
+    pointer-events:auto;
+    box-shadow:none;
+  }
+  .mobile-sidebar[data-sidebar-state="expanded"]{
+    width:min(304px,86vw);
+    transform:translateX(0);
+    visibility:visible;
+    pointer-events:auto;
+  }
+  .mobile-sidebar[data-sidebar-state="collapsed"] .navItem,
+  .mobile-sidebar[data-sidebar-state="expanded"] .navItem,
+  .mobile-sidebar[data-sidebar-state="collapsed"] .navParent,
+  .mobile-sidebar[data-sidebar-state="expanded"] .navParent,
+  .mobile-sidebar[data-sidebar-state="collapsed"] .sidebarSignOut,
+  .mobile-sidebar[data-sidebar-state="expanded"] .sidebarSignOut{
+    width:calc(100% - 18px);
+    justify-content:flex-start;
+    padding-left:10px;
+    padding-right:10px;
+    margin-left:9px;
+    margin-right:9px;
+  }
+}
+
+/* Final position lock: sidebar icons must not move between open/closed states. */
+.sidebar,
+.sidebar[data-sidebar-state="collapsed"],
+.sidebar[data-sidebar-state="expanded"],
+.mobile-sidebar,
+.mobile-sidebar[data-sidebar-state="collapsed"],
+.mobile-sidebar[data-sidebar-state="expanded"]{
+  padding-top:14px;
+}
+.sidebar .sidebarHead,
+.sidebar[data-sidebar-state="collapsed"] .sidebarHead,
+.sidebar[data-sidebar-state="expanded"] .sidebarHead{
+  display:none;
+  height:0;
+}
+.sidebar .navSection{
+  height:12px;
+  line-height:12px;
+  margin:18px 18px 8px;
+}
+.sidebar .navItem,
+.sidebar .navParent,
+.sidebar .sidebarSignOut,
+.sidebar[data-sidebar-state="collapsed"] .navItem,
+.sidebar[data-sidebar-state="expanded"] .navItem,
+.sidebar[data-sidebar-state="collapsed"] .navParent,
+.sidebar[data-sidebar-state="expanded"] .navParent,
+.sidebar[data-sidebar-state="collapsed"] .sidebarSignOut,
+.sidebar[data-sidebar-state="expanded"] .sidebarSignOut{
+  min-height:38px;
+  margin-top:7px;
+  margin-bottom:7px;
+  transform:none;
+}
+.sidebar .navItem:hover,
+.sidebar .navParent:hover,
+.sidebar .navSub:hover{
+  transform:none;
+}
+.sidebar .navItem:hover .navIcon,
+.sidebar .navParent:hover .navIcon,
+.sidebar .navIcon{
+  transform:none;
+}
+.sidebar .sidebarSignOut,
+.sidebar[data-sidebar-state="collapsed"] .sidebarSignOut,
+.sidebar[data-sidebar-state="expanded"] .sidebarSignOut{
+  min-height:52px;
+  height:52px;
+  padding:7px 10px;
+  margin:0 9px 14px;
+  align-items:center;
+  justify-content:flex-start;
+  transform:none;
+}
+.sidebar .sidebarSignOut .navIcon,
+.sidebar[data-sidebar-state="collapsed"] .sidebarSignOut .navIcon,
+.sidebar[data-sidebar-state="expanded"] .sidebarSignOut .navIcon{
+  flex:0 0 30px;
+  width:30px;
+  height:30px;
+  margin:0;
+  transform:none;
+}
+.sidebar .sidebarSignOut:hover,
+.sidebar .sidebarSignOut:hover .navIcon{
+  transform:none;
+}
+
+/* Selected sidebar item: calm row highlight with left line, icon stays unchanged. */
+.sidebar .navItem.active,
+.sidebar .navParent.active{
+  background:rgba(255,255,255,.035);
+  color:#e5edf7;
+  box-shadow:none;
+  font-weight:750;
+}
+.sidebar .navItem.active:before,
+.sidebar .navParent.active:before{
+  display:none;
+}
+.sidebar .navIcon,
+.sidebar .navItem.active .navIcon,
+.sidebar .navParent.active .navIcon,
+.sidebar[data-sidebar-state="collapsed"] .navItem.active .navIcon,
+.sidebar[data-sidebar-state="collapsed"] .navParent.active .navIcon{
+  background:rgba(255,255,255,.065);
+  color:#b9f3e8;
+  outline:0;
+  box-shadow:none;
+}
+.sidebar .navItem.active .navIcon,
+.sidebar .navParent.active .navIcon,
+.sidebar[data-sidebar-state="collapsed"] .navItem.active .navIcon,
+.sidebar[data-sidebar-state="collapsed"] .navParent.active .navIcon{
+  background:rgba(255,255,255,.065);
+  color:#b9f3e8;
+  outline:0;
+  box-shadow:none;
+}
+.sidebar .navItem.active:after,
+.sidebar .navParent.active:after{
+  content:"";
+  width:8px;
+  height:8px;
+  margin-left:auto;
+  border-top:2px solid #8ddfd2;
+  border-right:2px solid #8ddfd2;
+  transform:rotate(45deg);
+  flex:0 0 auto;
+}
+.sidebar[data-sidebar-state="collapsed"] .navItem.active:after,
+.sidebar[data-sidebar-state="collapsed"] .navParent.active:after{
+  display:none;
+}
+
+/* Keep the top sidebar button centered on the same vertical line as sidebar icons. */
+.topbar{
+  padding-left:14px;
+}
+.headerSidebarToggle,
+.headerSidebarToggle[aria-expanded="true"]{
+  width:40px;
+  height:40px;
+  margin-left:0;
+  margin-right:0;
+  transform:none;
+}
+.headerSidebarToggle:hover{
+  transform:none;
+}
+
+@media (max-width:900px){
+  .topbar{
+    padding-left:13px;
+  }
+  .headerSidebarToggle,
+  .headerSidebarToggle[aria-expanded="true"]{
+    width:42px;
+    height:42px;
+    margin-left:0;
+    margin-right:0;
+    transform:none;
+  }
+}
+
+/* Toggle icon states: three lines opens sidebar, X closes it. */
+.headerSidebarToggle{
+  position:relative;
+}
+.headerSidebarToggle.closeIcon{
+  gap:0;
+}
+.headerSidebarToggle .sidebarCancelIcon{
+  width:20px;
+  height:20px;
+  stroke:currentColor;
+  stroke-width:2.2;
+  stroke-linecap:round;
+  flex:0 0 auto;
+}
 
 .studentRecordsPanel .tableWrap th:last-child,
 .studentRecordsPanel .tableWrap td:last-child{
