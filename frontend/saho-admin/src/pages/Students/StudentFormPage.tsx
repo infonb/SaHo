@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   createStudent,
@@ -51,10 +51,25 @@ const init: StudentFormState = {
   sibling_aadhaar: '',
 };
 
-export default function StudentFormPage() {
+interface StudentFormPageProps {
+  embedded?: boolean;
+  onCancel?: () => void;
+  onSuccess?: () => void;
+}
+
+const steps = [
+  { key: 'personal', label: 'Personal' },
+  { key: 'location', label: 'Location' },
+  { key: 'guardian', label: 'Guardian' },
+] as const;
+
+type StudentFormStep = typeof steps[number]['key'];
+
+export default function StudentFormPage({ embedded = false, onCancel, onSuccess }: StudentFormPageProps) {
   const { id } = useParams();
   const isEdit = !!id;
   const [form, setForm] = useState<StudentFormState>(init);
+  const [activeStep, setActiveStep] = useState<StudentFormStep>('personal');
   const [states, setStates] = useState<[string, string][]>([]);
   const [districts, setDistricts] = useState<[string, string][]>([]);
   const [mandals, setMandals] = useState<[string, string][]>([]);
@@ -72,6 +87,7 @@ export default function StudentFormPage() {
   const [metaLoading, setMetaLoading] = useState(true);
   const [studentStateList, setStudentStateList] = useState<{ stId: number; stName: string }[]>([]);
   const [editLoading, setEditLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const mapLabelToOptionValue = (input: string | null | undefined, options: [string, string][]) => {
     if (!input) return '';
@@ -442,7 +458,11 @@ export default function StudentFormPage() {
         await createStudent(payload, selectedImageFile ?? undefined);
         toast('Student registered successfully.', 'success');
       }
-      nav('/students');
+      if (embedded && onSuccess) {
+        onSuccess();
+      } else {
+        nav('/students');
+      }
     } catch {
       toast('Unable to save student. Please verify all required fields.', 'error');
     } finally {
@@ -454,11 +474,49 @@ export default function StudentFormPage() {
   const currentClasses = useMemo(() => classes, [classes]);
   const currentRelationships = useMemo(() => relationships, [relationships]);
   const currentStates = useMemo(() => states, [states]);
+  const activeStepIndex = steps.findIndex(step => step.key === activeStep);
+  const goBack = () => setActiveStep(steps[Math.max(0, activeStepIndex - 1)].key);
+  const goNext = () => {
+    if (!formRef.current?.reportValidity()) return;
+    setActiveStep(steps[Math.min(steps.length - 1, activeStepIndex + 1)].key);
+  };
+  const goToStep = (index: number) => {
+    if (index <= activeStepIndex) {
+      setActiveStep(steps[index].key);
+      return;
+    }
+    if (index === activeStepIndex + 1) goNext();
+  };
+  const cancel = () => {
+    if (onCancel) onCancel();
+    else if (isEdit) nav(-1);
+    else nav('/students');
+  };
 
   return (
-    <form onSubmit={submit}>
-      <PageHeader title={isEdit ? 'Edit Student' : 'Add Student'} subtitle="Student, sibling, school, and guardian information" actions={<Button type="button" variant="outline" onClick={() => nav(-1)}>Back</Button>} />
-      <div className="panel">
+    <form ref={formRef} className={embedded ? 'studentWizardForm isEmbedded' : 'studentWizardForm'} onSubmit={submit}>
+      {!embedded ? <PageHeader title={isEdit ? 'Edit Student' : 'Add Student'} subtitle="Student, sibling, school, and guardian information" actions={<Button type="button" variant="outline" onClick={() => nav(-1)}>Back</Button>} /> : null}
+      <div className={embedded ? 'studentWizardPanel' : 'panel studentWizardPanel'}>
+        <div className="studentWizardHeader">
+          <div>
+            <div className="studentWizardEyebrow">{isEdit ? 'Update profile' : 'New student registration'}</div>
+            <h2>{isEdit ? 'Edit Student' : 'Add Student'}</h2>
+          </div>
+          <div className="studentStepIndicator" aria-label="Student form steps">
+            {steps.map((step, index) => (
+              <button
+                type="button"
+                key={step.key}
+                className={`studentStepPill${activeStep === step.key ? ' isActive' : ''}${index < activeStepIndex ? ' isComplete' : ''}`}
+                onClick={() => goToStep(index)}
+                disabled={index > activeStepIndex + 1}
+              >
+                <span>{index + 1}</span>{step.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="studentWizardBody" key={activeStep}>
         <StudentProfileSections
           mode={isEdit ? 'edit' : 'create'}
           form={form}
@@ -477,10 +535,20 @@ export default function StudentFormPage() {
           classes={currentClasses}
           aadhaarStatus={aadhaarStatus || (aadhaarValidating ? 'Checking Aadhaar...' : '')}
           loading={metaLoading || editLoading}
+          activeStep={activeStep}
         />
-        <div className="modalFooter" style={{ paddingInline: 0 }}>
-          <Button type="button" variant="outline" onClick={() => nav('/students')}>Cancel</Button>
-          <Button loading={loading || metaLoading || editLoading}>{isEdit ? 'Save Changes' : 'Register Student'}</Button>
+        </div>
+        <div className="studentWizardFooter">
+          {activeStep === 'personal' ? (
+            <Button type="button" variant="outline" onClick={cancel}>Cancel</Button>
+          ) : (
+            <Button type="button" variant="outline" onClick={goBack}>Back</Button>
+          )}
+          {activeStep === 'guardian' ? (
+            <Button loading={loading || metaLoading || editLoading}>{isEdit ? 'Save Changes' : 'Register Student'}</Button>
+          ) : (
+            <Button type="button" onClick={goNext} disabled={metaLoading || editLoading}>Next</Button>
+          )}
         </div>
       </div>
     </form>

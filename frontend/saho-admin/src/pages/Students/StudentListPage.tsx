@@ -13,8 +13,21 @@ import { useToast } from '../../hooks/useToast';
 import type { StudentFilters, StudentView, SponsorView } from '../../types';
 import StudentDetailModal from './StudentDetailModal';
 import Modal from '../../components/common/Modal';
+import StudentFormPage from './StudentFormPage';
 
 const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', sponsor_status: '', is_active: '' };
+type FilterOption = { value: string; label: string };
+
+const csvValues = (value: string) => value.split(',').map(v => v.trim()).filter(Boolean);
+const toggleCsvValue = (value: string, next: string) => {
+  const values = csvValues(value);
+  return values.includes(next) ? values.filter(v => v !== next).join(',') : [...values, next].join(',');
+};
+const orphanStatusLabel = (value?: string | null) => value === '3' ? 'Orphan' : value === '2' ? 'Semi Orphan' : value || 'N/A';
+const orphanStatusClass = (value?: string | null) => {
+  const label = orphanStatusLabel(value).toLowerCase();
+  return label.includes('orphan') && !label.includes('semi') ? 'orphan' : label.includes('semi') || label.includes('single') ? 'semi' : 'default';
+};
 
 export default function StudentListPage() {
   const [students, setStudents] = useState<StudentView[]>([]);
@@ -36,6 +49,8 @@ export default function StudentListPage() {
   const [singleDelete, setSingleDelete] = useState<number | null>(null);
   const [sponsorOpen, setSponsorOpen] = useState(false);
   const [sponsorDetails, setSponsorDetails] = useState<SponsorView | null>(null);
+  const [addStudentOpen, setAddStudentOpen] = useState(false);
+  const [openFilter, setOpenFilter] = useState<string | null>(null);
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -79,8 +94,10 @@ export default function StudentListPage() {
       setDistricts([]);
       return;
     }
-    const id = Number(pending.st_id);
-    getDistricts(id).then(d => setDistricts(d)).catch(() => setDistricts([]));
+    const ids = csvValues(pending.st_id).map(Number).filter(Boolean);
+    Promise.all(ids.map(id => getDistricts(id)))
+      .then(results => setDistricts(Array.from(new Map(results.flat().map(d => [d.distId ?? d.dist_id, d])).values())))
+      .catch(() => setDistricts([]));
   }, [pending.st_id]);
 
   useEffect(() => {
@@ -88,8 +105,10 @@ export default function StudentListPage() {
       setMandals([]);
       return;
     }
-    const id = Number(pending.dist_id);
-    getMandals(id).then(m => setMandals(m)).catch(() => setMandals([]));
+    const ids = csvValues(pending.dist_id).map(Number).filter(Boolean);
+    Promise.all(ids.map(id => getMandals(id)))
+      .then(results => setMandals(Array.from(new Map(results.flat().map(m => [m.mndlId ?? m.mndl_id, m])).values())))
+      .catch(() => setMandals([]));
   }, [pending.dist_id]);
 
   useEffect(() => {
@@ -97,8 +116,10 @@ export default function StudentListPage() {
       setVillages([]);
       return;
     }
-    const id = Number(pending.mndl_id);
-    getVillages(id).then(v => setVillages(v)).catch(() => setVillages([]));
+    const ids = csvValues(pending.mndl_id).map(Number).filter(Boolean);
+    Promise.all(ids.map(id => getVillages(id)))
+      .then(results => setVillages(Array.from(new Map(results.flat().map(v => [v.vilId ?? v.vil_id, v])).values())))
+      .catch(() => setVillages([]));
   }, [pending.mndl_id]);
 
   useEffect(() => {
@@ -106,12 +127,22 @@ export default function StudentListPage() {
       setSchools([]);
       return;
     }
-    const id = Number(pending.vil_id);
-    getSchools(id).then(s => setSchools(s)).catch(() => setSchools([]));
+    const ids = csvValues(pending.vil_id).map(Number).filter(Boolean);
+    Promise.all(ids.map(id => getSchools(id)))
+      .then(results => setSchools(Array.from(new Map(results.flat().map(s => [s.schId ?? s.sch_id, s])).values())))
+      .catch(() => setSchools([]));
   }, [pending.vil_id]);
 
   const allClasses = [...new Set(students.map(s => s.class_id))];
   const filteredStates = states;
+  const stateOptions = filteredStates.map(s => ({ value: String(s.stId ?? s.st_id), label: s.stName ?? s.st_name }));
+  const districtOptions = districts.map(d => ({ value: String(d.distId ?? d.dist_id), label: d.distName ?? d.dist_name }));
+  const mandalOptions = mandals.map(m => ({ value: String(m.mndlId ?? m.mndl_id), label: m.mndlName ?? m.mndl_name }));
+  const villageOptions = villages.map(v => ({ value: String(v.vilId ?? v.vil_id), label: v.vilName ?? v.vil_name }));
+  const schoolOptions = schools.map(s => ({ value: String(s.schId ?? s.sch_id), label: s.schName ?? s.sch_name }));
+  const genderOptions = [{ value: '1', label: 'Male' }, { value: '2', label: 'Female' }, { value: '3', label: 'Other' }];
+  const orphanOptions = [{ value: '3', label: 'Orphan' }, { value: '2', label: 'Single Parent' }];
+  const classOptions = allClasses.map(c => ({ value: c, label: c }));
   const pageIds = students.map(s => s.student_id);
   const hasSelection = checked.length > 0;
   const allPageChecked = pageIds.length > 0 && pageIds.every(id => checked.includes(id));
@@ -151,8 +182,27 @@ export default function StudentListPage() {
       <div className="rowFlex"><Avatar name={s.full_name} size="md" /><div><div className="strong studentNameCell" onClick={async () => { setLoading(true); try { const full = await getStudentById(s.student_id); setSelected(full ?? s); } finally { setLoading(false); } }}>{s.full_name}</div><div className="sub">{s.gender}</div></div></div>,
       <div>{age}</div>,
       <div>{s.class_id}</div>,
-      <div>{s.sch_name || 'N/A'}</div>,
-      <div>{s.guardian_full_name || 'N/A'}</div>,
+      <div className="tableCellStack">
+        <div className="cellTopText">{s.sch_name || 'N/A'}</div>
+        <div className="cellSubText">
+          <span className="cellIconInline" aria-hidden>
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 10.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </span>
+          {[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '—'}
+        </div>
+      </div>,
+      <div className="guardianCell">
+        <div className="cellTopText">{s.guardian_full_name || 'N/A'}</div>
+        {s.guardian_phone ? <div className="cellSubText">{s.guardian_phone}</div> : null}
+      </div>,
+      <div className="orphanStatusCell">
+        <span className={`orphanStatusBadge ${orphanStatusClass(s.orphan_status)}`}>
+          {orphanStatusLabel(s.orphan_status)}
+        </span>
+      </div>,
       <div>
         {s.sponsor_id ? (
           <button className="photoButton" onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }} title={s.sponsor_full_name ?? undefined}>
@@ -189,11 +239,10 @@ export default function StudentListPage() {
       <div className="student-list-header">
         <div className="student-list-title">
           <h1>Student management</h1>
-          <p>All enrolled single-parent students</p>
+        
         </div>
         <div className="student-list-actions">
-          <Button variant="outline">Export CSV</Button>
-          <Button className="add-student-btn" onClick={() => nav('/students/add')}>
+          <Button className="add-student-btn" onClick={() => setAddStudentOpen(true)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -291,95 +340,101 @@ export default function StudentListPage() {
               />
             </div>
             <div className="filter-group">
-              <select className="filter-select" value={pending.st_id} onChange={e => setPending({ ...pending, st_id: e.target.value, dist_id: '', mndl_id: '', vil_id: '', sch_id: '' })}>
-                <option value="">All States</option>
-                {filteredStates.map(s => <option value={s.stId ?? s.st_id} key={s.stId ?? s.st_id}>{s.stName ?? s.st_name}</option>)}
-              </select>
+              <MultiSelectFilter filterKey="state" label="All States" value={pending.st_id} options={stateOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, st_id: value, dist_id: '', mndl_id: '', vil_id: '', sch_id: '' })} />
             </div>
             <div className="filter-group">
-              <select className="filter-select" value={pending.dist_id} onChange={e => setPending({ ...pending, dist_id: e.target.value, mndl_id: '', vil_id: '', sch_id: '' })}>
-                <option value="">All Districts</option>
-                {districts.map(d => <option value={d.distId ?? d.dist_id} key={d.distId ?? d.dist_id}>{d.distName ?? d.dist_name}</option>)}
-              </select>
+              <MultiSelectFilter filterKey="district" label="All Districts" value={pending.dist_id} options={districtOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, dist_id: value, mndl_id: '', vil_id: '', sch_id: '' })} />
             </div>
             <div className="filter-group">
-              <select className="filter-select" value={pending.mndl_id} onChange={e => setPending({ ...pending, mndl_id: e.target.value, vil_id: '', sch_id: '' })}>
-                <option value="">All Mandals</option>
-                {mandals.map(m => <option value={m.mndlId ?? m.mndl_id} key={m.mndlId ?? m.mndl_id}>{m.mndlName ?? m.mndl_name}</option>)}
-              </select>
+              <MultiSelectFilter filterKey="mandal" label="All Mandals" value={pending.mndl_id} options={mandalOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, mndl_id: value, vil_id: '', sch_id: '' })} />
             </div>
-            <div className="filter-group">
-              <select className="filter-select" value={pending.vil_id} onChange={e => setPending({ ...pending, vil_id: e.target.value, sch_id: '' })}>
-                <option value="">All Villages</option>
-                {villages.map(v => <option value={v.vilId ?? v.vil_id} key={v.vilId ?? v.vil_id}>{v.vilName ?? v.vil_name}</option>)}
-              </select>
-            </div>
+            <div className="filter-empty-slot" aria-hidden="true" />
           </div>
           <div className="filters-row filters-row-2">
             <div className="filter-group">
-              <select className="filter-select" value={pending.sch_id} onChange={e => setPending({ ...pending, sch_id: e.target.value })}>
-                <option value="">All Schools</option>
-                {schools.map(s => <option value={s.schId ?? s.sch_id} key={s.schId ?? s.sch_id}>{s.schName ?? s.sch_name}</option>)}
-              </select>
+              <MultiSelectFilter filterKey="village" label="All Villages" value={pending.vil_id} options={villageOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, vil_id: value, sch_id: '' })} />
             </div>
             <div className="filter-group">
-              <select className="filter-select" value={pending.gender} onChange={e => setPending({ ...pending, gender: e.target.value })}>
-                <option value="">All Gender</option>
-                <option value="1">Male</option>
-                <option value="2">Female</option>
-                <option value="3">Other</option>
-              </select>
+              <MultiSelectFilter filterKey="school" label="All Schools" value={pending.sch_id} options={schoolOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, sch_id: value })} />
             </div>
             <div className="filter-group">
-              <select className="filter-select" value={pending.orphan_status} onChange={e => setPending({ ...pending, orphan_status: e.target.value })}>
-                <option value="">Orphan Status</option>
-                <option value="3">Orphan</option>
-                <option value="2">Single Parent</option>
-              </select>
+              <MultiSelectFilter filterKey="gender" label="All Gender" value={pending.gender} options={genderOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, gender: value })} />
             </div>
             <div className="filter-group">
-              <select className="filter-select" value={pending.class_id} onChange={e => setPending({ ...pending, class_id: e.target.value })}>
-                <option value="">All Classes</option>
-                {allClasses.map(c => <option key={c}>{c}</option>)}
-              </select>
+              <MultiSelectFilter filterKey="orphan" label="Orphan Status" value={pending.orphan_status} options={orphanOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, orphan_status: value })} />
             </div>
-            <div className="filter-actions-group">
-              <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); }}>
-                Clear
-              </button>
-              <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); }}>
-                Go
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7"></path>
-                </svg>
-              </button>
+            <div className="filter-group">
+              <MultiSelectFilter filterKey="class" label="All Classes" value={pending.class_id} options={classOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, class_id: value })} />
             </div>
           </div>
-        </div>
+          <div className="filter-actions-group">
+            <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); }}>
+              <span className="filterBtnIcon" aria-hidden>x</span> Clear
+            </button>
+            <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); }}>
+              Go
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </div>
+      </div>
       </div>
 
-      <div className="student-table-section">
+      <div className={`student-table-section studentRecordsPanel ${hasSelection ? 'bulkModeActive' : ''}`}>
         <div className="table-header">
           <h3 className="table-title">Student Records <span className="results-count">{total} results</span></h3>
         </div>
 
         {error ? <div className="toast error" style={{ position: 'static', marginBottom: 12 }}>{error}</div> : null}
 
-        <div className="table-select-row">
-          <label className="select-all-label">
-            <input type="checkbox" checked={allPageChecked} onChange={togglePage} />
-            <span>Select all on this page</span>
-          </label>
-          <div className="selected-count">Selected {checked.length} of {total}</div>
-          <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)} disabled={checked.length === 0} className={checked.length > 0 ? 'delete-selected-btn' : ''}>
-            Delete selected
-          </Button>
+        <div className={`bulkToolbarShell ${hasSelection ? 'isActive' : ''}`} aria-hidden={!hasSelection}>
+          <div className="selectHeaderRow studentBulkToolbar">
+            <div className="bulkToolbarInfo">
+              <label className="bulkSelectAll">
+                <input type="checkbox" checked={allPageChecked} onChange={togglePage} tabIndex={hasSelection ? 0 : -1} />
+                <span>Select all on this page</span>
+              </label>
+            </div>
+            <div className="bulkToolbarActions">
+              <Button size="sm" variant="outline" tabIndex={hasSelection ? 0 : -1}>Export CSV</Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="bulkDeleteButton"
+                onClick={() => setBulkOpen(true)}
+                disabled={!hasSelection}
+                tabIndex={hasSelection ? 0 : -1}
+              >
+                Delete selected
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <DataTable loading={loading} columns={[{ key: 'select', label: '', width: '44px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE' }, { key: 'grade', label: 'CLASS' }, { key: 'school', label: 'SCHOOL NAME' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: 'ACTIONS' }]} rows={rows} />
+        <DataTable
+          loading={loading}
+          columns={[{ key: 'select', label: '', width: '44px' }, { key: 'id', label: 'ID', width: '72px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE', width: '72px' }, { key: 'grade', label: 'CLASS', width: '88px' }, { key: 'school', label: 'SCHOOL' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'orphan', label: 'STATUS' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: '' }]}
+          rows={rows}
+          rowClassName={(index) => {
+            const student = students[index];
+            return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
+          }}
+        />
         <Pagination total={total} page={page} pageSize={pageSize} onChange={setPage} onPageSizeChange={(nextPageSize) => { setPageSize(nextPageSize); setPage(1); }} />
       </div>
       <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
+      <Modal open={addStudentOpen} onClose={() => setAddStudentOpen(false)} title="Add Student" width={940}>
+        <StudentFormPage
+          embedded
+          onCancel={() => setAddStudentOpen(false)}
+          onSuccess={() => {
+            setAddStudentOpen(false);
+            load(1, pageSize);
+            setPage(1);
+          }}
+        />
+      </Modal>
       <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.full_name ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
         {sponsorDetails ? <div>
           <h3 style={{ marginTop: 0 }}>{sponsorDetails.full_name}</h3>
@@ -396,5 +451,63 @@ export default function StudentListPage() {
       <ConfirmModal open={singleDelete !== null} onClose={() => setSingleDelete(null)} onConfirm={confirmSingleDelete} title="Delete Student" message="Delete selected student?" />
       <ConfirmModal open={bulkOpen} onClose={() => setBulkOpen(false)} onConfirm={confirmBulkDelete} title="Delete Selected Students" message={`Delete ${checked.length} selected students?`} />
     </div>
+  );
+}
+
+function MultiSelectFilter({
+  filterKey,
+  label,
+  value,
+  options,
+  openFilter,
+  setOpenFilter,
+  onChange
+}: {
+  filterKey: string;
+  label: string;
+  value: string;
+  options: FilterOption[];
+  openFilter: string | null;
+  setOpenFilter: (value: string | null) => void;
+  onChange: (value: string) => void;
+}) {
+  const selected = csvValues(value);
+  const selectedLabels = options.filter(option => selected.includes(option.value)).map(option => option.label);
+  const summary = selectedLabels.length === 0 ? label : selectedLabels.length === 1 ? selectedLabels[0] : `${selectedLabels.length} selected`;
+  const isOpen = openFilter === filterKey;
+
+  return (
+    <details className={`multiSelectFilter${selected.length ? ' hasValue' : ''}`} open={isOpen}>
+      <summary
+        className="multiSelectTrigger"
+        onClick={(event) => {
+          event.preventDefault();
+          setOpenFilter(isOpen ? null : filterKey);
+        }}
+      >
+        <span>{summary}</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </summary>
+      <div className="multiSelectMenu">
+        <div className="multiSelectMenuHead">
+          <span>{label}</span>
+          {selected.length ? <button type="button" onClick={() => onChange('')}>Clear</button> : null}
+        </div>
+        <div className="multiSelectOptions">
+          {options.length ? options.map(option => (
+            <label className="multiSelectOption" key={option.value}>
+              <input
+                type="checkbox"
+                checked={selected.includes(option.value)}
+                onChange={() => onChange(toggleCsvValue(value, option.value))}
+              />
+              <span>{option.label}</span>
+            </label>
+          )) : <div className="multiSelectEmpty">No options available</div>}
+        </div>
+      </div>
+    </details>
   );
 }
