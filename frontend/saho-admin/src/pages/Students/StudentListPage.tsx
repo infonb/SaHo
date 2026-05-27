@@ -110,6 +110,7 @@ export default function StudentListPage() {
   const allClasses = [...new Set(students.map(s => s.class_id))];
   const filteredStates = states;
   const pageIds = students.map(s => s.student_id);
+  const hasSelection = checked.length > 0;
   const allPageChecked = pageIds.length > 0 && pageIds.every(id => checked.includes(id));
   const toggle = (id: number) => setChecked(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
   const togglePage = () => setChecked(ids => allPageChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]);
@@ -147,6 +148,7 @@ export default function StudentListPage() {
     if (!hasBirthdayPassed) age -= 1;
     return [
       <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.student_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.student_id)} />,
+      <div className="studentIdCell">{s.student_id}</div>,
       <div className="rowFlex"><Avatar name={s.full_name} size="md" /><div><div className="strong studentNameCell" onClick={async () => { setLoading(true); try { const full = await getStudentById(s.student_id); setSelected(full ?? s); } finally { setLoading(false); } }}>{s.full_name}</div><div className="sub">{s.gender}</div></div></div>,
       <div>{age}</div>,
       <div>{s.class_id}</div>,
@@ -155,28 +157,28 @@ export default function StudentListPage() {
       <div>
         {s.sponsor_id ? (
           <button className="photoButton" onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }} title={s.sponsor_full_name ?? undefined}>
-            <Avatar name={s.sponsor_full_name ?? 'SP'} size="sm" />
+            <Avatar name={s.sponsor_full_name ?? 'SP'} size="md" />
           </button>
         ) : (
           <div title="Saho Foundation">
-            <Avatar name="Saho Foundation" size="sm" />
+            <Avatar name="Saho Foundation" size="md" />
           </div>
         )}
       </div>,
-      <div className="actions" onClick={e => e.stopPropagation()}>
+      <div className="actions student-actions" onClick={e => e.stopPropagation()}>
         <Button size="sm" variant="outline" className="iconBtn" onClick={() => nav(`/students/edit/${s.student_id}`)} aria-label="Edit student">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
             <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </Button>
-        <Button size="sm" variant="danger" className="iconBtn" style={{ marginLeft: 8 }} onClick={(e) => { e.stopPropagation(); setSingleDelete(s.student_id); }} aria-label={`Delete ${s.full_name}`}>
+        <Button size="sm" variant="outline" className="iconBtn deleteActionButton" onClick={(e) => { e.stopPropagation(); setSingleDelete(s.student_id); }} aria-label={`Delete ${s.full_name}`}>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-            <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </Button>
       </div>
@@ -184,7 +186,7 @@ export default function StudentListPage() {
   });
 
   return <div>
-    <PageHeader title="Students" subtitle={`All enrolled single-parent students - ${total} total`} actions={<><Button variant="outline">Export CSV</Button><Button onClick={() => nav('/students/add')}>Add Student</Button></>} />
+    <PageHeader title="Students" subtitle={`All enrolled single-parent students - ${total} total`} actions={<Button onClick={() => nav('/students/add')}>Add Student</Button>} />
     <div className="statGrid" style={{ marginBottom: '30px' }}>
       <StatCard label="TOTAL STUDENTS" value={totalStudents} note="All enrolled" />
       <StatCard label="TOTAL BOYS" value={totalBoys} note="Percentage of total" />
@@ -248,24 +250,46 @@ export default function StudentListPage() {
         </div>
       </FilterBar>
     </div>
-    <div className="panel">
+    <div className={`panel studentRecordsPanel ${hasSelection ? 'bulkModeActive' : ''}`}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '12px' }}>
         <h3 className="panelTitle">Student Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{total} results</span></h3>
       </div>
 
       {error ? <div className="toast error" style={{ position: 'static', marginBottom: 12 }}>{error}</div> : null}
 
-      <div className="selectHeaderRow" style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10 }}><input type="checkbox" checked={allPageChecked} onChange={togglePage} /> <span style={{ fontWeight: 800, color: 'var(--color-text2)' }}>Select all on this page</span></label>
-          <div className="selectedCount" style={{ marginLeft: 8, color: 'var(--color-text3)', fontWeight: 800 }}>Selected {checked.length} of {total}</div>
-        </div>
-        <div>
-          <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)} disabled={checked.length === 0} style={{ borderColor: checked.length ? 'var(--green-border)' : 'var(--color-border)', color: checked.length ? 'var(--green)' : 'var(--color-text3)' }}>Delete selected</Button>
+      <div className={`bulkToolbarShell ${hasSelection ? 'isActive' : ''}`} aria-hidden={!hasSelection}>
+        <div className="selectHeaderRow studentBulkToolbar">
+          <div className="bulkToolbarInfo">
+            <label className="bulkSelectAll">
+              <input type="checkbox" checked={allPageChecked} onChange={togglePage} tabIndex={hasSelection ? 0 : -1} />
+              <span>Select all on this page</span>
+            </label>
+          </div>
+          <div className="bulkToolbarActions">
+            <Button size="sm" variant="outline" tabIndex={hasSelection ? 0 : -1}>Export CSV</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="bulkDeleteButton"
+              onClick={() => setBulkOpen(true)}
+              disabled={!hasSelection}
+              tabIndex={hasSelection ? 0 : -1}
+            >
+              Delete selected
+            </Button>
+          </div>
         </div>
       </div>
 
-      <DataTable loading={loading} columns={[{ key: 'select', label: '', width: '44px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE' }, { key: 'grade', label: 'CLASS' }, { key: 'school', label: 'SCHOOL NAME' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: 'ACTIONS' }]} rows={rows} />
+      <DataTable
+        loading={loading}
+        columns={[{ key: 'select', label: '', width: '44px' }, { key: 'id', label: 'ID', width: '82px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE' }, { key: 'grade', label: 'CLASS' }, { key: 'school', label: 'SCHOOL NAME' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: '' }]}
+        rows={rows}
+        rowClassName={(index) => {
+          const student = students[index];
+          return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
+        }}
+      />
       <Pagination total={total} page={page} pageSize={pageSize} onChange={setPage} onPageSizeChange={(nextPageSize) => { setPageSize(nextPageSize); setPage(1); }} />
     </div>
     <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
