@@ -266,4 +266,38 @@ public class SponsorServiceImpl
         return "Individual";
     }
 
+    @Override
+    @Transactional
+    public void assignSponsorToStudent(Integer studentId, Integer sponsorId, String createdBy) {
+        try {
+            entityManager.unwrap(Session.class).doWork(connection -> {
+                try (CallableStatement statement =
+                             connection.prepareCall("{ call public.assignsponsortostudent(?, ?, ?) }")) {
+                    statement.setInt(1, studentId);
+                    statement.setInt(2, sponsorId);
+                    statement.setInt(3, Integer.parseInt(createdBy));
+                    statement.execute();
+                }
+            });
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to assign sponsor to student: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeSponsorFromStudent(Integer studentId) {
+        try {
+            entityManager.unwrap(Session.class).doWork(connection -> {
+                try (CallableStatement statement =
+                             connection.prepareCall("{ call public.removesponsorfromstudent(?) }")) {
+                    statement.setInt(1, studentId);
+                    statement.execute();
+                }
+            });
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to remove sponsor from student: " + e.getMessage(), e);
+        }
+    }
+
 }
