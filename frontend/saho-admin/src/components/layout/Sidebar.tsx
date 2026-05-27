@@ -37,11 +37,10 @@ const AdminIcon = () => (
 const groups = [
   { title: 'Overview', items: [{ icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' }] },
   {
-    title: 'Modules',
     items: [
       { icon: <StudentsIcon />, label: 'Students', to: '/view-students' },
       { icon: <SponsorsIcon />, label: 'Sponsors', to: '/sponsors' },
-      { icon: <RemindersIcon />, label: 'Events', to: '/reminders' },
+      { icon: <RemindersIcon />, label: 'Reminders', to: '/reminders' },
       { icon: <AdminIcon />, label: 'Admin Access', to: '/admins' },
     ],
   },
@@ -57,12 +56,14 @@ export default function Sidebar({ open }: { open: boolean }) {
     navigate('/login');
   };
 
+  const sidebarState = open ? 'expanded' : 'collapsed';
+
   return (
-    <aside className={`mobile-sidebar sidebar ${open ? 'expanded' : 'collapsed'}`}>
+    <aside className={`mobile-sidebar sidebar ${sidebarState}`} data-sidebar-state={sidebarState}>
       <div className="sidebarHead" />
       {groups.map(group => (
-        <div key={group.title}>
-          <div className="navSection">{group.title}</div>
+        <div className="navGroup" key={group.title ?? group.items[0].label}>
+          {group.title && <div className="navSection" aria-hidden={!open}>{group.title}</div>}
           {group.items.map(item => {
             const active = item.label === 'Students'
               ? pathname === '/view-students' || pathname.startsWith('/students')
