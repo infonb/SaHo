@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
@@ -17,6 +17,7 @@ export const LeafLogo = () => (
 export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: boolean; onSidebarToggle: () => void }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -31,6 +32,18 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
   const signOut = () => {
     logout();
     navigate('/login');
+  };
+
+  const search = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const term = query.trim().toLowerCase();
+    if (!term) return;
+
+    if (term.includes('sponsor')) navigate('/sponsors');
+    else if (term.includes('event') || term.includes('reminder')) navigate('/reminders');
+    else if (term.includes('admin') || term.includes('user')) navigate('/admins');
+    else if (term.includes('student') || term.includes('girl') || term.includes('class')) navigate('/students');
+    else navigate(`/students?search=${encodeURIComponent(query.trim())}`);
   };
 
   return (
@@ -48,7 +61,10 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
             <div className="brandSub">Foundation</div>
           </div>
         </div>
-        <div className="topbarTitle">Admin Dashboard</div>
+        <form className="topbarSearch" onSubmit={search}>
+          <button type="submit" aria-label="Search">Search</button>
+          <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Ask SaHo AI or search anything..." aria-label="Search SaHo admin" />
+        </form>
       </div>
       <div ref={ref} style={{ position: 'relative' }}>
         <button className="userPill" onClick={() => setOpen(value => !value)}>
