@@ -4,6 +4,7 @@ import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
+import sahoImg from '../../assets/saho_Img.png';
 
 export const LeafLogo = () => (
   <svg className="brandMark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -33,6 +34,10 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
     navigate('/login');
   };
 
+  const goDashboard = () => {
+    window.location.href = '/dashboard';
+  };
+
   return (
     <header className="dashboard-header topbar">
       <div className="topbarLeft">
@@ -50,18 +55,16 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
           )}
         </button>
         <div className="topbarBrand">
-          <LeafLogo />
-          <div>
-            <div className="brandName">SaHo</div>
-            <div className="brandSub">Foundation</div>
-          </div>
+          <button type="button" className="brandLogoButton" aria-label="Go to dashboard" onClick={goDashboard}>
+            <img className="brandLogo" src={sahoImg} alt="SaHo" />
+          </button>
         </div>
         <div className="topbarTitle">Admin Dashboard</div>
       </div>
+
       <div ref={ref} style={{ position: 'relative' }}>
-        <button className="userPill" onClick={() => setOpen(value => !value)}>
-          <Avatar name={user?.username ?? 'Admin'} size="sm" />
-          <span className="userPillName">{user?.username}</span>
+        <button className="userIconButton" aria-label="User menu" onClick={() => setOpen(value => !value)}>
+          <Avatar name={user?.username ?? 'Admin'} size="md" />
         </button>
         {open && (
           <div className="dropdown">
