@@ -54,7 +54,7 @@ export default function AssignSponsorPage() {
     setLoading(true);
     Promise.all([getStudents(), getSponsors()])
       .then(([st, sp]) => {
-        setStudents(st);
+        setStudents(st.students);
         setSponsors(sp);
       })
       .finally(() => setLoading(false));
@@ -426,7 +426,13 @@ export default function AssignSponsorPage() {
             disabled={!selectedSponsor || checkedStudents.length === 0}
             onClick={() => setConfirmOpen(true)}
           >
-            Assign Now
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%' }}>
+              <span>Assign Now</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path d="M5 12h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="m13 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </Button>
 
           <div className="toast" style={{ marginTop: 12, position: 'static' }}>
