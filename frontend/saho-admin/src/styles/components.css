@@ -159,16 +159,18 @@
 .studentRecordsPanel.bulkModeActive{border-color:rgba(20,184,166,.34);background:linear-gradient(180deg,rgba(240,253,250,.86) 0%,rgba(255,255,255,.96) 150px);box-shadow:0 14px 34px rgba(15,118,110,.09)}
 .bulkToolbarShell{max-height:0;opacity:0;overflow:hidden;transform:translateY(-8px);pointer-events:none;margin-bottom:0;transition:max-height .26s ease,opacity .2s ease,transform .24s ease,margin-bottom .24s ease}
 .bulkToolbarShell.isActive{max-height:96px;opacity:1;transform:translateY(0);pointer-events:auto;margin-bottom:12px}
-.studentBulkToolbar{position:relative;padding:12px 14px;border-color:rgba(20,184,166,.28);background:linear-gradient(135deg,#f0fdfa 0%,#ecfdf5 100%);border-radius:var(--r-md);box-shadow:0 10px 28px rgba(15,118,110,.08)}
-.studentBulkToolbar:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;border-radius:var(--r-md) 0 0 var(--r-md);background:linear-gradient(180deg,var(--color-primary),#22c55e)}
+.studentBulkToolbar{position:relative;padding:0;border:none;background:transparent;border-radius:0;box-shadow:none}
+.studentBulkToolbar:before{display:none}
 .bulkToolbarInfo,.bulkToolbarActions,.bulkSelectAll{display:flex;align-items:center}
 .bulkToolbarInfo{gap:14px;min-width:0;flex-wrap:wrap}
 .bulkToolbarActions{gap:10px;flex:0 0 auto}
 .bulkSelectAll{gap:10px;white-space:nowrap}
+.bulkSelectAll span{font-weight:800;color:var(--color-text2)}
 .studentBulkToolbar .selectedCount{display:inline-flex;align-items:baseline;gap:5px;color:var(--color-text2);font-weight:800}
 .studentBulkToolbar .selectedCount strong{font-size:17px;color:var(--color-primary);font-weight:900;line-height:1}
 .studentBulkToolbar .selectedCount span{color:var(--color-text3);font-weight:700}
 .studentBulkToolbar .btn{height:40px;border-radius:12px;box-shadow:0 1px 0 rgba(15,23,42,.04)}
+.studentBulkToolbar .btn svg{width:16px;height:16px}
 .studentBulkToolbar .bulkDeleteButton{border-color:#fecaca;color:#b91c1c;background:#fff7f7}
 .studentBulkToolbar .bulkDeleteButton:hover{border-color:#fca5a5;color:#991b1b;background:#fee2e2;box-shadow:0 6px 16px rgba(185,28,28,.08)}
 .studentBulkToolbar .bulkDeleteButton:disabled{border-color:var(--color-border);color:var(--color-text3);background:#f8fafc;box-shadow:none}
@@ -244,9 +246,9 @@ tbody tr:first-child td{border-top:0}
 tr.clickable:hover{background:#f8fafc;cursor:pointer}
 .tableWrap tbody tr.studentTableRow{cursor:pointer}
 .tableWrap tbody tr.studentTableRow:not(.isSelected):hover > td{background-color:#f0fdfa;border-top-color:rgba(20,184,166,.14)}
-.tableWrap tbody tr.studentTableRow.isSelected > td{background-color:#ecfdf5;border-top-color:rgba(20,184,166,.22)}
-.tableWrap tbody tr.studentTableRow.isSelected:hover > td{background-color:#dcfce7;border-top-color:rgba(20,184,166,.3)}
-.tableWrap tbody tr.studentTableRow.isSelected > td:first-child{box-shadow:inset 3px 0 0 var(--color-primary)}
+.tableWrap tbody tr.studentTableRow.isSelected > td{background-color:inherit;border-top-color:rgba(20,184,166,.22)}
+.tableWrap tbody tr.studentTableRow.isSelected:hover > td{background-color:#f0fdfa;border-top-color:rgba(20,184,166,.22)}
+.tableWrap tbody tr.studentTableRow.isSelected > td:first-child{box-shadow:inset 2px 0 0 rgba(16,185,129,.55)}
 .studentTableRow input[type="checkbox"]{cursor:pointer;accent-color:#10b981}
 .tableWrap tbody tr.student-row{position:relative;transition:all .25s ease;transform:translateY(0)}
 .tableWrap tbody tr.student-row > td{transition:all .25s ease}
@@ -1955,9 +1957,9 @@ td{padding:11px 12px;font-size:12.5px}
 }
 
 .add-student-btn {
-  background: #10b981 !important;
-  color: #ffffff !important;
-  border: none !important;
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+  border: 1px solid #a7f3d0 !important;
   height: 40px !important;
   padding: 0 16px !important;
   font-weight: 600 !important;
@@ -1965,11 +1967,14 @@ td{padding:11px 12px;font-size:12.5px}
   align-items: center !important;
   gap: 6px !important;
   border-radius: 12px !important;
-  transition: all 0.2s ease !important;
+  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.14) !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
 }
 
 .add-student-btn:hover {
-  background: #059669 !important;
+  background: #c7f9dd !important;
+  border-color: #86efac !important;
+  box-shadow: 0 12px 26px rgba(16, 185, 129, 0.18) !important;
 }
 
 .add-student-btn svg {
@@ -2072,7 +2077,16 @@ td{padding:11px 12px;font-size:12.5px}
 .stat-card-icon svg {
   width: 22px;
   height: 22px;
-  color: var(--card-accent, #0f766e);
+  color: var(--card-icon, #0f172a);
+  stroke: currentColor;
+}
+
+.stat-card-icon svg [stroke] {
+  stroke: currentColor;
+}
+
+.stat-card-icon svg [fill]:not([fill="none"]) {
+  fill: currentColor;
 }
 
 /* Filters Section */
@@ -2570,10 +2584,159 @@ td{padding:11px 12px;font-size:12.5px}
   box-shadow:0 0 0 4px rgba(16,185,129,.08);
   transform:none;
 }
-@keyframes studentStepIn{
-  from{opacity:0;transform:translateY(8px)}
-  to{opacity:1;transform:translateY(0)}
+/* Full-page student form (non-embedded) */
+.studentWizardForm:not(.isEmbedded) .studentWizardPanel {
+  max-width: 900px;
+  margin: 24px auto;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
 }
+
+.studentWizardForm:not(.isEmbedded) {
+  min-height: calc(100vh - 120px);
+  padding: 0 24px 40px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.studentWizardForm:not(.isEmbedded) .studentWizardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 26px 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.studentWizardForm:not(.isEmbedded) .studentWizardHeaderLeft {
+  flex: 1;
+}
+
+.studentWizardForm:not(.isEmbedded) .studentWizardEyebrow {
+  font-size: 13px;
+}
+
+.studentWizardForm:not(.isEmbedded) .studentWizardHeader h2 {
+  font-size: 26px;
+  margin-top: 6px;
+}
+
+.studentWizardForm:not(.isEmbedded) .studentStepIndicator {
+  flex-shrink: 0;
+  margin-left: 24px;
+}
+
+/* Large close button */
+.studentWizardClose {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.studentWizardClose:hover {
+  border-color: #cbd5e1;
+  color: #0f172a;
+  background: #f8fafc;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.studentWizardClose svg {
+  width: 20px;
+  height: 20px;
+}
+
+.studentWizardForm:not(.isEmbedded) .studentWizardPanel {
+  position: relative;
+}
+
+/* Button styles */
+.studentWizardFooter .btn-cancel,
+.studentWizardFooter .btn-back {
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #374151;
+  min-width: 120px;
+}
+
+.studentWizardFooter .btn-cancel:hover,
+.studentWizardFooter .btn-back:hover {
+  border-color: #9ca3af;
+  color: #1f2937;
+  background: #f9fafb;
+}
+
+.studentWizardFooter .btn-next,
+.studentWizardFooter .btn-register {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+  min-width: 140px;
+  font-weight: 700;
+}
+
+.studentWizardFooter .btn-next:hover:not(:disabled),
+.studentWizardFooter .btn-register:hover {
+  background: #059669;
+  border-color: #059669;
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.25);
+  transform: none;
+}
+
+.studentWizardFooter .btn-next:disabled {
+  background: #d1d5db;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Smooth transitions */
+.studentWizardBody {
+  animation: studentStepIn 0.25s ease both;
+}
+
+@keyframes studentStepIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Better spacing between fields */
+.studentWizardForm:not(.isEmbedded) .studentStepGrid {
+  gap: 20px;
+}
+
+.studentWizardForm:not(.isEmbedded) .field > span {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.studentWizardForm:not(.isEmbedded) .input,
+.studentWizardForm:not(.isEmbedded) .select,
+.studentWizardForm:not(.isEmbedded) .textarea {
+  min-height: 48px;
+  border-radius: 14px;
+}
+
+.studentWizardForm:not(.isEmbedded) .textarea {
+  min-height: 120px;
+}
+
 @media (max-width:760px){
   .studentWizardForm.isEmbedded{margin:-12px}
   .studentWizardHeader{padding:16px}
@@ -2618,33 +2781,31 @@ td{padding:11px 12px;font-size:12.5px}
 .go-filter-btn {
   height: 40px;
   padding: 0 18px;
-  border: none;
+  border: 1px solid #a7f3d0;
   border-radius: 12px;
-  background: #10b981;
-  color: #ffffff;
+  background: #d1fae5;
+  color: #065f46;
   font-size: 13px;
   font-weight: 850;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.22);
-  transition: background-color .18s ease,box-shadow .18s ease,transform .18s ease;
+  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.14);
+  transition: background-color .18s ease,border-color .18s ease,box-shadow .18s ease;
 }
 
 .go-filter-btn:hover {
-  background: #059669;
-  box-shadow: 0 12px 26px rgba(16, 185, 129, 0.28);
-  transform: none;
+  background: #c7f9dd;
+  border-color: #86efac;
+  box-shadow: 0 12px 26px rgba(16, 185, 129, 0.18);
 }
 
 .go-filter-btn svg {
   transition: transform 0.2s ease;
 }
 
-.go-filter-btn:hover svg {
-  transform: translateX(2px);
-}
+.go-filter-btn:hover svg { transform: none; }
 
 /* Table Section */
 .student-table-section {
@@ -2711,6 +2872,24 @@ td{padding:11px 12px;font-size:12.5px}
   vertical-align: middle;
 }
 
+.student-table-section th{
+  font-size:12px;
+  letter-spacing:.06em;
+  color:#475569;
+  text-align:center;
+  padding-top:16px;
+  padding-bottom:16px;
+}
+
+.student-table-section th:nth-child(3),
+.student-table-section td:nth-child(3){ text-align:left; }
+.student-table-section th:nth-child(3){
+  text-align:left;
+  padding-left:58px;
+}
+
+.student-table-section td:nth-child(3){ padding-left:12px; }
+
 .student-table-section .avatar.md,
 .student-table-section .studentPhoto.md{
   width:34px;
@@ -2750,8 +2929,22 @@ td{padding:11px 12px;font-size:12.5px}
 
 .student-table-section .rowFlex {
   gap: 12px;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: left;
+  width: 100%;
+  min-width: 0;
+}
+
+.student-table-section .studentCellText{
+  min-width:0;
+}
+
+.student-table-section .studentNameCell{
+  display:block;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
 .student-table-section .tableCellStack{
@@ -2864,13 +3057,13 @@ td{padding:11px 12px;font-size:12.5px}
 }
 
 .student-table-section .tableWrap tbody tr.studentTableRow.isSelected > td {
-  background-color: #ecfdf5;
+  background-color: inherit;
   border-top-color: rgba(16, 185, 129, .22);
 }
 
 .student-table-section .tableWrap tbody tr.studentTableRow.isSelected:hover > td {
-  background-color: #dcfce7;
-  border-top-color: rgba(16, 185, 129, .3);
+  background-color: #f8fafc;
+  border-top-color: rgba(16, 185, 129, .22);
 }
 
 .table-select-row {
