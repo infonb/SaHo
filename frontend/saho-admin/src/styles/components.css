@@ -1,4 +1,4 @@
-.topbar{position:fixed;inset:0 0 auto 0;height:var(--topbar-h);background:#ffffff;color:var(--color-text);z-index:40;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,2vw,28px);padding-left:0;border-bottom:2px solid #C0DD97;box-shadow:var(--shadow-sm);transition:padding .2s ease,box-shadow .2s ease,background .2s ease}
+.topbar{position:fixed;inset:0 0 auto 0;height:var(--topbar-h);background:#ffffff;color:var(--color-text);z-index:40;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,2vw,28px);padding-left:0;border-bottom:1px solid #e5e9f0;box-shadow:var(--shadow-sm);transition:padding .2s ease,box-shadow .2s ease,background .2s ease}
 .topbarLeft{display:flex;align-items:center;gap:0;min-width:0;flex:0 0 auto;padding-left:0}
 .topbarSidebarSlot{width:48px;min-width:48px;display:flex;justify-content:center;flex:0 0 auto;padding:0;margin:0;flex-shrink:0}
 .topbarTitle{font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--color-text);white-space:nowrap}
@@ -874,9 +874,12 @@ svg{max-width:100%}
 .appShell{background:linear-gradient(180deg,#f7fafc 0%,#f4f7fb 100%)}
 .topbar{
   height:var(--topbar-h);
-  background:rgba(255,255,255,.88);
-  border-bottom-color:rgba(226,232,240,.82);
-  box-shadow:0 1px 0 rgba(15,23,42,.04);
+  background-color:#ffffff !important;
+  background-image:none !important;
+  backdrop-filter:none !important;
+  opacity:1 !important;
+  border-bottom-color:#e5e9f0;
+  box-shadow:var(--shadow-sm);
   padding:0 clamp(14px,1.7vw,22px);
 }
 .topbarLeft{gap:12px}
