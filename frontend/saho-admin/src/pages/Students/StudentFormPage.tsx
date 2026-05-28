@@ -65,6 +65,24 @@ const steps = [
 
 type StudentFormStep = typeof steps[number]['key'];
 
+const personalRequiredFields: (keyof StudentFormState)[] = [
+  'first_name', 'last_name', 'email', 'dob', 'gender', 'religion', 'caste', 'class_id', 'aadhaar_number', 'orphan_status'
+];
+
+const locationRequiredFields: (keyof StudentFormState)[] = [
+  'st_id', 'dist_id', 'mndl_id', 'vil_id', 'sch_id'
+];
+
+const guardianRequiredFields: (keyof StudentFormState)[] = [
+  'guardian_first', 'guardian_last', 'relation', 'phone'
+];
+
+const stepRequiredFields: Record<StudentFormStep, (keyof StudentFormState)[]> = {
+  personal: personalRequiredFields,
+  location: locationRequiredFields,
+  guardian: guardianRequiredFields
+};
+
 export default function StudentFormPage({ embedded = false, onCancel, onSuccess }: StudentFormPageProps) {
   const { id } = useParams();
   const isEdit = !!id;
@@ -88,6 +106,13 @@ export default function StudentFormPage({ embedded = false, onCancel, onSuccess 
   const [studentStateList, setStudentStateList] = useState<{ stId: number; stName: string }[]>([]);
   const [editLoading, setEditLoading] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const activeStepIndex = steps.findIndex(step => step.key === activeStep);
+  const currentStepRequired = stepRequiredFields[activeStep];
+  const isCurrentStepValid = currentStepRequired.every(field => {
+    const value = form[field];
+    return value !== undefined && value !== null && String(value).trim() !== '';
+  });
 
   const mapLabelToOptionValue = (input: string | null | undefined, options: [string, string][]) => {
     if (!input) return '';
@@ -474,10 +499,9 @@ export default function StudentFormPage({ embedded = false, onCancel, onSuccess 
   const currentClasses = useMemo(() => classes, [classes]);
   const currentRelationships = useMemo(() => relationships, [relationships]);
   const currentStates = useMemo(() => states, [states]);
-  const activeStepIndex = steps.findIndex(step => step.key === activeStep);
   const goBack = () => setActiveStep(steps[Math.max(0, activeStepIndex - 1)].key);
   const goNext = () => {
-    if (!formRef.current?.reportValidity()) return;
+    if (!isCurrentStepValid) return;
     setActiveStep(steps[Math.min(steps.length - 1, activeStepIndex + 1)].key);
   };
   const goToStep = (index: number) => {
@@ -485,12 +509,12 @@ export default function StudentFormPage({ embedded = false, onCancel, onSuccess 
       setActiveStep(steps[index].key);
       return;
     }
-    if (index === activeStepIndex + 1) goNext();
+    if (index === activeStepIndex + 1 && isCurrentStepValid) goNext();
   };
   const cancel = () => {
     if (onCancel) onCancel();
     else if (isEdit) nav(-1);
-    else nav('/students');
+    else nav('/view-students');
   };
 
   return (
@@ -498,10 +522,18 @@ export default function StudentFormPage({ embedded = false, onCancel, onSuccess 
       {!embedded ? <PageHeader title={isEdit ? 'Edit Student' : 'Add Student'} subtitle="Student, sibling, school, and guardian information" actions={<Button type="button" variant="outline" onClick={() => nav(-1)}>Back</Button>} /> : null}
       <div className={embedded ? 'studentWizardPanel' : 'panel studentWizardPanel'}>
         <div className="studentWizardHeader">
-          <div>
+          <div className="studentWizardHeaderLeft">
             <div className="studentWizardEyebrow">{isEdit ? 'Update profile' : 'New student registration'}</div>
             <h2>{isEdit ? 'Edit Student' : 'Add Student'}</h2>
           </div>
+          {!embedded && (
+            <button type="button" className="studentWizardClose" onClick={cancel} aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          )}
           <div className="studentStepIndicator" aria-label="Student form steps">
             {steps.map((step, index) => (
               <button
@@ -540,14 +572,14 @@ export default function StudentFormPage({ embedded = false, onCancel, onSuccess 
         </div>
         <div className="studentWizardFooter">
           {activeStep === 'personal' ? (
-            <Button type="button" variant="outline" onClick={cancel}>Cancel</Button>
+            <Button type="button" variant="outline" className="btn-cancel" onClick={cancel}>Cancel</Button>
           ) : (
-            <Button type="button" variant="outline" onClick={goBack}>Back</Button>
+            <Button type="button" variant="outline" className="btn-back" onClick={goBack}>Back</Button>
           )}
           {activeStep === 'guardian' ? (
-            <Button loading={loading || metaLoading || editLoading}>{isEdit ? 'Save Changes' : 'Register Student'}</Button>
+            <Button loading={loading || metaLoading || editLoading} className="btn-register">{isEdit ? 'Save Changes' : 'Register Student'}</Button>
           ) : (
-            <Button type="button" onClick={goNext} disabled={metaLoading || editLoading}>Next</Button>
+            <Button type="button" className="btn-next" onClick={goNext} disabled={!isCurrentStepValid || metaLoading || editLoading}>Next</Button>
           )}
         </div>
       </div>

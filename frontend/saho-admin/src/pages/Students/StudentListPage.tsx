@@ -13,8 +13,6 @@ import { useToast } from '../../hooks/useToast';
 import type { StudentFilters, StudentView, SponsorView } from '../../types';
 import StudentDetailModal from './StudentDetailModal';
 import Modal from '../../components/common/Modal';
-import StudentFormPage from './StudentFormPage';
-
 const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', sponsor_status: '', is_active: '' };
 type FilterOption = { value: string; label: string };
 
@@ -49,7 +47,6 @@ export default function StudentListPage() {
   const [singleDelete, setSingleDelete] = useState<number | null>(null);
   const [sponsorOpen, setSponsorOpen] = useState(false);
   const [sponsorDetails, setSponsorDetails] = useState<SponsorView | null>(null);
-  const [addStudentOpen, setAddStudentOpen] = useState(false);
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const nav = useNavigate();
   const { user } = useAuth();
@@ -179,7 +176,26 @@ export default function StudentListPage() {
     return [
       <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.student_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.student_id)} />,
       <div className="studentIdCell">{s.student_id}</div>,
-      <div className="rowFlex"><Avatar name={s.full_name} size="md" /><div><div className="strong studentNameCell" onClick={async () => { setLoading(true); try { const full = await getStudentById(s.student_id); setSelected(full ?? s); } finally { setLoading(false); } }}>{s.full_name}</div><div className="sub">{s.gender}</div></div></div>,
+      <div className="rowFlex studentCell">
+        <Avatar name={s.full_name} size="md" />
+        <div className="tableCellStack studentCellStack">
+          <div
+            className="cellTopText studentNameCell"
+            onClick={async () => {
+              setLoading(true);
+              try {
+                const full = await getStudentById(s.student_id);
+                setSelected(full ?? s);
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
+            {s.full_name}
+          </div>
+          <div className="cellSubText">{s.gender}</div>
+        </div>
+      </div>,
       <div>{age}</div>,
       <div>{s.class_id}</div>,
       <div className="tableCellStack">
@@ -242,7 +258,7 @@ export default function StudentListPage() {
         
         </div>
         <div className="student-list-actions">
-          <Button className="add-student-btn" onClick={() => setAddStudentOpen(true)}>
+          <Button className="add-student-btn" onClick={() => nav('/students/add')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -397,7 +413,14 @@ export default function StudentListPage() {
               </label>
             </div>
             <div className="bulkToolbarActions">
-              <Button size="sm" variant="outline" tabIndex={hasSelection ? 0 : -1}>Export CSV</Button>
+              <Button size="sm" variant="outline" tabIndex={hasSelection ? 0 : -1}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M12 3v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 17v3h16v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Export CSV
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
@@ -406,6 +429,13 @@ export default function StudentListPage() {
                 disabled={!hasSelection}
                 tabIndex={hasSelection ? 0 : -1}
               >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M10 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 Delete selected
               </Button>
             </div>
@@ -424,17 +454,6 @@ export default function StudentListPage() {
         <Pagination total={total} page={page} pageSize={pageSize} onChange={setPage} onPageSizeChange={(nextPageSize) => { setPageSize(nextPageSize); setPage(1); }} />
       </div>
       <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
-      <Modal open={addStudentOpen} onClose={() => setAddStudentOpen(false)} title="Add Student" width={940}>
-        <StudentFormPage
-          embedded
-          onCancel={() => setAddStudentOpen(false)}
-          onSuccess={() => {
-            setAddStudentOpen(false);
-            load(1, pageSize);
-            setPage(1);
-          }}
-        />
-      </Modal>
       <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.full_name ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
         {sponsorDetails ? <div>
           <h3 style={{ marginTop: 0 }}>{sponsorDetails.full_name}</h3>

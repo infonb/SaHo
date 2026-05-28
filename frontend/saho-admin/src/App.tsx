@@ -31,6 +31,7 @@ export default function App() {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="view-students" element={<StudentListPage />} />
             <Route path="students" element={<StudentListPage />} />
+            <Route path="add-student" element={<StudentFormPage />} />
             <Route path="students/add" element={<StudentFormPage />} />
             <Route path="students/edit/:id" element={<StudentFormPage />} />
             <Route path="sponsors" element={<SponsorListPage />} />
