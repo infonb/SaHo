@@ -63,6 +63,7 @@ export default function StudentListPage() {
   const totalOrphans = students.filter(s => s.orphan_status === '3').length;
 
   const load = async (nextPage = page, nextPageSize = pageSize) => {
+    const scrollY = window.scrollY;
     setLoading(true);
     setError(null);
     try {
@@ -82,6 +83,7 @@ export default function StudentListPage() {
       setError('Unable to load students from the database.');
     } finally {
       setLoading(false);
+      requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: 'auto' }));
     }
   };
 
@@ -200,14 +202,14 @@ export default function StudentListPage() {
   };
 
   const sortArrow = (column: string) => {
-    if (sortColumn !== column) return '';
-    return sortDirection === 'ASC' ? ' ↑' : ' ↓';
+    if (sortColumn !== column) return '↑↓';
+    return sortDirection === 'ASC' ? '↑' : '↓';
   };
 
   const sortHeader = (label: string, column: string) => (
     <button type="button" className="sortableHeader" onClick={() => handleSort(column)} aria-label={`Sort by ${label}`}>
       <span>{label}</span>
-      <span className="sortArrow" aria-hidden>{sortArrow(column)}</span>
+      <span className={`sortArrow${sortColumn === column ? ' active' : ''}`} aria-hidden>{sortArrow(column)}</span>
     </button>
   );
 

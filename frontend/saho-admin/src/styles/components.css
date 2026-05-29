@@ -3271,13 +3271,21 @@ td{padding:11px 12px;font-size:12.5px}
   text-transform:inherit;
   cursor:pointer;
   padding:0;
+  gap:6px;
 }
 
 .student-table-section th .sortArrow{
   font-size:11px;
   line-height:1;
+  color:#94a3b8;
+  min-width:16px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.student-table-section th .sortArrow.active{
   color:#10b981;
-  min-width:10px;
 }
 
 .orphanStatusBadge{
