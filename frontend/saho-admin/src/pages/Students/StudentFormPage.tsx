@@ -522,18 +522,20 @@ export default function StudentFormPage({ embedded = false, onCancel, onSuccess 
       {!embedded ? <PageHeader title={isEdit ? 'Edit Student' : 'Add Student'} subtitle="Student, sibling, school, and guardian information" actions={<Button type="button" variant="outline" onClick={() => nav(-1)}>Back</Button>} /> : null}
       <div className={embedded ? 'studentWizardPanel' : 'panel studentWizardPanel'}>
         <div className="studentWizardHeader">
-          <div className="studentWizardHeaderLeft">
-            <div className="studentWizardEyebrow">{isEdit ? 'Update profile' : 'New student registration'}</div>
-            <h2>{isEdit ? 'Edit Student' : 'Add Student'}</h2>
+          <div className="studentWizardHeaderTop">
+            <div className="studentWizardHeaderLeft">
+              <div className="studentWizardEyebrow">{isEdit ? 'Update profile' : 'New student registration'}</div>
+              <h2>{isEdit ? 'Edit Student' : 'Add Student'}</h2>
+            </div>
+            {!embedded && (
+              <button type="button" className="studentWizardClose" onClick={cancel} aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            )}
           </div>
-          {!embedded && (
-            <button type="button" className="studentWizardClose" onClick={cancel} aria-label="Close">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          )}
           <div className="studentStepIndicator" aria-label="Student form steps">
             {steps.map((step, index) => (
               <button

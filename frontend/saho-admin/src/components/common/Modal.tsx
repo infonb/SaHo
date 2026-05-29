@@ -28,7 +28,7 @@ export default function Modal({ open, onClose, title, children, footer, width = 
       <div className="modalCard" style={{ width }} onMouseDown={(e) => e.stopPropagation()}>
         <div className="modalHead">
           <h2>{title}</h2>
-          <button className="btn ghost sm" onClick={onClose}>x</button>
+          <button className="modalCloseBtn btn ghost sm" onClick={onClose} aria-label="Close">x</button>
         </div>
         <div ref={bodyRef} className="modalBody">{children}</div>
         {footer && <div className="modalFooter">{footer}</div>}

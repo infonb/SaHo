@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-interface Column { key: string; label: string; width?: string; }
+interface Column { key: string; label: ReactNode; width?: string; }
 interface Props { columns: Column[]; rows: ReactNode[][]; loading?: boolean; onRowClick?: (index: number) => void; rowClassName?: string | ((index: number) => string); }
 export default function DataTable({ columns, rows, loading, onRowClick, rowClassName }: Props) {
   const getRowClassName = (index: number) => {
