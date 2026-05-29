@@ -19,7 +19,9 @@ public interface StudentProcedureRepository {
             String distId,
             String mndlId,
             String vilId,
-            String schId
+            String schId,
+            String sortColumn,
+            String sortDirection
     );
 
     Optional<StudentProfileResponseDto> getStudentProfileById(Integer studentId);

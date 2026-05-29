@@ -36,9 +36,11 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
             String distId,
             String mndlId,
             String vilId,
-            String schId
+            String schId,
+            String sortColumn,
+            String sortDirection
     ) {
-        return getStudentsFromProcedure(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId);
+        return getStudentsFromProcedure(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, sortColumn, sortDirection);
     }
 
     @Override
@@ -169,7 +171,9 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
             String distId,
             String mndlId,
             String vilId,
-            String schId
+            String schId,
+            String sortColumn,
+            String sortDirection
     ) {
         return jdbcTemplate.execute((ConnectionCallback<List<StudentListResponseDto>>) con -> {
             String cursorName = "student_list_ref";
@@ -206,8 +210,8 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 ps.setString(9, emptyToNull(mndlId));
                 ps.setString(10, emptyToNull(vilId));
                 ps.setString(11, emptyToNull(schId));
-                ps.setString(12, "student_id");
-                ps.setString(13, "DESC");
+                ps.setString(12, emptyToNull(sortColumn));
+                ps.setString(13, emptyToNull(sortDirection));
                 ps.setString(14, cursorName);
                 ps.execute();
             }
