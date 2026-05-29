@@ -1,7 +1,15 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
-interface Props { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; width?: number; }
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+  footer?: ReactNode;
+  width?: number;
+}
+
 export default function Modal({ open, onClose, title, children, footer, width = 520 }: Props) {
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -28,9 +36,15 @@ export default function Modal({ open, onClose, title, children, footer, width = 
       <div className="modalCard" style={{ width }} onMouseDown={(e) => e.stopPropagation()}>
         <div className="modalHead">
           <h2>{title}</h2>
-          <button className="btn ghost sm" onClick={onClose}>x</button>
+          <button className="modalCloseBtn" onClick={onClose} aria-label="Close dialog" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
-        <div ref={bodyRef} className="modalBody">{children}</div>
+        <div ref={bodyRef} className="modalBody">
+          {children}
+        </div>
         {footer && <div className="modalFooter">{footer}</div>}
       </div>
     </div>

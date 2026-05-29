@@ -274,22 +274,57 @@ tr.clickable:hover{background:#f8fafc;cursor:pointer}
 .pageSizeSelect{height:34px;min-width:58px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);color:var(--color-text2);font-weight:800;padding:0 28px 0 11px}
 .modalOverlay{position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:80;display:grid;place-items:center;padding:28px 18px;animation:fadeIn .16s ease}
 .modalCard{background:var(--color-surface);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);max-height:calc(100vh - 56px);max-width:calc(100vw - 32px);overflow:hidden;display:flex;flex-direction:column;animation:slideUp .18s ease both}
-.modalHead{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--color-border)}
+.modalHead{display:flex;justify-content:space-between;align-items:center;padding:20px 18px 10px 24px;border-bottom:0}
 .modalHead h2{font-family:var(--font-display);font-size:18px;font-weight:800;margin:0}
-.modalBody{padding:20px;overflow-y:auto;flex:1;min-height:0}
-.modalFooter{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--color-border)}
+.modalCloseBtn{width:32px;height:32px;border:0;border-radius:999px;background:transparent;color:#64748b;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;padding:0;cursor:pointer}
+.modalCloseBtn:hover{background:#f1f5f9;color:#0f172a}
+.modalCloseBtn svg{display:block;width:16px;height:16px}
+.modalBody{padding:8px 20px 20px;overflow-y:auto;flex:1;min-height:0}
+.modalFooter{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:0}
 .toastStack{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:60}
 .toast{padding:12px 14px;border-radius:var(--r-md);box-shadow:var(--shadow-md);background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);animation:toastIn .2s ease}
 .toast.error{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
 .empty{padding:34px;text-align:center;color:var(--color-text3)}
 .formGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 .sectionTitle{font-family:var(--font-display);font-weight:800;margin:22px 0 12px;padding-top:18px;border-top:1px solid var(--color-divider)}
-.studentProfileModal{font-size:13px}
+.studentProfileModal{font-size:13px;padding-top:2px}
 .studentProfileModal h2{font-size:18px}
 .studentProfileModal .sub{font-size:11px;margin-top:2px}
 .studentProfileModal .formGrid{gap:10px}
 .studentProfileModal .sectionTitle{margin:16px 0 10px;padding-top:12px;font-size:16px}
 .studentProfileModal .panelTitle{margin-bottom:10px}
+.studentProfileHero{border:1px solid var(--green-border);border-radius:26px;padding:20px;background:radial-gradient(circle at top right,var(--green-bg) 0%,#ffffff 42%,#f8fffd 100%);box-shadow:0 10px 22px rgba(15,23,42,.05)}
+.studentProfileHeroTop{display:flex;justify-content:flex-start;align-items:center;gap:18px}
+.studentProfileIdentity{min-width:0;flex:1}
+.studentProfileTitle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:900;color:var(--color-primary)}
+.studentProfileTitle:before{content:"\1F465";font-size:12px;opacity:.85;color:var(--color-primary)}
+.studentProfileIdentity h2{margin:6px 0 0;font-family:var(--font-display);font-size:25px;font-weight:800;color:#1f2937}
+.studentProfilePills{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.studentProfilePill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.studentProfilePill.emerald{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.studentProfilePill.amber{background:#f8fafc;color:#475569;border-color:#e2e8f0}
+.studentProfileAvatar{width:82px;height:82px;border-radius:999px;display:grid;place-items:center;background:linear-gradient(135deg,var(--color-primary),#14b8a6);color:#fff;font-weight:900;font-size:24px;box-shadow:0 10px 20px rgba(20,184,166,.22);flex:0 0 auto}
+.studentProfileTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;background:#ffffff;border:1px solid var(--color-border);border-radius:14px;overflow:hidden;margin-top:10px;margin-bottom:14px}
+.studentProfileTab{border:0;border-right:1px solid #edf2ed;background:#ffffff;color:#8a9492;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;font-weight:800;font-size:13px;cursor:pointer;transition:background .18s ease,color .18s ease,box-shadow .18s ease}
+.studentProfileTab:last-child{border-right:0}
+.studentProfileTab:hover{background:#f8fffe;color:var(--color-text)}
+.studentProfileTab.isActive{background:#ffffff;color:var(--color-primary);box-shadow:inset 0 -2px 0 var(--color-primary)}
+.studentProfileGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.studentProfileCard{border:1px solid var(--color-border);border-radius:14px;background:#ffffff;padding:14px;box-shadow:0 4px 14px rgba(15,23,42,.03)}
+.studentProfileLabel{display:flex;align-items:flex-start;gap:8px;color:#8a9492;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.14em}
+.studentProfileIcon{color:var(--color-primary);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;margin-top:1px}
+.studentProfileValue{margin-top:8px;font-size:14px;font-weight:800;color:#263238;word-break:break-word}
+.studentProfileSponsor{border-top:1px solid var(--color-divider);padding-top:14px;margin-top:14px}
+.studentProfileSectionTitle{display:flex;align-items:center;gap:8px;color:var(--color-primary);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.16em}
+.studentProfileSponsorGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.studentProfileChip{border:1px solid var(--color-border);border-radius:14px;background:#ffffff;padding:12px 14px}
+.studentProfileChipLabel{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.14em;color:var(--color-text3)}
+.studentProfileChipValue{margin-top:4px;font-size:14px;font-weight:800;color:#263238}
+@media (max-width: 720px){
+  .studentProfileHeroTop{flex-direction:column-reverse;align-items:flex-start}
+  .studentProfileGrid,.studentProfileSponsorGrid{grid-template-columns:1fr}
+  .studentProfileTabs{grid-template-columns:1fr}
+}
 .tableRowActions{justify-content:flex-end;flex-wrap:nowrap;gap:8px}
 .tableRowActions .btn{flex:0 0 auto}
 .loginShell{min-height:100vh;display:grid;place-items:center;padding:30px}
@@ -2917,6 +2952,17 @@ td{padding:11px 12px;font-size:12.5px}
 .student-table-section .studentNameCell {
   color: #0f172a;
   font-weight: 700;
+}
+
+.student-table-section button.studentNameCell {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
 }
 
 .student-table-section .studentNameCell:hover {

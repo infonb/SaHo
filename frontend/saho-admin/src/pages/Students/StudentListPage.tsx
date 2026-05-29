@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deactivateStudents, getStudents, getStudentById } from '../../api/studentApi';
+import { deactivateStudents, getStudents } from '../../api/studentApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
 import { getSponsorById } from '../../api/sponsorApi';
 import Button from '../../components/common/Button';
@@ -179,20 +179,9 @@ export default function StudentListPage() {
       <div className="rowFlex studentCell">
         <Avatar name={s.full_name} size="md" />
         <div className="tableCellStack studentCellStack">
-          <div
-            className="cellTopText studentNameCell"
-            onClick={async () => {
-              setLoading(true);
-              try {
-                const full = await getStudentById(s.student_id);
-                setSelected(full ?? s);
-              } finally {
-                setLoading(false);
-              }
-            }}
-          >
+          <button type="button" className="cellTopText studentNameCell" onClick={() => setSelected(s)}>
             {s.full_name}
-          </div>
+          </button>
           <div className="cellSubText">{s.gender}</div>
         </div>
       </div>,
@@ -446,6 +435,7 @@ export default function StudentListPage() {
           loading={loading}
           columns={[{ key: 'select', label: '', width: '44px' }, { key: 'id', label: 'ID', width: '72px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE', width: '72px' }, { key: 'grade', label: 'CLASS', width: '88px' }, { key: 'school', label: 'SCHOOL' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'orphan', label: 'STATUS' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: '' }]}
           rows={rows}
+          onRowClick={(index) => setSelected(students[index] ?? null)}
           rowClassName={(index) => {
             const student = students[index];
             return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;

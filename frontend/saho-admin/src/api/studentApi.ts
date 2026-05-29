@@ -62,7 +62,7 @@ export const getStudents = async ({
       dob: s.dob ?? '',
       gender: s.gender ?? 'Other',
       aadhaar_number: s.aadhaarNumber ?? '',
-      caste: s.casteId ? String(s.casteId) : '',
+      caste: casteNameFromValue(s.casteName ?? s.caste ?? s.casteId),
       religion: s.religion ?? null,
       blood_group: s.bloodGroup ?? null,
       class_id: s.className ? String(s.className) : (s.classId ? String(s.classId) : ''),
@@ -88,6 +88,9 @@ export const getStudents = async ({
       sponsor_id: null,
       sponsor_full_name: null,
       sponsor_type: null,
+      sibling_id: s.siblingId ?? null,
+      sibling_student_name: s.siblingStudentName ?? s.siblingName ?? null,
+      sibling_student_id: s.siblingStudentId ?? null,
       vil_name: s.vilName ?? '',
       mndl_name: s.mndlName ?? '',
       dist_name: s.distName ?? '',
@@ -127,10 +130,10 @@ export const getStudentById = async (id: number): Promise<StudentView | undefine
       dob: s.dob ?? '',
       gender: mapGender(s.gender ?? s.gender_code ?? s.gender_label),
       aadhaar_number: s.aadhaarNumber ?? s.aadhaar_number ?? '',
-      caste: s.casteName ?? (s.casteId ? String(s.casteId) : ''),
+      caste: casteNameFromValue(s.casteName ?? s.caste ?? s.casteId),
       religion: mapReligion(s.religion ?? s.religion_code ?? s.religion_label),
       blood_group: s.bloodGroup ?? s.blood_group ?? null,
-      class_id: s.classId ? String(s.classId) : '',
+      class_id: s.className ?? s.class_id ?? (s.classId ? String(s.classId) : ''),
       orphan_status: mapOrphan(s.orphanStatus ?? s.orphan_status ?? s.orphan_status_code),
       image_url: s.imageUrl ?? s.image_url ?? null,
       is_active: true,
@@ -157,6 +160,9 @@ export const getStudentById = async (id: number): Promise<StudentView | undefine
       sponsor_id: null,
       sponsor_full_name: null,
       sponsor_type: null,
+      sibling_id: s.siblingId ?? null,
+      sibling_student_name: s.siblingStudentName ?? s.siblingName ?? null,
+      sibling_student_id: s.siblingStudentId ?? null,
     } as StudentView;
 
     return view;
@@ -206,4 +212,20 @@ export const deactivateStudent = async (id: number, modified_by: string): Promis
 export const deactivateStudents = async (ids: number[], modified_by: string): Promise<void> => {
   // No bulk-delete endpoint yet; fan out to single deletes.
   await Promise.all(ids.map(id => deactivateStudent(id, modified_by)));
+};
+const casteNameFromValue = (value: any) => {
+  if (typeof value === 'string' && value.trim()) return value;
+  const numeric = Number(value);
+  const casteMap: Record<number, string> = {
+    1: 'SC',
+    2: 'ST',
+    3: 'BC-A',
+    4: 'BC-B',
+    5: 'BC-C',
+    6: 'BC-D',
+    7: 'OBC',
+    8: 'OC',
+    9: 'Other',
+  };
+  return Number.isFinite(numeric) ? (casteMap[numeric] ?? String(value ?? '')) : String(value ?? '');
 };
