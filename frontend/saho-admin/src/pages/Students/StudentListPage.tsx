@@ -83,7 +83,9 @@ export default function StudentListPage() {
       setError('Unable to load students from the database.');
     } finally {
       setLoading(false);
-      requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: 'auto' }));
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: 'auto' });
+      });
     }
   };
 
@@ -207,7 +209,13 @@ export default function StudentListPage() {
   };
 
   const sortHeader = (label: string, column: string) => (
-    <button type="button" className="sortableHeader" onClick={() => handleSort(column)} aria-label={`Sort by ${label}`}>
+    <button
+      type="button"
+      className="sortableHeader"
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={() => handleSort(column)}
+      aria-label={`Sort by ${label}`}
+    >
       <span>{label}</span>
       <span className={`sortArrow${sortColumn === column ? ' active' : ''}`} aria-hidden>{sortArrow(column)}</span>
     </button>
