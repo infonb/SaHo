@@ -6,17 +6,27 @@ import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import DataTable from '../../components/common/DataTable';
-import FilterBar from '../../components/common/FilterBar';
 import Modal from '../../components/common/Modal';
-import PageHeader from '../../components/common/PageHeader';
 import Pagination from '../../components/common/Pagination';
-import StatCard from '../../components/common/StatCard';
 import { usePagination } from '../../hooks/usePagination';
 import { useToast } from '../../hooks/useToast';
 import type { SponsorFilters, SponsorView } from '../../types';
 
 const defaults: SponsorFilters = { search: '', type: '', nationality: '', is_active: '' };
-const contribution = (value: string) => /^\d+(\.\d+)?$/.test(value) ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value)) : value;
+const contribution = (value?: string | null, nationality?: string) => {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) return '-';
+  if (/^[\u20b9\u0024\u20ac\u00a3\u00a5]/.test(trimmed) || /^[A-Z]{3}\s?\d/.test(trimmed)) return trimmed;
+  if (/^\d+(\.\d+)?$/.test(trimmed)) {
+    const currency = nationality?.toLowerCase() === 'indian' ? 'INR' : 'USD';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(Number(trimmed));
+  }
+  return trimmed;
+};
 
 export default function SponsorListPage() {
   const [items, setItems] = useState<SponsorView[]>([]);
@@ -112,45 +122,117 @@ export default function SponsorListPage() {
   ]);
 
   return (
-    <div>
-      <PageHeader
-        title="Sponsors"
-        subtitle="Individuals and organisations supporting students"
-        actions={<><Button variant="success" onClick={() => nav('/sponsors/assign')}>Assign Sponsor</Button><Button onClick={() => nav('/sponsors/add')}>Add Sponsor</Button></>}
-      />
-
-      <div className="statGrid sponsorStatsGrid" style={{ marginBottom: 14 }}>
-        <StatCard label="TOTAL SPONSORS" value={totalSponsors} note="All sponsors" />
-        <StatCard label="ACTIVE" value={activeSponsors} note="Currently active" />
-        <StatCard label="PENDING" value={pendingSponsors} note="Needs attention" />
-        <StatCard label="SPONSORED STUDENTS" value={totalStudentsSponsored} note="Across sponsors" />
+    <div className="student-list-page sponsor-list-page">
+      <div className="student-list-header">
+        <div className="student-list-title">
+          <h1>Sponsors</h1>
+          <p>Individuals and organisations supporting students</p>
+        </div>
+        <div className="student-list-actions sponsor-list-actions">
+          <Button variant="success" className="assign-sponsor-btn" onClick={() => nav('/sponsors/assign')}>Assign Sponsor</Button>
+          <Button className="add-student-btn" onClick={() => nav('/sponsors/add')}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Sponsor
+          </Button>
+        </div>
       </div>
 
-      <FilterBar
-        className="filterBarInline"
-        onGo={() => { setApplied({ ...pending }); pager.setPage(1); }}
-        onClear={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); }}
-      >
-        <div className="filterGroup filterGroupWide">
-          <input className="filterSearch" placeholder="Search sponsors" value={pending.search} onChange={e => setPending({ ...pending, search: e.target.value })} />
+      <div className="student-stats-grid sponsor-stats-grid">
+        <div className="student-stat-card total">
+          <div className="stat-card-content">
+            <div className="stat-card-label">Total Sponsors</div>
+            <div className="stat-card-value">{totalSponsors}</div>
+            <div className="stat-card-note">All sponsors</div>
+          </div>
+          <div className="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
         </div>
-        <div className="filterGroup filterGroupCompact">
-          <select className="select compact" value={pending.nationality} onChange={e => setPending({ ...pending, nationality: e.target.value })}>
-            <option value="">All Nationality</option>
-            {nationalities.map(n => <option key={n}>{n}</option>)}
-          </select>
+        <div className="student-stat-card active">
+          <div className="stat-card-content">
+            <div className="stat-card-label">Active</div>
+            <div className="stat-card-value">{activeSponsors}</div>
+            <div className="stat-card-note">Currently active</div>
+          </div>
+          <div className="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5"></path>
+            </svg>
+          </div>
         </div>
-        <div className="filterGroup filterGroupCompact">
-          <select className="select compact" value={pending.type} onChange={e => setPending({ ...pending, type: e.target.value })}>
-            <option value="">All Types</option>
-            <option>Individual</option>
-            <option>Organisation</option>
-          </select>
+        <div className="student-stat-card pending">
+          <div className="stat-card-content">
+            <div className="stat-card-label">Pending</div>
+            <div className="stat-card-value">{pendingSponsors}</div>
+            <div className="stat-card-note">Needs attention</div>
+          </div>
+          <div className="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v5l3 3"></path>
+            </svg>
+          </div>
         </div>
-      </FilterBar>
+        <div className="student-stat-card sponsored">
+          <div className="stat-card-content">
+            <div className="stat-card-label">Sponsored Students</div>
+            <div className="stat-card-value">{totalStudentsSponsored}</div>
+            <div className="stat-card-note">Across sponsors</div>
+          </div>
+          <div className="stat-card-icon sponsoredIcon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 20.4C8.4 18.6 4.7 15.1 4.7 10.8c0-2.8 2-4.9 4.7-4.9 1.5 0 2.9.7 3.7 1.9.8-1.2 2.2-1.9 3.7-1.9 2.7 0 4.7 2.1 4.7 4.9 0 4.3-3.7 7.8-8.7 9.6Z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div className="student-filters-section sponsor-filters-section">
+        <div className="filters-container sponsor-filters-container">
+          <div className="filter-search-wrapper sponsor-search-wrapper">
+            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35"></path>
+            </svg>
+            <input className="filter-search-input" placeholder="Search sponsors" value={pending.search} onChange={e => setPending({ ...pending, search: e.target.value })} />
+          </div>
+          <div className="filter-group">
+            <select className="filter-select" value={pending.nationality} onChange={e => setPending({ ...pending, nationality: e.target.value })}>
+              <option value="">All Nationality</option>
+              {nationalities.map(n => <option key={n}>{n}</option>)}
+            </select>
+          </div>
+          <div className="filter-group">
+            <select className="filter-select" value={pending.type} onChange={e => setPending({ ...pending, type: e.target.value })}>
+              <option value="">All Types</option>
+              <option>Individual</option>
+              <option>Organisation</option>
+            </select>
+          </div>
+          <div className="filter-actions-group">
+            <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); }}>
+              <span className="filterBtnIcon" aria-hidden>x</span> Clear
+            </button>
+            <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); pager.setPage(1); }}>
+              Go
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className={`panel studentRecordsPanel ${hasSelection ? 'bulkModeActive' : ''}`}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '12px' }}>
+        <div className="sponsorRecordsHeader">
           <h3 className="panelTitle">Sponsor Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{items.length} results</span></h3>
           <div className="viewToggle" aria-label="Sponsor view mode">
             <button type="button" className={viewMode === 'cards' ? 'active' : ''} onClick={() => setViewMode('cards')}>Cards</button>
@@ -191,24 +273,24 @@ export default function SponsorListPage() {
         {viewMode === 'cards' ? (
           <div className="sponsorCardGrid">
             {loading ? [0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>) : pager.current.map(s => {
-              const progress = Math.min(100, Math.max(12, Number(s.students_count) * 18));
+              const sponsoredCount = Number(s.students_count) || 0;
               return (
                 <article key={s.sponsor_id} className="sponsorCard">
                   <div className="sponsorCardTop">
-                    <Avatar name={s.full_name} size="lg" />
-                    <div>
-                      <button type="button" className="linkButton strong sponsorNameCell" onClick={() => setSelected(s)}>{s.full_name}</button>
-                      <div className="sub">{s.type} - {s.nationality}</div>
+                    <Avatar name={s.sponsor_name} size="lg" />
+                    <div className="sponsorCardIdentity">
+                      <button type="button" className="linkButton sponsorNameCell" onClick={() => setSelected(s)}>{s.sponsor_name}</button>
+                      <div className="sponsorPhone">{s.ph_no || '-'}</div>
+                      <div className="sponsorMetaLine">{s.type} - {s.nationality}</div>
                     </div>
-                    <Badge variant={s.is_active ? 'assigned' : 'inactive'}>{s.is_active ? 'Active' : 'Pending'}</Badge>
                   </div>
                   <div className="sponsorCardMetric">
                     <span>Contribution</span>
-                    <strong>{contribution(s.contrib_amt)}</strong>
+                    <strong>{contribution(s.contrib, s.nationality)}</strong>
                   </div>
-                  <div className="sponsorCardProgress">
-                    <div><span>{s.students_count} students</span><span>{progress}%</span></div>
-                    <div className="progressTrack"><span style={{ width: `${progress}%` }} /></div>
+                  <div className="sponsorCountCard">
+                    <span>Students Sponsored</span>
+                    <strong>{sponsoredCount} sponsored</strong>
                   </div>
                   <div className="sponsorCardActions">
                     <Button size="sm" variant="outline" onClick={() => nav(`/sponsors/edit/${s.sponsor_id}`)}>Edit</Button>
@@ -363,3 +445,4 @@ function SponsorModal({
 function Info({ label, value }: { label: string; value?: string | number | null }) {
   return <div className="field"><span>{label}</span><div className="input" style={{ background: '#f8fafc' }}>{value || '-'}</div></div>;
 }
+

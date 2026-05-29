@@ -65,7 +65,6 @@ export default function StudentListPage() {
       const data = await getStudents({ pageNumber: nextPage, pageSize: nextPageSize, filters: applied });
       setStudents(data.students);
       setTotal(data.total);
-      setChecked([]);
     } catch {
       setStudents([]);
       setTotal(0);
@@ -148,8 +147,10 @@ export default function StudentListPage() {
 
   const confirmBulkDelete = async () => {
     await deactivateStudents(checked, user?.username ?? 'admin');
+    const removedCount = checked.length;
+    setChecked([]);
     setBulkOpen(false);
-    toast(`${checked.length} students removed.`, 'success');
+    toast(`${removedCount} students removed.`, 'success');
     load(page, pageSize);
   };
 
@@ -174,8 +175,10 @@ export default function StudentListPage() {
     const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
     if (!hasBirthdayPassed) age -= 1;
     return [
-      <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.student_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.student_id)} />,
-      <div className="studentIdCell">{s.student_id}</div>,
+      <div className="idSelectCell">
+        <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.student_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.student_id)} />
+        <span className="studentIdCell">{s.student_id}</span>
+      </div>,
       <div className="rowFlex studentCell">
         <Avatar name={s.full_name} size="md" />
         <div className="tableCellStack studentCellStack">
@@ -199,9 +202,9 @@ export default function StudentListPage() {
           {[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '—'}
         </div>
       </div>,
-      <div className="guardianCell">
+      <div className="tableCellStack studentCellStack guardianCell">
         <div className="cellTopText">{s.guardian_full_name || 'N/A'}</div>
-        {s.guardian_phone ? <div className="cellSubText">{s.guardian_phone}</div> : null}
+        <div className="cellSubText">{s.guardian_relation_name || 'N/A'}</div>
       </div>,
       <div className="orphanStatusCell">
         <span className={`orphanStatusBadge ${orphanStatusClass(s.orphan_status)}`}>
@@ -279,10 +282,11 @@ export default function StudentListPage() {
             <div className="stat-card-value">{totalBoys}</div>
             <div className="stat-card-note">Male students</div>
           </div>
-          <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="4"></circle>
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <div className="stat-card-icon genderIcon maleIcon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="10" cy="14" r="5.5" stroke="currentColor" strokeWidth="1.9"></circle>
+              <path d="M13.8 10.2L20 4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"></path>
+              <path d="M16 4H20V8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"></path>
             </svg>
           </div>
         </div>
@@ -292,10 +296,11 @@ export default function StudentListPage() {
             <div className="stat-card-value">{totalGirls}</div>
             <div className="stat-card-note">Female students</div>
           </div>
-          <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="4"></circle>
-              <path d="M14 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <div className="stat-card-icon genderIcon femaleIcon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="9.5" r="5.5" stroke="currentColor" strokeWidth="1.9"></circle>
+              <path d="M12 15v5.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"></path>
+              <path d="M9.2 18H14.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"></path>
             </svg>
           </div>
         </div>
@@ -305,11 +310,12 @@ export default function StudentListPage() {
             <div className="stat-card-value">{totalSponsored}</div>
             <div className="stat-card-note">With sponsors</div>
           </div>
-          <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-              <path d="M2 17l10 5 10-5"></path>
-              <path d="M2 12l10 5 10-5"></path>
+          <div className="stat-card-icon sponsoredIcon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 20.4C8.4 18.6 4.7 15.1 4.7 10.8c0-2.8 2-4.9 4.7-4.9 1.5 0 2.9.7 3.7 1.9.8-1.2 2.2-1.9 3.7-1.9 2.7 0 4.7 2.1 4.7 4.9 0 4.3-3.7 7.8-8.7 9.6Z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M5 14.3c1.1-1.1 2.2-1.9 3.7-2.4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+              <path d="M19 14.3c-1.1-1.1-2.2-1.9-3.7-2.4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+              <path d="M12 10.9l1.2-1.2c1-1 1.8-1.6 2.8-1.6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
         </div>
@@ -396,10 +402,8 @@ export default function StudentListPage() {
         <div className={`bulkToolbarShell ${hasSelection ? 'isActive' : ''}`} aria-hidden={!hasSelection}>
           <div className="selectHeaderRow studentBulkToolbar">
             <div className="bulkToolbarInfo">
-              <label className="bulkSelectAll">
-                <input type="checkbox" checked={allPageChecked} onChange={togglePage} tabIndex={hasSelection ? 0 : -1} />
-                <span>Select all on this page</span>
-              </label>
+              <span className="bulkSelectAllText">Select all on this page</span>
+              <span className="selected-count">Selected {checked.length} of {total}</span>
             </div>
             <div className="bulkToolbarActions">
               <Button size="sm" variant="outline" tabIndex={hasSelection ? 0 : -1}>
@@ -433,7 +437,7 @@ export default function StudentListPage() {
 
         <DataTable
           loading={loading}
-          columns={[{ key: 'select', label: '', width: '44px' }, { key: 'id', label: 'ID', width: '72px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE', width: '72px' }, { key: 'grade', label: 'CLASS', width: '88px' }, { key: 'school', label: 'SCHOOL' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'orphan', label: 'STATUS' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: '' }]}
+          columns={[{ key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span>ID</span></div>, width: '92px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE', width: '72px' }, { key: 'grade', label: 'CLASS', width: '88px' }, { key: 'school', label: 'SCHOOL' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'orphan', label: 'STATUS' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: '' }]}
           rows={rows}
           onRowClick={(index) => setSelected(students[index] ?? null)}
           rowClassName={(index) => {
