@@ -2523,45 +2523,51 @@ td{padding:11px 12px;font-size:12.5px}
   to{opacity:1;transform:translateY(0)}
 }
 
-/* Student add wizard modal */
+/* Student form wizard */
 .modalOverlay{
   background:rgba(15,23,42,.58);
   backdrop-filter:blur(8px);
 }
+.modalCard:has(.studentWizardForm.isViewMode) .modalHead{
+  display:none;
+}
+.modalCard:has(.studentWizardForm.isViewMode) .modalBody{
+  padding:18px 22px 22px;
+}
 .studentWizardForm{
+  --student-control-height:46px;
+  --student-control-radius:10px;
+  --student-control-border:1px;
+  --student-field-font:13px;
+  --student-label-color:#6b7280;
+  --student-error:#e11d48;
+  --student-error-bg:#fff1f2;
+  --student-success:#059669;
+  width:100%;
+  max-width:1180px;
+  margin:0 auto;
   color:#0f172a;
+  display:grid;
+  gap:22px;
 }
 .studentWizardForm.isEmbedded{
-  margin:-16px;
-}
-.studentWizardPanel{
-  background:rgba(255,255,255,.92);
-  border:1px solid rgba(226,232,240,.95);
-  border-radius:16px;
-  box-shadow:0 24px 70px rgba(15,23,42,.16);
-  overflow:hidden;
-}
-.studentWizardForm.isEmbedded .studentWizardPanel{
-  border:0;
-  border-radius:0;
-  box-shadow:none;
+  max-width:none;
+  margin:0;
 }
 .studentWizardHeader{
-  position:sticky;
-  top:0;
-  z-index:2;
   display:grid;
-  gap:12px;
-  padding:18px 22px 16px;
-  background:rgba(255,255,255,.88);
-  border-bottom:1px solid #e2e8f0;
-  backdrop-filter:blur(14px);
+  gap:14px;
+  padding:0;
+  background:transparent;
 }
 .studentWizardHeaderTop{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
-  gap:12px;
+  gap:16px;
+}
+.studentWizardHeaderLeft{
+  min-width:0;
 }
 .studentWizardEyebrow{
   color:#64748b;
@@ -2571,27 +2577,49 @@ td{padding:11px 12px;font-size:12.5px}
   letter-spacing:.08em;
 }
 .studentWizardHeader h2{
-  margin:2px 0 0;
+  margin:3px 0 0;
   color:#0f172a;
   font-family:var(--font-display);
-  font-size:20px;
+  font-size:28px;
   font-weight:900;
   letter-spacing:0;
+}
+.studentWizardClose{
+  width:var(--student-control-height);
+  height:var(--student-control-height);
+  border:var(--student-control-border) solid #e2e8f0;
+  border-radius:var(--student-control-radius);
+  background:#ffffff;
+  color:#64748b;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease;
+}
+.studentWizardClose:hover{
+  border-color:#ef4444;
+  color:#dc2626;
+  background:#fef2f2;
+  box-shadow:0 4px 12px rgba(220,38,38,.08);
+}
+.studentWizardClose svg{
+  width:18px;
+  height:18px;
 }
 .studentStepIndicator{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
   align-items:center;
-  gap:12px;
-  max-width:100%;
+  gap:10px;
   width:100%;
 }
 .studentStepPill{
-  position:relative;
-  min-height:38px;
+  min-height:46px;
   padding:0 14px;
   border:1px solid #e2e8f0;
-  border-radius:999px;
+  border-radius:10px;
   background:#ffffff;
   color:#64748b;
   font-size:12px;
@@ -2618,7 +2646,7 @@ td{padding:11px 12px;font-size:12.5px}
   border-color:rgba(16,185,129,.42);
   background:#ecfdf5;
   color:#047857;
-  box-shadow:0 0 0 4px rgba(16,185,129,.08);
+  box-shadow:0 0 0 3px rgba(16,185,129,.08);
 }
 .studentStepPill.isActive span,
 .studentStepPill.isComplete span{
@@ -2633,25 +2661,9 @@ td{padding:11px 12px;font-size:12.5px}
   cursor:not-allowed;
   opacity:.58;
 }
-.studentWizardBody{
-  padding:22px;
-  min-height:430px;
-  background:#f8fafc;
-  animation:studentStepIn .22s ease both;
-}
-.studentStepPanel{
-  background:#ffffff;
-  border:1px solid #e2e8f0;
-  border-radius:16px;
-  padding:18px;
-  box-shadow:0 12px 34px rgba(15,23,42,.06);
-}
-.studentSiblingPanel{
-  margin-top:14px;
-}
 .studentStepTitle{
-  margin:0 0 16px;
-  color:#0f172a;
+  margin:0 0 18px;
+  color:#6b7280;
   font-size:16px;
   font-weight:900;
   display:flex;
@@ -2659,38 +2671,67 @@ td{padding:11px 12px;font-size:12.5px}
   gap:10px;
 }
 .studentStepIcon{
-  width:30px;
-  height:30px;
-  border-radius:10px;
+  width:28px;
+  height:28px;
+  border-radius:8px;
   display:grid;
   place-items:center;
   background:#ecfdf5;
   color:#10b981;
-  font-size:13px;
+  font-size:12px;
   font-weight:900;
 }
 .studentStepGrid{
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:16px;
+  align-items:start;
 }
-.studentWizardForm .field > span{
-  color:#64748b;
-  font-size:12px;
+.studentFormContainer{
+  display:grid;
+  gap:18px;
+}
+.studentFormSection{
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  background:#ffffff;
+  padding:20px;
+}
+.studentSiblingInline{
+  margin-top:24px;
+  padding-top:20px;
+  border-top:1px solid #eef2f7;
+}
+.studentSiblingInline .studentStepTitle{
+  margin-bottom:14px;
+}
+.studentStepTitle.isSubsection{
+  color:#6b7280;
+}
+.studentWizardForm .field > span,
+.studentWizardForm .field > label,
+.studentWizardForm .formField > label{
+  color:var(--student-label-color);
+  font-size:var(--student-field-font);
   font-weight:800;
+  line-height:1.25;
 }
 .studentWizardForm .input,
 .studentWizardForm .select,
 .studentWizardForm .textarea{
-  min-height:44px;
-  border-radius:12px;
-  border-color:#e2e8f0;
+  min-height:var(--student-control-height);
+  height:var(--student-control-height);
+  border-radius:var(--student-control-radius);
+  border:var(--student-control-border) solid #d1d5db;
   background:#ffffff;
   color:#0f172a;
-  box-shadow:0 1px 2px rgba(15,23,42,.04);
+  font-size:var(--student-field-font);
+  padding:10px 12px;
+  box-shadow:none;
 }
 .studentWizardForm .textarea{
-  min-height:108px;
-  resize:vertical;
+  min-height:var(--student-control-height);
+  height:var(--student-control-height);
+  resize:none;
 }
 .studentWizardForm .input:hover,
 .studentWizardForm .select:hover,
@@ -2702,235 +2743,301 @@ td{padding:11px 12px;font-size:12.5px}
 .studentWizardForm .textarea:focus{
   outline:0;
   border-color:#10b981;
-  box-shadow:0 0 0 4px rgba(16,185,129,.14),0 1px 2px rgba(15,23,42,.04);
+  box-shadow:0 0 0 3px rgba(16,185,129,.16);
+}
+.studentWizardForm .formField.has-error .input,
+.studentWizardForm .formField.has-error .select,
+.studentWizardForm .formField.has-error .textarea{
+  border-color:var(--student-error);
+  background:#fffafa;
+}
+.studentWizardForm .formField.has-error .input:focus,
+.studentWizardForm .formField.has-error .select:focus,
+.studentWizardForm .formField.has-error .textarea:focus{
+  border-color:var(--student-error);
+  box-shadow:0 0 0 3px rgba(225,29,72,.10);
+}
+.studentWizardForm .formField.has-success .input,
+.studentWizardForm .formField.has-success .select,
+.studentWizardForm .formField.has-success .textarea{
+  border-color:var(--student-success);
+}
+.validationMessage{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:rgba(225,29,72,.9);
+  font-size:12px;
+  font-weight:700;
+  line-height:1.35;
+  margin-top:2px;
+}
+.validationMessage span{
+  width:16px;
+  height:16px;
+  border-radius:999px;
+  display:inline-grid;
+  place-items:center;
+  background:var(--student-error-bg);
+  color:rgba(225,29,72,.9);
+  font-size:11px;
+  font-weight:900;
+  flex:0 0 auto;
+}
+.formHelperText{
+  color:#6b7280;
+  font-size:12px;
+  font-weight:600;
+  line-height:1.35;
+  margin-top:2px;
+}
+.studentWizardForm .input[readonly],
+.studentWizardForm .textarea[readonly],
+.studentWizardForm .select:disabled{
+  color:#0f172a;
+  background:#ffffff;
+  opacity:1;
+  cursor:default;
 }
 .studentPhotoField{
   grid-column:1 / -1;
 }
 .studentModalUpload{
-  min-height:112px;
-  border:1px dashed #cbd5e1;
-  border-radius:16px;
-  background:#f8fafc;
+  min-height:var(--student-control-height);
+  border:var(--student-control-border) dashed #d1d5db;
+  border-radius:var(--student-control-radius);
+  background:#ffffff;
   gap:12px;
-  padding:16px;
+  padding:8px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  text-align:left;
   transition:border-color .2s ease,box-shadow .2s ease,background-color .2s ease;
+}
+.studentModalUpload img{
+  width:40px;
+  height:40px;
+  border-radius:8px;
+  object-fit:cover;
+  flex:0 0 auto;
 }
 .studentModalUpload:hover,
 .studentModalUpload:focus-within{
   border-color:#10b981;
-  background:#f0fdf4;
-  box-shadow:0 0 0 4px rgba(16,185,129,.08);
+  background:#f8fffd;
+  box-shadow:0 0 0 3px rgba(16,185,129,.08);
 }
 .studentModalUploadActions{
-  justify-content:center;
+  justify-content:flex-start;
   gap:10px;
   flex-wrap:wrap;
 }
-.studentWizardFooter{
-  position:sticky;
-  bottom:0;
-  z-index:2;
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  padding:16px 22px;
-  background:rgba(255,255,255,.9);
-  border-top:1px solid #e2e8f0;
-  backdrop-filter:blur(14px);
+.studentModalUploadActions .btn,
+.studentModalUploadActions .btn.outline,
+.studentModalUploadActions label.btn{
+  height:var(--student-control-height);
+  min-height:var(--student-control-height);
+  border-radius:var(--student-control-radius);
+  font-size:var(--student-field-font);
 }
-.studentWizardFooter .btn.primary,
-.studentWizardFooter .btn:not(.outline):not(.ghost):not(.danger):not(.success){
+.studentWizardForm .foundCard{
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  padding:0;
+}
+.studentWizardForm .studentSearchAction{
+  display:flex;
+  align-items:flex-start;
+  padding-top:calc((var(--student-field-font) * 1.25) + 5px);
+}
+.studentWizardForm .studentSearchButton{
+  height:var(--student-control-height);
+  min-height:var(--student-control-height);
+  border-radius:var(--student-control-radius);
+  font-size:var(--student-field-font);
+  background:#0f766e;
+  border-color:#0f766e;
+}
+.studentWizardForm .studentSearchButton:hover{
+  background:#0d5f59;
+  border-color:#0d5f59;
+  transform:none;
+}
+.studentWizardActions{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  padding:14px 0;
+  border-top:1px solid #e5e7eb;
+  border-bottom:1px solid #e5e7eb;
+}
+.studentWizardActions .btn{
+  height:var(--student-control-height);
+  min-height:var(--student-control-height);
+  border-radius:var(--student-control-radius);
+  font-size:var(--student-field-font);
+  min-width:140px;
+  padding:0 18px;
+  transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease;
+}
+.studentSecondaryButton,
+.studentWizardActions .btn-cancel,
+.studentWizardActions .btn-back{
+  background:#ffffff;
+  border-color:#d1d5db;
+  color:#374151;
+}
+.studentSecondaryButton:hover,
+.studentWizardActions .btn-cancel:hover,
+.studentWizardActions .btn-back:hover{
+  border-color:#ef4444;
+  color:#dc2626;
+  background:#fef2f2;
+}
+.studentPrimaryButton,
+.studentWizardActions .btn-next,
+.studentWizardActions .btn-register,
+.studentWizardActions .btn:not(.outline):not(.ghost):not(.danger):not(.success){
   background:#10b981;
   border-color:#10b981;
   color:#ffffff;
+  min-width:140px;
+  font-weight:700;
 }
-.studentWizardFooter .btn.primary:hover,
-.studentWizardFooter .btn:not(.outline):not(.ghost):not(.danger):not(.success):hover{
-  background:#059669;
-  border-color:#059669;
-  box-shadow:0 10px 24px rgba(16,185,129,.22);
+.studentPrimaryButton:hover,
+.studentWizardActions .btn-next:hover:not(:disabled),
+.studentWizardActions .btn-register:hover,
+.studentWizardActions .btn:not(.outline):not(.ghost):not(.danger):not(.success):hover{
+  background:#047857;
+  border-color:#047857;
+  box-shadow:0 8px 20px rgba(16,185,129,.2);
   transform:none;
 }
-.studentWizardFooter .btn.outline{
-  background:#ffffff;
+.studentWizardActions .btn-next:disabled{
+  background:#d1d5db;
+  border-color:#d1d5db;
+  color:#9ca3af;
+  cursor:not-allowed;
+  opacity:.7;
+}
+.studentWizardForm:not(.isEmbedded){
+  padding:0 8px 24px;
+}
+.studentWizardForm.isViewMode .field > span{
+  color:#475569;
+}
+.studentWizardForm.isViewMode .readonlyField,
+.studentWizardForm.isViewMode .input[readonly],
+.studentWizardForm.isViewMode .textarea[readonly]{
+  background:#f8fafc;
   border-color:#e2e8f0;
   color:#0f172a;
+  cursor:default;
+  caret-color:transparent;
+  box-shadow:none;
+  opacity:1;
+  user-select:text;
 }
-.studentWizardFooter .btn.outline:hover{
-  border-color:#10b981;
-  color:#047857;
-  background:#f8fffd;
-  box-shadow:0 0 0 4px rgba(16,185,129,.08);
-  transform:none;
+.studentWizardForm.isViewMode .readonlyField:hover,
+.studentWizardForm.isViewMode .readonlyField:focus,
+.studentWizardForm.isViewMode .input[readonly]:hover,
+.studentWizardForm.isViewMode .input[readonly]:focus,
+.studentWizardForm.isViewMode .textarea[readonly]:hover,
+.studentWizardForm.isViewMode .textarea[readonly]:focus{
+  outline:0;
+  border-color:#e2e8f0;
+  background:#f8fafc;
+  box-shadow:none;
 }
-/* Full-page student form (non-embedded) */
-.studentWizardForm:not(.isEmbedded) .studentWizardPanel {
-  max-width: 900px;
-  margin: 24px auto;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+.studentWizardForm.isViewMode .studentModalUpload{
+  border-style:solid;
+  background:#f8fafc;
 }
-
-.studentWizardForm:not(.isEmbedded) {
-  min-height: calc(100vh - 120px);
-  padding: 0 24px 40px;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-.studentWizardForm:not(.isEmbedded) .studentWizardHeader {
-  display: grid;
-  gap: 12px;
-  padding: 20px 26px 18px;
-  background: rgba(255, 255, 255, 0.9);
-  border-bottom: 1px solid #e2e8f0;
+.studentWizardForm.isViewMode .studentModalUpload:hover,
+.studentWizardForm.isViewMode .studentModalUpload:focus-within{
+  border-color:#cbd5e1;
+  background:#f8fafc;
+  box-shadow:none;
 }
 
-.studentWizardForm:not(.isEmbedded) .studentWizardHeaderLeft {
-  flex: 1;
-}
-
-.studentWizardForm:not(.isEmbedded) .studentWizardHeaderTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.studentWizardForm:not(.isEmbedded) .studentWizardEyebrow {
-  font-size: 12px;
-}
-
-.studentWizardForm:not(.isEmbedded) .studentWizardHeader h2 {
-  font-size: 24px;
-  margin-top: 4px;
-}
-
-.studentWizardForm:not(.isEmbedded) .studentStepIndicator {
-  margin-left: 0;
-  max-width: 100%;
-}
-
-/* Large close button */
-.studentWizardClose {
-  width: 44px;
-  height: 44px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #64748b;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.studentWizardClose:hover {
-  border-color: #cbd5e1;
-  color: #0f172a;
-  background: #f8fafc;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-}
-
-.studentWizardClose svg {
-  width: 18px;
-  height: 18px;
-}
-
-.studentWizardForm:not(.isEmbedded) .studentWizardPanel {
-  position: relative;
-}
-
-/* Button styles */
-.studentWizardFooter .btn-cancel,
-.studentWizardFooter .btn-back {
-  background: #ffffff;
-  border-color: #d1d5db;
-  color: #374151;
-  min-width: 120px;
-}
-
-.studentWizardFooter .btn-cancel:hover,
-.studentWizardFooter .btn-back:hover {
-  border-color: #9ca3af;
-  color: #1f2937;
-  background: #f9fafb;
-}
-
-.studentWizardFooter .btn-next,
-.studentWizardFooter .btn-register {
-  background: #10b981;
-  border-color: #10b981;
-  color: #ffffff;
-  min-width: 140px;
-  font-weight: 700;
-}
-
-.studentWizardFooter .btn-next:hover:not(:disabled),
-.studentWizardFooter .btn-register:hover {
-  background: #059669;
-  border-color: #059669;
-  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.25);
-  transform: none;
-}
-
-.studentWizardFooter .btn-next:disabled {
-  background: #d1d5db;
-  border-color: #d1d5db;
-  color: #9ca3af;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-/* Smooth transitions */
-.studentWizardBody {
-  animation: studentStepIn 0.25s ease both;
-}
-
-@keyframes studentStepIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+@media (min-width:1400px){
+  .studentWizardForm{
+    max-width:1280px;
   }
 }
 
-/* Better spacing between fields */
-.studentWizardForm:not(.isEmbedded) .studentStepGrid {
-  gap: 20px;
-}
-
-.studentWizardForm:not(.isEmbedded) .field > span {
-  font-size: 13px;
-  margin-bottom: 6px;
-}
-
-.studentWizardForm:not(.isEmbedded) .input,
-.studentWizardForm:not(.isEmbedded) .select,
-.studentWizardForm:not(.isEmbedded) .textarea {
-  min-height: 48px;
-  border-radius: 14px;
-}
-
-.studentWizardForm:not(.isEmbedded) .textarea {
-  min-height: 120px;
+@media (max-width:1100px){
+  .studentStepGrid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px;
+  }
 }
 
 @media (max-width:760px){
-  .studentWizardForm.isEmbedded{margin:-12px}
-  .studentWizardHeader{padding:16px}
-  .studentWizardHeaderTop{flex-direction:column;align-items:flex-start}
-  .studentStepIndicator{grid-template-columns:1fr;gap:8px}
-  .studentStepPill{justify-content:flex-start;padding:0 12px;min-height:40px}
-  .studentWizardBody{padding:14px;min-height:360px}
-  .studentStepPanel{padding:14px}
-  .studentStepGrid{grid-template-columns:1fr}
-  .studentWizardFooter{padding:12px 14px}
-  .studentWizardFooter .btn{flex:1}
+  .modalCard:has(.studentWizardForm.isViewMode) .modalBody{
+    padding:14px;
+  }
+  .studentWizardForm{
+    gap:18px;
+  }
+  .studentWizardHeaderTop{
+    align-items:flex-start;
+  }
+  .studentWizardHeaderLeft{
+    padding-right:0;
+  }
+  .studentWizardHeader h2{
+    font-size:21px;
+  }
+  .studentStepIndicator{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  .studentStepPill{
+    min-height:40px;
+  }
+  .studentStepGrid{
+    grid-template-columns:1fr;
+  }
+  .studentWizardActions{
+    justify-content:center;
+  }
+}
+
+@media (max-width:560px){
+  .studentWizardForm:not(.isEmbedded){
+    padding:0 0 18px;
+  }
+  .studentWizardHeaderTop{
+    gap:10px;
+  }
+  .studentWizardClose{
+    width:38px;
+    height:38px;
+  }
+  .studentStepTitle{
+    font-size:15px;
+  }
+  .studentFormSection{
+    padding:16px;
+  }
+  .studentModalUpload{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .studentWizardActions{
+    flex-direction:column;
+  }
+  .studentWizardActions .btn{
+    width:100%;
+  }
+  .siblingSearch{
+    grid-template-columns:1fr;
+  }
 }
 
 .filter-actions-group {

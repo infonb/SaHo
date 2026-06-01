@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import Avatar from '../../components/common/Avatar';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
-import StudentPhoto from '../../components/common/StudentPhoto';
-import type { StudentView } from '../../types';
 
 export interface StudentFormState {
   first_name: string;
@@ -36,22 +34,23 @@ export interface StudentFormState {
   sibling_aadhaar: string;
 }
 
+export type StudentFormErrors = Partial<Record<keyof StudentFormState, string>>;
+
 interface StudentSiblingResult {
   studentId: number;
   studentName: string;
   classId: number;
   schoolName: string;
 }
-
 interface StudentProfileSectionsProps {
   mode: 'create' | 'edit' | 'view';
   form?: StudentFormState;
   set?: (key: keyof StudentFormState, value: string) => void;
+  touch?: (key: keyof StudentFormState) => void;
   chooseImage?: (file: File | Blob) => void;
   sibling?: StudentSiblingResult | null;
   siblingChecked?: boolean;
   searchSibling?: () => void;
-  student?: StudentView | null;
   schools?: [string, string][];
   states?: [string, string][];
   districts?: [string, string][];
@@ -61,11 +60,13 @@ interface StudentProfileSectionsProps {
   castes?: [string, string][];
   classes?: [string, string][];
   aadhaarStatus?: string;
+  errors?: StudentFormErrors;
+  validatedFields?: Set<keyof StudentFormState>;
+  touchedFields?: Set<keyof StudentFormState>;
   loading?: boolean;
   activeStep?: 'personal' | 'location' | 'guardian';
 }
 
-const mask = (aadhaar: string) => `........${aadhaar.slice(-4)}`;
 const isViewMode = (mode: StudentProfileSectionsProps['mode']) => mode === 'view';
 
 export const GENDER_OPTIONS: [string, string][] = [
@@ -90,8 +91,26 @@ export const ORPHAN_STATUS_OPTIONS: [string, string][] = [
   ['3', 'Orphan'],
 ];
 
+function FormContainer({ children }: { children: ReactNode }) {
+  return <div className="studentFormContainer">{children}</div>;
+}
+
+function FormSection({ title, step, children }: { title: string; step: string; children: ReactNode }) {
+  return (
+    <section className="studentFormSection" aria-labelledby={`student-section-${step}`}>
+      <h3 id={`student-section-${step}`} className="studentStepTitle"><span className="studentStepIcon">{step}</span>{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function ValidationMessage({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return <div id={id} className="validationMessage" role="alert"><span aria-hidden="true">!</span>{message}</div>;
+}
+
 export default function StudentProfileSections(props: StudentProfileSectionsProps) {
-  const { mode, form, set, chooseImage, sibling, siblingChecked, searchSibling, student, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal' } = props;
+  const { mode, form, set, touch, chooseImage, sibling, siblingChecked, searchSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields } = props;
   const [photoOpen, setPhotoOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -100,81 +119,8 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  if (isViewMode(mode)) {
-    if (!student) return null;
-
-    return (
-      <>
-        <div className="rowFlex" style={{ marginBottom: 18 }}>
-          <StudentPhoto name={student.full_name} src={student.image_url} size="lg" button onClick={() => setPhotoOpen(true)} />
-          <div>
-            <h2 style={{ margin: 0, fontFamily: 'var(--font-display)' }}>{student.full_name}</h2>
-            <div className="actions" style={{ marginTop: 8 }}>
-              <Badge variant="assigned">{student.class_id}</Badge>
-              <Badge variant={student.orphan_status === 'Orphan' ? 'other' : 'individual'}>{student.orphan_status ?? 'Not Set'}</Badge>
-            </div>
-          </div>
-        </div>
-
-        <h3 className="panelTitle">Basic Student Details</h3>
-        <div className="formGrid">
-          <Info label="Email" value={student.email} />
-          <Info label="Date of Birth" value={student.dob} />
-          <Info label="Gender" value={student.gender} />
-          <Info label="Aadhaar Number" value={mask(student.aadhaar_number)} />
-          <Info label="Blood Group" value={student.blood_group} />
-          <Info label="Caste" value={student.caste} />
-          <Info label="Religion" value={student.religion} />
-          <Info label="Orphan / Semi Orphan" value={student.orphan_status} />
-        </div>
-
-        <h3 className="sectionTitle">School & Location</h3>
-        <div className="formGrid">
-          <Info label="School" value={student.sch_name} />
-          <Info label="Village" value={student.vil_name} />
-          <Info label="Mandal" value={student.mndl_name} />
-          <Info label="District" value={student.dist_name} />
-          <Info label="State" value={student.st_name} />
-        </div>
-
-        <h3 className="sectionTitle">Guardian Details</h3>
-        <div className="formGrid">
-          <Info label="Name" value={student.guardian_full_name} />
-          <Info label="Phone" value={student.guardian_phone} />
-          <Info label="Relation" value={student.guardian_relation_name} />
-          <Info label="Occupation" value={student.guardian_occ} />
-        </div>
-
-        <h3 className="sectionTitle">Sponsor</h3>
-        {student.sponsor_full_name ? (
-          <div className="panel">
-            <strong>{student.sponsor_full_name}</strong>
-            <div className="sub">{student.sponsor_type}</div>
-          </div>
-        ) : (
-          <div className="panel" style={{ borderStyle: 'dashed' }}>No sponsor assigned</div>
-        )}
-
-        <Modal
-          open={photoOpen}
-          onClose={() => setPhotoOpen(false)}
-          title={`${student.full_name} Photo`}
-          width={520}
-          footer={<Button variant="outline" onClick={() => setPhotoOpen(false)}>Close</Button>}
-        >
-          <div className="photoPreviewWrap">
-            {student.image_url ? (
-              <img className="photoPreview" src={student.image_url} alt={student.full_name} />
-            ) : (
-              <StudentPhoto name={student.full_name} size="lg" />
-            )}
-          </div>
-        </Modal>
-      </>
-    );
-  }
-
   if (!form || !set) return null;
+  const readOnly = isViewMode(mode);
 
   const religionOptions = RELIGION_OPTIONS;
   const casteOptions = props.castes ?? ['SC', 'ST', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'OC', 'Other'];
@@ -182,6 +128,15 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   const orphanStatusOptions = ORPHAN_STATUS_OPTIONS;
   const MIN_IMAGE_BYTES = 5 * 1024;
   const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
+  const viewLabel = (label: string) => readOnly ? label.replace(/\*/g, '') : label;
+  const getFieldState = (key: keyof StudentFormState) => {
+    if (readOnly) return 'default' as const;
+    const touched = touchedFields?.has(key) ?? false;
+    if (errors[key] && touched) return 'error' as const;
+    if (!errors[key] && touched && validatedFields?.has(key) && String(form[key] ?? '').trim()) return 'success' as const;
+    return 'default' as const;
+  };
+  const showMessage = (key: keyof StudentFormState) => Boolean(errors[key]) && (touchedFields?.has(key) || validatedFields?.has(key));
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach(t => t.stop());
@@ -189,7 +144,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   };
 
   useEffect(() => {
-    if (!cameraOpen) return;
+    if (readOnly || !cameraOpen) return;
     if (capturedUrl) return;
 
     let cancelled = false;
@@ -228,7 +183,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
       stopCamera();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cameraOpen, capturedUrl]);
+  }, [cameraOpen, capturedUrl, readOnly]);
 
   useEffect(() => {
     return () => {
@@ -237,6 +192,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   }, [capturedUrl]);
 
   const handlePhoto = (e: ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -259,6 +215,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   };
 
   const capturePhoto = async () => {
+    if (readOnly) return;
     const v = videoRef.current;
     if (!v || !v.videoWidth || !v.videoHeight) return;
 
@@ -291,6 +248,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   };
 
   const openCamera = () => {
+    if (readOnly) return;
     if (capturedUrl) {
       URL.revokeObjectURL(capturedUrl);
       setCapturedUrl(null);
@@ -326,6 +284,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   };
 
   const clearPhoto = () => {
+    if (readOnly) return;
     setUploadError(null);
     if (form.image_url?.startsWith('blob:')) {
       try { URL.revokeObjectURL(form.image_url); } catch { /* ignore */ }
@@ -343,27 +302,27 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   };
 
   return (
-    <>
+    <FormContainer>
       {activeStep === 'personal' ? (
-        <section className="studentStepPanel">
-          <h3 className="studentStepTitle"><span className="studentStepIcon">1</span>Personal Information</h3>
-          <div className="formGrid studentStepGrid">
-            <Field label="First Name*" value={form.first_name} onChange={v => set('first_name', v)} />
-            <Field label="Middle Name" value={form.middle_name} onChange={v => set('middle_name', v)} />
-            <Field label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} />
-            <Field label="Email ID*" type="email" value={form.email} onChange={v => set('email', v)} />
-            <Field label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} />
-            <Select label="Gender*" value={form.gender} onChange={v => set('gender', v)} options={GENDER_OPTIONS} />
-            <Select label="Blood Group" value={form.blood_group} onChange={v => set('blood_group', v)} options={['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']} />
-            <Select label="Religion*" value={form.religion} onChange={v => set('religion', v)} options={religionOptions} />
-            <Select label="Caste*" value={form.caste} onChange={v => set('caste', v)} options={casteOptions} />
-            <Select label="Class*" value={form.class_id} onChange={v => set('class_id', v)} options={classOptions} />
-            <Field label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} maxLength={12} subText={props.aadhaarStatus} />
-            <Select label="Orphan / Semi Orphan*" value={form.orphan_status} onChange={v => set('orphan_status', v)} options={orphanStatusOptions} />
-            <label className="field studentPhotoField">
+        <>
+          <FormSection title="Personal Information" step="1">
+            <div className="formGrid studentStepGrid">
+              <Field fieldKey="first_name" label="First Name*" value={form.first_name} onChange={v => set('first_name', v)} onBlur={() => touch?.('first_name')} readOnly={readOnly} error={showMessage('first_name') ? errors.first_name : undefined} state={getFieldState('first_name')} />
+              <Field fieldKey="middle_name" label="Middle Name" value={form.middle_name} onChange={v => set('middle_name', v)} readOnly={readOnly} state={getFieldState('middle_name')} />
+              <Field fieldKey="last_name" label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} onBlur={() => touch?.('last_name')} readOnly={readOnly} error={showMessage('last_name') ? errors.last_name : undefined} state={getFieldState('last_name')} />
+              <Field fieldKey="email" label="Email ID*" type="email" value={form.email} onChange={v => set('email', v)} onBlur={() => touch?.('email')} readOnly={readOnly} error={showMessage('email') ? errors.email : undefined} state={getFieldState('email')} />
+              <Field fieldKey="dob" label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} onBlur={() => touch?.('dob')} readOnly={readOnly} error={showMessage('dob') ? errors.dob : undefined} state={getFieldState('dob')} />
+              <Select fieldKey="gender" label="Gender*" value={form.gender} onChange={v => set('gender', v)} onBlur={() => touch?.('gender')} options={GENDER_OPTIONS} readOnly={readOnly} error={showMessage('gender') ? errors.gender : undefined} state={getFieldState('gender')} />
+              <Select fieldKey="blood_group" label="Blood Group" value={form.blood_group} onChange={v => set('blood_group', v)} options={['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']} readOnly={readOnly} state={getFieldState('blood_group')} />
+              <Select fieldKey="religion" label="Religion*" value={form.religion} onChange={v => set('religion', v)} onBlur={() => touch?.('religion')} options={religionOptions} readOnly={readOnly} error={showMessage('religion') ? errors.religion : undefined} state={getFieldState('religion')} />
+              <Select fieldKey="caste" label="Caste*" value={form.caste} onChange={v => set('caste', v)} onBlur={() => touch?.('caste')} options={casteOptions} readOnly={readOnly} error={showMessage('caste') ? errors.caste : undefined} state={getFieldState('caste')} />
+              <Select fieldKey="class_id" label="Class*" value={form.class_id} onChange={v => set('class_id', v)} onBlur={() => touch?.('class_id')} options={classOptions} readOnly={readOnly} error={showMessage('class_id') ? errors.class_id : undefined} state={getFieldState('class_id')} />
+              <Field fieldKey="aadhaar_number" label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} onBlur={() => touch?.('aadhaar_number')} maxLength={12} subText={readOnly || errors.aadhaar_number ? undefined : props.aadhaarStatus} readOnly={readOnly} numericOnly error={showMessage('aadhaar_number') ? errors.aadhaar_number : undefined} state={getFieldState('aadhaar_number')} />
+              <Select fieldKey="orphan_status" label="Orphan / Semi Orphan*" value={form.orphan_status} onChange={v => set('orphan_status', v)} onBlur={() => touch?.('orphan_status')} options={orphanStatusOptions} readOnly={readOnly} error={showMessage('orphan_status') ? errors.orphan_status : undefined} state={getFieldState('orphan_status')} />
+              <label className="field studentPhotoField">
               <span>Student Photo</span>
               <div className="uploadBox studentModalUpload">
-                {form.image_url ? (
+                {form.image_url && !readOnly ? (
                   <Button
                     type="button"
                     size="sm"
@@ -382,21 +341,64 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
                     </svg>
                   </Button>
                 ) : null}
-                {form.image_url ? <img src={form.image_url} alt="Student" /> : <span>Select photo option<br /><small>Take photo or upload</small></span>}
-                <div className="rowFlex studentModalUploadActions">
-                  <Button type="button" variant="outline" onClick={openCamera}>Take Photo</Button>
-                  <label className="btn outline md" style={{ cursor: 'pointer' }}>
-                    Upload Photo
-                    <input accept="image/*" type="file" onChange={handlePhoto} style={{ display: 'none' }} />
-                  </label>
-                </div>
-                <div className="sub" style={{ marginTop: 2 }}>
-                  {uploadError ? <span style={{ color: 'var(--red)' }}>{uploadError}</span> : 'Upload size: 5KB to 1MB'}
-                </div>
+                {form.image_url ? <img src={form.image_url} alt="Student" /> : <span>{readOnly ? 'No photo available' : <>Select photo option<br /><small>Take photo or upload</small></>}</span>}
+                {!readOnly ? (
+                  <>
+                    <div className="rowFlex studentModalUploadActions">
+                      <Button type="button" variant="outline" onClick={openCamera}>Take Photo</Button>
+                      <label className="btn outline md" style={{ cursor: 'pointer' }}>
+                        Upload Photo
+                        <input accept="image/*" type="file" onChange={handlePhoto} style={{ display: 'none' }} />
+                      </label>
+                    </div>
+                    <div className="sub" style={{ marginTop: 2 }}>
+                      {uploadError ? <span style={{ color: 'var(--red)' }}>{uploadError}</span> : 'Upload size: 5KB to 1MB'}
+                    </div>
+                  </>
+                ) : null}
               </div>
-            </label>
-          </div>
-        </section>
+              </label>
+            </div>
+
+            <div className="studentSiblingInline">
+              <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon">+</span>Sibling Information</h3>
+              <div className="formGrid studentStepGrid">
+                <label className="field">
+                  <span>{viewLabel('Does the student have any sibling in this foundation?*')}</span>
+                  {readOnly ? (
+                    <input className="input readonlyField" value={form.has_sibling || '-'} readOnly aria-readonly="true" tabIndex={-1} data-field="has_sibling" />
+                  ) : (
+                    <div className="radioRow">
+                      <label><input type="radio" checked={form.has_sibling === 'Yes'} onChange={() => set('has_sibling', 'Yes')} /> Yes</label>
+                      <label><input type="radio" checked={form.has_sibling === 'No'} onChange={() => set('has_sibling', 'No')} /> No</label>
+                    </div>
+                  )}
+                </label>
+                {form.has_sibling === 'Yes' && (
+                  <>
+                    <Field fieldKey="sibling_aadhaar" label="Search Existing Student by Aadhaar Number*" value={form.sibling_aadhaar} onChange={v => set('sibling_aadhaar', v)} onBlur={() => touch?.('sibling_aadhaar')} maxLength={12} readOnly={readOnly} numericOnly error={showMessage('sibling_aadhaar') ? errors.sibling_aadhaar : undefined} state={getFieldState('sibling_aadhaar')} />
+                    <div className="studentSearchAction">
+                      {!readOnly ? <Button className="studentSearchButton" type="button" onClick={searchSibling}>Search</Button> : null}
+                    </div>
+                    {sibling ? (
+                      <div className="foundCard">
+                        <Avatar name={sibling.studentName} size="lg" />
+                        <div>
+                          <strong>{sibling.studentName}</strong>
+                          <Badge variant="success">Student ID: {sibling.studentId}</Badge>
+                          <div className="sub">Class: {sibling.classId}</div>
+                          <div className="sub">School: {sibling.schoolName}</div>
+                        </div>
+                      </div>
+                    ) : siblingChecked ? (
+                      <div className="foundCard muted">No existing student selected.</div>
+                    ) : null}
+                  </>
+                )}
+              </div>
+            </div>
+          </FormSection>
+        </>
       ) : null}
 
       <Modal
@@ -442,96 +444,104 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
         )}
       </Modal>
 
-      {activeStep === 'personal' ? (
-        <section className="studentStepPanel studentSiblingPanel">
-          <h3 className="studentStepTitle"><span className="studentStepIcon">+</span>Sibling Information</h3>
-          <div className="formGrid studentStepGrid">
-            <label className="field">
-              <span>Does the student have any sibling in this foundation?*</span>
-              <div className="radioRow">
-                <label><input type="radio" checked={form.has_sibling === 'Yes'} onChange={() => set('has_sibling', 'Yes')} /> Yes</label>
-                <label><input type="radio" checked={form.has_sibling === 'No'} onChange={() => set('has_sibling', 'No')} /> No</label>
-              </div>
-            </label>
-            {form.has_sibling === 'Yes' && (
-              <>
-                <div className="siblingSearch">
-                  <Field label="Search Existing Student by Aadhaar Number*" value={form.sibling_aadhaar} onChange={v => set('sibling_aadhaar', v)} maxLength={12} />
-                  <Button type="button" onClick={searchSibling}>Search</Button>
-                </div>
-                {sibling ? (
-                  <div className="foundCard">
-                    <Avatar name={sibling.studentName} size="lg" />
-                    <div>
-                      <strong>{sibling.studentName}</strong>
-                      <Badge variant="success">Student ID: {sibling.studentId}</Badge>
-                      <div className="sub">Class: {sibling.classId}</div>
-                      <div className="sub">School: {sibling.schoolName}</div>
-                    </div>
-                  </div>
-                ) : siblingChecked ? (
-                  <div className="foundCard muted">No existing student selected.</div>
-                ) : null}
-              </>
-            )}
-          </div>
-        </section>
-      ) : null}
-
       {activeStep === 'location' ? (
-        <section className="studentStepPanel">
-          <h3 className="studentStepTitle"><span className="studentStepIcon">2</span>School & Location</h3>
+        <FormSection title="School & Location" step="2">
           <div className="formGrid studentStepGrid">
-            <Select label="State*" value={form.st_id} onChange={v => set('st_id', v)} options={states} />
-            <Select label="District*" value={form.dist_id} onChange={v => set('dist_id', v)} options={districts} />
-            <Select label="Mandal*" value={form.mndl_id} onChange={v => set('mndl_id', v)} options={mandals} />
-            <Select label="Village*" value={form.vil_id} onChange={v => set('vil_id', v)} options={villages} />
-            <Select label="School*" value={form.sch_id} onChange={v => set('sch_id', v)} options={schools} />
+            <Select fieldKey="st_id" label="State*" value={form.st_id} onChange={v => set('st_id', v)} onBlur={() => touch?.('st_id')} options={states} readOnly={readOnly} error={showMessage('st_id') ? errors.st_id : undefined} state={getFieldState('st_id')} />
+            <Select fieldKey="dist_id" label="District*" value={form.dist_id} onChange={v => set('dist_id', v)} onBlur={() => touch?.('dist_id')} options={districts} readOnly={readOnly} error={showMessage('dist_id') ? errors.dist_id : undefined} state={getFieldState('dist_id')} />
+            <Select fieldKey="mndl_id" label="Mandal*" value={form.mndl_id} onChange={v => set('mndl_id', v)} onBlur={() => touch?.('mndl_id')} options={mandals} readOnly={readOnly} error={showMessage('mndl_id') ? errors.mndl_id : undefined} state={getFieldState('mndl_id')} />
+            <Select fieldKey="vil_id" label="Village*" value={form.vil_id} onChange={v => set('vil_id', v)} onBlur={() => touch?.('vil_id')} options={villages} readOnly={readOnly} error={showMessage('vil_id') ? errors.vil_id : undefined} state={getFieldState('vil_id')} />
+            <Select fieldKey="sch_id" label="School*" value={form.sch_id} onChange={v => set('sch_id', v)} onBlur={() => touch?.('sch_id')} options={schools} readOnly={readOnly} error={showMessage('sch_id') ? errors.sch_id : undefined} state={getFieldState('sch_id')} />
           </div>
-        </section>
+        </FormSection>
       ) : null}
 
       {activeStep === 'guardian' ? (
-        <section className="studentStepPanel">
-          <h3 className="studentStepTitle"><span className="studentStepIcon">3</span>Guardian Information</h3>
+        <FormSection title="Guardian Information" step="3">
           <div className="formGrid studentStepGrid">
-            <Field label="Guardian First Name*" value={form.guardian_first} onChange={v => set('guardian_first', v)} />
-            <Field label="Guardian Middle Name" value={form.guardian_middle} onChange={v => set('guardian_middle', v)} />
-            <Field label="Guardian Last Name*" value={form.guardian_last} onChange={v => set('guardian_last', v)} />
-            <Select label="Relation*" value={form.relation} onChange={v => set('relation', v)} options={relationships} />
-            <Field label="Phone Number*" value={form.phone} onChange={v => set('phone', v)} />
-            <Field label="Occupation" value={form.occ} onChange={v => set('occ', v)} />
-            <label className="field"><span>Address</span><textarea className="textarea" value={form.addr} onChange={e => set('addr', e.target.value)} /></label>
+            <Field fieldKey="guardian_first" label="Guardian First Name*" value={form.guardian_first} onChange={v => set('guardian_first', v)} onBlur={() => touch?.('guardian_first')} readOnly={readOnly} error={showMessage('guardian_first') ? errors.guardian_first : undefined} state={getFieldState('guardian_first')} />
+            <Field fieldKey="guardian_middle" label="Guardian Middle Name" value={form.guardian_middle} onChange={v => set('guardian_middle', v)} readOnly={readOnly} state={getFieldState('guardian_middle')} />
+            <Field fieldKey="guardian_last" label="Guardian Last Name*" value={form.guardian_last} onChange={v => set('guardian_last', v)} onBlur={() => touch?.('guardian_last')} readOnly={readOnly} error={showMessage('guardian_last') ? errors.guardian_last : undefined} state={getFieldState('guardian_last')} />
+            <Select fieldKey="relation" label="Relation*" value={form.relation} onChange={v => set('relation', v)} onBlur={() => touch?.('relation')} options={relationships} readOnly={readOnly} error={showMessage('relation') ? errors.relation : undefined} state={getFieldState('relation')} />
+            <Field fieldKey="phone" label="Phone Number*" value={form.phone} onChange={v => set('phone', v)} onBlur={() => touch?.('phone')} maxLength={10} numericOnly readOnly={readOnly} error={showMessage('phone') ? errors.phone : undefined} state={getFieldState('phone')} />
+            <Field fieldKey="occ" label="Occupation" value={form.occ} onChange={v => set('occ', v)} readOnly={readOnly} state={getFieldState('occ')} />
+            <FormField fieldKey="addr" label="Address" readOnly={readOnly} state={getFieldState('addr')}>
+              <textarea id="student-field-addr" data-field="addr" className={readOnly ? 'textarea readonlyField' : 'textarea'} value={form.addr} readOnly={readOnly} aria-readonly={readOnly || undefined} tabIndex={readOnly ? -1 : undefined} onChange={e => set('addr', e.target.value)} />
+            </FormField>
           </div>
-        </section>
+        </FormSection>
       ) : null}
-      </>
+    </FormContainer>
   );
 }
 
-function Field({ label, value, onChange, type = 'text', maxLength, subText }: { label: string; value: string; onChange: (v: string) => void; type?: string; maxLength?: number; subText?: string }) {
+type FieldState = 'default' | 'error' | 'success';
+
+function FormField({ fieldKey, label, children, error, subText, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; children: ReactNode; error?: string; subText?: string; readOnly?: boolean; state?: FieldState }) {
+  const inputId = `student-field-${fieldKey}`;
+  const messageId = `${inputId}-message`;
+  const displayLabel = readOnly ? label.replace(/\*/g, '') : label;
   return (
-    <label className="field">
-      <span>{label}</span>
-      <input required={label.includes('*')} maxLength={maxLength} type={type} className="input" value={value} onChange={e => onChange(e.target.value)} />
-      {subText ? <div className="sub" style={{ marginTop: 6 }}>{subText}</div> : null}
-    </label>
+    <div className={`field formField has-${state}`}>
+      <label htmlFor={inputId}>{displayLabel}</label>
+      {children}
+      <ValidationMessage id={messageId} message={error} />
+      {!error && subText ? <div id={messageId} className="formHelperText">{subText}</div> : null}
+    </div>
   );
 }
 
-function Select({ label, value, onChange, options, subText }: { label: string; value: string; onChange: (v: string) => void; options: (string | [string, string])[]; subText?: string }) {
+function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLength, subText, error, readOnly = false, numericOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; type?: string; maxLength?: number; subText?: string; error?: string; readOnly?: boolean; numericOnly?: boolean; state?: FieldState }) {
+  const inputType = readOnly || numericOnly ? 'text' : type;
+  const inputId = `student-field-${fieldKey}`;
+  const messageId = `${inputId}-message`;
+  const handleChange = (nextValue: string) => {
+    const cleanValue = numericOnly ? nextValue.replace(/\D/g, '').slice(0, maxLength) : nextValue;
+    onChange(cleanValue);
+  };
+
   return (
-    <label className="field">
-      <span>{label}</span>
-      <select required={label.includes('*')} className="select" value={value} onChange={e => onChange(e.target.value)}>
-        <option value="">Select</option>
-        {options.map(o => Array.isArray(o) ? <option key={o[0]} value={o[0]}>{o[1]}</option> : <option key={o} value={o}>{o}</option>)}
-      </select>
-      {subText ? <div className="sub" style={{ marginTop: 6 }}>{subText}</div> : null}
-    </label>
+    <FormField fieldKey={fieldKey} label={label} error={error} subText={subText} readOnly={readOnly} state={state}>
+      <input
+        id={inputId}
+        data-field={fieldKey}
+        required={!readOnly && label.includes('*')}
+        readOnly={readOnly}
+        aria-readonly={readOnly || undefined}
+        aria-invalid={state === 'error' || undefined}
+        aria-describedby={error || subText ? messageId : undefined}
+        tabIndex={readOnly ? -1 : undefined}
+        maxLength={maxLength}
+        type={inputType}
+        inputMode={numericOnly ? 'numeric' : undefined}
+        pattern={numericOnly ? '\\d*' : undefined}
+        className={readOnly ? 'input readonlyField' : 'input'}
+        value={readOnly ? (value || '-') : value}
+        onChange={e => handleChange(e.target.value)}
+        onBlur={onBlur}
+      />
+    </FormField>
   );
 }
+function Select({ fieldKey, label, value, onChange, onBlur, options, subText, error, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; options: (string | [string, string])[]; subText?: string; error?: string; readOnly?: boolean; state?: FieldState }) {
+  const inputId = `student-field-${fieldKey}`;
+  const messageId = `${inputId}-message`;
+  const selectedLabel = options.reduce<string>((labelValue, option) => {
+    if (labelValue) return labelValue;
+    if (Array.isArray(option)) return option[0] === value ? option[1] : '';
+    return option === value ? option : '';
+  }, '');
 
-function Info({ label, value }: { label: string; value?: string | number | null }) {
-  return <div><div className="sub">{label}</div><div className="strong">{value || '-'}</div></div>;
+  return (
+    <FormField fieldKey={fieldKey} label={label} error={error} subText={subText} readOnly={readOnly} state={state}>
+      {readOnly ? (
+        <input id={inputId} data-field={fieldKey} className="input readonlyField" value={selectedLabel || value || '-'} readOnly aria-readonly="true" tabIndex={-1} />
+      ) : (
+        <select id={inputId} data-field={fieldKey} required={label.includes('*')} className="select" value={value} onChange={e => onChange(e.target.value)} onBlur={onBlur} aria-invalid={state === 'error' || undefined} aria-describedby={error || subText ? messageId : undefined}>
+          <option value="">Select</option>
+          {options.map(o => Array.isArray(o) ? <option key={o[0]} value={o[0]}>{o[1]}</option> : <option key={o} value={o}>{o}</option>)}
+        </select>
+      )}
+    </FormField>
+  );
 }
