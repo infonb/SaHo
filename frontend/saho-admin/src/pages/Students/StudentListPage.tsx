@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deactivateStudents, getStudents } from '../../api/studentApi';
 import { getClasses } from '../../api/masterApi';
@@ -91,7 +91,7 @@ export default function StudentListPage() {
 
   useEffect(() => {
     load(page, pageSize);
-  }, [page, pageSize, applied, sortColumn, sortDirection]);
+  }, [page, pageSize, applied]);
 
   useEffect(() => {
     let mounted = true;
@@ -200,11 +200,10 @@ export default function StudentListPage() {
       setSortColumn(column);
       setSortDirection('ASC');
     }
-    setPage(1);
   };
 
   const sortArrow = (column: string) => {
-    if (sortColumn !== column) return '↑↓';
+    if (sortColumn !== column) return '↕';
     return sortDirection === 'ASC' ? '↑' : '↓';
   };
 
@@ -221,7 +220,57 @@ export default function StudentListPage() {
     </button>
   );
 
-  const rows = students.map(s => {
+  const sortedStudents = useMemo(() => {
+    const directionFactor = sortDirection === 'ASC' ? 1 : -1;
+    const copy = [...students];
+    const compareText = (left: string | number | null | undefined, right: string | number | null | undefined) =>
+      String(left ?? '').localeCompare(String(right ?? ''), undefined, { numeric: true, sensitivity: 'base' });
+    const compareNumber = (left: unknown, right: unknown) => {
+      const leftNumber = Number(left);
+      const rightNumber = Number(right);
+      if (Number.isNaN(leftNumber) && Number.isNaN(rightNumber)) return 0;
+      if (Number.isNaN(leftNumber)) return 1;
+      if (Number.isNaN(rightNumber)) return -1;
+      return leftNumber - rightNumber;
+    };
+    const ageFromDob = (dobValue: string) => {
+      const dob = new Date(dobValue);
+      if (Number.isNaN(dob.getTime())) return -1;
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+      if (!hasBirthdayPassed) age -= 1;
+      return age;
+    };
+
+    copy.sort((left, right) => {
+      let result = 0;
+      switch (sortColumn) {
+        case 'student_id':
+          result = compareNumber(left.student_id, right.student_id);
+          break;
+        case 'student_name':
+          result = compareText(left.full_name, right.full_name);
+          break;
+        case 'age':
+          result = compareNumber(ageFromDob(left.dob), ageFromDob(right.dob));
+          break;
+        case 'class_name':
+          result = compareText(left.class_id, right.class_id);
+          break;
+        case 'orphan_status':
+          result = compareText(orphanStatusLabel(left.orphan_status), orphanStatusLabel(right.orphan_status));
+          break;
+        default:
+          result = compareNumber(left.student_id, right.student_id);
+      }
+      return result * directionFactor;
+    });
+
+    return copy;
+  }, [students, sortColumn, sortDirection]);
+
+  const rows = sortedStudents.map(s => {
     const dob = new Date(s.dob);
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
@@ -252,7 +301,7 @@ export default function StudentListPage() {
               <path d="M12 10.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </span>
-          {[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '—'}
+          {[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '-'}
         </div>
       </div>,
       <div className="tableCellStack studentCellStack guardianCell">
@@ -502,9 +551,9 @@ export default function StudentListPage() {
             { key: 'actions', label: '' }
           ]}
           rows={rows}
-          onRowClick={(index) => setSelected(students[index] ?? null)}
+          onRowClick={(index) => setSelected(sortedStudents[index] ?? null)}
           rowClassName={(index) => {
-            const student = students[index];
+            const student = sortedStudents[index];
             return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
           }}
         />
@@ -587,3 +636,4 @@ function MultiSelectFilter({
     </details>
   );
 }
+
