@@ -22,7 +22,9 @@ public interface StudentService {
             String distId,
             String mndlId,
             String vilId,
-            String schId
+            String schId,
+            String sortColumn,
+            String sortDirection
     );
 
     StudentProfileResponseDto getStudentById(Integer studentId);

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deactivateStudents, getStudents } from '../../api/studentApi';
+import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
 import { getSponsorById } from '../../api/sponsorApi';
 import Button from '../../components/common/Button';
@@ -41,6 +42,7 @@ export default function StudentListPage() {
   const [mandals, setMandals] = useState<any[]>([]);
   const [villages, setVillages] = useState<any[]>([]);
   const [schools, setSchools] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [selected, setSelected] = useState<StudentView | null>(null);
   const [checked, setChecked] = useState<number[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -48,6 +50,8 @@ export default function StudentListPage() {
   const [sponsorOpen, setSponsorOpen] = useState(false);
   const [sponsorDetails, setSponsorDetails] = useState<SponsorView | null>(null);
   const [openFilter, setOpenFilter] = useState<string | null>(null);
+  const [sortColumn, setSortColumn] = useState('student_id');
+  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -59,10 +63,17 @@ export default function StudentListPage() {
   const totalOrphans = students.filter(s => s.orphan_status === '3').length;
 
   const load = async (nextPage = page, nextPageSize = pageSize) => {
+    const scrollY = window.scrollY;
     setLoading(true);
     setError(null);
     try {
-      const data = await getStudents({ pageNumber: nextPage, pageSize: nextPageSize, filters: applied });
+      const data = await getStudents({
+        pageNumber: nextPage,
+        pageSize: nextPageSize,
+        filters: applied,
+        sortColumn,
+        sortDirection,
+      });
       setStudents(data.students);
       setTotal(data.total);
     } catch {
@@ -72,6 +83,9 @@ export default function StudentListPage() {
       setError('Unable to load students from the database.');
     } finally {
       setLoading(false);
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: 'auto' });
+      });
     }
   };
 
@@ -129,16 +143,27 @@ export default function StudentListPage() {
       .catch(() => setSchools([]));
   }, [pending.vil_id]);
 
-  const allClasses = [...new Set(students.map(s => s.class_id))];
+  useEffect(() => {
+    let mounted = true;
+    getClasses()
+      .then(data => {
+        if (mounted) setClasses(data);
+      })
+      .catch(() => {
+        if (mounted) setClasses([]);
+      });
+    return () => { mounted = false; };
+  }, []);
+
   const filteredStates = states;
   const stateOptions = filteredStates.map(s => ({ value: String(s.stId ?? s.st_id), label: s.stName ?? s.st_name }));
   const districtOptions = districts.map(d => ({ value: String(d.distId ?? d.dist_id), label: d.distName ?? d.dist_name }));
   const mandalOptions = mandals.map(m => ({ value: String(m.mndlId ?? m.mndl_id), label: m.mndlName ?? m.mndl_name }));
   const villageOptions = villages.map(v => ({ value: String(v.vilId ?? v.vil_id), label: v.vilName ?? v.vil_name }));
   const schoolOptions = schools.map(s => ({ value: String(s.schId ?? s.sch_id), label: s.schName ?? s.sch_name }));
+  const classOptions = classes.map(c => ({ value: String(c.classId ?? c.class_id), label: c.className ?? c.class_name }));
   const genderOptions = [{ value: '1', label: 'Male' }, { value: '2', label: 'Female' }, { value: '3', label: 'Other' }];
   const orphanOptions = [{ value: '3', label: 'Orphan' }, { value: '2', label: 'Single Parent' }];
-  const classOptions = allClasses.map(c => ({ value: c, label: c }));
   const pageIds = students.map(s => s.student_id);
   const hasSelection = checked.length > 0;
   const allPageChecked = pageIds.length > 0 && pageIds.every(id => checked.includes(id));
@@ -168,7 +193,84 @@ export default function StudentListPage() {
     setSponsorOpen(true);
   };
 
-  const rows = students.map(s => {
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => (prev === 'ASC' ? 'DESC' : 'ASC'));
+    } else {
+      setSortColumn(column);
+      setSortDirection('ASC');
+    }
+  };
+
+  const sortArrow = (column: string) => {
+    if (sortColumn !== column) return '↕';
+    return sortDirection === 'ASC' ? '↑' : '↓';
+  };
+
+  const sortHeader = (label: string, column: string) => (
+    <button
+      type="button"
+      className="sortableHeader"
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={() => handleSort(column)}
+      aria-label={`Sort by ${label}`}
+    >
+      <span>{label}</span>
+      <span className={`sortArrow${sortColumn === column ? ' active' : ''}`} aria-hidden>{sortArrow(column)}</span>
+    </button>
+  );
+
+  const sortedStudents = useMemo(() => {
+    const directionFactor = sortDirection === 'ASC' ? 1 : -1;
+    const copy = [...students];
+    const compareText = (left: string | number | null | undefined, right: string | number | null | undefined) =>
+      String(left ?? '').localeCompare(String(right ?? ''), undefined, { numeric: true, sensitivity: 'base' });
+    const compareNumber = (left: unknown, right: unknown) => {
+      const leftNumber = Number(left);
+      const rightNumber = Number(right);
+      if (Number.isNaN(leftNumber) && Number.isNaN(rightNumber)) return 0;
+      if (Number.isNaN(leftNumber)) return 1;
+      if (Number.isNaN(rightNumber)) return -1;
+      return leftNumber - rightNumber;
+    };
+    const ageFromDob = (dobValue: string) => {
+      const dob = new Date(dobValue);
+      if (Number.isNaN(dob.getTime())) return -1;
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+      if (!hasBirthdayPassed) age -= 1;
+      return age;
+    };
+
+    copy.sort((left, right) => {
+      let result = 0;
+      switch (sortColumn) {
+        case 'student_id':
+          result = compareNumber(left.student_id, right.student_id);
+          break;
+        case 'student_name':
+          result = compareText(left.full_name, right.full_name);
+          break;
+        case 'age':
+          result = compareNumber(ageFromDob(left.dob), ageFromDob(right.dob));
+          break;
+        case 'class_name':
+          result = compareText(left.class_id, right.class_id);
+          break;
+        case 'orphan_status':
+          result = compareText(orphanStatusLabel(left.orphan_status), orphanStatusLabel(right.orphan_status));
+          break;
+        default:
+          result = compareNumber(left.student_id, right.student_id);
+      }
+      return result * directionFactor;
+    });
+
+    return copy;
+  }, [students, sortColumn, sortDirection]);
+
+  const rows = sortedStudents.map(s => {
     const dob = new Date(s.dob);
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
@@ -199,7 +301,7 @@ export default function StudentListPage() {
               <path d="M12 10.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </span>
-          {[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '—'}
+          {[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '-'}
         </div>
       </div>,
       <div className="tableCellStack studentCellStack guardianCell">
@@ -213,8 +315,8 @@ export default function StudentListPage() {
       </div>,
       <div>
         {s.sponsor_id ? (
-          <button className="photoButton" onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }} title={s.sponsor_full_name ?? undefined}>
-            <Avatar name={s.sponsor_full_name ?? 'SP'} size="md" />
+          <button className="photoButton" onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }} title={s.sponsor_sponsor_name ?? undefined}>
+            <Avatar name={s.sponsor_sponsor_name ?? 'SP'} size="md" />
           </button>
         ) : (
           <div title="Saho Foundation">
@@ -379,10 +481,10 @@ export default function StudentListPage() {
             </div>
           </div>
           <div className="filter-actions-group">
-            <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); }}>
+            <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); setOpenFilter(null); }}>
               <span className="filterBtnIcon" aria-hidden>x</span> Clear
             </button>
-            <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); }}>
+            <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>
               Go
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
@@ -437,26 +539,36 @@ export default function StudentListPage() {
 
         <DataTable
           loading={loading}
-          columns={[{ key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span>ID</span></div>, width: '92px' }, { key: 'student', label: 'STUDENT' }, { key: 'age', label: 'AGE', width: '72px' }, { key: 'grade', label: 'CLASS', width: '88px' }, { key: 'school', label: 'SCHOOL' }, { key: 'guardian', label: 'GUARDIAN' }, { key: 'orphan', label: 'STATUS' }, { key: 'sponsor', label: 'SPONSOR' }, { key: 'actions', label: '' }]}
+          columns={[
+            { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
+            { key: 'student', label: sortHeader('STUDENT', 'student_name') },
+            { key: 'age', label: sortHeader('AGE', 'age'), width: '72px' },
+            { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
+            { key: 'school', label: 'SCHOOL' },
+            { key: 'guardian', label: 'GUARDIAN' },
+            { key: 'orphan', label: sortHeader('STATUS', 'orphan_status') },
+            { key: 'sponsor', label: 'SPONSOR' },
+            { key: 'actions', label: '' }
+          ]}
           rows={rows}
-          onRowClick={(index) => setSelected(students[index] ?? null)}
+          onRowClick={(index) => setSelected(sortedStudents[index] ?? null)}
           rowClassName={(index) => {
-            const student = students[index];
+            const student = sortedStudents[index];
             return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
           }}
         />
         <Pagination total={total} page={page} pageSize={pageSize} onChange={setPage} onPageSizeChange={(nextPageSize) => { setPageSize(nextPageSize); setPage(1); }} />
       </div>
       <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
-      <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.full_name ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
+      <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.sponsor_name ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
         {sponsorDetails ? <div>
-          <h3 style={{ marginTop: 0 }}>{sponsorDetails.full_name}</h3>
+          <h3 style={{ marginTop: 0 }}>{sponsorDetails.sponsor_name}</h3>
           <div className="sub">{sponsorDetails.type} - {sponsorDetails.nationality}</div>
           <div style={{ marginTop: 12 }}>
             <div style={{ fontWeight: 800 }}>{sponsorDetails.email}</div>
             <div className="sub">{sponsorDetails.ph_no}</div>
             <div className="sub" style={{ marginTop: 8 }}>{sponsorDetails.loc}</div>
-            <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib_amt}</div></div>
+            <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib}</div></div>
             <div style={{ marginTop: 12 }}><strong>Students Sponsored:</strong> <span className="strong">{sponsorDetails.students_count}</span></div>
           </div>
         </div> : <div>No sponsor information available</div>}
@@ -524,3 +636,4 @@ function MultiSelectFilter({
     </details>
   );
 }
+

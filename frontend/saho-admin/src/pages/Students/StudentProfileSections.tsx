@@ -146,9 +146,9 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
         </div>
 
         <h3 className="sectionTitle">Sponsor</h3>
-        {student.sponsor_full_name ? (
+        {student.sponsor_sponsor_name ? (
           <div className="panel">
-            <strong>{student.sponsor_full_name}</strong>
+            <strong>{student.sponsor_sponsor_name}</strong>
             <div className="sub">{student.sponsor_type}</div>
           </div>
         ) : (

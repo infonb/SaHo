@@ -14,17 +14,56 @@ export const getStudents = async ({
   pageNumber = 1,
   pageSize = 10,
   filters,
+  sortColumn = 'student_id',
+  sortDirection = 'DESC',
 }: {
   pageNumber?: number;
   pageSize?: number;
   filters?: Partial<StudentFilters>;
+  sortColumn?: string;
+  sortDirection?: 'ASC' | 'DESC';
 } = {}): Promise<StudentsResponse> => {
+  const normalizeGenderValue = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed === 'Male') return '1';
+    if (trimmed === 'Female') return '2';
+    if (trimmed === 'Other') return '3';
+    return trimmed;
+  };
+
+  const genderValues = filters?.gender?.split(',').map(value => normalizeGenderValue(value)).filter(Boolean) ?? [];
   const orphanValues = filters?.orphan_status?.split(',').map(value => value.trim()).filter(Boolean) ?? [];
+  if (genderValues.length > 1) {
+    const responses = await Promise.all(genderValues.map(gender => getStudents({
+      pageNumber: 1,
+      pageSize: 10000,
+      filters: { ...filters, gender },
+      sortColumn,
+      sortDirection,
+    })));
+    const studentMap = new Map<number, StudentView>();
+    responses.flatMap(response => response.students).forEach(student => {
+      studentMap.set(student.student_id, student);
+    });
+    const students = Array.from(studentMap.values()).sort((a, b) => b.student_id - a.student_id);
+    const start = (pageNumber - 1) * pageSize;
+    const pageStudents = students.slice(start, start + pageSize);
+
+    return {
+      pageNumber,
+      pageSize,
+      students: pageStudents,
+      total: students.length,
+      hasMore: start + pageSize < students.length,
+    };
+  }
   if (orphanValues.length > 1) {
     const responses = await Promise.all(orphanValues.map(orphan_status => getStudents({
       pageNumber: 1,
       pageSize: 10000,
       filters: { ...filters, orphan_status },
+      sortColumn,
+      sortDirection,
     })));
     const studentMap = new Map<number, StudentView>();
     responses.flatMap(response => response.students).forEach(student => {
@@ -46,7 +85,7 @@ export const getStudents = async ({
   try {
     const params: any = { pageNumber, pageSize };
     if (filters?.search?.trim()) params.search = filters.search.trim();
-    if (filters?.gender) params.gender = filters.gender;
+    if (filters?.gender) params.gender = normalizeGenderValue(filters.gender);
     if (filters?.class_id) params.classId = filters.class_id;
     if (filters?.orphan_status) params.orphanStatus = filters.orphan_status;
     if (filters?.st_id) params.stId = filters.st_id;
@@ -54,6 +93,8 @@ export const getStudents = async ({
     if (filters?.mndl_id) params.mndlId = filters.mndl_id;
     if (filters?.vil_id) params.vilId = filters.vil_id;
     if (filters?.sch_id) params.schId = filters.sch_id;
+    params.sortColumn = sortColumn;
+    params.sortDirection = sortDirection;
     const res = await apiClient.get('/students', { params });
     const students = (res.data?.students ?? []).map((s: any) => ({
       student_id: s.studentId,
@@ -95,7 +136,7 @@ export const getStudents = async ({
       mndl_name: s.mndlName ?? '',
       dist_name: s.distName ?? '',
       st_name: s.stName ?? '',
-    } as StudentView));
+    } as unknown as StudentView));
 
     const inferredTotal = Number(res.data?.total ?? res.data?.totalCount ?? (res.data?.students?.[0]?.totalCount ?? res.data?.students?.[0]?.total_count));
     const hasMore = students.length === pageSize;
@@ -123,7 +164,7 @@ export const getStudentById = async (id: number): Promise<StudentView | undefine
     const mapReligion = (r: any) => (r === '1' ? 'Hindu' : r === '2' ? 'Muslim' : r === '3' ? 'Christian' : r === '4' ? 'Buddhist' : r === '5' ? 'Jain' : r === '6' ? 'Sikh' : r === '7' ? 'Other' : r ?? null);
     const mapOrphan = (o: any) => (o === '1' ? 'None' : o === '2' ? 'Single Parent' : o === '3' ? 'Orphan' : o ?? null);
 
-    const view: StudentView = {
+    const view = {
       student_id: s.studentId ?? s.student_id,
       full_name: s.studentName ?? s.name ?? '',
       email: s.emailId ?? s.email ?? '',
@@ -163,7 +204,7 @@ export const getStudentById = async (id: number): Promise<StudentView | undefine
       sibling_id: s.siblingId ?? null,
       sibling_student_name: s.siblingStudentName ?? s.siblingName ?? null,
       sibling_student_id: s.siblingStudentId ?? null,
-    } as StudentView;
+    } as unknown as StudentView;
 
     return view;
   } catch (err) {
@@ -229,3 +270,6 @@ const casteNameFromValue = (value: any) => {
   };
   return Number.isFinite(numeric) ? (casteMap[numeric] ?? String(value ?? '')) : String(value ?? '');
 };
+
+
+
