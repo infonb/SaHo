@@ -21,7 +21,9 @@ import com.saho.foundation.service.iservices.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.MediaType;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
@@ -139,6 +141,70 @@ public class StudentServiceImpl implements StudentService {
             .students(students)
             .build();
         }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] exportStudentsCsv(
+            String search,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId,
+            String sortColumn,
+            String sortDirection,
+            String studentIdsCsv
+    ) {
+        List<StudentListResponseDto> students = studentRepository.getAllStudentsWithPagination(
+                search,
+                1,
+                Integer.MAX_VALUE,
+                gender,
+                classId,
+                orphanStatus,
+                stId,
+                distId,
+                mndlId,
+                vilId,
+                schId,
+                sortColumn,
+                sortDirection
+        );
+
+        java.util.Set<Integer> selectedIds = parseStudentIds(studentIdsCsv);
+        if (!selectedIds.isEmpty()) {
+            students = students.stream()
+                    .filter(student -> selectedIds.contains(student.getStudentId()))
+                    .toList();
+        }
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("Student ID,Student Name,Age,Class,School Name,Gender,Orphan Status,Sponsor\n");
+
+        for (StudentListResponseDto student : students) {
+            csv.append(csvValue(student.getStudentId()))
+                    .append(',')
+                    .append(csvValue(student.getName()))
+                    .append(',')
+                    .append(csvValue(ageFromDob(student.getDob())))
+                    .append(',')
+                    .append(csvValue(student.getClassName() != null ? student.getClassName() : student.getClassId()))
+                    .append(',')
+                    .append(csvValue(student.getSchName()))
+                    .append(',')
+                    .append(csvValue(resolveGenderLabel(student.getGender())))
+                    .append(',')
+                    .append(csvValue(resolveOrphanStatusLabel(student.getOrphanStatus())))
+                    .append(',')
+                    .append(csvValue(""))
+                    .append('\n');
+        }
+
+        return csv.toString().getBytes(StandardCharsets.UTF_8);
+    }
 
     @Override
     public StudentProfileResponseDto getStudentById(Integer studentId) {
@@ -351,5 +417,40 @@ public class StudentServiceImpl implements StudentService {
         }
         String label = OrphanStatus.getLabelByValue(value);
         return label != null ? label : value;
+    }
+
+    private Integer ageFromDob(java.time.LocalDate dob) {
+        if (dob == null) {
+            return null;
+        }
+        java.time.Period period = java.time.Period.between(dob, java.time.LocalDate.now());
+        return period.getYears();
+    }
+
+    private String csvValue(Object value) {
+        String text = value == null ? "" : String.valueOf(value);
+        if (text.contains("\"") || text.contains(",") || text.contains("\n")) {
+            return "\"" + text.replace("\"", "\"\"") + "\"";
+        }
+        return text;
+    }
+
+    private java.util.Set<Integer> parseStudentIds(String studentIdsCsv) {
+        if (studentIdsCsv == null || studentIdsCsv.isBlank()) {
+            return java.util.Collections.emptySet();
+        }
+        java.util.Set<Integer> ids = new java.util.HashSet<>();
+        for (String part : studentIdsCsv.split(",")) {
+            String trimmed = part.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            try {
+                ids.add(Integer.parseInt(trimmed));
+            } catch (NumberFormatException ignored) {
+                // Ignore invalid ids in export requests.
+            }
+        }
+        return ids;
     }
 }

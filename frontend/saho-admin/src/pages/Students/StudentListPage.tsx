@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deactivateStudents, getStudents } from '../../api/studentApi';
+import { deactivateStudents, exportStudentsCsv, getStudents } from '../../api/studentApi';
 import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
 import { getSponsorById } from '../../api/sponsorApi';
@@ -22,6 +22,11 @@ const toggleCsvValue = (value: string, next: string) => {
   const values = csvValues(value);
   return values.includes(next) ? values.filter(v => v !== next).join(',') : [...values, next].join(',');
 };
+const truncateText = (value?: string | null, maxLength = 15) => {
+  const text = value?.trim() || 'N/A';
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength)}...`;
+};
 const orphanStatusLabel = (value?: string | null) => value === '3' ? 'Orphan' : value === '2' ? 'Semi Orphan' : value || 'N/A';
 const orphanStatusClass = (value?: string | null) => {
   const label = orphanStatusLabel(value).toLowerCase();
@@ -31,6 +36,7 @@ const orphanStatusClass = (value?: string | null) => {
 export default function StudentListPage() {
   const [students, setStudents] = useState<StudentView[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -50,8 +56,8 @@ export default function StudentListPage() {
   const [sponsorOpen, setSponsorOpen] = useState(false);
   const [sponsorDetails, setSponsorDetails] = useState<SponsorView | null>(null);
   const [openFilter, setOpenFilter] = useState<string | null>(null);
-  const [sortColumn, setSortColumn] = useState('student_id');
-  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC' | null>(null);
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -64,15 +70,17 @@ export default function StudentListPage() {
 
   const load = async (nextPage = page, nextPageSize = pageSize) => {
     const scrollY = window.scrollY;
-    setLoading(true);
+    const hasRows = students.length > 0;
+    setLoading(!hasRows);
+    setFetching(hasRows);
     setError(null);
     try {
       const data = await getStudents({
         pageNumber: nextPage,
         pageSize: nextPageSize,
         filters: applied,
-        sortColumn,
-        sortDirection,
+        sortColumn: sortColumn ?? undefined,
+        sortDirection: sortDirection ?? undefined,
       });
       setStudents(data.students);
       setTotal(data.total);
@@ -83,6 +91,7 @@ export default function StudentListPage() {
       setError('Unable to load students from the database.');
     } finally {
       setLoading(false);
+      setFetching(false);
       requestAnimationFrame(() => {
         window.scrollTo({ top: scrollY, behavior: 'auto' });
       });
@@ -91,7 +100,7 @@ export default function StudentListPage() {
 
   useEffect(() => {
     load(page, pageSize);
-  }, [page, pageSize, applied]);
+  }, [page, pageSize, applied, sortColumn, sortDirection]);
 
   useEffect(() => {
     let mounted = true;
@@ -195,15 +204,40 @@ export default function StudentListPage() {
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
-      setSortDirection(prev => (prev === 'ASC' ? 'DESC' : 'ASC'));
+      if (sortDirection === null) {
+        setSortDirection('ASC');
+      } else if (sortDirection === 'ASC') {
+        setSortDirection('DESC');
+      } else {
+        setSortColumn(null);
+        setSortDirection(null);
+      }
     } else {
       setSortColumn(column);
       setSortDirection('ASC');
     }
+    setPage(1);
+  };
+
+  const handleExportCsv = async () => {
+    const blob = await exportStudentsCsv({
+      filters: applied,
+      sortColumn: sortColumn ?? undefined,
+      sortDirection: sortDirection ?? undefined,
+      studentIds: checked.length ? checked : undefined,
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'students.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   };
 
   const sortArrow = (column: string) => {
-    if (sortColumn !== column) return '↕';
+    if (sortColumn !== column || sortDirection === null) return '⇅';
     return sortDirection === 'ASC' ? '↑' : '↓';
   };
 
@@ -216,61 +250,11 @@ export default function StudentListPage() {
       aria-label={`Sort by ${label}`}
     >
       <span>{label}</span>
-      <span className={`sortArrow${sortColumn === column ? ' active' : ''}`} aria-hidden>{sortArrow(column)}</span>
+      <span className={`sortArrow${sortColumn === column && sortDirection !== null ? ' active' : ''}`} aria-hidden>{sortArrow(column)}</span>
     </button>
   );
 
-  const sortedStudents = useMemo(() => {
-    const directionFactor = sortDirection === 'ASC' ? 1 : -1;
-    const copy = [...students];
-    const compareText = (left: string | number | null | undefined, right: string | number | null | undefined) =>
-      String(left ?? '').localeCompare(String(right ?? ''), undefined, { numeric: true, sensitivity: 'base' });
-    const compareNumber = (left: unknown, right: unknown) => {
-      const leftNumber = Number(left);
-      const rightNumber = Number(right);
-      if (Number.isNaN(leftNumber) && Number.isNaN(rightNumber)) return 0;
-      if (Number.isNaN(leftNumber)) return 1;
-      if (Number.isNaN(rightNumber)) return -1;
-      return leftNumber - rightNumber;
-    };
-    const ageFromDob = (dobValue: string) => {
-      const dob = new Date(dobValue);
-      if (Number.isNaN(dob.getTime())) return -1;
-      const today = new Date();
-      let age = today.getFullYear() - dob.getFullYear();
-      const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
-      if (!hasBirthdayPassed) age -= 1;
-      return age;
-    };
-
-    copy.sort((left, right) => {
-      let result = 0;
-      switch (sortColumn) {
-        case 'student_id':
-          result = compareNumber(left.student_id, right.student_id);
-          break;
-        case 'student_name':
-          result = compareText(left.full_name, right.full_name);
-          break;
-        case 'age':
-          result = compareNumber(ageFromDob(left.dob), ageFromDob(right.dob));
-          break;
-        case 'class_name':
-          result = compareText(left.class_id, right.class_id);
-          break;
-        case 'orphan_status':
-          result = compareText(orphanStatusLabel(left.orphan_status), orphanStatusLabel(right.orphan_status));
-          break;
-        default:
-          result = compareNumber(left.student_id, right.student_id);
-      }
-      return result * directionFactor;
-    });
-
-    return copy;
-  }, [students, sortColumn, sortDirection]);
-
-  const rows = sortedStudents.map(s => {
+  const rows = students.map(s => {
     const dob = new Date(s.dob);
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
@@ -284,8 +268,13 @@ export default function StudentListPage() {
       <div className="rowFlex studentCell">
         <Avatar name={s.full_name} size="md" />
         <div className="tableCellStack studentCellStack">
-          <button type="button" className="cellTopText studentNameCell" onClick={() => setSelected(s)}>
-            {s.full_name}
+          <button
+            type="button"
+            className="cellTopText studentNameCell"
+            onClick={() => setSelected(s)}
+            title={s.full_name}
+          >
+            {truncateText(s.full_name, 15)}
           </button>
           <div className="cellSubText">{s.gender}</div>
         </div>
@@ -293,8 +282,8 @@ export default function StudentListPage() {
       <div>{age}</div>,
       <div>{s.class_id}</div>,
       <div className="tableCellStack">
-        <div className="cellTopText">{s.sch_name || 'N/A'}</div>
-        <div className="cellSubText">
+        <div className="cellTopText" title={s.sch_name || 'N/A'}>{truncateText(s.sch_name, 18)}</div>
+        <div className="cellSubText" title={[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '-'}>
           <span className="cellIconInline" aria-hidden>
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -305,8 +294,8 @@ export default function StudentListPage() {
         </div>
       </div>,
       <div className="tableCellStack studentCellStack guardianCell">
-        <div className="cellTopText">{s.guardian_full_name || 'N/A'}</div>
-        <div className="cellSubText">{s.guardian_relation_name || 'N/A'}</div>
+        <div className="cellTopText" title={s.guardian_full_name || 'N/A'}>{truncateText(s.guardian_full_name, 15)}</div>
+        <div className="cellSubText" title={s.guardian_relation_name || 'N/A'}>{truncateText(s.guardian_relation_name, 15)}</div>
       </div>,
       <div className="orphanStatusCell">
         <span className={`orphanStatusBadge ${orphanStatusClass(s.orphan_status)}`}>
@@ -497,6 +486,7 @@ export default function StudentListPage() {
       <div className={`student-table-section studentRecordsPanel ${hasSelection ? 'bulkModeActive' : ''}`}>
         <div className="table-header">
           <h3 className="table-title">Student Records <span className="results-count">{total} results</span></h3>
+          {fetching ? <span className="table-updating">Updating...</span> : null}
         </div>
 
         {error ? <div className="toast error" style={{ position: 'static', marginBottom: 12 }}>{error}</div> : null}
@@ -508,7 +498,7 @@ export default function StudentListPage() {
               <span className="selected-count">Selected {checked.length} of {total}</span>
             </div>
             <div className="bulkToolbarActions">
-              <Button size="sm" variant="outline" tabIndex={hasSelection ? 0 : -1}>
+              <Button size="sm" variant="outline" onClick={handleExportCsv}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path d="M12 3v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -540,20 +530,20 @@ export default function StudentListPage() {
         <DataTable
           loading={loading}
           columns={[
-            { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
-            { key: 'student', label: sortHeader('STUDENT', 'student_name') },
-            { key: 'age', label: sortHeader('AGE', 'age'), width: '72px' },
+          { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
+          { key: 'student', label: sortHeader('STUDENT', 'student_name') },
+          { key: 'age', label: sortHeader('AGE', 'age'), width: '72px' },
             { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
             { key: 'school', label: 'SCHOOL' },
             { key: 'guardian', label: 'GUARDIAN' },
-            { key: 'orphan', label: sortHeader('STATUS', 'orphan_status') },
+            { key: 'orphan', label: 'STATUS' },
             { key: 'sponsor', label: 'SPONSOR' },
             { key: 'actions', label: '' }
           ]}
           rows={rows}
-          onRowClick={(index) => setSelected(sortedStudents[index] ?? null)}
+          onRowClick={(index) => setSelected(students[index] ?? null)}
           rowClassName={(index) => {
-            const student = sortedStudents[index];
+            const student = students[index];
             return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
           }}
         />
@@ -636,4 +626,5 @@ function MultiSelectFilter({
     </details>
   );
 }
+
 

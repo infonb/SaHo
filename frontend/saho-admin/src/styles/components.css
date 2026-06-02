@@ -3037,12 +3037,12 @@ td{padding:11px 12px;font-size:12.5px}
 }
 
 .student-table-section th {
-  padding: 10px 12px;
+  padding: 14px 12px;
   background: #f8fafc;
   color: #0f172a;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .055em;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
   text-transform: uppercase;
   border-bottom: 1px solid #e2e8f0;
   text-align: center;
@@ -3050,7 +3050,7 @@ td{padding:11px 12px;font-size:12.5px}
 }
 
 .student-table-section td {
-  padding: 7px 12px;
+  padding: 12px 12px;
   color: #475569;
   font-size: 13px;
   font-weight: 500;
@@ -3070,18 +3070,95 @@ td{padding:11px 12px;font-size:12.5px}
 }
 
 .student-table-section th:nth-child(2),
-.student-table-section td:nth-child(2){ text-align:left; }
-.student-table-section th:nth-child(2){
+.student-table-section td:nth-child(2){
   text-align:left;
-  padding-left:58px;
+  padding-left:18px;
 }
 
 .student-table-section td:nth-child(2){ padding-left:12px; }
 
+/* Column alignment: numeric/data columns centered, text columns left-aligned */
+.student-table-section th:nth-child(1),
+.student-table-section td:nth-child(1),
+.student-table-section th:nth-child(3),
+.student-table-section td:nth-child(3),
+.student-table-section th:nth-child(4),
+.student-table-section td:nth-child(4),
+.student-table-section th:nth-child(7),
+.student-table-section td:nth-child(7),
+.student-table-section th:nth-child(8),
+.student-table-section td:nth-child(8){
+  text-align:center;
+}
+
+.student-table-section th:nth-child(2),
+.student-table-section td:nth-child(2),
+.student-table-section th:nth-child(5),
+.student-table-section td:nth-child(5),
+.student-table-section th:nth-child(6),
+.student-table-section td:nth-child(6){
+  text-align:left;
+}
+
+.student-table-section th:nth-child(5),
+.student-table-section td:nth-child(5),
+.student-table-section th:nth-child(6),
+.student-table-section td:nth-child(6){
+  padding-left:16px;
+}
+
+.student-table-section th:nth-child(3),
+.student-table-section th:nth-child(4){
+  text-align:center;
+  padding-left:0;
+  padding-right:0;
+}
+
+.student-table-section th:nth-child(3),
+.student-table-section td:nth-child(3){
+  width:72px;
+  min-width:72px;
+  max-width:72px;
+  text-align:center;
+  padding-left:0;
+  padding-right:0;
+}
+
+.student-table-section th:nth-child(4),
+.student-table-section td:nth-child(4){
+  width:88px;
+  min-width:88px;
+  max-width:88px;
+  text-align:center;
+  padding-left:0;
+  padding-right:0;
+}
+
+.student-table-section th:nth-child(2),
+.student-table-section td:nth-child(2){
+  width:240px;
+  min-width:240px;
+  max-width:240px;
+}
+
+.student-table-section th:nth-child(5),
+.student-table-section td:nth-child(5){
+  width:210px;
+  min-width:210px;
+  max-width:210px;
+}
+
+.student-table-section th:nth-child(6),
+.student-table-section td:nth-child(6){
+  width:180px;
+  min-width:180px;
+  max-width:180px;
+}
+
 .student-table-section .avatar.md,
 .student-table-section .studentPhoto.md{
-  width:34px;
-  height:34px;
+  width:38px;
+  height:38px;
   font-size:13px;
 }
 
@@ -3098,7 +3175,7 @@ td{padding:11px 12px;font-size:12.5px}
   display:flex;
   align-items:center;
   justify-content:flex-start;
-  gap:18px;
+  gap:14px;
   min-width:0;
 }
 
@@ -3162,6 +3239,8 @@ td{padding:11px 12px;font-size:12.5px}
   align-content:center;
   justify-items:start;
   text-align:left;
+  min-width:0;
+  width:100%;
 }
 
 .student-table-section .studentNameCell{
@@ -3179,6 +3258,19 @@ td{padding:11px 12px;font-size:12.5px}
   min-width:0;
   justify-items:center;
   text-align:center;
+}
+
+.student-table-section td:nth-child(5) .tableCellStack,
+.student-table-section td:nth-child(6) .tableCellStack,
+.student-table-section td:nth-child(2) .tableCellStack{
+  justify-items:start;
+  text-align:left;
+  min-width:0;
+  width:100%;
+}
+
+.student-table-section td:nth-child(2) .rowFlex.studentCell{
+  justify-content:flex-start;
 }
 
 .student-table-section .cellTopRow{
@@ -3230,6 +3322,24 @@ td{padding:11px 12px;font-size:12.5px}
   text-align:left;
 }
 
+.student-table-section td:nth-child(5) .cellTopText,
+.student-table-section td:nth-child(5) .cellSubText,
+.student-table-section td:nth-child(6) .cellTopText,
+.student-table-section td:nth-child(6) .cellSubText{
+  text-align:left;
+}
+
+.student-table-section td:nth-child(2) .cellTopText,
+.student-table-section td:nth-child(5) .cellTopText,
+.student-table-section td:nth-child(5) .cellSubText,
+.student-table-section td:nth-child(6) .cellTopText,
+.student-table-section td:nth-child(6) .cellSubText{
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
 .student-table-section .orphanStatusCell{
   white-space:nowrap;
 }
@@ -3240,25 +3350,36 @@ td{padding:11px 12px;font-size:12.5px}
   text-align:left;
   gap:2px;
   align-items:start;
+  min-width:0;
+  width:100%;
 }
 
 .student-table-section .guardianCell .cellTopText,
 .student-table-section .guardianCell .cellSubText{
   text-align:left;
   white-space:nowrap;
-}
-
-.student-table-section .guardianCell .cellTopText{
   max-width:100%;
   overflow:hidden;
   text-overflow:ellipsis;
+}
+
+.student-table-section .guardianCell .cellTopText{
+  width:100%;
 }
 
 .student-table-section th .sortableHeaderWrap,
 .student-table-section th .sortableHeader{
   display:inline-flex;
   align-items:center;
-  gap:4px;
+  gap:8px;
+}
+
+.student-table-section th:nth-child(3) .sortableHeaderWrap,
+.student-table-section th:nth-child(4) .sortableHeaderWrap{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
 .student-table-section th .sortableHeader{
@@ -3271,17 +3392,39 @@ td{padding:11px 12px;font-size:12.5px}
   text-transform:inherit;
   cursor:pointer;
   padding:0;
-  gap:6px;
+  gap:8px;
+  justify-content:flex-start;
+}
+
+.student-table-section th:nth-child(3) .sortableHeader,
+.student-table-section th:nth-child(4) .sortableHeader{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.student-table-section th:nth-child(3) .sortableHeader > span:first-child,
+.student-table-section th:nth-child(4) .sortableHeader > span:first-child{
+  text-align:center;
+}
+
+.student-table-section th:nth-child(3) .sortArrow,
+.student-table-section th:nth-child(4) .sortArrow{
+  margin-left:2px;
 }
 
 .student-table-section th .sortArrow{
-  font-size:11px;
-  line-height:1;
+  width:16px;
+  height:16px;
   color:#94a3b8;
-  min-width:16px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
+  flex:0 0 auto;
+  font-size:14px;
+  line-height:1;
+  font-weight:900;
 }
 
 .student-table-section th .sortArrow.active{
@@ -3333,6 +3476,11 @@ td{padding:11px 12px;font-size:12.5px}
 .student-table-section .tableWrap tbody tr.studentTableRow:not(.isSelected):hover > td {
   background-color: #f8fafc;
   border-top-color: #e2e8f0;
+}
+
+.student-table-section .tableWrap tbody tr.studentTableRow > td{
+  padding-top:14px;
+  padding-bottom:14px;
 }
 
 .student-table-section .tableWrap tbody tr.studentTableRow.isSelected > td {

@@ -154,6 +154,47 @@ export const getStudents = async ({
   }
 };
 
+export const exportStudentsCsv = async ({
+  filters,
+  sortColumn = 'student_id',
+  sortDirection = 'DESC',
+  studentIds,
+}: {
+  filters?: Partial<StudentFilters>;
+  sortColumn?: string;
+  sortDirection?: 'ASC' | 'DESC' | null;
+  studentIds?: number[];
+} = {}) => {
+  const params: any = {};
+  const normalizeGenderValue = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed === 'Male') return '1';
+    if (trimmed === 'Female') return '2';
+    if (trimmed === 'Other') return '3';
+    return trimmed;
+  };
+
+  if (filters?.search?.trim()) params.search = filters.search.trim();
+  if (filters?.gender) params.gender = normalizeGenderValue(filters.gender);
+  if (filters?.class_id) params.classId = filters.class_id;
+  if (filters?.orphan_status) params.orphanStatus = filters.orphan_status;
+  if (filters?.st_id) params.stId = filters.st_id;
+  if (filters?.dist_id) params.distId = filters.dist_id;
+  if (filters?.mndl_id) params.mndlId = filters.mndl_id;
+  if (filters?.vil_id) params.vilId = filters.vil_id;
+  if (filters?.sch_id) params.schId = filters.sch_id;
+  if (sortColumn) params.sortColumn = sortColumn;
+  if (sortDirection) params.sortDirection = sortDirection;
+  if (studentIds?.length) params.studentIds = studentIds.join(',');
+
+  const res = await apiClient.get('/students/export', {
+    params,
+    responseType: 'blob',
+  });
+
+  return res.data as Blob;
+};
+
 export const getStudentById = async (id: number): Promise<StudentView | undefined> => {
   // Try backend first
   try {
