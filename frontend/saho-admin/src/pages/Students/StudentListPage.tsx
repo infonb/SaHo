@@ -828,10 +828,28 @@ export default function StudentListPage() {
             </div>
           </div>
           <div className="filter-actions-group">
-            <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); setOpenFilter(null); }}>
-              <span className="filterBtnIcon" aria-hidden>x</span> Clear
+            <button
+              className="clear-filters-btn"
+              onClick={() => {
+                setPending(defaults);
+                setApplied(defaults);
+                setPage(1);
+                setOpenFilter(null);
+              }}
+            >
+              <span className="filterBtnIcon" aria-hidden>
+                x
+              </span>{" "}
+              Clear
             </button>
-            <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>
+            <button
+              className="go-filter-btn"
+              onClick={() => {
+                setApplied({ ...pending });
+                setPage(1);
+                setOpenFilter(null);
+              }}
+            >
               Go
               <svg
                 width="14"
@@ -973,40 +991,95 @@ export default function StudentListPage() {
         <DataTable
           loading={loading}
           columns={[
-            { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
-            { key: 'student', label: sortHeader('STUDENT', 'student_name') },
-            { key: 'age', label: sortHeader('AGE', 'age'), width: '72px' },
-            { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
-            { key: 'school', label: 'SCHOOL' },
-            { key: 'guardian', label: 'GUARDIAN' },
-            { key: 'orphan', label: sortHeader('STATUS', 'orphan_status') },
-            { key: 'sponsor', label: 'SPONSOR' },
-            { key: 'actions', label: '' }
+            {
+              key: "id",
+              label: (
+                <div className="idSelectCell header">
+                  <input
+                    aria-label="Select all on this page"
+                    type="checkbox"
+                    checked={allPageChecked}
+                    onChange={togglePage}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <span className="sortableHeaderWrap">
+                    {sortHeader("ID", "student_id")}
+                  </span>
+                </div>
+              ),
+              width: "92px",
+            },
+            { key: "student", label: sortHeader("STUDENT", "student_name") },
+            { key: "age", label: sortHeader("AGE", "age"), width: "72px" },
+            {
+              key: "grade",
+              label: sortHeader("CLASS", "class_name"),
+              width: "88px",
+            },
+            { key: "school", label: "SCHOOL" },
+            { key: "guardian", label: "GUARDIAN" },
+            { key: "orphan", label: sortHeader("STATUS", "orphan_status") },
+            { key: "sponsor", label: "SPONSOR" },
+            { key: "actions", label: "" },
           ]}
           rows={rows}
           onRowClick={(index) => setSelected(sortedStudents[index] ?? null)}
           rowClassName={(index) => {
             const student = sortedStudents[index];
-            return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
+            return `studentTableRow${student && checked.includes(student.student_id) ? " isSelected" : ""}`;
           }}
         />
       </div>
-      <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
-      <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.sponsor_name ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
-        {sponsorDetails ? <div>
-          <h3 style={{ marginTop: 0 }}>{sponsorDetails.sponsor_name}</h3>
-          <div className="sub">{sponsorDetails.type} - {sponsorDetails.nationality}</div>
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontWeight: 800 }}>{sponsorDetails.email}</div>
-            <div className="sub">{sponsorDetails.ph_no}</div>
-            <div className="sub" style={{ marginTop: 8 }}>{sponsorDetails.loc}</div>
-            <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib}</div></div>
-            <div style={{ marginTop: 12 }}><strong>Students Sponsored:</strong> <span className="strong">{sponsorDetails.students_count}</span></div>
+      <StudentDetailModal
+        student={selected}
+        onClose={() => setSelected(null)}
+      />
+      <Modal
+        open={sponsorOpen}
+        onClose={() => setSponsorOpen(false)}
+        title={sponsorDetails?.sponsor_name ?? "Sponsor"}
+        width={560}
+        footer={
+          <Button variant="outline" onClick={() => setSponsorOpen(false)}>
+            Close
+          </Button>
+        }
+      >
+        {sponsorDetails ? (
+          <div>
+            <h3 style={{ marginTop: 0 }}>{sponsorDetails.sponsor_name}</h3>
+
+            <div className="sub">
+              {sponsorDetails.type} - {sponsorDetails.nationality}
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontWeight: 800 }}>{sponsorDetails.email}</div>
+
+              <div className="sub">{sponsorDetails.ph_no}</div>
+
+              <div className="sub" style={{ marginTop: 8 }}>
+                {sponsorDetails.loc}
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                <strong>Contribution:</strong>
+                <div className="sub" style={{ marginTop: 6 }}>
+                  {sponsorDetails.contrib}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                <strong>Students Sponsored:</strong>{" "}
+                <span className="strong">{sponsorDetails.students_count}</span>
+              </div>
+            </div>
           </div>
         ) : (
           <div>No sponsor information available</div>
         )}
       </Modal>
+
       <ConfirmModal
         open={singleDelete !== null}
         onClose={() => setSingleDelete(null)}
@@ -1014,6 +1087,7 @@ export default function StudentListPage() {
         title="Delete Student"
         message="Delete selected student?"
       />
+
       <ConfirmModal
         open={bulkOpen}
         onClose={() => setBulkOpen(false)}
