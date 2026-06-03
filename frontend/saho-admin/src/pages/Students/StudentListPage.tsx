@@ -104,7 +104,7 @@ export default function StudentListPage() {
 
   useEffect(() => {
     load(page, pageSize);
-  }, [page, pageSize, applied]);
+  }, [page, pageSize, applied, sortColumn, sortDirection]);
 
   useEffect(() => {
     let mounted = true;
@@ -254,6 +254,7 @@ export default function StudentListPage() {
   };
 
   const handleSort = (column: string) => {
+    setPage(1);
     if (sortColumn === column) {
       setSortDirection(prev => (prev === 'ASC' ? 'DESC' : 'ASC'));
     } else {
@@ -990,6 +991,8 @@ export default function StudentListPage() {
 
         <DataTable
           loading={loading}
+          loadingRowCount={pageSize}
+          transitionKey={`${page}-${pageSize}-${sortColumn}-${sortDirection}-${JSON.stringify(applied)}-${loading ? "loading" : "loaded"}`}
           columns={[
             {
               key: "id",
@@ -1028,6 +1031,18 @@ export default function StudentListPage() {
             const student = sortedStudents[index];
             return `studentTableRow${student && checked.includes(student.student_id) ? " isSelected" : ""}`;
           }}
+          footer={
+            <Pagination
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              onChange={setPage}
+              onPageSizeChange={(nextPageSize) => {
+                setPageSize(nextPageSize);
+                setPage(1);
+              }}
+            />
+          }
         />
       </div>
       <StudentDetailModal

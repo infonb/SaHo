@@ -440,8 +440,11 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   ) => {
     setEditLoading(true);
     try {
-      const student = await getStudentById(studentId);
-      const snapshot = viewFallback?.snapshot;
+      const student = ((await getStudentById(studentId)) ?? viewFallback?.snapshot) as unknown as (StudentView & Record<string, any>) | undefined;
+      const snapshot = viewFallback?.snapshot ?? student;
+      if (!student) {
+        throw new Error('Student not found');
+      }
       const [firstName, ...restName] = (student.studentName || snapshot?.full_name || '').split(' ');
       const fallbackGuardian = splitName(student.guardianName ?? snapshot?.guardian_full_name);
       const newForm: StudentFormState = {

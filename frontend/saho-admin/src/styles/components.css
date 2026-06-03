@@ -253,7 +253,8 @@
 .tableSelectAll{padding:10px 14px;border:1px solid var(--color-border);border-top:0;border-radius:0 0 var(--r-lg) var(--r-lg);background:#ffffff;color:var(--color-text3);font-size:13px;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .tableSelectAll label{display:flex;align-items:center;gap:8px}
 .selectedCount{font-size:13px;color:var(--color-text);font-weight:700}
-.tableWrap{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--r-lg);overflow:auto;box-shadow:var(--shadow-sm)}
+.tableWrap{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.tableScroll{overflow:auto}
 table{width:100%;border-collapse:separate;border-spacing:0;min-width:760px}
 th{font-size:11px;text-transform:uppercase;color:var(--color-text3);text-align:left;background:#f8fafc;padding:13px 14px;border-bottom:1px solid var(--color-border);font-weight:900;letter-spacing:.35px;white-space:nowrap}
 td{padding:14px;border-top:1px solid var(--color-border);font-size:13px;vertical-align:middle;color:var(--color-text2);background:transparent;background-clip:padding-box;transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease}
@@ -279,13 +280,18 @@ tr.clickable:hover{background:#f8fafc;cursor:pointer}
 .strong{font-weight:800;color:var(--color-text)}
 .sub{font-size:12px;color:var(--color-text3);margin-top:3px}
 .pagination{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 4px;color:var(--color-text3);font-size:13px}
+.tableFooter{border-top:1px solid var(--color-border);background:#ffffff;border-radius:0 0 var(--r-lg) var(--r-lg)}
+.tableFooter .pagination{padding:14px 16px}
+.tableBodyTransition{animation:tableBodyIn .2s ease both}
+@keyframes tableBodyIn{from{opacity:.55;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .paginationSummary{font-weight:800;color:var(--color-text3)}
 .pageControls{display:flex;align-items:center;gap:10px}
 .pageBtns{display:flex;gap:8px}
-.pageBtn,.pageNav{border:0;background:transparent;color:var(--color-text3);border-radius:7px;min-width:30px;height:30px;display:inline-grid;place-items:center;font-weight:800}
+.pageBtn,.pageNav{border:0;background:transparent;color:var(--color-text3);border-radius:7px;min-width:30px;height:30px;display:inline-grid;place-items:center;font-weight:800;transition:background-color .18s ease,color .18s ease,box-shadow .22s ease,transform .18s ease}
 .pageBtn.active{background:#991b1b;color:#ffffff;box-shadow:0 6px 16px rgba(153,27,27,.2)}
-.pageBtn:hover,.pageNav:hover{background:var(--br-100);color:var(--color-text)}
-.pageBtn:disabled,.pageNav:disabled{opacity:.35;cursor:not-allowed;background:transparent}
+.pageBtn:hover,.pageNav:hover{background:var(--br-100);color:var(--color-text);transform:translateY(-1px)}
+.pageBtn.active:hover{color:#ffffff;transform:translateY(-1px) scale(1.03)}
+.pageBtn:disabled,.pageNav:disabled{opacity:.35;cursor:not-allowed;background:transparent;transform:none}
 .pageSizeSelect{height:34px;min-width:58px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);color:var(--color-text2);font-weight:800;padding:0 28px 0 11px}
 .modalOverlay{position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:80;display:grid;place-items:center;padding:28px 18px;animation:fadeIn .16s ease}
 .modalCard{background:var(--color-surface);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);max-height:calc(100vh - 56px);max-width:calc(100vw - 32px);overflow:hidden;display:flex;flex-direction:column;animation:slideUp .18s ease both}

@@ -6,7 +6,7 @@ interface Props {
   onPageSizeChange?: (pageSize: number) => void;
 }
 
-const pageSizeOptions = [5, 10, 20, 50];
+const pageSizeOptions = [10, 25, 50, 100];
 
 export default function Pagination({ total, page, pageSize, onChange, onPageSizeChange }: Props) {
   const pages = Math.max(1, Math.ceil(total / pageSize));

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-export const usePagination = <T,>(items: T[], initialPageSize = 5) => {
+export const usePagination = <T,>(items: T[], initialPageSize = 10) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(initialPageSize);
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
