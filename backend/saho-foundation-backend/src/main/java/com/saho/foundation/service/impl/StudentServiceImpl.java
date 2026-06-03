@@ -92,18 +92,20 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional(readOnly = true)
-        public StudentPaginationResponseDto getAllStudents(
-                String search,
-                Integer pageNumber,
-                Integer pageSize,
-                String gender,
-                String classId,
-                String orphanStatus,
-                String stId,
-                String distId,
-                String mndlId,
-                String vilId,
-                String schId
+    public StudentPaginationResponseDto getAllStudents(
+            String search,
+            Integer pageNumber,
+            Integer pageSize,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId,
+            String sortColumn,
+            String sortDirection
         ) {
         List<StudentListResponseDto> students = studentRepository.getAllStudentsWithPagination(
                 search,
@@ -116,7 +118,9 @@ public class StudentServiceImpl implements StudentService {
                 distId,
                 mndlId,
                 vilId,
-                schId
+                schId,
+                sortColumn,
+                sortDirection
         )
             .stream()
             .map(this::mapStudentListResponse)
