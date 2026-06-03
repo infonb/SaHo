@@ -25,6 +25,13 @@ import org.springframework.http.MediaType;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.HashSet;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -89,6 +96,7 @@ public class StudentServiceImpl implements StudentService {
 
         Student savedStudent = studentRepository.findByAadhaarNumber(requestDto.getAadhaarNumber())
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found after procedure call for aadhaarNumber: " + requestDto.getAadhaarNumber()));
+        syncSiblingPair(savedStudent.getStudentId(), requestDto.getSiblingIds(), Boolean.TRUE.equals(requestDto.getHasSibling()));
         return mapToResponseDto(savedStudent);
     }
 
@@ -246,6 +254,7 @@ public class StudentServiceImpl implements StudentService {
             throw new DuplicateResourceException("aadhaarNumber already exists");
         }
 
+        Integer previousSiblingId = firstStudentId(existingStudent.getSiblingId());
         Integer guardianId = existingStudent.getGuardian() != null ? existingStudent.getGuardian().getGuardianId() : null;
 
         // Update guardian details also when guardian data is provided.
@@ -285,6 +294,7 @@ public class StudentServiceImpl implements StudentService {
 
         Student updatedStudent = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found after update with id: " + studentId));
+        syncSiblingOnUpdate(updatedStudent.getStudentId(), previousSiblingId, requestDto.getSiblingIds(), Boolean.TRUE.equals(requestDto.getHasSibling()));
 
         return mapToResponseDto(updatedStudent);
     }
@@ -435,22 +445,87 @@ public class StudentServiceImpl implements StudentService {
         return text;
     }
 
-    private java.util.Set<Integer> parseStudentIds(String studentIdsCsv) {
-        if (studentIdsCsv == null || studentIdsCsv.isBlank()) {
-            return java.util.Collections.emptySet();
+    private void syncSiblingPair(Integer currentStudentId, String siblingIdsCsv, boolean hasSibling) {
+        if (currentStudentId == null || !hasSibling) {
+            return;
         }
-        java.util.Set<Integer> ids = new java.util.HashSet<>();
+
+        Integer siblingId = firstStudentId(siblingIdsCsv);
+        if (siblingId == null || siblingId.equals(currentStudentId)) {
+            return;
+        }
+
+        Student currentStudent = studentRepository.findById(currentStudentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + currentStudentId));
+        Student siblingStudent = studentRepository.findById(siblingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sibling student not found with id: " + siblingId));
+
+        currentStudent.setSiblingId(String.valueOf(siblingId));
+        siblingStudent.setSiblingId(String.valueOf(currentStudentId));
+        studentRepository.save(currentStudent);
+        studentRepository.flush();
+        studentRepository.saveAndFlush(siblingStudent);
+    }
+
+    private void syncSiblingOnUpdate(Integer currentStudentId, Integer previousSiblingId, String siblingIdsCsv, boolean hasSibling) {
+        // Remove the old sibling link first if the sibling changed.
+        if (previousSiblingId != null) {
+            try {
+                Student previousSibling = studentRepository.findById(previousSiblingId)
+                        .orElse(null);
+                if (previousSibling != null) {
+                    Set<Integer> previousIds = parseStudentIds(previousSibling.getSiblingId());
+                    previousIds.remove(currentStudentId);
+                    previousSibling.setSiblingId(joinStudentIds(previousIds));
+                    studentRepository.saveAndFlush(previousSibling);
+                }
+            } catch (Exception ignored) {
+                // Ignore cleanup failures here so the new relationship can still be applied.
+            }
+        }
+
+        // Apply the new sibling relationship.
+        syncSiblingPair(currentStudentId, siblingIdsCsv, hasSibling);
+    }
+
+    private Set<Integer> parseStudentIds(String studentIdsCsv) {
+        if (studentIdsCsv == null || studentIdsCsv.isBlank()) {
+            return Collections.emptySet();
+        }
+
+        Set<Integer> ids = new LinkedHashSet<>();
         for (String part : studentIdsCsv.split(",")) {
-            String trimmed = part.trim();
+            String trimmed = part == null ? "" : part.trim();
             if (trimmed.isEmpty()) {
                 continue;
             }
             try {
-                ids.add(Integer.parseInt(trimmed));
+                Integer parsed = Integer.parseInt(trimmed);
+                if (parsed > 0) {
+                    ids.add(parsed);
+                }
             } catch (NumberFormatException ignored) {
-                // Ignore invalid ids in export requests.
+                // Ignore invalid ids and keep the rest of the group intact.
             }
         }
         return ids;
+    }
+
+    private Integer firstStudentId(String studentIdsCsv) {
+        Set<Integer> ids = parseStudentIds(studentIdsCsv);
+        return ids.stream().findFirst().orElse(null);
+    }
+
+    private String joinStudentIds(Collection<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return null;
+        }
+
+        return ids.stream()
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .sorted()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
     }
 }

@@ -450,7 +450,6 @@ export default function StudentListPage() {
             <div className="filter-group">
               <MultiSelectFilter filterKey="mandal" label="All Mandals" value={pending.mndl_id} options={mandalOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, mndl_id: value, vil_id: '', sch_id: '' })} />
             </div>
-            <div className="filter-empty-slot" aria-hidden="true" />
           </div>
           <div className="filters-row filters-row-2">
             <div className="filter-group">
@@ -468,19 +467,19 @@ export default function StudentListPage() {
             <div className="filter-group">
               <MultiSelectFilter filterKey="class" label="All Classes" value={pending.class_id} options={classOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, class_id: value })} />
             </div>
+            <div className="filter-actions-row">
+              <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); setOpenFilter(null); }}>
+                <span className="filterBtnIcon" aria-hidden>x</span> Clear
+              </button>
+              <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>
+                Go
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"></path>
+                </svg>
+              </button>
+            </div>
           </div>
-          <div className="filter-actions-group">
-            <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); setOpenFilter(null); }}>
-              <span className="filterBtnIcon" aria-hidden>x</span> Clear
-            </button>
-            <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>
-              Go
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7"></path>
-              </svg>
-            </button>
-          </div>
-      </div>
+        </div>
       </div>
 
       <div className={`student-table-section studentRecordsPanel ${hasSelection ? 'bulkModeActive' : ''}`}>
@@ -530,15 +529,15 @@ export default function StudentListPage() {
         <DataTable
           loading={loading}
           columns={[
-          { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
-          { key: 'student', label: sortHeader('STUDENT', 'student_name') },
-          { key: 'age', label: sortHeader('AGE', 'age'), width: '72px' },
+            { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
+            { key: 'student', label: sortHeader('STUDENT', 'student_name'), width: '250px' },
+            { key: 'age', label: sortHeader('AGE', 'age'), width: '92px' },
             { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
-            { key: 'school', label: 'SCHOOL' },
-            { key: 'guardian', label: 'GUARDIAN' },
-            { key: 'orphan', label: 'STATUS' },
-            { key: 'sponsor', label: 'SPONSOR' },
-            { key: 'actions', label: '' }
+            { key: 'school', label: 'SCHOOL', width: '235px' },
+            { key: 'guardian', label: 'GUARDIAN', width: '210px' },
+            { key: 'orphan', label: 'STATUS', width: '150px' },
+            { key: 'sponsor', label: 'SPONSOR', width: '120px' },
+            { key: 'actions', label: '', width: '100px' }
           ]}
           rows={rows}
           onRowClick={(index) => setSelected(students[index] ?? null)}

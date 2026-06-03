@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import { getSponsorById } from '../../api/sponsorApi';
+import { getStudentById } from '../../api/studentApi';
 import type { SponsorView, StudentView } from '../../types';
 
 type TabKey = 'personal' | 'location' | 'guardian';
@@ -15,16 +16,43 @@ const tabs: { key: TabKey; label: string; icon: JSX.Element }[] = [
 export default function StudentDetailModal({ student, onClose }: { student: StudentView | null; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<TabKey>('personal');
   const [sponsor, setSponsor] = useState<SponsorView | null>(null);
+  const [siblingNames, setSiblingNames] = useState<string[]>([]);
 
   useEffect(() => {
     if (!student) return;
     setActiveTab('personal');
     setSponsor(null);
-    if (!student.sponsor_id) return;
+    setSiblingNames([]);
+    const siblingIds = (student.sibling_id ?? '')
+      .split(',')
+      .map(id => id.trim())
+      .filter(Boolean)
+      .map(Number)
+      .filter(id => Number.isFinite(id) && id > 0 && id !== student.student_id);
+
     let mounted = true;
-    getSponsorById(student.sponsor_id)
-      .then(data => { if (mounted) setSponsor(data ?? null); })
-      .catch(() => { if (mounted) setSponsor(null); });
+
+    if (siblingIds.length > 0) {
+      Promise.all(siblingIds.map(id => getStudentById(id)))
+        .then(results => {
+          if (!mounted) return;
+          const names = results
+            .filter((item): item is NonNullable<typeof item> => Boolean(item))
+            .map(item => item.full_name)
+            .filter(Boolean);
+          setSiblingNames(names);
+        })
+        .catch(() => {
+          if (mounted) setSiblingNames([]);
+        });
+    }
+
+    if (student.sponsor_id) {
+      getSponsorById(student.sponsor_id)
+        .then(data => { if (mounted) setSponsor(data ?? null); })
+        .catch(() => { if (mounted) setSponsor(null); });
+    }
+
     return () => { mounted = false; };
   }, [student]);
 
@@ -86,7 +114,7 @@ export default function StudentDetailModal({ student, onClose }: { student: Stud
               { label: 'Religion', value: student.religion, icon: <IconHeart /> },
               { label: 'Caste', value: student.caste, icon: <IconTag /> },
               { label: 'Orphan Status', value: student.orphan_status, icon: <IconShield /> },
-              { label: 'Sibling', value: student.sibling_id ? `${student.sibling_student_name || 'Sibling'} ${student.sibling_student_id ? `(${student.sibling_student_id})` : ''}` : 'No', icon: <IconUserCheck /> },
+              { label: 'Sibling', value: siblingNames.length ? siblingNames.join(', ') : (student.sibling_id ? 'Sibling linked' : 'No'), icon: <IconUserCheck /> },
               ...(hasSponsor ? [{ label: 'Sponsor Name', value: sponsorName || 'Assigned sponsor', icon: <IconSpark /> }] : []),
             ]}
           />
