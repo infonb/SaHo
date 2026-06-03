@@ -185,9 +185,10 @@
 .studentBulkToolbar .selectedCount strong{font-size:17px;color:var(--color-primary);font-weight:900;line-height:1}
 .studentBulkToolbar .selectedCount span{color:var(--color-text3);font-weight:700}
 .studentBulkToolbar .btn{height:40px;border-radius:12px;box-shadow:0 1px 0 rgba(15,23,42,.04)}
+.studentBulkToolbar .btn:hover{transform:none;box-shadow:0 1px 0 rgba(15,23,42,.04)}
 .studentBulkToolbar .btn svg{width:16px;height:16px}
 .studentBulkToolbar .bulkDeleteButton{border-color:#fecaca;color:#b91c1c;background:#fff7f7}
-.studentBulkToolbar .bulkDeleteButton:hover{border-color:#fca5a5;color:#991b1b;background:#fee2e2;box-shadow:0 6px 16px rgba(185,28,28,.08)}
+.studentBulkToolbar .bulkDeleteButton:hover{border-color:#fecaca;color:#b91c1c;background:#fff7f7;box-shadow:0 1px 0 rgba(15,23,42,.04)}
 .studentBulkToolbar .bulkDeleteButton:disabled{border-color:var(--color-border);color:var(--color-text3);background:#f8fafc;box-shadow:none}
 
 .confirmModalContent{display:flex;gap:14px;align-items:flex-start}
@@ -2086,30 +2087,14 @@ td{padding:11px 12px;font-size:12.5px}
   border-radius: 12px;
 }
 
-.add-student-btn {
-  background: #d1fae5 !important;
-  color: #065f46 !important;
-  border: 1px solid #a7f3d0 !important;
-  height: 40px !important;
-  padding: 0 16px !important;
-  font-weight: 600 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  border-radius: 12px !important;
-  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.14) !important;
-  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
-}
-
-.add-student-btn:hover {
-  background: #c7f9dd !important;
-  border-color: #86efac !important;
-  box-shadow: 0 12px 26px rgba(16, 185, 129, 0.18) !important;
-}
-
-.add-student-btn svg {
-  width: 16px;
-  height: 16px;
+.student-list-actions .add-student-btn,
+.student-list-actions .add-student-btn:hover,
+.student-list-actions .add-student-btn:focus-visible {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-color: transparent;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Stats Grid */
@@ -3459,20 +3444,35 @@ td{padding:11px 12px;font-size:12.5px}
 }
 
 .student-table-section th .sortArrow{
-  width:16px;
-  height:16px;
-  color:#94a3b8;
+  width:14px;
+  height:14px;
+  position:relative;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   flex:0 0 auto;
+  color:#94a3b8;
   font-size:14px;
   line-height:1;
   font-weight:900;
 }
 
-.student-table-section th .sortArrow.active{
-  color:#10b981;
+.student-table-section th .sortArrow.inactive::before{
+  content:"↕";
+}
+
+.student-table-section th .sortArrow.asc::before{
+  content:"↑";
+  color:#0f766e;
+}
+
+.student-table-section th .sortArrow.desc::before{
+  content:"↓";
+  color:#0f766e;
+}
+
+.student-table-section th .sortArrow::after{
+  content:none;
 }
 
 .orphanStatusBadge{
@@ -3782,9 +3782,9 @@ td{padding:11px 12px;font-size:12.5px}
 }
 
 .student-filters-section .clear-filters-btn:hover{
-  background:#f0fdfa;
-  border-color:#99f6e4;
-  transform:translateY(-1px);
+  background:#fff;
+  border-color:#dbe5ef;
+  transform:none;
 }
 
 .student-filters-section .go-filter-btn{
@@ -3806,8 +3806,8 @@ td{padding:11px 12px;font-size:12.5px}
 }
 
 .student-filters-section .go-filter-btn:hover{
-  background:#0f5f59;
-  transform:translateY(-1px);
+  background:#0f766e;
+  transform:none;
 }
 
 .student-filters-section .go-filter-btn svg{

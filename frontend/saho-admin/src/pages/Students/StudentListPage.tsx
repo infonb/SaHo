@@ -236,11 +236,6 @@ export default function StudentListPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const sortArrow = (column: string) => {
-    if (sortColumn !== column || sortDirection === null) return '⇅';
-    return sortDirection === 'ASC' ? '↑' : '↓';
-  };
-
   const sortHeader = (label: string, column: string) => (
     <button
       type="button"
@@ -250,7 +245,16 @@ export default function StudentListPage() {
       aria-label={`Sort by ${label}`}
     >
       <span>{label}</span>
-      <span className={`sortArrow${sortColumn === column && sortDirection !== null ? ' active' : ''}`} aria-hidden>{sortArrow(column)}</span>
+      <span
+        className={`sortArrow${
+          sortColumn === column && sortDirection !== null
+            ? sortDirection === 'ASC'
+              ? ' asc'
+              : ' desc'
+            : ' inactive'
+        }`}
+        aria-hidden
+      />
     </button>
   );
 
