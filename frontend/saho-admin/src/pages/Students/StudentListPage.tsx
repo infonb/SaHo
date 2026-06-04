@@ -835,44 +835,6 @@ export default function StudentListPage() {
               </button>
             </div>
           </div>
-          <div className="filter-actions-group">
-            <button
-              className="clear-filters-btn"
-              onClick={() => {
-                setPending(defaults);
-                setApplied(defaults);
-                setPage(1);
-                setOpenFilter(null);
-              }}
-            >
-              <span className="filterBtnIcon" aria-hidden>
-                x
-              </span>{" "}
-              Clear
-            </button>
-            <button
-              className="go-filter-btn"
-              onClick={() => {
-                setApplied({ ...pending });
-                setPage(1);
-                setOpenFilter(null);
-              }}
-            >
-              Go
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14M12 5l7 7-7 7"></path>
-              </svg>
-            </button>
-          </div>
         </div>
       </div>
 
@@ -963,7 +925,6 @@ export default function StudentListPage() {
         <DataTable
           loading={loading}
           loadingRowCount={Math.min(pageSize, 20)}
-          transitionKey={`${page}-${pageSize}-${sortColumn}-${sortDirection}-${JSON.stringify(applied)}-${loading ? "loading" : "loaded"}`}
           columns={[
             { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
             { key: 'student', label: sortHeader('STUDENT', 'student_name'), width: '250px' },
@@ -997,7 +958,8 @@ export default function StudentListPage() {
       </div>
       <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
       <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.sponsorName ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
-        {sponsorDetails ? <div>
+        {sponsorDetails ? (
+          <div>
           <h3 style={{ marginTop: 0 }}>{sponsorDetails.sponsorName}</h3>
           <div className="sub">{sponsorDetails.type} - {sponsorDetails.nationality}</div>
           <div style={{ marginTop: 12 }}>
@@ -1006,6 +968,7 @@ export default function StudentListPage() {
             <div className="sub" style={{ marginTop: 8 }}>{sponsorDetails.loc}</div>
             <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib}</div></div>
             <div style={{ marginTop: 12 }}><strong>Students Sponsored:</strong> <span className="strong">{sponsorDetails.students_count}</span></div>
+          </div>
           </div>
         ) : (
           <div>No sponsor information available</div>
