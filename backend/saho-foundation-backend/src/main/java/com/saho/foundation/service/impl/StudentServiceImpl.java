@@ -396,6 +396,8 @@ public class StudentServiceImpl implements StudentService {
                 .stName(student.getStName())
                 .siblingId(student.getSiblingId())
                 .orphanStatus(resolveOrphanStatusLabel(student.getOrphanStatus()))
+                .sponsorId(student.getSponsorId())
+                .sponsorName(student.getSponsorName())
                 .totalCount(student.getTotalCount())
                 .imageUrl(student.getImageUrl())
                 .createdAt(student.getCreatedAt())

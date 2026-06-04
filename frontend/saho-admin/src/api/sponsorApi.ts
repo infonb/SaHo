@@ -87,7 +87,7 @@ interface ApiResponse<T> {
 // ===============================
 
 export interface CreateSponsorPayload {
-  sponsor_name: string;
+  sponsorName: string;
   nationality: string;
   type: 'Individual' | 'Organisation';
   email: string;
@@ -96,7 +96,7 @@ export interface CreateSponsorPayload {
   loc?: string | null;
   contrib: string;
   image_url?: string | null;
-  created_by: string;
+  created_by: number;
 }
 
 // ===============================
@@ -128,7 +128,7 @@ const mapFrontendToBackend = (
 
   return {
     sponsorId: null,
-    sponsorName: payload.sponsor_name,
+    sponsorName: payload.sponsorName,
     email: payload.email,
     dob: payload.dob,
     phNo: payload.ph_no,
@@ -148,7 +148,7 @@ const mapFrontendToBackend = (
 const mapBackendToFrontend = (sponsor: any): SponsorView => ({
   sponsor_id: sponsor.sponsorId,
 
-  sponsor_name: sponsor.sponsorName ?? '',
+  sponsorName: sponsor.sponsorName ?? '',
 
   email: sponsor.email ?? '',
 
@@ -205,11 +205,11 @@ export const getSponsors = async (
     );
 
     // SUPPORTS MULTIPLE RESPONSE STRUCTURES
-    const sponsorList = Array.isArray(response.data?.data)
+    const sponsorList: any[] = Array.isArray(response.data?.data)
       ? response.data.data
       : response.data?.data?.sponsors || [];
 
-    const sponsors = sponsorList.map(mapBackendToFrontend);
+    const sponsors: SponsorView[] = sponsorList.map(mapBackendToFrontend);
 
     // ===============================
     // FRONTEND FILTERS
@@ -244,7 +244,7 @@ export const getSponsors = async (
 
       filtered = filtered.filter(
         s =>
-          s.sponsor_name.toLowerCase().includes(q) ||
+          s.sponsorName.toLowerCase().includes(q) ||
           s.email.toLowerCase().includes(q)
       );
     }
@@ -369,7 +369,7 @@ export const updateSponsor = async (
 
       sponsorId: id,
 
-      sponsorName: payload.sponsor_name,
+      sponsorName: payload.sponsorName,
 
       email: payload.email,
 

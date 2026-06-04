@@ -162,6 +162,8 @@ public class SponsorServiceImpl
         response.setLoc(resultSet.getString("loc"));
       
         response.setContrib(resultSet.getString("contrib"));
+        response.setStudentsCount(resultSet.getInt("students_count")
+);
 
         return response;
     }

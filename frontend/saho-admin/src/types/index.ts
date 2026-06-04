@@ -11,7 +11,7 @@ export interface Student { student_id: number; first_name: string; middle_name: 
 export interface Sponsor {
   sponsor_id: number;
 
-  sponsor_name: string;
+  sponsorName: string;
 
   email: string;
 
@@ -43,13 +43,13 @@ export interface StudentSponsor { id: number; std_id: number; spn_id: number; as
 export interface Reminder { rem_id: number; title: string; description: string | null; event_date: string; venue: string; st_id_csv: number | null; dist_ids_csv: string | null; mndl_ids_csv: string | null; vil_ids_csv: string | null; sch_ids_csv: string | null; status: boolean; created_by: number; created_at: string; updated_at: string | null; }
 export interface StudentReminder { rem_std_id: number; std_id: number; rem_id: number; }
 export interface AuthUser { user_id: number; username: string; email_id: string; role: User['role']; initials: string; }
-export interface StudentView { student_id: number; full_name: string; email: string; dob: string; gender: 'Male' | 'Female' | 'Other'; aadhaar_number: string; caste: string; religion: string | null; blood_group: string | null; class_id: string; orphan_status: string | null; image_url: string | null; is_active: boolean; created_at: string; created_by: string; sch_id: number; sch_name: string; sch_address: string; vil_id: number; vil_name: string; mndl_id: number; mndl_name: string; dist_id: number; dist_name: string; st_id: number; st_name: string; guardian_id: number; guardian_full_name: string; guardian_phone: string; guardian_relation_name: string; guardian_occ: string | null; sponsor_id: number | null; sponsor_sponsor_name: string | null; sponsor_type: string | null; sibling_id?: string | null; sibling_student_name?: string | null; sibling_student_id?: number | null; }
+export interface StudentView { student_id: number; full_name: string; email: string; dob: string; gender: 'Male' | 'Female' | 'Other'; aadhaar_number: string; caste: string; religion: string | null; blood_group: string | null; class_id: string; orphan_status: string | null; image_url: string | null; is_active: boolean; created_at: string; created_by: string; sch_id: number; sch_name: string; sch_address: string; vil_id: number; vil_name: string; mndl_id: number; mndl_name: string; dist_id: number; dist_name: string; st_id: number; st_name: string; guardian_id: number; guardian_full_name: string; guardian_phone: string; guardian_relation_name: string; guardian_occ: string | null; sponsor_id: number | null; sponsorName?: string | null; sponsor_type: string | null; sibling_id?: string | null; sibling_student_name?: string | null; sibling_student_id?: number | null; }
 
 export interface SponsorView {
 
   sponsor_id: number;
 
-  sponsor_name: string;
+  sponsorName: string;
 
   email: string;
 
