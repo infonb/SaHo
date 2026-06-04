@@ -440,7 +440,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   ) => {
     setEditLoading(true);
     try {
-      const student = ((await getStudentById(studentId)) ?? viewFallback?.snapshot) as unknown as (StudentView & Record<string, any>) | undefined;
+      const student = ((await getStudentById(studentId).catch(() => undefined)) ?? viewFallback?.snapshot) as unknown as (StudentView & Record<string, any>) | undefined;
       const snapshot = viewFallback?.snapshot ?? student;
       if (!student) {
         throw new Error('Student not found');
