@@ -1,5 +1,5 @@
-import type { CSSProperties, ReactNode, SVGProps } from 'react';
-import { useMemo, useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { useMemo } from 'react';
 import '../../styles/dashboard-visual.css';
 
 type PieSlice = { label: string; value: number; color: string };
@@ -44,27 +44,11 @@ const recentSponsors = [
   { initials: 'VR', name: 'Priya Reddy', amount: '₹75,000', ago: '1 month ago' },
 ];
 
-function MenuIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 7h14M5 12h14M5 17h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function CalendarIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.7" />
       <path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M15 17H5.5c1.2-1.3 1.5-2.7 1.5-5.5a5 5 0 0 1 10 0c0 2.8.3 4.2 1.5 5.5H15m-3 2a2.2 2.2 0 0 1-2.2-2.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -92,17 +76,6 @@ function SponsorsIcon() {
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M7 14a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm10 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.7" />
       <path d="M3.7 20c0-3 2.2-5 5.3-5 1.8 0 3.1.6 4 1.7 1-1.1 2.4-1.7 4.3-1.7 3 0 4.7 1.8 4.7 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function AiIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" {...props}>
-      <rect x="8" y="7" width="16" height="18" rx="8" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M12 13h0M20 13h0" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <path d="M12 19c1.2 1 2.7 1.5 4 1.5s2.8-.5 4-1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M6 16H4M28 16h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
@@ -159,22 +132,16 @@ function DashboardCard({
 }
 
 export default function DashboardPage() {
-  const [assistantOpen, setAssistantOpen] = useState(true);
   const totalStudents = 248;
   const totalSponsors = 57;
   const totalContribution = '₹12,45,000';
-  const topCardStyle = assistantOpen ? { gridColumn: 'span 3', gridRow: '1' } : { gridColumn: 'span 4', gridRow: '1' };
-  const sponsorshipStyle = assistantOpen ? { gridColumn: 'span 3', gridRow: '2' } : { gridColumn: 'span 4', gridRow: '2' };
-  const growthStyle = assistantOpen ? { gridColumn: 'span 6', gridRow: '2' } : { gridColumn: 'span 8', gridRow: '2' };
-  const lowerCardStyle = assistantOpen ? { gridColumn: 'span 3', gridRow: '3' } : { gridColumn: 'span 4', gridRow: '3' };
-  const assistantStyle = assistantOpen ? { gridColumn: '10 / span 3', gridRow: '1 / span 3' } : undefined;
 
   const chartBars = useMemo(() => yearWise, []);
 
   return (
     <div className="sahoDashboard">
       <div className="dashboardGrid">
-        <DashboardCard className="statsStudents" style={topCardStyle}>
+        <DashboardCard className="statsStudents">
           <div className="cardTopRow">
             <div className="smallIcon purpleBg"><StudentIcon /></div>
             <div style={{ flex: 1 }}>
@@ -200,7 +167,7 @@ export default function DashboardPage() {
           </div>
         </DashboardCard>
 
-        <DashboardCard className="statsSponsors" style={topCardStyle}>
+        <DashboardCard className="statsSponsors">
           <div className="cardTopRow">
             <div className="smallIcon greenBg"><SponsorsIcon /></div>
             <div style={{ flex: 1 }}>
@@ -213,7 +180,7 @@ export default function DashboardPage() {
           <div className="metricAmount">{totalContribution}</div>
         </DashboardCard>
 
-        <DashboardCard className="statsCategory" style={topCardStyle}>
+        <DashboardCard className="statsCategory">
           <p className="dashCardTitle">Student Category</p>
           <div className="donutWrap" style={{ marginTop: 14 }}>
             <DonutChart slices={studentCategory} />
@@ -236,45 +203,7 @@ export default function DashboardPage() {
           </div>
         </DashboardCard>
 
-        {assistantOpen ? (
-          <DashboardCard className="assistantDock" style={assistantStyle}>
-            <div className="assistantHeader">
-              <div className="assistantTitle">
-                <span className="aiBadge"><AiIcon /></span>
-                <span>SaHo AI Assistant</span>
-              </div>
-              <button type="button" className="assistantCollapse" aria-label="Minimize assistant" onClick={() => setAssistantOpen(false)}>
-                –
-              </button>
-            </div>
-            <div className="assistantMessage">
-              Hello Admin! 👋<br />
-              How can I help you today?
-            </div>
-            <div className="assistantActions">
-              <button className="assistantAction" type="button"><AiIcon className="mini" />Show orphan students</button>
-              <button className="assistantAction" type="button"><AiIcon className="mini" />Students with low attendance</button>
-              <button className="assistantAction" type="button"><AiIcon className="mini" />Upcoming events</button>
-              <button className="assistantAction" type="button"><AiIcon className="mini" />Monthly sponsorship report</button>
-            </div>
-            <div className="assistantComposer">
-              <div className="assistantInput">
-                <input type="text" placeholder="Ask anything..." aria-label="Ask anything" />
-                <button type="button" aria-label="Send message"><ArrowUpRight /></button>
-              </div>
-              <p className="assistantNote">SaHo AI can make mistakes. Please verify important data.</p>
-            </div>
-          </DashboardCard>
-        ) : (
-          <div className="assistantFloating">
-            <div className="assistantBubbleLabel">SaHo AI Assistant</div>
-            <button type="button" className="assistantBubble" aria-label="Open assistant" onClick={() => setAssistantOpen(true)}>
-              <AiIcon />
-            </button>
-          </div>
-        )}
-
-        <DashboardCard className="sponsorship" style={sponsorshipStyle}>
+        <DashboardCard className="sponsorship">
           <p className="dashCardTitle">Sponsorship Status</p>
           <div className="donutWrap" style={{ marginTop: 20 }}>
             <DonutChart slices={sponsorshipStatus} />
@@ -297,7 +226,7 @@ export default function DashboardPage() {
           </div>
         </DashboardCard>
 
-        <DashboardCard className="growth" style={growthStyle}>
+        <DashboardCard className="growth">
           <div className="chartHead">
             <div>
               <p className="dashCardTitle">Year Wise Students &amp; Sponsors</p>
@@ -329,7 +258,7 @@ export default function DashboardPage() {
           </div>
         </DashboardCard>
 
-        <DashboardCard className="events" style={lowerCardStyle}>
+        <DashboardCard className="events">
           <div className="listCard">
             <div className="listHeader">
               <p className="dashCardTitle" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -354,7 +283,7 @@ export default function DashboardPage() {
           </div>
         </DashboardCard>
 
-        <DashboardCard className="studentsRecent" style={lowerCardStyle}>
+        <DashboardCard className="studentsRecent">
           <div className="listCard">
             <div className="listHeader">
               <p className="dashCardTitle" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -376,7 +305,7 @@ export default function DashboardPage() {
           </div>
         </DashboardCard>
 
-        <DashboardCard className="sponsorsRecent" style={lowerCardStyle}>
+        <DashboardCard className="sponsorsRecent">
           <div className="listCard">
             <div className="listHeader">
               <p className="dashCardTitle" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -403,9 +332,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-
-
-
-
-
