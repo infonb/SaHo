@@ -1,0 +1,58 @@
+.rowFlex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 520px) {
+  .rowFlex {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .actions {
+    width: 100%;
+  }
+
+  .actions .btn {
+    flex: 1;
+  }
+
+  .pageHeader .actions {
+    justify-content: flex-start;
+  }
+
+  .statGrid {
+    gap: 10px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.statGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.studentProfileModal .formGrid {
+  gap: 10px;
+}
+

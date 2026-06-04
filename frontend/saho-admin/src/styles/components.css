@@ -3765,9 +3765,6 @@ svg {
   color: #6b778c;
 }
 
-.actions {
-  gap: 8px;
-}
 
 .btn {
   border-radius: 10px;
@@ -3844,10 +3841,6 @@ svg {
   height: 50px;
 }
 
-.statGrid {
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
-}
 
 .statCard {
   min-height: 92px;
