@@ -6765,7 +6765,7 @@ td {
 }
 
 .student-table-section td {
-  padding: 12px 12px;
+  padding: 6px 12px !important;
   color: #475569;
   font-size: 13px;
   font-weight: 500;
@@ -7239,10 +7239,6 @@ td {
   border-top-color: #e2e8f0;
 }
 
-.student-table-section .tableWrap tbody tr.studentTableRow > td{
-  padding-top:14px;
-  padding-bottom:14px;
-}
 
 .student-table-section .tableWrap tbody tr.studentTableRow.isSelected > th {
   background-color: inherit;
