@@ -27,6 +27,21 @@ public interface StudentService {
             String sortDirection
     );
 
+    byte[] exportStudentsCsv(
+            String search,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId,
+            String sortColumn,
+            String sortDirection,
+            String studentIdsCsv
+    );
+
     StudentProfileResponseDto getStudentById(Integer studentId);
 
     StudentSiblingSearchResponseDto getStudentByAadhaarNumber(String aadhaarNumber);

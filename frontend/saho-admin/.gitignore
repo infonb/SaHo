@@ -4,3 +4,4 @@ dist
 .codex
 .env
 .DS_Store
+*.log

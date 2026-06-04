@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deactivateStudents, getStudents } from '../../api/studentApi';
+import { deactivateStudents, exportStudentsCsv, getStudents } from '../../api/studentApi';
 import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
 import { getSponsorById } from '../../api/sponsorApi';
@@ -17,21 +17,37 @@ import Modal from '../../components/common/Modal';
 const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', sponsor_status: '', is_active: '' };
 type FilterOption = { value: string; label: string };
 
-const csvValues = (value: string) => value.split(',').map(v => v.trim()).filter(Boolean);
+const csvValues = (value: string) =>
+  value
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
 const toggleCsvValue = (value: string, next: string) => {
   const values = csvValues(value);
-  return values.includes(next) ? values.filter(v => v !== next).join(',') : [...values, next].join(',');
+  return values.includes(next)
+    ? values.filter((v) => v !== next).join(",")
+    : [...values, next].join(",");
+};
+const truncateText = (value?: string | null, maxLength = 15) => {
+  const text = value?.trim() || 'N/A';
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength)}...`;
 };
 const orphanStatusLabel = (value?: string | null) => value === '3' ? 'Orphan' : value === '2' ? 'Semi Orphan' : value || 'N/A';
 const orphanStatusClass = (value?: string | null) => {
   const label = orphanStatusLabel(value).toLowerCase();
-  return label.includes('orphan') && !label.includes('semi') ? 'orphan' : label.includes('semi') || label.includes('single') ? 'semi' : 'default';
+  return label.includes("orphan") && !label.includes("semi")
+    ? "orphan"
+    : label.includes("semi") || label.includes("single")
+      ? "semi"
+      : "default";
 };
 const getSponsorDisplayName = (student: StudentView) => student.sponsorName ?? null;
 
 export default function StudentListPage() {
   const [students, setStudents] = useState<StudentView[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -49,31 +65,35 @@ export default function StudentListPage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [singleDelete, setSingleDelete] = useState<number | null>(null);
   const [sponsorOpen, setSponsorOpen] = useState(false);
-  const [sponsorDetails, setSponsorDetails] = useState<SponsorView | null>(null);
+  const [sponsorDetails, setSponsorDetails] = useState<SponsorView | null>(
+    null,
+  );
   const [openFilter, setOpenFilter] = useState<string | null>(null);
-  const [sortColumn, setSortColumn] = useState('student_id');
-  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC' | null>(null);
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
 
   const totalStudents = total;
-  const totalBoys = students.filter(s => s.gender === 'Male').length;
-  const totalGirls = students.filter(s => s.gender === 'Female').length;
-  const totalSponsored = students.filter(s => s.sponsor_id).length;
-  const totalOrphans = students.filter(s => s.orphan_status === '3').length;
+  const totalBoys = students.filter((s) => s.gender === "Male").length;
+  const totalGirls = students.filter((s) => s.gender === "Female").length;
+  const totalSponsored = students.filter((s) => s.sponsor_id).length;
+  const totalOrphans = students.filter((s) => s.orphan_status === "3").length;
 
   const load = async (nextPage = page, nextPageSize = pageSize) => {
     const scrollY = window.scrollY;
-    setLoading(true);
+    const hasRows = students.length > 0;
+    setLoading(!hasRows);
+    setFetching(hasRows);
     setError(null);
     try {
       const data = await getStudents({
         pageNumber: nextPage,
         pageSize: nextPageSize,
         filters: applied,
-        sortColumn,
-        sortDirection,
+        sortColumn: sortColumn ?? undefined,
+        sortDirection: sortDirection ?? undefined,
       });
       setStudents(data.students);
       setTotal(data.total);
@@ -81,9 +101,10 @@ export default function StudentListPage() {
       setStudents([]);
       setTotal(0);
       setChecked([]);
-      setError('Unable to load students from the database.');
+      setError("Unable to load students from the database.");
     } finally {
       setLoading(false);
+      setFetching(false);
       requestAnimationFrame(() => {
         window.scrollTo({ top: scrollY, behavior: 'auto' });
       });
@@ -92,12 +113,18 @@ export default function StudentListPage() {
 
   useEffect(() => {
     load(page, pageSize);
-  }, [page, pageSize, applied]);
+  }, [page, pageSize, applied, sortColumn, sortDirection]);
 
   useEffect(() => {
     let mounted = true;
-    getStates().then(data => { if (mounted) setStates(data); }).catch(() => {});
-    return () => { mounted = false; };
+    getStates()
+      .then((data) => {
+        if (mounted) setStates(data);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -106,8 +133,16 @@ export default function StudentListPage() {
       return;
     }
     const ids = csvValues(pending.st_id).map(Number).filter(Boolean);
-    Promise.all(ids.map(id => getDistricts(id)))
-      .then(results => setDistricts(Array.from(new Map(results.flat().map(d => [d.distId ?? d.dist_id, d])).values())))
+    Promise.all(ids.map((id) => getDistricts(id)))
+      .then((results) =>
+        setDistricts(
+          Array.from(
+            new Map(
+              results.flat().map((d) => [d.distId ?? d.dist_id, d]),
+            ).values(),
+          ),
+        ),
+      )
       .catch(() => setDistricts([]));
   }, [pending.st_id]);
 
@@ -117,8 +152,16 @@ export default function StudentListPage() {
       return;
     }
     const ids = csvValues(pending.dist_id).map(Number).filter(Boolean);
-    Promise.all(ids.map(id => getMandals(id)))
-      .then(results => setMandals(Array.from(new Map(results.flat().map(m => [m.mndlId ?? m.mndl_id, m])).values())))
+    Promise.all(ids.map((id) => getMandals(id)))
+      .then((results) =>
+        setMandals(
+          Array.from(
+            new Map(
+              results.flat().map((m) => [m.mndlId ?? m.mndl_id, m]),
+            ).values(),
+          ),
+        ),
+      )
       .catch(() => setMandals([]));
   }, [pending.dist_id]);
 
@@ -128,8 +171,16 @@ export default function StudentListPage() {
       return;
     }
     const ids = csvValues(pending.mndl_id).map(Number).filter(Boolean);
-    Promise.all(ids.map(id => getVillages(id)))
-      .then(results => setVillages(Array.from(new Map(results.flat().map(v => [v.vilId ?? v.vil_id, v])).values())))
+    Promise.all(ids.map((id) => getVillages(id)))
+      .then((results) =>
+        setVillages(
+          Array.from(
+            new Map(
+              results.flat().map((v) => [v.vilId ?? v.vil_id, v]),
+            ).values(),
+          ),
+        ),
+      )
       .catch(() => setVillages([]));
   }, [pending.mndl_id]);
 
@@ -139,8 +190,16 @@ export default function StudentListPage() {
       return;
     }
     const ids = csvValues(pending.vil_id).map(Number).filter(Boolean);
-    Promise.all(ids.map(id => getSchools(id)))
-      .then(results => setSchools(Array.from(new Map(results.flat().map(s => [s.schId ?? s.sch_id, s])).values())))
+    Promise.all(ids.map((id) => getSchools(id)))
+      .then((results) =>
+        setSchools(
+          Array.from(
+            new Map(
+              results.flat().map((s) => [s.schId ?? s.sch_id, s]),
+            ).values(),
+          ),
+        ),
+      )
       .catch(() => setSchools([]));
   }, [pending.vil_id]);
 
@@ -167,24 +226,33 @@ export default function StudentListPage() {
   const orphanOptions = [{ value: '3', label: 'Orphan' }, { value: '2', label: 'Single Parent' }];
   const pageIds = students.map(s => s.student_id);
   const hasSelection = checked.length > 0;
-  const allPageChecked = pageIds.length > 0 && pageIds.every(id => checked.includes(id));
-  const toggle = (id: number) => setChecked(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
-  const togglePage = () => setChecked(ids => allPageChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]);
+  const allPageChecked =
+    pageIds.length > 0 && pageIds.every((id) => checked.includes(id));
+  const toggle = (id: number) =>
+    setChecked((ids) =>
+      ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+    );
+  const togglePage = () =>
+    setChecked((ids) =>
+      allPageChecked
+        ? ids.filter((id) => !pageIds.includes(id))
+        : [...new Set([...ids, ...pageIds])],
+    );
 
   const confirmBulkDelete = async () => {
-    await deactivateStudents(checked, user?.username ?? 'admin');
+    await deactivateStudents(checked, user?.username ?? "admin");
     const removedCount = checked.length;
     setChecked([]);
     setBulkOpen(false);
-    toast(`${removedCount} students removed.`, 'success');
+    toast(`${removedCount} students removed.`, "success");
     load(page, pageSize);
   };
 
   const confirmSingleDelete = async () => {
     if (!singleDelete) return;
-    await deactivateStudents([singleDelete], user?.username ?? 'admin');
+    await deactivateStudents([singleDelete], user?.username ?? "admin");
     setSingleDelete(null);
-    toast('Student removed.', 'success');
+    toast("Student removed.", "success");
     load(page, pageSize);
   };
 
@@ -195,17 +263,38 @@ export default function StudentListPage() {
   };
 
   const handleSort = (column: string) => {
+    setPage(1);
     if (sortColumn === column) {
-      setSortDirection(prev => (prev === 'ASC' ? 'DESC' : 'ASC'));
+      if (sortDirection === null) {
+        setSortDirection('ASC');
+      } else if (sortDirection === 'ASC') {
+        setSortDirection('DESC');
+      } else {
+        setSortColumn(null);
+        setSortDirection(null);
+      }
     } else {
       setSortColumn(column);
       setSortDirection('ASC');
     }
+    setPage(1);
   };
 
-  const sortArrow = (column: string) => {
-    if (sortColumn !== column) return '↕';
-    return sortDirection === 'ASC' ? '↑' : '↓';
+  const handleExportCsv = async () => {
+    const blob = await exportStudentsCsv({
+      filters: applied,
+      sortColumn: sortColumn ?? undefined,
+      sortDirection: sortDirection ?? undefined,
+      studentIds: checked.length ? checked : undefined,
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'students.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   };
 
   const sortHeader = (label: string, column: string) => (
@@ -217,76 +306,48 @@ export default function StudentListPage() {
       aria-label={`Sort by ${label}`}
     >
       <span>{label}</span>
-      <span className={`sortArrow${sortColumn === column ? ' active' : ''}`} aria-hidden>{sortArrow(column)}</span>
+      <span
+        className={`sortArrow${
+          sortColumn === column && sortDirection !== null
+            ? sortDirection === 'ASC'
+              ? ' asc'
+              : ' desc'
+            : ' inactive'
+        }`}
+        aria-hidden
+      />
     </button>
   );
 
-  const sortedStudents = useMemo(() => {
-    const directionFactor = sortDirection === 'ASC' ? 1 : -1;
-    const copy = [...students];
-    const compareText = (left: string | number | null | undefined, right: string | number | null | undefined) =>
-      String(left ?? '').localeCompare(String(right ?? ''), undefined, { numeric: true, sensitivity: 'base' });
-    const compareNumber = (left: unknown, right: unknown) => {
-      const leftNumber = Number(left);
-      const rightNumber = Number(right);
-      if (Number.isNaN(leftNumber) && Number.isNaN(rightNumber)) return 0;
-      if (Number.isNaN(leftNumber)) return 1;
-      if (Number.isNaN(rightNumber)) return -1;
-      return leftNumber - rightNumber;
-    };
-    const ageFromDob = (dobValue: string) => {
-      const dob = new Date(dobValue);
-      if (Number.isNaN(dob.getTime())) return -1;
-      const today = new Date();
-      let age = today.getFullYear() - dob.getFullYear();
-      const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
-      if (!hasBirthdayPassed) age -= 1;
-      return age;
-    };
-
-    copy.sort((left, right) => {
-      let result = 0;
-      switch (sortColumn) {
-        case 'student_id':
-          result = compareNumber(left.student_id, right.student_id);
-          break;
-        case 'student_name':
-          result = compareText(left.full_name, right.full_name);
-          break;
-        case 'age':
-          result = compareNumber(ageFromDob(left.dob), ageFromDob(right.dob));
-          break;
-        case 'class_name':
-          result = compareText(left.class_id, right.class_id);
-          break;
-        case 'orphan_status':
-          result = compareText(orphanStatusLabel(left.orphan_status), orphanStatusLabel(right.orphan_status));
-          break;
-        default:
-          result = compareNumber(left.student_id, right.student_id);
-      }
-      return result * directionFactor;
-    });
-
-    return copy;
-  }, [students, sortColumn, sortDirection]);
-
-  const rows = sortedStudents.map(s => {
+  const rows = students.map(s => {
     const dob = new Date(s.dob);
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
-    const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+    const hasBirthdayPassed =
+      today.getMonth() > dob.getMonth() ||
+      (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
     if (!hasBirthdayPassed) age -= 1;
     return [
       <div className="idSelectCell">
-        <input aria-label={`Select ${s.full_name}`} type="checkbox" checked={checked.includes(s.student_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.student_id)} />
+        <input
+          aria-label={`Select ${s.full_name}`}
+          type="checkbox"
+          checked={checked.includes(s.student_id)}
+          onClick={(e) => e.stopPropagation()}
+          onChange={() => toggle(s.student_id)}
+        />
         <span className="studentIdCell">{s.student_id}</span>
       </div>,
       <div className="rowFlex studentCell">
         <Avatar name={s.full_name} size="md" />
         <div className="tableCellStack studentCellStack">
-          <button type="button" className="cellTopText studentNameCell" onClick={() => setSelected(s)}>
-            {s.full_name}
+          <button
+            type="button"
+            className="cellTopText studentNameCell"
+            onClick={() => setSelected(s)}
+            title={s.full_name}
+          >
+            {truncateText(s.full_name, 15)}
           </button>
           <div className="cellSubText">{s.gender}</div>
         </div>
@@ -294,23 +355,37 @@ export default function StudentListPage() {
       <div>{age}</div>,
       <div>{s.class_id}</div>,
       <div className="tableCellStack">
-        <div className="cellTopText">{s.sch_name || 'N/A'}</div>
-        <div className="cellSubText">
+        <div className="cellTopText" title={s.sch_name || 'N/A'}>{truncateText(s.sch_name, 18)}</div>
+        <div className="cellSubText" title={[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '-'}>
           <span className="cellIconInline" aria-hidden>
             <svg viewBox="0 0 24 24" fill="none">
-              <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 10.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M12 10.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </span>
           {[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '-'}
         </div>
       </div>,
       <div className="tableCellStack studentCellStack guardianCell">
-        <div className="cellTopText">{s.guardian_full_name || 'N/A'}</div>
-        <div className="cellSubText">{s.guardian_relation_name || 'N/A'}</div>
+        <div className="cellTopText" title={s.guardian_full_name || 'N/A'}>{truncateText(s.guardian_full_name, 15)}</div>
+        <div className="cellSubText" title={s.guardian_relation_name || 'N/A'}>{truncateText(s.guardian_relation_name, 15)}</div>
       </div>,
       <div className="orphanStatusCell">
-        <span className={`orphanStatusBadge ${orphanStatusClass(s.orphan_status)}`}>
+        <span
+          className={`orphanStatusBadge ${orphanStatusClass(s.orphan_status)}`}
+        >
           {orphanStatusLabel(s.orphan_status)}
         </span>
       </div>,
@@ -333,23 +408,93 @@ export default function StudentListPage() {
           </div>
         )}
       </div>,
-      <div className="actions student-actions" onClick={e => e.stopPropagation()}>
-        <Button size="sm" variant="outline" className="iconBtn" onClick={() => nav(`/students/edit/${s.student_id}`)} aria-label="Edit student">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-            <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <div
+        className="actions student-actions"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Button
+          size="sm"
+          variant="outline"
+          className="iconBtn"
+          onClick={() => nav(`/students/edit/${s.student_id}`)}
+          aria-label="Edit student"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
+            <path
+              d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M14 4l6 6"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </Button>
-        <Button size="sm" variant="outline" className="iconBtn deleteActionButton" onClick={(e) => { e.stopPropagation(); setSingleDelete(s.student_id); }} aria-label={`Delete ${s.full_name}`}>
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-            <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <Button
+          size="sm"
+          variant="outline"
+          className="iconBtn deleteActionButton"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSingleDelete(s.student_id);
+          }}
+          aria-label={`Delete ${s.full_name}`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
+            <path
+              d="M3 6h18"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M10 11v6"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M14 11v6"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </Button>
-      </div>
+      </div>,
     ];
   });
 
@@ -358,11 +503,22 @@ export default function StudentListPage() {
       <div className="student-list-header">
         <div className="student-list-title">
           <h1>Student management</h1>
-        
         </div>
         <div className="student-list-actions">
-          <Button className="add-student-btn" onClick={() => nav('/students/add')}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <Button
+            className="add-student-btn"
+            onClick={() => nav("/students/add")}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
@@ -379,7 +535,14 @@ export default function StudentListPage() {
             <div className="stat-card-note">All enrolled</div>
           </div>
           <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -393,11 +556,32 @@ export default function StudentListPage() {
             <div className="stat-card-value">{totalBoys}</div>
             <div className="stat-card-note">Male students</div>
           </div>
-          <div className="stat-card-icon genderIcon maleIcon" aria-hidden="true">
+          <div
+            className="stat-card-icon genderIcon maleIcon"
+            aria-hidden="true"
+          >
             <svg viewBox="0 0 24 24" fill="none">
-              <circle cx="10" cy="14" r="5.5" stroke="currentColor" strokeWidth="1.9"></circle>
-              <path d="M13.8 10.2L20 4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"></path>
-              <path d="M16 4H20V8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"></path>
+              <circle
+                cx="10"
+                cy="14"
+                r="5.5"
+                stroke="currentColor"
+                strokeWidth="1.9"
+              ></circle>
+              <path
+                d="M13.8 10.2L20 4"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              ></path>
+              <path
+                d="M16 4H20V8"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              ></path>
             </svg>
           </div>
         </div>
@@ -407,11 +591,30 @@ export default function StudentListPage() {
             <div className="stat-card-value">{totalGirls}</div>
             <div className="stat-card-note">Female students</div>
           </div>
-          <div className="stat-card-icon genderIcon femaleIcon" aria-hidden="true">
+          <div
+            className="stat-card-icon genderIcon femaleIcon"
+            aria-hidden="true"
+          >
             <svg viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="9.5" r="5.5" stroke="currentColor" strokeWidth="1.9"></circle>
-              <path d="M12 15v5.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"></path>
-              <path d="M9.2 18H14.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"></path>
+              <circle
+                cx="12"
+                cy="9.5"
+                r="5.5"
+                stroke="currentColor"
+                strokeWidth="1.9"
+              ></circle>
+              <path
+                d="M12 15v5.5"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+              ></path>
+              <path
+                d="M9.2 18H14.8"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+              ></path>
             </svg>
           </div>
         </div>
@@ -423,10 +626,32 @@ export default function StudentListPage() {
           </div>
           <div className="stat-card-icon sponsoredIcon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
-              <path d="M12 20.4C8.4 18.6 4.7 15.1 4.7 10.8c0-2.8 2-4.9 4.7-4.9 1.5 0 2.9.7 3.7 1.9.8-1.2 2.2-1.9 3.7-1.9 2.7 0 4.7 2.1 4.7 4.9 0 4.3-3.7 7.8-8.7 9.6Z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M5 14.3c1.1-1.1 2.2-1.9 3.7-2.4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-              <path d="M19 14.3c-1.1-1.1-2.2-1.9-3.7-2.4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-              <path d="M12 10.9l1.2-1.2c1-1 1.8-1.6 2.8-1.6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M12 20.4C8.4 18.6 4.7 15.1 4.7 10.8c0-2.8 2-4.9 4.7-4.9 1.5 0 2.9.7 3.7 1.9.8-1.2 2.2-1.9 3.7-1.9 2.7 0 4.7 2.1 4.7 4.9 0 4.3-3.7 7.8-8.7 9.6Z"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M5 14.3c1.1-1.1 2.2-1.9 3.7-2.4"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+              />
+              <path
+                d="M19 14.3c-1.1-1.1-2.2-1.9-3.7-2.4"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+              />
+              <path
+                d="M12 10.9l1.2-1.2c1-1 1.8-1.6 2.8-1.6"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
         </div>
@@ -437,7 +662,14 @@ export default function StudentListPage() {
             <div className="stat-card-note">Full orphans</div>
           </div>
           <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M3 12h18M3 6h18M3 18h18"></path>
               <circle cx="17" cy="12" r="3"></circle>
               <circle cx="7" cy="12" r="3"></circle>
@@ -450,7 +682,15 @@ export default function StudentListPage() {
         <div className="filters-container">
           <div className="filters-row filters-row-1">
             <div className="filter-search-wrapper">
-              <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                className="search-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="M21 21l-4.35-4.35"></path>
               </svg>
@@ -458,66 +698,207 @@ export default function StudentListPage() {
                 className="filter-search-input"
                 placeholder="Search students by name, ID..."
                 value={pending.search}
-                onChange={e => setPending({ ...pending, search: e.target.value })}
+                onChange={(e) =>
+                  setPending({ ...pending, search: e.target.value })
+                }
               />
             </div>
             <div className="filter-group">
-              <MultiSelectFilter filterKey="state" label="All States" value={pending.st_id} options={stateOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, st_id: value, dist_id: '', mndl_id: '', vil_id: '', sch_id: '' })} />
+              <MultiSelectFilter
+                filterKey="state"
+                label="All States"
+                value={pending.st_id}
+                options={stateOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) =>
+                  setPending({
+                    ...pending,
+                    st_id: value,
+                    dist_id: "",
+                    mndl_id: "",
+                    vil_id: "",
+                    sch_id: "",
+                  })
+                }
+              />
             </div>
             <div className="filter-group">
-              <MultiSelectFilter filterKey="district" label="All Districts" value={pending.dist_id} options={districtOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, dist_id: value, mndl_id: '', vil_id: '', sch_id: '' })} />
+              <MultiSelectFilter
+                filterKey="district"
+                label="All Districts"
+                value={pending.dist_id}
+                options={districtOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) =>
+                  setPending({
+                    ...pending,
+                    dist_id: value,
+                    mndl_id: "",
+                    vil_id: "",
+                    sch_id: "",
+                  })
+                }
+              />
             </div>
             <div className="filter-group">
-              <MultiSelectFilter filterKey="mandal" label="All Mandals" value={pending.mndl_id} options={mandalOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, mndl_id: value, vil_id: '', sch_id: '' })} />
+              <MultiSelectFilter
+                filterKey="mandal"
+                label="All Mandals"
+                value={pending.mndl_id}
+                options={mandalOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) =>
+                  setPending({
+                    ...pending,
+                    mndl_id: value,
+                    vil_id: "",
+                    sch_id: "",
+                  })
+                }
+              />
             </div>
-            <div className="filter-empty-slot" aria-hidden="true" />
           </div>
           <div className="filters-row filters-row-2">
             <div className="filter-group">
-              <MultiSelectFilter filterKey="village" label="All Villages" value={pending.vil_id} options={villageOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, vil_id: value, sch_id: '' })} />
+              <MultiSelectFilter
+                filterKey="village"
+                label="All Villages"
+                value={pending.vil_id}
+                options={villageOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) =>
+                  setPending({ ...pending, vil_id: value, sch_id: "" })
+                }
+              />
             </div>
             <div className="filter-group">
-              <MultiSelectFilter filterKey="school" label="All Schools" value={pending.sch_id} options={schoolOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, sch_id: value })} />
+              <MultiSelectFilter
+                filterKey="school"
+                label="All Schools"
+                value={pending.sch_id}
+                options={schoolOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) => setPending({ ...pending, sch_id: value })}
+              />
             </div>
             <div className="filter-group">
-              <MultiSelectFilter filterKey="gender" label="All Gender" value={pending.gender} options={genderOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, gender: value })} />
+              <MultiSelectFilter
+                filterKey="gender"
+                label="All Gender"
+                value={pending.gender}
+                options={genderOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) => setPending({ ...pending, gender: value })}
+              />
             </div>
             <div className="filter-group">
-              <MultiSelectFilter filterKey="orphan" label="Orphan Status" value={pending.orphan_status} options={orphanOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, orphan_status: value })} />
+              <MultiSelectFilter
+                filterKey="orphan"
+                label="Orphan Status"
+                value={pending.orphan_status}
+                options={orphanOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) =>
+                  setPending({ ...pending, orphan_status: value })
+                }
+              />
             </div>
             <div className="filter-group">
-              <MultiSelectFilter filterKey="class" label="All Classes" value={pending.class_id} options={classOptions} openFilter={openFilter} setOpenFilter={setOpenFilter} onChange={value => setPending({ ...pending, class_id: value })} />
+              <MultiSelectFilter
+                filterKey="class"
+                label="All Classes"
+                value={pending.class_id}
+                options={classOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) =>
+                  setPending({ ...pending, class_id: value })
+                }
+              />
+            </div>
+            <div className="filter-actions-row">
+              <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); setOpenFilter(null); }}>
+                <span className="filterBtnIcon" aria-hidden>x</span> Clear
+              </button>
+              <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>
+                Go
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"></path>
+                </svg>
+              </button>
             </div>
           </div>
           <div className="filter-actions-group">
-            <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); setOpenFilter(null); }}>
-              <span className="filterBtnIcon" aria-hidden>x</span> Clear
+            <button
+              className="clear-filters-btn"
+              onClick={() => {
+                setPending(defaults);
+                setApplied(defaults);
+                setPage(1);
+                setOpenFilter(null);
+              }}
+            >
+              <span className="filterBtnIcon" aria-hidden>
+                x
+              </span>{" "}
+              Clear
             </button>
-            <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>
+            <button
+              className="go-filter-btn"
+              onClick={() => {
+                setApplied({ ...pending });
+                setPage(1);
+                setOpenFilter(null);
+              }}
+            >
               Go
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
               </svg>
             </button>
           </div>
-      </div>
+        </div>
       </div>
 
-      <div className={`student-table-section studentRecordsPanel ${hasSelection ? 'bulkModeActive' : ''}`}>
+      <div
+        className={`student-table-section studentRecordsPanel ${hasSelection ? "bulkModeActive" : ""}`}
+      >
         <div className="table-header">
           <h3 className="table-title">Student Records <span className="results-count">{total} results</span></h3>
+          {fetching ? <span className="table-updating">Updating...</span> : null}
         </div>
 
-        {error ? <div className="toast error" style={{ position: 'static', marginBottom: 12 }}>{error}</div> : null}
+        {error ? <div className="toast error studentListErrorToast">{error}</div> : null}
 
-        <div className={`bulkToolbarShell ${hasSelection ? 'isActive' : ''}`} aria-hidden={!hasSelection}>
+        <div
+          className={`bulkToolbarShell ${hasSelection ? "isActive" : ""}`}
+          aria-hidden={!hasSelection}
+        >
           <div className="selectHeaderRow studentBulkToolbar">
             <div className="bulkToolbarInfo">
               <span className="bulkSelectAllText">Select all on this page</span>
-              <span className="selected-count">Selected {checked.length} of {total}</span>
+              <span className="selected-count">
+                Selected {checked.length} of {total}
+              </span>
             </div>
             <div className="bulkToolbarActions">
-              <Button size="sm" variant="outline" tabIndex={hasSelection ? 0 : -1}>
+              <Button size="sm" variant="outline" onClick={handleExportCsv}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path d="M12 3v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -533,12 +914,45 @@ export default function StudentListPage() {
                 disabled={!hasSelection}
                 tabIndex={hasSelection ? 0 : -1}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M10 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden
+                >
+                  <path
+                    d="M3 6h18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M10 11v6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M14 11v6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
                 Delete selected
               </Button>
@@ -548,25 +962,38 @@ export default function StudentListPage() {
 
         <DataTable
           loading={loading}
+          loadingRowCount={Math.min(pageSize, 20)}
+          transitionKey={`${page}-${pageSize}-${sortColumn}-${sortDirection}-${JSON.stringify(applied)}-${loading ? "loading" : "loaded"}`}
           columns={[
             { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
-            { key: 'student', label: sortHeader('STUDENT', 'student_name') },
-            { key: 'age', label: sortHeader('AGE', 'age'), width: '72px' },
+            { key: 'student', label: sortHeader('STUDENT', 'student_name'), width: '250px' },
+            { key: 'age', label: sortHeader('AGE', 'age'), width: '92px' },
             { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
-            { key: 'school', label: 'SCHOOL' },
-            { key: 'guardian', label: 'GUARDIAN' },
-            { key: 'orphan', label: sortHeader('STATUS', 'orphan_status') },
-            { key: 'sponsor', label: 'SPONSOR' },
-            { key: 'actions', label: '' }
+            { key: 'school', label: 'SCHOOL', width: '235px' },
+            { key: 'guardian', label: 'GUARDIAN', width: '210px' },
+            { key: 'orphan', label: 'STATUS', width: '150px' },
+            { key: 'sponsor', label: 'SPONSOR', width: '120px' },
+            { key: 'actions', label: '', width: '100px' }
           ]}
           rows={rows}
-          onRowClick={(index) => setSelected(sortedStudents[index] ?? null)}
+          onRowClick={(index) => setSelected(students[index] ?? null)}
           rowClassName={(index) => {
-            const student = sortedStudents[index];
+            const student = students[index];
             return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
           }}
+          footer={
+            <Pagination
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              onChange={setPage}
+              onPageSizeChange={(nextPageSize) => {
+                setPageSize(nextPageSize);
+                setPage(1);
+              }}
+            />
+          }
         />
-        <Pagination total={total} page={page} pageSize={pageSize} onChange={setPage} onPageSizeChange={(nextPageSize) => { setPageSize(nextPageSize); setPage(1); }} />
       </div>
       <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
       <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.sponsorName ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
@@ -580,10 +1007,26 @@ export default function StudentListPage() {
             <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib}</div></div>
             <div style={{ marginTop: 12 }}><strong>Students Sponsored:</strong> <span className="strong">{sponsorDetails.students_count}</span></div>
           </div>
-        </div> : <div>No sponsor information available</div>}
+        ) : (
+          <div>No sponsor information available</div>
+        )}
       </Modal>
-      <ConfirmModal open={singleDelete !== null} onClose={() => setSingleDelete(null)} onConfirm={confirmSingleDelete} title="Delete Student" message="Delete selected student?" />
-      <ConfirmModal open={bulkOpen} onClose={() => setBulkOpen(false)} onConfirm={confirmBulkDelete} title="Delete Selected Students" message={`Delete ${checked.length} selected students?`} />
+
+      <ConfirmModal
+        open={singleDelete !== null}
+        onClose={() => setSingleDelete(null)}
+        onConfirm={confirmSingleDelete}
+        title="Delete Student"
+        message="Delete selected student?"
+      />
+
+      <ConfirmModal
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        onConfirm={confirmBulkDelete}
+        title="Delete Selected Students"
+        message={`Delete ${checked.length} selected students?`}
+      />
     </div>
   );
 }
@@ -595,7 +1038,7 @@ function MultiSelectFilter({
   options,
   openFilter,
   setOpenFilter,
-  onChange
+  onChange,
 }: {
   filterKey: string;
   label: string;
@@ -606,12 +1049,22 @@ function MultiSelectFilter({
   onChange: (value: string) => void;
 }) {
   const selected = csvValues(value);
-  const selectedLabels = options.filter(option => selected.includes(option.value)).map(option => option.label);
-  const summary = selectedLabels.length === 0 ? label : selectedLabels.length === 1 ? selectedLabels[0] : `${selectedLabels.length} selected`;
+  const selectedLabels = options
+    .filter((option) => selected.includes(option.value))
+    .map((option) => option.label);
+  const summary =
+    selectedLabels.length === 0
+      ? label
+      : selectedLabels.length === 1
+        ? selectedLabels[0]
+        : `${selectedLabels.length} selected`;
   const isOpen = openFilter === filterKey;
 
   return (
-    <details className={`multiSelectFilter${selected.length ? ' hasValue' : ''}`} open={isOpen}>
+    <details
+      className={`multiSelectFilter${selected.length ? " hasValue" : ""}`}
+      open={isOpen}
+    >
       <summary
         className="multiSelectTrigger"
         onClick={(event) => {
@@ -621,28 +1074,43 @@ function MultiSelectFilter({
       >
         <span>{summary}</span>
         <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M6 9l6 6 6-6"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </summary>
       <div className="multiSelectMenu">
         <div className="multiSelectMenuHead">
           <span>{label}</span>
-          {selected.length ? <button type="button" onClick={() => onChange('')}>Clear</button> : null}
+          {selected.length ? (
+            <button type="button" onClick={() => onChange("")}>
+              Clear
+            </button>
+          ) : null}
         </div>
         <div className="multiSelectOptions">
-          {options.length ? options.map(option => (
-            <label className="multiSelectOption" key={option.value}>
-              <input
-                type="checkbox"
-                checked={selected.includes(option.value)}
-                onChange={() => onChange(toggleCsvValue(value, option.value))}
-              />
-              <span>{option.label}</span>
-            </label>
-          )) : <div className="multiSelectEmpty">No options available</div>}
+          {options.length ? (
+            options.map((option) => (
+              <label className="multiSelectOption" key={option.value}>
+                <input
+                  type="checkbox"
+                  checked={selected.includes(option.value)}
+                  onChange={() => onChange(toggleCsvValue(value, option.value))}
+                />
+                <span>{option.label}</span>
+              </label>
+            ))
+          ) : (
+            <div className="multiSelectEmpty">No options available</div>
+          )}
         </div>
       </div>
     </details>
   );
 }
+
 
