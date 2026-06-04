@@ -106,7 +106,7 @@ export default function StudentListPage() {
       setLoading(false);
       setFetching(false);
       requestAnimationFrame(() => {
-        window.scrollTo({ top: scrollY, behavior: 'auto' });
+        window.scrollTo({ top: scrollY, behavior: "auto" });
       });
     }
   };
@@ -206,25 +206,52 @@ export default function StudentListPage() {
   useEffect(() => {
     let mounted = true;
     getClasses()
-      .then(data => {
+      .then((data) => {
         if (mounted) setClasses(data);
       })
       .catch(() => {
         if (mounted) setClasses([]);
       });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const filteredStates = states;
-  const stateOptions = filteredStates.map(s => ({ value: String(s.stId ?? s.st_id), label: s.stName ?? s.st_name }));
-  const districtOptions = districts.map(d => ({ value: String(d.distId ?? d.dist_id), label: d.distName ?? d.dist_name }));
-  const mandalOptions = mandals.map(m => ({ value: String(m.mndlId ?? m.mndl_id), label: m.mndlName ?? m.mndl_name }));
-  const villageOptions = villages.map(v => ({ value: String(v.vilId ?? v.vil_id), label: v.vilName ?? v.vil_name }));
-  const schoolOptions = schools.map(s => ({ value: String(s.schId ?? s.sch_id), label: s.schName ?? s.sch_name }));
-  const classOptions = classes.map(c => ({ value: String(c.classId ?? c.class_id), label: c.className ?? c.class_name }));
-  const genderOptions = [{ value: '1', label: 'Male' }, { value: '2', label: 'Female' }, { value: '3', label: 'Other' }];
-  const orphanOptions = [{ value: '3', label: 'Orphan' }, { value: '2', label: 'Single Parent' }];
-  const pageIds = students.map(s => s.student_id);
+  const stateOptions = filteredStates.map((s) => ({
+    value: String(s.stId ?? s.st_id),
+    label: s.stName ?? s.st_name,
+  }));
+  const districtOptions = districts.map((d) => ({
+    value: String(d.distId ?? d.dist_id),
+    label: d.distName ?? d.dist_name,
+  }));
+  const mandalOptions = mandals.map((m) => ({
+    value: String(m.mndlId ?? m.mndl_id),
+    label: m.mndlName ?? m.mndl_name,
+  }));
+  const villageOptions = villages.map((v) => ({
+    value: String(v.vilId ?? v.vil_id),
+    label: v.vilName ?? v.vil_name,
+  }));
+  const schoolOptions = schools.map((s) => ({
+    value: String(s.schId ?? s.sch_id),
+    label: s.schName ?? s.sch_name,
+  }));
+  const classOptions = classes.map((c) => ({
+    value: String(c.classId ?? c.class_id),
+    label: c.className ?? c.class_name,
+  }));
+  const genderOptions = [
+    { value: "1", label: "Male" },
+    { value: "2", label: "Female" },
+    { value: "3", label: "Other" },
+  ];
+  const orphanOptions = [
+    { value: "3", label: "Orphan" },
+    { value: "2", label: "Single Parent" },
+  ];
+  const pageIds = students.map((s) => s.student_id);
   const hasSelection = checked.length > 0;
   const allPageChecked =
     pageIds.length > 0 && pageIds.every((id) => checked.includes(id));
@@ -275,7 +302,7 @@ export default function StudentListPage() {
       }
     } else {
       setSortColumn(column);
-      setSortDirection('ASC');
+      setSortDirection("ASC");
     }
     setPage(1);
   };
@@ -375,7 +402,7 @@ export default function StudentListPage() {
               />
             </svg>
           </span>
-          {[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '-'}
+          {[s.vil_name, s.dist_name].filter(Boolean).join(", ") || "-"}
         </div>
       </div>,
       <div className="tableCellStack studentCellStack guardianCell">
@@ -502,7 +529,7 @@ export default function StudentListPage() {
     <div className="student-list-page">
       <div className="student-list-header">
         <div className="student-list-title">
-          <h1>Student management</h1>
+          <h1>Student Management</h1>
         </div>
         <div className="student-list-actions">
           <Button
@@ -679,6 +706,7 @@ export default function StudentListPage() {
       </div>
 
       <div className="student-filters-section">
+        <p className="filters-name-tag">Filters</p>
         <div className="filters-container">
           <div className="filters-row filters-row-1">
             <div className="filter-search-wrapper">

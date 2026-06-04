@@ -34,10 +34,10 @@ const inferStatus = (eventDate: string): EventStatus => {
 // Filter state interface
 interface EventFilters {
   stateId: string;
-  districtId: string;
-  mandalId: string;
-  villageId: string;
-  status: string;
+  districtId?: string;
+  mandalId?: string;
+  villageId?: string;
+  status?: string;
 }
 
 // Status badge component

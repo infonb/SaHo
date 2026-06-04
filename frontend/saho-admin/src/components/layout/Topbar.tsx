@@ -5,6 +5,7 @@ import Badge from '../common/Badge';
 import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
 import sahoImg from '../../assets/saho_Img.png';
+import logo from '../../assets/logo.png';
 
 export const LeafLogo = () => (
   <svg className="brandMark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -56,8 +57,10 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
         </button>
         <div className="topbarBrand">
           <button type="button" className="brandLogoButton" aria-label="Go to dashboard" onClick={goDashboard}>
-            <img className="brandLogo" src={sahoImg} alt="SaHo" />
+            <img className="brandLogo" src={logo} alt="SaHo" />
           </button>
+        </div>
+        <div className="divider">
         </div>
         <div className="topbarTitle">Admin Dashboard</div>
       </div>

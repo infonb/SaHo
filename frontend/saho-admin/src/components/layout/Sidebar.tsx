@@ -35,9 +35,10 @@ const AdminIcon = () => (
 );
 
 const groups = [
-  { title: 'Overview', items: [{ icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' }] },
+  // { title: 'Overview', items: [{ icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' }] },
   {
     items: [
+    { icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' },
       { icon: <StudentsIcon />, label: 'Students', to: '/view-students' },
       { icon: <SponsorsIcon />, label: 'Sponsors', to: '/sponsors' },
       { icon: <RemindersIcon />, label: 'Reminders', to: '/reminders' },

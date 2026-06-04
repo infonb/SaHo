@@ -782,7 +782,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     else if (isEdit) nav(-1);
     else nav('/view-students');
   };
-  const title = isView ? 'View Student' : isEdit ? 'Edit Student' : 'Add Student';
+  const title = isView ? 'View' : isEdit ? 'Edit ' : 'Add ';
   const eyebrow = isView ? '' : isEdit ? '' : '';
 
   return (
@@ -791,7 +791,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         <div className="studentWizardHeaderTop">
           <div className="studentWizardHeaderLeft">
             <div className="studentWizardEyebrow">{eyebrow}</div>
-            <h2>{title}</h2>
+            <h2>{title} Student</h2>
           </div>
           <button type="button" className="studentWizardClose" onClick={cancel} aria-label="Close">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
