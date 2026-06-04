@@ -133,6 +133,8 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 .stName(getOptionalColumn(rs, "st_name"))
                 .siblingId(getOptionalColumn(rs, "sibling_id"))
                 .orphanStatus(getOptionalColumn(rs, "orphan_status"))
+                .sponsorId((Integer) getOptionalObject(rs, "sponsor_id"))
+                .sponsorName(getOptionalColumn(rs, "sponsor_name"))
                 .totalCount((Integer) getOptionalObject(rs, "total_count"))
                 .imageUrl(getOptionalColumn(rs, "image_url"))
                 .createdAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)

@@ -30,7 +30,7 @@ export default function StudentDetailModal({ student, onClose }: { student: Stud
 
   if (!student) return null;
 
-  const sponsorName = sponsor?.sponsor_name ?? student.sponsor_sponsor_name ?? '';
+  const sponsorName = sponsor?.sponsorName ?? student.sponsorName ?? null;
   const hasSponsor = Boolean(student.sponsor_id);
 
   return (
@@ -87,7 +87,7 @@ export default function StudentDetailModal({ student, onClose }: { student: Stud
               { label: 'Caste', value: student.caste, icon: <IconTag /> },
               { label: 'Orphan Status', value: student.orphan_status, icon: <IconShield /> },
               { label: 'Sibling', value: student.sibling_id ? `${student.sibling_student_name || 'Sibling'} ${student.sibling_student_id ? `(${student.sibling_student_id})` : ''}` : 'No', icon: <IconUserCheck /> },
-              ...(hasSponsor ? [{ label: 'Sponsor Name', value: sponsorName || 'Assigned sponsor', icon: <IconSpark /> }] : []),
+              ...(hasSponsor ? [{ label: 'Sponsor Name', value: sponsorName ?? '--', icon: <IconSpark /> }] : []),
             ]}
           />
         ) : null}
@@ -122,7 +122,7 @@ export default function StudentDetailModal({ student, onClose }: { student: Stud
               Sponsor
             </div>
             <div className="studentProfileSponsorGrid">
-              <InfoChip label="Sponsor" value={sponsorName || 'Assigned'} />
+              <InfoChip label="Sponsor" value={sponsorName ?? '--'} />
               <InfoChip label="Sponsor Type" value={student.sponsor_type || sponsor?.type || 'N/A'} />
               <InfoChip label="Contribution" value={sponsor?.contrib || 'N/A'} />
             </div>

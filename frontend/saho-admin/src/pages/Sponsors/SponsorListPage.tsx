@@ -69,16 +69,16 @@ export default function SponsorListPage() {
     const headers = ['Sponsor ID', 'Name', 'Email', 'Phone', 'Type', 'Nationality', 'Contribution', 'Students Sponsored', 'Location'];
     const csvRows = exportRows.map(s => [
       s.sponsor_id,
-      s.full_name,
+      s.sponsorName,
       s.email,
       s.ph_no,
       s.type,
       s.nationality,
-      s.contrib_amt,
+      s.contrib,
       s.students_count,
       s.loc ?? ''
     ]);
-    const escapeCsvValue = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+    const escapeCsvValue = (value: string | number | undefined) => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const csv = [headers, ...csvRows].map(row => row.map(escapeCsvValue).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -90,11 +90,11 @@ export default function SponsorListPage() {
   };
 
   const rows = pager.current.map(s => [
-    <input aria-label={`Select ${s.sponsor_name}`} type="checkbox" checked={checked.includes(s.sponsor_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.sponsor_id)} />,
+    <input aria-label={`Select ${s.sponsorName}`} type="checkbox" checked={checked.includes(s.sponsor_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.sponsor_id)} />,
     <div className="rowFlex">
-      <Avatar name={s.sponsor_name} size="md" />
+      <Avatar name={s.sponsorName} size="md" />
       <div>
-        <button type="button" className="linkButton strong sponsorNameCell" onClick={() => setSelected(s)}>{s.sponsor_name}</button>
+        <button type="button" className="linkButton strong sponsorNameCell" onClick={() => setSelected(s)}>{s.sponsorName}</button>
       </div>
     </div>,
     <Badge variant={s.type === 'Organisation' ? 'organisation' : 'individual'}>{s.type}</Badge>,
@@ -109,7 +109,7 @@ export default function SponsorListPage() {
           <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </Button>
-      <Button size="sm" variant="outline" className="iconBtn deleteActionButton" onClick={(e) => { e.stopPropagation(); setSingleDelete(s.sponsor_id); }} aria-label={`Delete ${s.sponsor_name}`}>
+      <Button size="sm" variant="outline" className="iconBtn deleteActionButton" onClick={(e) => { e.stopPropagation(); setSingleDelete(s.sponsor_id); }} aria-label={`Delete ${s.sponsorName}`}>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
           <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -277,9 +277,9 @@ export default function SponsorListPage() {
               return (
                 <article key={s.sponsor_id} className="sponsorCard">
                   <div className="sponsorCardTop">
-                    <Avatar name={s.sponsor_name} size="lg" />
+                    <Avatar name={s.sponsorName} size="lg" />
                     <div className="sponsorCardIdentity">
-                      <button type="button" className="linkButton sponsorNameCell" onClick={() => setSelected(s)}>{s.sponsor_name}</button>
+                      <button type="button" className="linkButton sponsorNameCell" onClick={() => setSelected(s)}>{s.sponsorName}</button>
                       <div className="sponsorPhone">{s.ph_no || '-'}</div>
                       <div className="sponsorMetaLine">{s.type} - {s.nationality}</div>
                     </div>
@@ -338,7 +338,7 @@ function SponsorModal({
     <Modal
       open={!!sponsor}
       onClose={onClose}
-      title={sponsor.sponsor_name}
+      title={sponsor.sponsorName}
       width={680}
       footer={
         <>
@@ -366,7 +366,7 @@ function SponsorModal({
       >
 
         <Avatar
-          name={sponsor.sponsor_name}
+          name={sponsor.sponsorName}
           size="lg"
         />
 
@@ -378,7 +378,7 @@ function SponsorModal({
               fontFamily: 'var(--font-display)'
             }}
           >
-            {sponsor.sponsor_name}
+            {sponsor.sponsorName}
           </h2>
 
           <div

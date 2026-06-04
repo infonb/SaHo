@@ -37,6 +37,8 @@ public class StudentListResponseDto {
     private String stName;
     private String siblingId;
     private String orphanStatus;
+    private Integer sponsorId;
+    private String sponsorName;
     private Integer totalCount;
     private String imageUrl;
     private LocalDateTime createdAt;

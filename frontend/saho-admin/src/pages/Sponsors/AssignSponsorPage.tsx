@@ -52,7 +52,10 @@ export default function AssignSponsorPage() {
 
   const load = () => {
     setLoading(true);
-    Promise.all([getStudents(), getSponsors()])
+    Promise.all([
+      getStudents({ pageNumber: 1, pageSize: 10000 }),
+      getSponsors(),
+    ])
       .then(([st, sp]) => {
         setStudents(st.students);
         setSponsors(sp);
@@ -69,11 +72,14 @@ export default function AssignSponsorPage() {
       if (sponsorType !== 'All' && s.type !== sponsorType) return false;
       if (!q) return true;
       return (
-        s.sponsor_name.toLowerCase().includes(q) ||
+        s.sponsorName.toLowerCase().includes(q) ||
         (s.email ?? '').toLowerCase().includes(q)
       );
     });
   }, [sponsors, sponsorSearch, sponsorType]);
+
+  const sponsorPager = usePagination(visibleSponsors, 10);
+  const pageSponsors = sponsorPager.current;
 
   const classOptions = useMemo(() => [...new Set(students.map(s => s.class_id))], [students]);
   const districtOptions = useMemo(
@@ -125,7 +131,7 @@ export default function AssignSponsorPage() {
     return checkedStudents.map(id => ({ id, name: map.get(id) ?? `Student ${id}` }));
   }, [students, checkedStudents]);
 
-  const sponsorRows = visibleSponsors.map(s => [
+  const sponsorRows = pageSponsors.map(s => [
     <label className="rowFlex" style={{ gap: 12 }}>
       <input
         type="radio"
@@ -133,13 +139,13 @@ export default function AssignSponsorPage() {
         checked={selectedSponsor?.sponsor_id === s.sponsor_id}
         onChange={() => setSelectedSponsor(s)}
       />
-      <Avatar name={s.sponsor_name} size="md" />
+      <Avatar name={s.sponsorName} size="md" />
       <div style={{ minWidth: 0 }}>
-        <div className="strong" style={{ lineHeight: 1.15 }}>{s.sponsor_name}</div>
+        <div className="strong" style={{ lineHeight: 1.15 }}>{s.sponsorName}</div>
         <div className="sub" style={{ marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.email}</div>
       </div>
     </label>,
-    <Badge variant={s.type === 'Organisation' ? 'organisation' : 'individual'}>{s.type}</Badge>,
+      <Badge variant={s.type === 'Organisation' ? 'organisation' : 'individual'}>{s.type}</Badge>,
     <div style={{ fontWeight: 800 }}>{contribution(s.contrib)}</div>,
     <div style={{ fontWeight: 800 }}>{s.students_count ?? 0}</div>
   ]);
@@ -157,7 +163,11 @@ export default function AssignSponsorPage() {
     <div>{s.class_id}</div>,
     <div style={{ maxWidth: 260, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.sch_name}</div>,
     <div style={{ maxWidth: 160, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.dist_name}</div>,
-    s.sponsor_id ? <Badge variant="assigned">Assigned</Badge> : <Badge variant="unassigned">None</Badge>
+    s.sponsor_id ? (
+      <Badge variant="assigned">{s.sponsorName ?? 'Assigned'}</Badge>
+    ) : (
+      <Badge variant="unassigned">None</Badge>
+    )
   ]);
 
   const confirmAssign = async () => {
@@ -226,11 +236,19 @@ export default function AssignSponsorPage() {
                 { key: 'st', label: 'Students Sponsored', width: '170px' }
               ]}
               rows={sponsorRows}
-              onRowClick={(index) => setSelectedSponsor(visibleSponsors[index] ?? null)}
-              rowClassName={(index) => (visibleSponsors[index]?.sponsor_id === selectedSponsor?.sponsor_id ? 'assignRowSelected' : '')}
+              onRowClick={(index) => setSelectedSponsor(pageSponsors[index] ?? null)}
+              rowClassName={(index) => (pageSponsors[index]?.sponsor_id === selectedSponsor?.sponsor_id ? 'assignRowSelected' : '')}
             />
 
-            <div className="assignHint">Showing 1 to {visibleSponsors.length} of {visibleSponsors.length} sponsors</div>
+            <Pagination
+              total={visibleSponsors.length}
+              page={sponsorPager.page}
+              pageSize={sponsorPager.pageSize}
+              onChange={sponsorPager.setPage}
+              onPageSizeChange={sponsorPager.setPageSize}
+            />
+
+            <div className="assignHint">Showing {Math.min((sponsorPager.page - 1) * sponsorPager.pageSize + 1, visibleSponsors.length)} to {Math.min(sponsorPager.page * sponsorPager.pageSize, visibleSponsors.length)} of {visibleSponsors.length} sponsors</div>
           </div>
 
           <div className="panel">
@@ -382,9 +400,9 @@ export default function AssignSponsorPage() {
           {selectedSponsor ? (
             <div className="assignSummaryCard">
               <div className="assignSummaryPill">
-                <Avatar name={selectedSponsor.sponsor_name} size="lg" />
+                <Avatar name={selectedSponsor.sponsorName} size="lg" />
                 <div style={{ minWidth: 0 }}>
-                  <div className="strong">{selectedSponsor.sponsor_name}</div>
+                  <div className="strong">{selectedSponsor.sponsorName}</div>
                   <div className="sub">{selectedSponsor.type} • {selectedSponsor.nationality}</div>
                   <div className="sub" style={{ marginTop: 6 }}>
                     Contribution <span style={{ fontWeight: 900, color: 'var(--green)' }}>{contribution(selectedSponsor.contrib)}</span>
@@ -464,7 +482,7 @@ export default function AssignSponsorPage() {
         icon="Assign"
         confirmLabel="Yes, Assign"
         danger={false}
-        message={`Assign ${checkedStudents.length} students to ${selectedSponsor?.sponsor_name}?`}
+        message={`Assign ${checkedStudents.length} students to ${selectedSponsor?.sponsorName}?`}
       />
     </div>
   );

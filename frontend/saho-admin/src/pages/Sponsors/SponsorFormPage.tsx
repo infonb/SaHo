@@ -48,7 +48,7 @@ export default function SponsorFormPage() {
     if (!s) return;
 
     setForm({
-      name: s.sponsor_name ?? '',
+      name: s.sponsorName ?? '',
       email: s.email ?? '',
       dob: s.dob ?? '',
       ph_no: s.ph_no ?? '',
@@ -293,7 +293,7 @@ export default function SponsorFormPage() {
     setLoading(true);
     try {
       const payload = {
-        sponsor_name: form.name.trim(),
+        sponsorName: form.name.trim(),
         email: form.email,
         dob: form.dob,
         ph_no: form.ph_no,

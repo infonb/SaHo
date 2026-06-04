@@ -146,13 +146,13 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
         </div>
 
         <h3 className="sectionTitle">Sponsor</h3>
-        {student.sponsor_sponsor_name ? (
+        {student.sponsorName ? (
           <div className="panel">
-            <strong>{student.sponsor_sponsor_name}</strong>
+            <strong>{student.sponsorName}</strong>
             <div className="sub">{student.sponsor_type}</div>
           </div>
         ) : (
-          <div className="panel" style={{ borderStyle: 'dashed' }}>No sponsor assigned</div>
+          <div className="panel" style={{ borderStyle: 'dashed' }}>--</div>
         )}
 
         <Modal

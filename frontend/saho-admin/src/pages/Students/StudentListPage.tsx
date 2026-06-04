@@ -27,6 +27,7 @@ const orphanStatusClass = (value?: string | null) => {
   const label = orphanStatusLabel(value).toLowerCase();
   return label.includes('orphan') && !label.includes('semi') ? 'orphan' : label.includes('semi') || label.includes('single') ? 'semi' : 'default';
 };
+const getSponsorDisplayName = (student: StudentView) => student.sponsorName ?? null;
 
 export default function StudentListPage() {
   const [students, setStudents] = useState<StudentView[]>([]);
@@ -315,12 +316,20 @@ export default function StudentListPage() {
       </div>,
       <div>
         {s.sponsor_id ? (
-          <button className="photoButton" onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }} title={s.sponsor_sponsor_name ?? undefined}>
-            <Avatar name={s.sponsor_sponsor_name ?? 'SP'} size="md" />
+          <button
+            className="photoButton"
+            onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }}
+            title={getSponsorDisplayName(s) ?? '--'}
+          >
+            {getSponsorDisplayName(s) ? (
+              <Avatar name={getSponsorDisplayName(s) ?? ''} size="md" />
+            ) : (
+              <div className="avatar md">--</div>
+            )}
           </button>
         ) : (
-          <div title="Saho Foundation">
-            <Avatar name="Saho Foundation" size="md" />
+          <div title="--">
+            <div className="avatar md">--</div>
           </div>
         )}
       </div>,
@@ -560,9 +569,9 @@ export default function StudentListPage() {
         <Pagination total={total} page={page} pageSize={pageSize} onChange={setPage} onPageSizeChange={(nextPageSize) => { setPageSize(nextPageSize); setPage(1); }} />
       </div>
       <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
-      <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.sponsor_name ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
+      <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.sponsorName ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
         {sponsorDetails ? <div>
-          <h3 style={{ marginTop: 0 }}>{sponsorDetails.sponsor_name}</h3>
+          <h3 style={{ marginTop: 0 }}>{sponsorDetails.sponsorName}</h3>
           <div className="sub">{sponsorDetails.type} - {sponsorDetails.nationality}</div>
           <div style={{ marginTop: 12 }}>
             <div style={{ fontWeight: 800 }}>{sponsorDetails.email}</div>
