@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deactivateStudents, getStudents } from '../../api/studentApi';
+import { deactivateStudents, exportStudentsCsv, getStudents } from '../../api/studentApi';
 import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
 import { getSponsorById } from '../../api/sponsorApi';
@@ -28,8 +28,12 @@ const toggleCsvValue = (value: string, next: string) => {
     ? values.filter((v) => v !== next).join(",")
     : [...values, next].join(",");
 };
-const orphanStatusLabel = (value?: string | null) =>
-  value === "3" ? "Orphan" : value === "2" ? "Semi Orphan" : value || "N/A";
+const truncateText = (value?: string | null, maxLength = 15) => {
+  const text = value?.trim() || 'N/A';
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength)}...`;
+};
+const orphanStatusLabel = (value?: string | null) => value === '3' ? 'Orphan' : value === '2' ? 'Semi Orphan' : value || 'N/A';
 const orphanStatusClass = (value?: string | null) => {
   const label = orphanStatusLabel(value).toLowerCase();
   return label.includes("orphan") && !label.includes("semi")
@@ -42,6 +46,7 @@ const orphanStatusClass = (value?: string | null) => {
 export default function StudentListPage() {
   const [students, setStudents] = useState<StudentView[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -63,8 +68,8 @@ export default function StudentListPage() {
     null,
   );
   const [openFilter, setOpenFilter] = useState<string | null>(null);
-  const [sortColumn, setSortColumn] = useState('student_id');
-  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC' | null>(null);
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -77,15 +82,17 @@ export default function StudentListPage() {
 
   const load = async (nextPage = page, nextPageSize = pageSize) => {
     const scrollY = window.scrollY;
-    setLoading(true);
+    const hasRows = students.length > 0;
+    setLoading(!hasRows);
+    setFetching(hasRows);
     setError(null);
     try {
       const data = await getStudents({
         pageNumber: nextPage,
         pageSize: nextPageSize,
         filters: applied,
-        sortColumn,
-        sortDirection,
+        sortColumn: sortColumn ?? undefined,
+        sortDirection: sortDirection ?? undefined,
       });
       setStudents(data.students);
       setTotal(data.total);
@@ -96,6 +103,7 @@ export default function StudentListPage() {
       setError("Unable to load students from the database.");
     } finally {
       setLoading(false);
+      setFetching(false);
       requestAnimationFrame(() => {
         window.scrollTo({ top: scrollY, behavior: 'auto' });
       });
@@ -256,16 +264,36 @@ export default function StudentListPage() {
   const handleSort = (column: string) => {
     setPage(1);
     if (sortColumn === column) {
-      setSortDirection(prev => (prev === 'ASC' ? 'DESC' : 'ASC'));
+      if (sortDirection === null) {
+        setSortDirection('ASC');
+      } else if (sortDirection === 'ASC') {
+        setSortDirection('DESC');
+      } else {
+        setSortColumn(null);
+        setSortDirection(null);
+      }
     } else {
       setSortColumn(column);
       setSortDirection('ASC');
     }
+    setPage(1);
   };
 
-  const sortArrow = (column: string) => {
-    if (sortColumn !== column) return '↕';
-    return sortDirection === 'ASC' ? '↑' : '↓';
+  const handleExportCsv = async () => {
+    const blob = await exportStudentsCsv({
+      filters: applied,
+      sortColumn: sortColumn ?? undefined,
+      sortDirection: sortDirection ?? undefined,
+      studentIds: checked.length ? checked : undefined,
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'students.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   };
 
   const sortHeader = (label: string, column: string) => (
@@ -277,61 +305,20 @@ export default function StudentListPage() {
       aria-label={`Sort by ${label}`}
     >
       <span>{label}</span>
-      <span className={`sortArrow${sortColumn === column ? ' active' : ''}`} aria-hidden>{sortArrow(column)}</span>
+      <span
+        className={`sortArrow${
+          sortColumn === column && sortDirection !== null
+            ? sortDirection === 'ASC'
+              ? ' asc'
+              : ' desc'
+            : ' inactive'
+        }`}
+        aria-hidden
+      />
     </button>
   );
 
-  const sortedStudents = useMemo(() => {
-    const directionFactor = sortDirection === 'ASC' ? 1 : -1;
-    const copy = [...students];
-    const compareText = (left: string | number | null | undefined, right: string | number | null | undefined) =>
-      String(left ?? '').localeCompare(String(right ?? ''), undefined, { numeric: true, sensitivity: 'base' });
-    const compareNumber = (left: unknown, right: unknown) => {
-      const leftNumber = Number(left);
-      const rightNumber = Number(right);
-      if (Number.isNaN(leftNumber) && Number.isNaN(rightNumber)) return 0;
-      if (Number.isNaN(leftNumber)) return 1;
-      if (Number.isNaN(rightNumber)) return -1;
-      return leftNumber - rightNumber;
-    };
-    const ageFromDob = (dobValue: string) => {
-      const dob = new Date(dobValue);
-      if (Number.isNaN(dob.getTime())) return -1;
-      const today = new Date();
-      let age = today.getFullYear() - dob.getFullYear();
-      const hasBirthdayPassed = today.getMonth() > dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
-      if (!hasBirthdayPassed) age -= 1;
-      return age;
-    };
-
-    copy.sort((left, right) => {
-      let result = 0;
-      switch (sortColumn) {
-        case 'student_id':
-          result = compareNumber(left.student_id, right.student_id);
-          break;
-        case 'student_name':
-          result = compareText(left.full_name, right.full_name);
-          break;
-        case 'age':
-          result = compareNumber(ageFromDob(left.dob), ageFromDob(right.dob));
-          break;
-        case 'class_name':
-          result = compareText(left.class_id, right.class_id);
-          break;
-        case 'orphan_status':
-          result = compareText(orphanStatusLabel(left.orphan_status), orphanStatusLabel(right.orphan_status));
-          break;
-        default:
-          result = compareNumber(left.student_id, right.student_id);
-      }
-      return result * directionFactor;
-    });
-
-    return copy;
-  }, [students, sortColumn, sortDirection]);
-
-  const rows = sortedStudents.map(s => {
+  const rows = students.map(s => {
     const dob = new Date(s.dob);
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
@@ -357,8 +344,9 @@ export default function StudentListPage() {
             type="button"
             className="cellTopText studentNameCell"
             onClick={() => setSelected(s)}
+            title={s.full_name}
           >
-            {s.full_name}
+            {truncateText(s.full_name, 15)}
           </button>
           <div className="cellSubText">{s.gender}</div>
         </div>
@@ -366,8 +354,8 @@ export default function StudentListPage() {
       <div>{age}</div>,
       <div>{s.class_id}</div>,
       <div className="tableCellStack">
-        <div className="cellTopText">{s.sch_name || "N/A"}</div>
-        <div className="cellSubText">
+        <div className="cellTopText" title={s.sch_name || 'N/A'}>{truncateText(s.sch_name, 18)}</div>
+        <div className="cellSubText" title={[s.vil_name, s.dist_name].filter(Boolean).join(', ') || '-'}>
           <span className="cellIconInline" aria-hidden>
             <svg viewBox="0 0 24 24" fill="none">
               <path
@@ -390,8 +378,8 @@ export default function StudentListPage() {
         </div>
       </div>,
       <div className="tableCellStack studentCellStack guardianCell">
-        <div className="cellTopText">{s.guardian_full_name || "N/A"}</div>
-        <div className="cellSubText">{s.guardian_relation_name || "N/A"}</div>
+        <div className="cellTopText" title={s.guardian_full_name || 'N/A'}>{truncateText(s.guardian_full_name, 15)}</div>
+        <div className="cellSubText" title={s.guardian_relation_name || 'N/A'}>{truncateText(s.guardian_relation_name, 15)}</div>
       </div>,
       <div className="orphanStatusCell">
         <span
@@ -763,7 +751,6 @@ export default function StudentListPage() {
                 }
               />
             </div>
-            <div className="filter-empty-slot" aria-hidden="true" />
           </div>
           <div className="filters-row filters-row-2">
             <div className="filter-group">
@@ -827,6 +814,17 @@ export default function StudentListPage() {
                 }
               />
             </div>
+            <div className="filter-actions-row">
+              <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); setOpenFilter(null); }}>
+                <span className="filterBtnIcon" aria-hidden>x</span> Clear
+              </button>
+              <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>
+                Go
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"></path>
+                </svg>
+              </button>
+            </div>
           </div>
           <div className="filter-actions-group">
             <button
@@ -873,20 +871,11 @@ export default function StudentListPage() {
         className={`student-table-section studentRecordsPanel ${hasSelection ? "bulkModeActive" : ""}`}
       >
         <div className="table-header">
-          <h3 className="table-title">
-            Student Records{" "}
-            <span className="results-count">{total} results</span>
-          </h3>
+          <h3 className="table-title">Student Records <span className="results-count">{total} results</span></h3>
+          {fetching ? <span className="table-updating">Updating...</span> : null}
         </div>
 
-        {error ? (
-          <div
-            className="toast error"
-            style={{ position: "static", marginBottom: 12 }}
-          >
-            {error}
-          </div>
-        ) : null}
+        {error ? <div className="toast error studentListErrorToast">{error}</div> : null}
 
         <div
           className={`bulkToolbarShell ${hasSelection ? "isActive" : ""}`}
@@ -900,38 +889,11 @@ export default function StudentListPage() {
               </span>
             </div>
             <div className="bulkToolbarActions">
-              <Button
-                size="sm"
-                variant="outline"
-                tabIndex={hasSelection ? 0 : -1}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden
-                >
-                  <path
-                    d="M12 3v10"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M8 11l4 4 4-4"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M4 17v3h16v-3"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+              <Button size="sm" variant="outline" onClick={handleExportCsv}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M12 3v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 17v3h16v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 Export CSV
               </Button>
@@ -994,42 +956,21 @@ export default function StudentListPage() {
           loadingRowCount={Math.min(pageSize, 20)}
           transitionKey={`${page}-${pageSize}-${sortColumn}-${sortDirection}-${JSON.stringify(applied)}-${loading ? "loading" : "loaded"}`}
           columns={[
-            {
-              key: "id",
-              label: (
-                <div className="idSelectCell header">
-                  <input
-                    aria-label="Select all on this page"
-                    type="checkbox"
-                    checked={allPageChecked}
-                    onChange={togglePage}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <span className="sortableHeaderWrap">
-                    {sortHeader("ID", "student_id")}
-                  </span>
-                </div>
-              ),
-              width: "92px",
-            },
-            { key: "student", label: sortHeader("STUDENT", "student_name") },
-            { key: "age", label: sortHeader("AGE", "age"), width: "72px" },
-            {
-              key: "grade",
-              label: sortHeader("CLASS", "class_name"),
-              width: "88px",
-            },
-            { key: "school", label: "SCHOOL" },
-            { key: "guardian", label: "GUARDIAN" },
-            { key: "orphan", label: sortHeader("STATUS", "orphan_status") },
-            { key: "sponsor", label: "SPONSOR" },
-            { key: "actions", label: "" },
+            { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
+            { key: 'student', label: sortHeader('STUDENT', 'student_name'), width: '250px' },
+            { key: 'age', label: sortHeader('AGE', 'age'), width: '92px' },
+            { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
+            { key: 'school', label: 'SCHOOL', width: '235px' },
+            { key: 'guardian', label: 'GUARDIAN', width: '210px' },
+            { key: 'orphan', label: 'STATUS', width: '150px' },
+            { key: 'sponsor', label: 'SPONSOR', width: '120px' },
+            { key: 'actions', label: '', width: '100px' }
           ]}
           rows={rows}
-          onRowClick={(index) => setSelected(sortedStudents[index] ?? null)}
+          onRowClick={(index) => setSelected(students[index] ?? null)}
           rowClassName={(index) => {
-            const student = sortedStudents[index];
-            return `studentTableRow${student && checked.includes(student.student_id) ? " isSelected" : ""}`;
+            const student = students[index];
+            return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
           }}
           footer={
             <Pagination
@@ -1195,4 +1136,5 @@ function MultiSelectFilter({
     </details>
   );
 }
+
 
