@@ -62,6 +62,8 @@ export interface StudentProfileResponse {
   dob: string;
   gender: string;
   aadhaarNumber: string;
+  casteId?: number;
+  casteName?: string | null;
   religion?: string | null;
   bloodGroup?: string | null;
   classId?: number;
@@ -69,7 +71,11 @@ export interface StudentProfileResponse {
   orphanStatus?: string | null;
   imageUrl?: string | null;
   guardianName?: string;
+  guardianFirstName?: string | null;
+  guardianMiddleName?: string | null;
+  guardianLastName?: string | null;
   phoneNumber?: string;
+  guardianRelationName?: string | null;
   occ?: string | null;
   addr?: string | null;
   schName?: string;
@@ -85,6 +91,16 @@ export interface ClassResponse {
   classId: number;
   className: string;
 }
+
+interface CasteResponse {
+  casteId: number;
+  casteName: string;
+}
+
+const asArray = <T,>(data: T[] | { data?: T[]; content?: T[]; items?: T[] }): T[] => {
+  if (Array.isArray(data)) return data;
+  return data.data ?? data.content ?? data.items ?? [];
+};
 
 export const getStates = async (): Promise<StateMaster[]> => {
   try {
@@ -136,10 +152,15 @@ export const getSchoolsByVillage = async (villageId: number): Promise<SchoolMast
   }
 };
 
-export const getCastes = async (): Promise<{ casteId: number; casteName: string }[]> => {
+export const getCastes = async (): Promise<CasteResponse[]> => {
   try {
-    const response = await apiClient.get<{ casteId: number; casteName: string }[]>('/master/castes');
-    return response.data;
+    const response = await apiClient.get<any[] | { data?: any[]; content?: any[]; items?: any[] }>('/master/castes');
+    return asArray(response.data)
+      .map((c) => ({
+        casteId: Number(c.casteId ?? c.caste_id ?? c.id),
+        casteName: String(c.casteName ?? c.caste_name ?? c.name ?? ''),
+      }))
+      .filter((c) => Number.isFinite(c.casteId) && c.casteName.trim() !== '');
   } catch (error) {
     logApiFailure('getCastes', error);
     throw error;
@@ -167,8 +188,13 @@ export const getRelationships = async (): Promise<RelationshipMaster[]> => {
 
 export const getClasses = async (): Promise<ClassResponse[]> => {
   try {
-    const response = await apiClient.get<ClassResponse[]>('/master/classes');
-    return response.data;
+    const response = await apiClient.get<any[] | { data?: any[]; content?: any[]; items?: any[] }>('/master/classes');
+    return asArray(response.data)
+      .map((c) => ({
+        classId: Number(c.classId ?? c.class_id ?? c.id),
+        className: String(c.className ?? c.class_name ?? c.name ?? ''),
+      }))
+      .filter((c) => Number.isFinite(c.classId) && c.className.trim() !== '');
   } catch (error) {
     logApiFailure('getClasses', error);
     throw error;

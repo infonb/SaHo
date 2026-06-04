@@ -10,11 +10,11 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
  * - Token-based authentication
  */
 
-// Determine API base URL from environment or default to localhost:8080
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
+// Use Vite's /api proxy in development to avoid browser CORS issues.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 const DEBUG_DISABLE_AUTH = true;
 const DEBUG_DISABLE_401_REDIRECT = true;
-
+console.log(BASE_URL);
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
