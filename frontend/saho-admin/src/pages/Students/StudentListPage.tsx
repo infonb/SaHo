@@ -991,7 +991,7 @@ export default function StudentListPage() {
 
         <DataTable
           loading={loading}
-          loadingRowCount={pageSize}
+          loadingRowCount={Math.min(pageSize, 20)}
           transitionKey={`${page}-${pageSize}-${sortColumn}-${sortDirection}-${JSON.stringify(applied)}-${loading ? "loading" : "loaded"}`}
           columns={[
             {
