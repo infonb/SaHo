@@ -300,6 +300,13 @@ tr.clickable:hover{background:#f8fafc;cursor:pointer}
 .toastStack{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:10px;z-index:60}
 .toast{padding:12px 14px;border-radius:var(--r-md);box-shadow:var(--shadow-md);background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);animation:toastIn .2s ease}
 .toast.error{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.studentListErrorToast{
+  position:fixed;
+  right:22px;
+  bottom:22px;
+  z-index:55;
+  min-width:min(420px,calc(100vw - 44px));
+}
 .empty{padding:34px;text-align:center;color:var(--color-text3)}
 .formGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 .sectionTitle{font-family:var(--font-display);font-weight:800;margin:22px 0 12px;padding-top:18px;border-top:1px solid var(--color-divider)}

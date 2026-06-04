@@ -492,7 +492,7 @@ export default function StudentListPage() {
           {fetching ? <span className="table-updating">Updating...</span> : null}
         </div>
 
-        {error ? <div className="toast error" style={{ position: 'static', marginBottom: 12 }}>{error}</div> : null}
+        {error ? <div className="toast error studentListErrorToast">{error}</div> : null}
 
         <div className={`bulkToolbarShell ${hasSelection ? 'isActive' : ''}`} aria-hidden={!hasSelection}>
           <div className="selectHeaderRow studentBulkToolbar">
