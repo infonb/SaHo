@@ -17,7 +17,7 @@ import type { User, VolunteerFilters } from '../../types';
 const defaults: VolunteerFilters = { search: '', is_active: '' };
 export default function VolunteerListPage() {
   const [items, setItems] = useState<User[]>([]); const [pending, setPending] = useState(defaults); const [applied, setApplied] = useState(defaults); const [remove, setRemove] = useState<User | null>(null); const [loading, setLoading] = useState(true);
-  const nav = useNavigate(); const { toast } = useToast(); const pager = usePagination(items, 5);
+  const nav = useNavigate(); const { toast } = useToast(); const pager = usePagination(items, 10);
   const load = () => { setLoading(true); getVolunteers(applied).then(setItems).finally(() => setLoading(false)); };
   useEffect(load, [applied]);
   const stop = (e: MouseEvent) => e.stopPropagation();
