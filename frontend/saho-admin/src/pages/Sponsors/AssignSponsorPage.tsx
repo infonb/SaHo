@@ -14,6 +14,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import { usePagination } from '../../hooks/usePagination';
 import type { SponsorView, StudentView } from '../../types';
+import "../../styles/Students/AssignSponserPage.css";
+
 
 const contribution = (value?: string | null) => {
   if (!value) return '-';
