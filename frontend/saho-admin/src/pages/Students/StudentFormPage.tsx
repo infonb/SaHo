@@ -1,6 +1,7 @@
 import { type ComponentProps, type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import "../../styles/Students/StudentFormPage.css";
 import {
   createStudent,
   findStudentByAadhaar,
