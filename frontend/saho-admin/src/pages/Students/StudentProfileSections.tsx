@@ -3,7 +3,7 @@ import Avatar from '../../components/common/Avatar';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
-
+import "../../styles/Students/StudentProfileSections.css";
 export interface StudentFormState {
   first_name: string;
   middle_name: string;
