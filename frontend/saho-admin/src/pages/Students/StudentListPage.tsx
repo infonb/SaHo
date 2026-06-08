@@ -14,7 +14,6 @@ import { useToast } from '../../hooks/useToast';
 import type { StudentFilters, StudentView, SponsorView } from '../../types';
 import StudentDetailModal from './StudentDetailModal';
 import Modal from '../../components/common/Modal';
-import "../../styles/Students/StudentListPage.css";
 const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', sponsor_status: '', is_active: '' };
 type FilterOption = { value: string; label: string };
 
@@ -1104,3 +1103,5 @@ function MultiSelectFilter({
     </details>
   );
 }
+
+
