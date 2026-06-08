@@ -327,7 +327,7 @@ if (isEdit) {
 
   return (
     <form onSubmit={submit}>
-      <PageHeader title={isEdit ? 'Edit Sponsor' : 'Add Sponsor'} subtitle="Sponsor profile and contribution details" actions={<Button type="button" variant="outline" onClick={() => nav(-1)}>Back</Button>} />
+      <PageHeader title={isEdit ? 'Edit Sponsor' : 'Add Sponsor'} subtitle="Sponsor profile and contribution details" actions={<Button type="button" className="btn btnRed"variant="outline" onClick={() => nav(-1)}>Back</Button>} />
       <div className="panel">
         <div className="sponsorPhotoDock">
           <div className="field">
@@ -397,8 +397,8 @@ if (isEdit) {
         </div>
 
         <div className="modalFooter" style={{ paddingInline: 0 }}>
-          <Button type="button" variant="outline" onClick={() => nav('/sponsors')}>Cancel</Button>
-          <Button loading={loading}>{isEdit ? 'Save Changes' : 'Add Sponsor'}</Button>
+          <Button type="button" className="btn btnRed" variant="outline" onClick={() => nav('/sponsors')}>Cancel</Button>
+          <Button className="btn btnGreen" loading={loading}>{isEdit ? 'Save changes' : 'Add Sponsor'}</Button>
         </div>
 
         <Modal

@@ -441,7 +441,7 @@ export default function CreateEvent() {
 
           {/* Form Actions */}
           <div className="form-actions">
-            <Button
+            <Button className="btn btnRed"
               type="button"
               variant="outline"
               onClick={handleReset}
@@ -449,6 +449,7 @@ export default function CreateEvent() {
               Reset Form
             </Button>
             <Button
+            className="btn btnGreen"
               type="submit"
               variant="primary"
               loading={loading}

@@ -483,6 +483,147 @@
   font-size: 14px;
 }
 
+/* .maxBtn{
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+  white-space: nowrap;
+} */
+
+/* .maxBtnPrimary{
+  background: var(--color-primary);
+  color: #ffffff;
+  border: 1px solid var(--color-primary);
+  box-shadow: 0 1px 0 rgba(255,255,255,.18) inset;
+}
+
+.maxBtnDanger{
+  background: #fff;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+} */
+
+.btnGreen
+{
+  background: #4d7a63;
+  color: #ffffff;
+  min-width: 100px;
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px solid #4d7a63;
+  font-size: 13px !important; 
+  line-height: 1.5;
+  font-weight: 600 !important;
+}
+
+.btnGreen:hover
+{
+  background:#fff !important;
+  color:#4d7a63 !important;
+  border-color:#4d7a63 !important;
+}
+
+.btnRed
+{
+  background: #b91c1c !important;
+  color: #ffffff !important;
+  min-width: 100px;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  border: 1px solid #b91c1c !important;
+  font-size: 13px !important; 
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+}
+
+.btnRed:hover
+{
+  background:#fff !important;
+  color:#b91c1c !important;
+  border-color:#b91c1c !important;
+}
+
+
+
+.clearBtn
+{
+  background: #b91c1c;
+  color: #ffffff;
+   min-width: 70px;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px solid #fca5a5;
+  font-size: 13px !important;
+  line-height: 1.5;
+  font-weight: 600 !important;
+}
+
+.clearBtn:hover
+{
+  background:#fff !important;
+  color:#b91c1c !important;
+  border-color:#b91c1c !important;
+}
+
+.goBtn
+{
+  background: #4d7a63;
+  color: #ffffff;
+   min-width: 70px;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 8px 12px  !important;
+  border: 1px solid #4d7a63;
+  font-size: 13px !important;
+  line-height: 1.5!important;
+  font-weight: 600 !important;
+}
+
+.goBtn:hover
+{
+  background: #ffffff !important;
+  color: #4d7a63 !important;
+  border-color: #4d7a63 !important;
+}
+/* 
+.bulkToolbarActions .bulkDeleteButton:hover{
+  background: #b91c1c;
+  color: #fff;
+  border-color: #b91c1c;
+  box-shadow: none;
+} */
+
+.bulkToolbarActions:has(.bulkDeleteButton:hover) .bulkExportButton{
+  background: #fff;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: none;
+}
+
+.bulkToolbarActions:has(.bulkExportButton:hover) .bulkDeleteButton{
+  background: #fff;
+  color: #b91c1c;
+  border-color: #fca5a5;
+  box-shadow: none;
+}
+
+.student-list-actions .maxBtn{
+  min-width: 0;
+}
+
+.bulkToolbarActions .maxBtn{
+  min-width: 0;
+}
+
 .btn.primary {
   background: var(--color-primary);
   color: #ffffff;
@@ -1103,37 +1244,6 @@
 .studentBulkToolbar .selectedCount span {
   color: var(--color-text3);
   font-weight: 700;
-}
-
-.studentBulkToolbar .btn {
-  height: 40px;
-  border-radius: 12px;
-  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
-}
-
-.studentBulkToolbar .btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.studentBulkToolbar .bulkDeleteButton {
-  border-color: #fecaca;
-  color: #b91c1c;
-  background: #fff7f7;
-}
-
-.studentBulkToolbar .bulkDeleteButton:hover {
-  border-color: #fca5a5;
-  color: #991b1b;
-  background: #fee2e2;
-  box-shadow: 0 6px 16px rgba(185, 28, 28, 0.08);
-}
-
-.studentBulkToolbar .bulkDeleteButton:disabled {
-  border-color: var(--color-border);
-  color: var(--color-text3);
-  background: #f8fafc;
-  box-shadow: none;
 }
 
 .confirmModalContent {
@@ -3787,10 +3897,186 @@ svg {
   background: #0f766e;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset;
 }
-
+/* 
 .btn.primary:hover {
   background: #0f5f59;
   box-shadow: 0 8px 18px rgba(15, 118, 110, 0.14);
+/* } */
+/* 
+.minBtn{
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.clearBtn{
+  background: #fff;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.goBtn{
+  background: #0f766e;
+  color: #fff;
+  border: 1px solid #0f766e;
+}
+
+.clearBtn:hover{
+  background: #b91c1c;
+  color: #fff;
+  border-color: #b91c1c;
+  box-shadow: none;
+  transform: none;
+}
+
+.goBtn:hover{
+  background: #0f766e;
+  color: #fff;
+  border-color: #0f766e;
+  box-shadow: none;
+  transform: none;
+}
+
+.filter-actions-row:has(.clearBtn:hover) .goBtn,
+.filter-actions-group:has(.clearBtn:hover) .goBtn{
+  background: #fff;
+  color: #0f766e;
+  border-color: #0f766e;
+  box-shadow: none;
+  transform: none;
+}
+
+.filter-actions-row:has(.goBtn:hover) .clearBtn,
+.filter-actions-group:has(.goBtn:hover) .clearBtn{
+  background: #fff;
+  color: #b91c1c;
+  border-color: #fca5a5;
+  box-shadow: none;
+  transform: none;
+}
+
+.goBtn svg{
+  transition: transform .18s ease;
+}
+
+.goBtn:hover svg{
+  transform: none;
+} */ 
+
+/* 
+.clearBtn
+{
+  background: #ffffff;
+  color: #b91c1c;
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px solid #fca5a5;
+  font-size: 13px !important;
+  line-height: 1.5;
+  font-weight: 600 !important;
+}
+
+.clearBtn:hover
+{
+  background: #b91c1c !important;
+  color: #ffffff !important;
+  border-color: #b91c1c !important;
+}
+
+.goBtn
+{
+  background: #4d7a63;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px solid #4d7a63;
+  font-size: 13px !important;
+  line-height: 1.5;
+  font-weight: 600 !important;
+}
+
+.goBtn:hover
+{
+  background: #ffffff !important;
+  color: #4d7a63 !important;
+  border-color: #4d7a63 !important;
+} */
+/* 
+.exportBtn{
+  background: var(--color-primary);
+  color: #fff;
+  border: 1px solid var(--color-primary);
+}
+
+.deleteBtn{
+  background: #fff;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.bulkToolbarActions .btn.exportBtn{
+  background: var(--color-primary);
+  color: #fff;
+  border: 1px solid var(--color-primary);
+  box-shadow: 0 1px 0 rgba(255,255,255,.18) inset;
+}
+
+.bulkToolbarActions .btn.deleteBtn{
+  background: #fff;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.exportBtn:hover{
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+  box-shadow: 0 1px 0 rgba(255,255,255,.18) inset;
+  transform: none;
+}
+
+.deleteBtn:hover{
+  background: #b91c1c;
+  color: #fff;
+  border-color: #b91c1c;
+  box-shadow: none;
+  transform: none;
+}
+
+.bulkToolbarActions .btn.exportBtn:hover{
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.bulkToolbarActions .btn.deleteBtn:hover{
+  background: #b91c1c;
+  color: #fff;
+  border-color: #b91c1c;
+}
+
+.bulkToolbarActions:has(.deleteBtn:hover) .exportBtn{
+  background: #fff;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: none;
+  transform: none;
+} */
+
+.bulkToolbarActions:has(.exportBtn:hover) .deleteBtn{
+  background: #fff;
+  color: #b91c1c;
+  border-color: #fca5a5;
+  box-shadow: none;
+  transform: none;
 }
 
 .btn.outline {
@@ -4618,6 +4904,22 @@ td {
   transform: none;
 }
 
+.studentTableRow .student-actions .btn.iconBtn.editActionButton:hover,
+.studentTableRow:has(.editActionButton:hover) .student-actions .btn.iconBtn.deleteActionButton{
+  color: var(--color-text2);
+  border-color: var(--color-border);
+  background: #ffffff;
+  transform: none;
+}
+
+.studentTableRow .student-actions .btn.iconBtn.deleteActionButton:hover,
+.studentTableRow:has(.deleteActionButton:hover) .student-actions .btn.iconBtn.editActionButton{
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fff7f7;
+  transform: none;
+}
+
 .btn.iconBtn.deleteActionButton:hover,
 .studentTableRow .student-actions .btn.iconBtn.deleteActionButton:hover {
   color: #dc2626;
@@ -5144,11 +5446,6 @@ td {
   padding-top: 2px;
 }
 
-.sponsorCardActions .btn {
-  height: 34px;
-  border-radius: 12px;
-}
-
 .sponsorStatsGrid .stat-card-icon {
   right: 20px;
   top: 16px;
@@ -5560,11 +5857,6 @@ td {
   display: flex;
   gap: 10px;
   align-items: center;
-}
-
-.student-list-actions .btn {
-  height: 40px;
-  border-radius: 12px;
 }
 
 .student-list-actions .add-student-btn,

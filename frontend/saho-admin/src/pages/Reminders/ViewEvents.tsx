@@ -251,7 +251,7 @@ export default function ViewEvents() {
         subtitle="Calendar, reminders, and community event planning"
         actions={
           <Link to="/reminders/create">
-            <Button variant="primary" size="sm">Create Event</Button>
+            <Button className="btn btnGreen" size="sm">Create Event</Button>
           </Link>
         }
       />

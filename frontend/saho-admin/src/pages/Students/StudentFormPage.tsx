@@ -842,14 +842,14 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       {!isView ? (
         <div className="studentWizardActions" aria-label="Form actions">
           {activeStep === 'guardian' ? (
-            <PrimaryButton loading={loading || metaLoading || editLoading} className="btn-register">{isEdit ? 'Save Changes' : 'Register Student'}</PrimaryButton>
+            <PrimaryButton loading={loading || metaLoading || editLoading} className="btn btnGreen">{isEdit ? 'Save Changes' : 'Register Student'}</PrimaryButton>
           ) : (
-            <PrimaryButton type="button" className="btn-next" onClick={goNext} disabled={metaLoading || editLoading}>Next</PrimaryButton>
+            <PrimaryButton type="button" className="btn btnGreen" onClick={goNext} disabled={metaLoading || editLoading}>Next</PrimaryButton>
           )}
           {activeStep === 'personal' ? (
-            <SecondaryButton type="button" className="btn-cancel" onClick={cancel}>Cancel</SecondaryButton>
+            <SecondaryButton type="button" className="btn btnRed" onClick={cancel}>Cancel</SecondaryButton>
           ) : (
-            <SecondaryButton type="button" className="btn-back" onClick={goBack}>Back</SecondaryButton>
+            <SecondaryButton type="button" className="btn btnRed" onClick={goBack}>Back</SecondaryButton>
           )}
         </div>
       ) : null}

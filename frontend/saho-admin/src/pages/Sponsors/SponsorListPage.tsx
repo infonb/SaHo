@@ -103,13 +103,13 @@ export default function SponsorListPage() {
     <strong>{contribution(s.contrib)}</strong>,
     <Badge variant="assigned">{s.students_count}</Badge>,
     <div className="actions tableRowActions" onClick={e => e.stopPropagation()}>
-      <Button size="sm" variant="outline" className="iconBtn" onClick={(e) => { e.stopPropagation(); nav(`/sponsors/edit/${s.sponsor_id}`); }} aria-label="Edit sponsor">
+      <Button size="sm" variant="outline" className="btn clearBtn" onClick={(e) => { e.stopPropagation(); nav(`/sponsors/edit/${s.sponsor_id}`); }} aria-label="Edit sponsor">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
           <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </Button>
-      <Button size="sm" variant="outline" className="iconBtn deleteActionButton" onClick={(e) => { e.stopPropagation(); setSingleDelete(s.sponsor_id); }} aria-label={`Delete ${s.sponsorName}`}>
+      <Button size="sm" variant="outline" className="btn goBtn" onClick={(e) => { e.stopPropagation(); setSingleDelete(s.sponsor_id); }} aria-label={`Delete ${s.sponsorName}`}>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
           <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -129,8 +129,8 @@ export default function SponsorListPage() {
           <p>Individuals and organisations supporting students</p>
         </div>
         <div className="student-list-actions sponsor-list-actions">
-          <Button variant="success" className="assign-sponsor-btn" onClick={() => nav('/sponsors/assign')}>Assign Sponsor</Button>
-          <Button className="add-student-btn" onClick={() => nav('/sponsors/add')}>
+          <Button className="btn btnGreen" onClick={() => nav('/sponsors/assign')}>Assign Sponsor</Button>
+          <Button className="btn btnGreen" onClick={() => nav('/sponsors/add')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -218,10 +218,10 @@ export default function SponsorListPage() {
             </select>
           </div>
           <div className="filter-actions-group">
-            <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); }}>
+            <button className="btn clearBtn" onClick={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); }}>
               <span className="filterBtnIcon" aria-hidden>x</span> Clear
             </button>
-            <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); pager.setPage(1); }}>
+            <button className="btn goBtn" onClick={() => { setApplied({ ...pending }); pager.setPage(1); }}>
               Go
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7"></path>
@@ -293,8 +293,8 @@ export default function SponsorListPage() {
                     <strong>{sponsoredCount} sponsored</strong>
                   </div>
                   <div className="sponsorCardActions">
-                    <Button size="sm" variant="outline" onClick={() => nav(`/sponsors/edit/${s.sponsor_id}`)}>Edit</Button>
-                    <Button size="sm" variant="danger" onClick={() => setSingleDelete(s.sponsor_id)}>Delete</Button>
+                    <button type="button" className="minBtn goBtn" onClick={() => nav(`/sponsors/edit/${s.sponsor_id}`)}>Edit</button>
+                    <button type="button" className="minBtn clearBtn" onClick={() => setSingleDelete(s.sponsor_id)}>Delete</button>
                   </div>
                 </article>
               );

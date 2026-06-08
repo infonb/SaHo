@@ -84,7 +84,7 @@ export default function AdminsPage() {
       <PageHeader
         title="Admin Access"
         subtitle="Manage system users and permissions"
-        actions={<Button onClick={startAdd}>Add Admin</Button>}
+        actions={<Button className="btn btnGreen" onClick={startAdd}>Add Admin</Button>}
       />
       <div
         className="statGrid"

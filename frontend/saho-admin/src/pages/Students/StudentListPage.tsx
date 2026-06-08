@@ -442,7 +442,7 @@ export default function StudentListPage() {
         <Button
           size="sm"
           variant="outline"
-          className="iconBtn"
+          className="iconBtn editActionButton"
           onClick={() => nav(`/students/edit/${s.student_id}`)}
           aria-label="Edit student"
         >
@@ -532,10 +532,15 @@ export default function StudentListPage() {
           <h1>Student Management</h1>
         </div>
         <div className="student-list-actions">
-          <Button
-            className="add-student-btn"
-            onClick={() => nav("/students/add")}
-          >
+          <button type="button" className="btn btnGreen" aria-label="Import CSV">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 3v10" />
+              <path d="M8 9l4 4 4-4" />
+              <path d="M4 17v3h16v-3" />
+            </svg>
+            Import CSV
+          </button>
+          <button type="button" className="btn btnGreen" onClick={() => nav("/students/add")}>
             <svg
               width="16"
               height="16"
@@ -550,7 +555,7 @@ export default function StudentListPage() {
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
             Add Student
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -852,10 +857,10 @@ export default function StudentListPage() {
               />
             </div>
             <div className="filter-actions-row">
-              <button className="clear-filters-btn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); setOpenFilter(null); }}>
+              <button className="btn clearBtn" onClick={() => { setPending(defaults); setApplied(defaults); setPage(1); setOpenFilter(null); }}>
                 <span className="filterBtnIcon" aria-hidden>x</span> Clear
               </button>
-              <button className="go-filter-btn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>
+              <button className="btn goBtn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>
                 Go
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7"></path>
@@ -888,18 +893,16 @@ export default function StudentListPage() {
               </span>
             </div>
             <div className="bulkToolbarActions">
-              <Button size="sm" variant="outline" onClick={handleExportCsv}>
+              <button className="btn btnGreen" onClick={handleExportCsv}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path d="M12 3v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M4 17v3h16v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 Export CSV
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="bulkDeleteButton"
+              </button>
+              <button
+                className="btn btnRed"
                 onClick={() => setBulkOpen(true)}
                 disabled={!hasSelection}
                 tabIndex={hasSelection ? 0 : -1}
@@ -945,7 +948,7 @@ export default function StudentListPage() {
                   />
                 </svg>
                 Delete selected
-              </Button>
+              </button>
             </div>
           </div>
         </div>

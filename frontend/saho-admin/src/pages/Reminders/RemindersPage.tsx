@@ -10,7 +10,7 @@ export default function RemindersPage() {
         subtitle="Manage events and student reminders"
         actions={
           <Link to="/reminders/create">
-            <Button variant="primary" size="sm">Create Event</Button>
+            <Button size="sm">Create Event</Button>
           </Link>
         }
       />
@@ -19,7 +19,7 @@ export default function RemindersPage() {
         <p className="sub">Event management page. Create new events to engage with students and the community.</p>
         <div style={{ marginTop: '16px' }}>
           <Link to="/reminders/create">
-            <Button variant="primary">Create New Event</Button>
+            <Button>Create New Event</Button>
           </Link>
         </div>
       </div>
