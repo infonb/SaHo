@@ -6067,6 +6067,25 @@ td {
   font-size: 10px !important;
 }
 
+.student-filters-section .filters-container,
+.student-filters-section .container-fluid {
+  padding-top: 18px;
+  font-size: 13px !important;
+}
+
+.student-filters-section .filter-search-input,
+.student-filters-section .multiSelectTrigger {
+  font-size: 13px;
+}
+
+.student-filters-section .clear-filters-btn,
+.student-filters-section .go-filter-btn {
+  width: 100%;
+  min-width: 0;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
 .sponsor-filters-container {
   grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
   gap: 12px;

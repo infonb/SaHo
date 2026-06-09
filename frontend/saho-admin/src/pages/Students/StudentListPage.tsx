@@ -216,7 +216,10 @@ export default function StudentListPage() {
       mounted = false;
     };
   }, []);
-
+  const showDistrictFilter = csvValues(pending.st_id).length > 0;
+  const showMandalFilter = csvValues(pending.dist_id).length > 0;
+  const showVillageFilter = csvValues(pending.mndl_id).length > 0;
+  const showSchoolFilter = csvValues(pending.vil_id).length > 0;
   const filteredStates = states;
   const stateOptions = filteredStates.map((s) => ({
     value: String(s.stId ?? s.st_id),
@@ -710,7 +713,261 @@ export default function StudentListPage() {
         </div>
       </div>
 
-      <div className="student-filters-section">
+     <div className="student-filters-section">
+  <p className="filters-name-tag">Filters</p>
+
+  <div className="container-fluid">
+
+    {/* Row 1 */}
+    <div className="row g-3">
+
+      {/* Gender */}
+      <div className="col-2">
+        <MultiSelectFilter
+          filterKey="gender"
+          label="All Gender"
+          value={pending.gender}
+          options={genderOptions}
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
+          onChange={(value) =>
+            setPending({ ...pending, gender: value })
+          }
+        />
+      </div>
+
+      {/* Orphan */}
+      <div className="col-2">
+        <MultiSelectFilter
+          filterKey="orphan"
+          label="Orphan Status"
+          value={pending.orphan_status}
+          options={orphanOptions}
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
+          onChange={(value) =>
+            setPending({
+              ...pending,
+              orphan_status: value,
+            })
+          }
+        />
+      </div>
+
+      {/* Class */}
+      <div className="col-2">
+        <MultiSelectFilter
+          filterKey="class"
+          label="All Classes"
+          value={pending.class_id}
+          options={classOptions}
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
+          onChange={(value) =>
+            setPending({
+              ...pending,
+              class_id: value,
+            })
+          }
+        />
+      </div>
+
+      {/* State */}
+      <div className="col-2">
+        <MultiSelectFilter
+          filterKey="state"
+          label="All States"
+          value={pending.st_id}
+          options={stateOptions}
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
+          onChange={(value) =>
+            setPending({
+              ...pending,
+              st_id: value,
+              dist_id: "",
+              mndl_id: "",
+              vil_id: "",
+              sch_id: "",
+            })
+          }
+        />
+      </div>
+
+      {/* Search */}
+      <div className="col-4">
+        <div className="filter-search-wrapper">
+          <svg
+            className="search-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="M21 21l-4.35-4.35"></path>
+          </svg>
+
+          <input
+            className="filter-search-input"
+            placeholder="Search students by name, ID..."
+            value={pending.search}
+            onChange={(e) =>
+              setPending({
+                ...pending,
+                search: e.target.value,
+              })
+            }
+          />
+        </div>
+      </div>
+
+    </div>
+
+    {/* Row 2 */}
+<div className="row g-3 mt-1">
+
+  {showDistrictFilter ? (
+    <div className="col-2">
+      <MultiSelectFilter
+        filterKey="district"
+        label="All Districts"
+        value={pending.dist_id}
+        options={districtOptions}
+        openFilter={openFilter}
+        setOpenFilter={setOpenFilter}
+        onChange={(value) =>
+          setPending({
+            ...pending,
+            dist_id: value,
+            mndl_id: "",
+            vil_id: "",
+            sch_id: "",
+          })
+        }
+      />
+    </div>
+  ) : (
+    <div className="col-2" />
+  )}
+
+  {showMandalFilter ? (
+    <div className="col-2">
+      <MultiSelectFilter
+        filterKey="mandal"
+        label="All Mandals"
+        value={pending.mndl_id}
+        options={mandalOptions}
+        openFilter={openFilter}
+        setOpenFilter={setOpenFilter}
+        onChange={(value) =>
+          setPending({
+            ...pending,
+            mndl_id: value,
+            vil_id: "",
+            sch_id: "",
+          })
+        }
+      />
+    </div>
+  ) : (
+    <div className="col-2" />
+  )}
+
+  {showVillageFilter ? (
+    <div className="col-2">
+      <MultiSelectFilter
+        filterKey="village"
+        label="All Villages"
+        value={pending.vil_id}
+        options={villageOptions}
+        openFilter={openFilter}
+        setOpenFilter={setOpenFilter}
+        onChange={(value) =>
+          setPending({
+            ...pending,
+            vil_id: value,
+            sch_id: "",
+          })
+        }
+      />
+    </div>
+  ) : (
+    <div className="col-2" />
+  )}
+
+  {showSchoolFilter ? (
+    <div className="col-2">
+      <MultiSelectFilter
+        filterKey="school"
+        label="All Schools"
+        value={pending.sch_id}
+        options={schoolOptions}
+        openFilter={openFilter}
+        setOpenFilter={setOpenFilter}
+        onChange={(value) =>
+          setPending({
+            ...pending,
+            sch_id: value,
+          })
+        }
+      />
+    </div>
+  ) : (
+    <div className="col-2" />
+  )}
+
+      {/* Empty Space */}
+      <div className="col-2"></div>
+
+      {/* Buttons */}
+      <div className="col-1">
+          <button
+            className="clear-filters-btn"
+            onClick={() => {
+              setPending(defaults);
+              setApplied(defaults);
+              setPage(1);
+              setOpenFilter(null);
+            }}
+          >
+            <span className="filterBtnIcon">×</span>
+            Clear
+          </button>
+      </div>
+      <div className="col-1">
+          
+          <button
+            className="go-filter-btn"
+            onClick={() => {
+              setApplied({ ...pending });
+              setPage(1);
+              setOpenFilter(null);
+            }}
+          >
+            Go
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7"></path>
+            </svg>
+          </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+      {/* <div className="student-filters-section">
         <p className="filters-name-tag">Filters</p>
         <div className="filters-container">
           <div className="filters-row filters-row-1">
@@ -869,7 +1126,7 @@ export default function StudentListPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div
         className={`student-table-section studentRecordsPanel ${hasSelection ? "bulkModeActive" : ""}`}
