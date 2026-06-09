@@ -6,6 +6,7 @@ import Modal from '../../components/common/Modal';
 import PageHeader from '../../components/common/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
+import "../../styles/Sponsors/SponsorFormPage.css";
 
 const init = { name: '', email: '', dob: '', ph_no: '', type: 'Individual', nationality: 'Indian', contrib: '', loc: '', image_url: '' };
 
