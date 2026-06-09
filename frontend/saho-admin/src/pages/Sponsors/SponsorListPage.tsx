@@ -196,31 +196,33 @@ export default function SponsorListPage() {
       </div>
 
       <div className="student-filters-section sponsor-filters-section">
-        <div className="filters-container sponsor-filters-container">
-          <div className="filter-search-wrapper sponsor-search-wrapper">
+        <div className="filters-container sponsor-filters-container row g-2 align-items-center">
+          <div className="filter-search-wrapper sponsor-search-wrapper col-4">
             <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
               <path d="M21 21l-4.35-4.35"></path>
             </svg>
             <input className="filter-search-input" placeholder="Search sponsors" value={pending.search} onChange={e => setPending({ ...pending, search: e.target.value })} />
           </div>
-          <div className="filter-group">
+          <div className="filter-group col-3">
             <select className="filter-select" value={pending.nationality} onChange={e => setPending({ ...pending, nationality: e.target.value })}>
               <option value="">All Nationality</option>
               {nationalities.map(n => <option key={n}>{n}</option>)}
             </select>
           </div>
-          <div className="filter-group">
+          <div className="filter-group col-3">
             <select className="filter-select" value={pending.type} onChange={e => setPending({ ...pending, type: e.target.value })}>
               <option value="">All Types</option>
               <option>Individual</option>
               <option>Organisation</option>
             </select>
           </div>
-          <div className="filter-actions-group">
+          <div className="filter-actions-group col-1">
             <button className="btn clearBtn" onClick={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); }}>
               <span className="filterBtnIcon" aria-hidden>x</span> Clear
             </button>
+          </div>
+          <div className="filter-actions-group col-1">
             <button className="btn goBtn" onClick={() => { setApplied({ ...pending }); pager.setPage(1); }}>
               Go
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
