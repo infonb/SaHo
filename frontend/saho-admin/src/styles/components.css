@@ -6067,23 +6067,25 @@ td {
   font-size: 10px !important;
 }
 
-.student-filters-section .filters-container,
 .student-filters-section .container-fluid {
-  padding-top: 18px;
+  padding-top: 14px;
   font-size: 13px !important;
 }
 
 .student-filters-section .filter-search-input,
 .student-filters-section .multiSelectTrigger {
+  height: 36px;
   font-size: 13px;
 }
 
 .student-filters-section .clear-filters-btn,
 .student-filters-section .go-filter-btn {
   width: 100%;
+  height: 36px;
   min-width: 0;
   padding-left: 8px;
   padding-right: 8px;
+  margin-bottom: 4px;
 }
 
 .sponsor-filters-container {
@@ -7624,22 +7626,6 @@ td {
     gap:12px;
   }
 
-  .student-filters-section .filters-row{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .student-filters-section .filters-row-1 .filter-search-wrapper,
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(4),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(5),
-  .student-filters-section .filter-actions-row{
-    grid-column: span 1;
-  }
 }
 
 @media (max-width: 640px) {
@@ -7682,23 +7668,6 @@ td {
     padding: 10px;
   }
 
-  .student-filters-section .filters-row{
-    grid-template-columns: 1fr;
-  }
-
-  .student-filters-section .filters-row-1 .filter-search-wrapper,
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(4),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(5),
-  .student-filters-section .filter-actions-row{
-    grid-column:auto;
-  }
-
   .clear-filters-btn,
   .go-filter-btn {
     width: 100%;
@@ -7725,293 +7694,6 @@ td {
 .sidebar[data-sidebar-state="expanded"] .sidebarSignOut {
   margin-top:auto;
   margin-bottom:14px;
-}
-
-/* Student filter layout override */
-.student-filters-section .filters-container{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  background:transparent;
-  border:none !important;
-  padding:14px 16px;
-  box-shadow:0 12px 32px rgba(15,23,42,.06);
-}
-
-.student-filters-section .filters-row{
-  width:100%;
-  display:grid;
-  grid-template-columns:repeat(12,minmax(0,1fr));
-  gap:10px 12px;
-  align-items:center;
-}
-
-/* ROW 1: Search(4) + State(2) + District(2) + Mandal(2) + Empty(2) = 12 columns */
-.student-filters-section .filters-row-1 .filter-search-wrapper{
-  grid-column:span 4;
-}
-
-.student-filters-section .filters-row-1 .filter-group:nth-of-type(1),
-.student-filters-section .filters-row-1 .filter-group:nth-of-type(2),
-.student-filters-section .filters-row-1 .filter-group:nth-of-type(3){
-  grid-column:span 2;
-}
-
-/* ROW 2: Village(2) + School(2) + Gender(2) + Orphan Status(2) + Class(2) + Actions(2) = 12 columns */
-.student-filters-section .filters-row-2 .filter-group:nth-of-type(1),
-.student-filters-section .filters-row-2 .filter-group:nth-of-type(2),
-.student-filters-section .filters-row-2 .filter-group:nth-of-type(3),
-.student-filters-section .filters-row-2 .filter-group:nth-of-type(4),
-.student-filters-section .filters-row-2 .filter-group:nth-of-type(5){
-  grid-column:span 2;
-}
-
-/* Action buttons on same row, right-aligned */
-.student-filters-section .filter-actions-row{
-  grid-column:span 2;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  justify-content:flex-end;
-}
-
-.student-filters-section .filter-search-wrapper,
-.student-filters-section .filter-group{
-  width:100%;
-  min-width:0;
-}
-
-.student-filters-section .multiSelectFilter{
-  width:100%;
-  min-width:0;
-}
-
-.student-filters-section .clear-filters-btn{
-  /* height:40px; */
-  padding:0 14px;
-  border:1px solid #dbe5ef;
-  border-radius:12px;
-  background:#fff;
-  color:#0f766e;
-  font-size:10px;
-  font-weight:700;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  cursor:pointer;
-  /* transition:background .16s ease,border-color .16s ease,transform .16s ease; */
-  white-space:nowrap;
-}
-
-.student-filters-section .clear-filters-btn:hover{
-  background:#fff;
-  border-color:#dbe5ef;
-  transform:none;
-}
-
-.student-filters-section .go-filter-btn{
-  /* height:40px; */
-  padding:0 16px;
-  border:1px solid transparent;
-  border-radius:12px;
-  background:#0f766e;
-  color:#fff;
-  font-size:10px;
-  font-weight:700;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  cursor:pointer;
-  transition:background .16s ease,border-color .16s ease,transform .16s ease;
-  white-space:nowrap;
-}
-
-.student-filters-section .go-filter-btn svg{
-  width:14px;
-  height:14px;
-}
-
-.student-filters-section .filterBtnIcon{
-  font-size:14px;
-  font-weight:800;
-}
-
-/* Responsive: Tablet - 2 column grid */
-@media (max-width: 1024px){
-  .student-filters-section .filters-row-1,
-  .student-filters-section .filters-row-2{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-
-  .student-filters-section .filters-row-1 .filter-search-wrapper,
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(4),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(5),
-  .student-filters-section .filter-actions-row{
-    grid-column:span 1;
-  }
-}
-
-/* Responsive: Mobile - Stacked layout */
-@media (max-width: 640px){
-  .student-filters-section .filters-row-1,
-  .student-filters-section .filters-row-2{
-    grid-template-columns:1fr;
-  }
-
-  .student-filters-section .filters-row-1 .filter-search-wrapper,
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(4),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(5),
-  .student-filters-section .filter-actions-row{
-    grid-column:auto;
-  }
-
-  .student-filters-section .filter-actions-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    width:100%;
-    margin-top:8px;
-  }
-
-  .student-filters-section .clear-filters-btn,
-  .student-filters-section .go-filter-btn{
-    width:100%;
-    justify-content:center;
-  }
-}
-
-
-.student-filters-section .filters-row{
-  width:100%;
-  display:grid;
-  grid-template-columns:repeat(12,minmax(0,1fr));
-  gap:10px 12px;
-  align-items:center;
-}
-
-/* ROW 1: Search(4) + State(2) + District(2) + Mandal(2) + Empty(2) = 12 columns */
-.student-filters-section .filters-row-1 .filter-search-wrapper{
-  grid-column:span 4;
-}
-
-.student-filters-section .filters-row-1 .filter-group:nth-of-type(1),
-.student-filters-section .filters-row-1 .filter-group:nth-of-type(2),
-.student-filters-section .filters-row-1 .filter-group:nth-of-type(3){
-  grid-column:span 2;
-}
-
-/* ROW 2: Village(2) + School(2) + Gender(2) + Orphan Status(2) + Class(2) + Actions(2) = 12 columns */
-.student-filters-section .filters-row-2 .filter-group:nth-of-type(1),
-.student-filters-section .filters-row-2 .filter-group:nth-of-type(2),
-.student-filters-section .filters-row-2 .filter-group:nth-of-type(3),
-.student-filters-section .filters-row-2 .filter-group:nth-of-type(4),
-.student-filters-section .filters-row-2 .filter-group:nth-of-type(5){
-  grid-column:span 2;
-}
-
-/* Action buttons on same row, right-aligned */
-.student-filters-section .filter-actions-row{
-  grid-column:span 2;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  justify-content:flex-end;
-}
-
-.student-filters-section .filter-search-wrapper,
-.student-filters-section .filter-group{
-  width:100%;
-  min-width:0;
-}
-
-.student-filters-section .multiSelectFilter{
-  width:100%;
-  min-width:0;
-}
-
-.student-filters-section .clear-filters-btn:hover{
-  background:#fff;
-  border-color:#dbe5ef;
-  transform:none;
-}
-
-.student-filters-section .go-filter-btn:hover{
-  background:#0f766e;
-  transform:none;
-}
-
-.student-filters-section .go-filter-btn svg{
-  width:14px;
-  height:14px;
-}
-
-.student-filters-section .filterBtnIcon{
-  font-size:14px;
-  font-weight:800;
-}
-
-/* Responsive: Tablet - 2 column grid */
-@media (max-width: 1024px){
-  .student-filters-section .filters-row-1,
-  .student-filters-section .filters-row-2{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-
-  .student-filters-section .filters-row-1 .filter-search-wrapper,
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(4),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(5),
-  .student-filters-section .filter-actions-row{
-    grid-column:span 1;
-  }
-}
-
-/* Responsive: Mobile - Stacked layout */
-@media (max-width: 640px){
-  .student-filters-section .filters-row-1,
-  .student-filters-section .filters-row-2{
-    grid-template-columns:1fr;
-  }
-
-  .student-filters-section .filters-row-1 .filter-search-wrapper,
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-1 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(1),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(2),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(3),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(4),
-  .student-filters-section .filters-row-2 .filter-group:nth-of-type(5),
-  .student-filters-section .filter-actions-row{
-    grid-column:auto;
-  }
-
-  .student-filters-section .filter-actions-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    width:100%;
-    margin-top:8px;
-  }
-
-  
 }
 
 html {
