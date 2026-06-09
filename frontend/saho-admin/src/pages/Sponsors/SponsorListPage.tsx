@@ -11,6 +11,7 @@ import Pagination from '../../components/common/Pagination';
 import { usePagination } from '../../hooks/usePagination';
 import { useToast } from '../../hooks/useToast';
 import type { SponsorFilters, SponsorView } from '../../types';
+import "../../styles/Sponsors/SponsorListPage.css";
 
 const defaults: SponsorFilters = { search: '', type: '', nationality: '', is_active: '' };
 const contribution = (value?: string | null, nationality?: string) => {
