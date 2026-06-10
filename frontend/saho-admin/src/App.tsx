@@ -37,6 +37,7 @@ export default function App() {
             <Route path="sponsors" element={<SponsorListPage />} />
             <Route path="sponsors/add" element={<SponsorFormPage />} />
             <Route path="sponsors/edit/:id" element={<SponsorFormPage />} />
+            <Route path="sponsors/view/:id" element={<SponsorFormPage />} />
             <Route path="sponsors/assign" element={<AssignSponsorPage />} />
             <Route path="reminders" element={<ViewEvents />} />
             <Route path="reminders/create" element={<CreateEvent />} />

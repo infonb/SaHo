@@ -1950,15 +1950,18 @@ tr.clickable:hover {
 }
 
 .pageBtn.active {
-  background: #991b1b;
+  /* background: #991b1b; */
+  background: #0f766e;
   color: #ffffff;
-  box-shadow: 0 6px 16px rgba(153, 27, 27, 0.2);
+  box-shadow: none;
+  border: 0.5px solid #0f766e;
 }
 
 .pageBtn:hover,
 .pageNav:hover {
-  background: var(--br-100);
-  color: var(--color-text);
+  background: #fff;
+  color: #0f766e;
+  border: 0.5px solid #0f766e;
 }
 
 .pageBtn:disabled,
@@ -1974,9 +1977,64 @@ tr.clickable:hover {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-surface);
-  color: var(--color-text2);
+  color: #6b778C;
   font-weight: 800;
   padding: 0 28px 0 11px;
+}
+
+.pagination .multiSelectFilter {
+  width: 62px;
+  min-width: 62px;
+}
+
+.pagination .multiSelectTrigger {
+  width: 62px;
+  min-width: 62px;
+  padding: 7px 8px 7px 10px;
+  justify-content: space-between;
+}
+
+.pagination .multiSelectTrigger span {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pagination .multiSelectMenu {
+  left: auto;
+  right: 0;
+  top: auto;
+  bottom: calc(100% + 8px);
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+  padding: 4px 0;
+}
+
+.pagination .multiSelectOptions {
+  max-height: 180px;
+}
+
+.pagination .multiSelectMenuHead {
+  display: none;
+}
+
+.pagination .multiSelectOption {
+  appearance: none;
+  -webkit-appearance: none;
+  width: calc(100% - 12px);
+  margin: 2px 6px;
+  padding: 7px 10px;
+  justify-content: center;
+  text-align: center;
+  border: 0;
+  background: transparent;
+}
+
+.pagination .multiSelectOption span {
+  width: 100%;
+  text-align: center;
 }
 
 .modalOverlay {
@@ -2015,32 +2073,6 @@ tr.clickable:hover {
   font-size: 18px;
   font-weight: 800;
   margin: 0;
-}
-
-.modalCloseBtn {
-  width: 32px;
-  height: 32px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: #64748b;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  padding: 0;
-  cursor: pointer;
-}
-
-.modalCloseBtn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-
-.modalCloseBtn svg {
-  display: block;
-  width: 16px;
-  height: 16px;
 }
 
 .modalBody {
@@ -4399,8 +4431,8 @@ td {
 }
 
 .pageBtn.active {
-  background: #0f766e;
-  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.16);
+  /* background: #0f766e; */
+  /* box-shadow: 0 8px 18px rgba(15, 118, 110, 0.16); */
 }
 
 .pageSizeSelect {
@@ -5332,6 +5364,8 @@ td {
   align-items: center;
   margin-bottom: 8px;
   gap: 12px;
+  align-items:center; 
+  padding:10px
 }
 
 .sponsorCardGrid {
@@ -5339,6 +5373,20 @@ td {
   grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
   gap: 18px;
 }
+
+.sponsor-list-page .tableWrap th:nth-child(4),
+.sponsor-list-page .tableWrap td:nth-child(4),
+.sponsor-list-page .tableWrap th:nth-child(8),
+.sponsor-list-page .tableWrap td:nth-child(8) {
+  text-align: center;
+}
+
+.sponsor-list-page .tableWrap td:nth-child(4) .badge,
+.sponsor-list-page .tableWrap td:nth-child(8) .badge {
+  margin-inline: auto;
+}
+
+
 
 .sponsorCard,
 .eventCard {
@@ -5548,7 +5596,7 @@ td {
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   background: #fff;
-  color: #334155;
+  color: #6b778C;
   padding: 0 11px;
   font-size: 12.5px;
   transition:
@@ -6245,7 +6293,7 @@ td {
   background: #ffffff;
   font-size: 13px;
   font-weight: 600;
-  color: #334155;
+  color: #6b778c;
   cursor: pointer;
   transition:
     border-color 0.18s ease,
