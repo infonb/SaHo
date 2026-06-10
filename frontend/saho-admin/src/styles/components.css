@@ -2065,7 +2065,7 @@ tr.clickable:hover {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  z-index: 60;
+  z-index: 1000;
 }
 
 .toast {
@@ -5932,25 +5932,7 @@ td {
   opacity: 0.07;
 }
 
-/* .student-stat-card.total {
-  --card-accent: #22c55e;
-}
 
-.student-stat-card.boys {
-  --card-accent: #f59e0b;
-}
-
-.student-stat-card.girls {
-  --card-accent: #8b5cf6;
-}
-
-.student-stat-card.sponsored {
-  --card-accent: #22c55e;
-}
-
-.student-stat-card.orphans {
-  --card-accent: #f59e0b;
-} */
 
 .student-stat-card.boys .genderIcon {
   background: #dbeafe;
@@ -6652,14 +6634,14 @@ td {
 .studentWizardForm .input,
 .studentWizardForm .select,
 .studentWizardForm .textarea {
-  min-height: var(--student-control-height);
-  height: var(--student-control-height);
+  /* min-height: var(--student-control-height);
+  height: var(--student-control-height); */
   border-radius: var(--student-control-radius);
   border: var(--student-control-border) solid #d1d5db;
   background: #ffffff;
   color: #0f172a;
   font-size: var(--student-field-font);
-  padding: 10px 12px;
+  padding: 6px 12px;
   box-shadow: none;
 }
 .studentWizardForm .textarea {
@@ -6739,9 +6721,12 @@ td {
 .studentPhotoField {
   grid-column: 1 / -1;
 }
+.studentPhotoField .studentStepTitle {
+  margin-bottom: 10px;
+}
 .studentModalUpload {
   min-height: var(--student-control-height);
-  border: var(--student-control-border) dashed #d1d5db;
+  border: 1px solid #d9d9d9;
   border-radius: var(--student-control-radius);
   background: #ffffff;
   gap: 12px;
@@ -6750,10 +6735,16 @@ td {
   align-items: center;
   justify-content: space-between;
   text-align: left;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
+}
+.studentModalUploadPreview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  color: #6b7280;
+  font-size: var(--student-field-font);
+  font-weight: 700;
+  line-height: 1.25;
 }
 .studentModalUpload img {
   width: 40px;
@@ -6762,16 +6753,15 @@ td {
   object-fit: cover;
   flex: 0 0 auto;
 }
-.studentModalUpload:hover,
-.studentModalUpload:focus-within {
-  border-color: #10b981;
-  background: #f8fffd;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
-}
 .studentModalUploadActions {
   justify-content: flex-start;
   gap: 10px;
   flex-wrap: wrap;
+}
+.studentModalUploadSide {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
 }
 .studentModalUploadActions .btn,
 .studentModalUploadActions .btn.outline,
@@ -6780,6 +6770,46 @@ td {
   min-height: var(--student-control-height);
   border-radius: var(--student-control-radius);
   font-size: var(--student-field-font);
+  line-height: 1.2;
+  font-weight: 700;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.studentModalUploadActions .btn svg,
+.studentModalUploadActions label.btn svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+.studentModalUploadHelp {
+  margin-top: 0;
+  text-align: right;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #94a3b8;
+  font-weight: 500;
+}
+.studentCheckboxField {
+  align-self: end;
+}
+.studentCheckboxControl {
+  min-height: var(--student-control-height);
+  height: var(--student-control-height);
+  background: #ffffff;
+  color: #0f172a;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--student-field-font);
+  font-weight: 800;
+}
+.studentCheckboxControl input {
+  width: 16px;
+  height: 16px;
+  accent-color: #10b981;
 }
 .studentWizardForm .foundCard {
   border: 0;
@@ -6788,22 +6818,41 @@ td {
   box-shadow: none;
   padding: 0;
 }
+.studentWizardForm .studentSearchRow {
+  display: contents;
+}
+.studentWizardForm .studentSearchRow .formField {
+  min-width: 0;
+}
 .studentWizardForm .studentSearchAction {
   display: flex;
-  align-items: flex-start;
-  padding-top: calc((var(--student-field-font) * 1.25) + 5px);
+  align-items: center;
+  align-self: end;
+  padding-top: 0;
 }
 .studentWizardForm .studentSearchButton {
   height: var(--student-control-height);
   min-height: var(--student-control-height);
   border-radius: var(--student-control-radius);
   font-size: var(--student-field-font);
-  background: #0f766e;
-  border-color: #0f766e;
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+  min-width: 140px;
+  padding: 0 18px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 .studentWizardForm .studentSearchButton:hover {
-  background: #0d5f59;
-  border-color: #0d5f59;
+  background: #047857;
+  border-color: #047857;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
   transform: none;
 }
 .studentWizardActions {
@@ -6903,12 +6952,6 @@ td {
   border-style: solid;
   background: #f8fafc;
 }
-.studentWizardForm.isViewMode .studentModalUpload:hover,
-.studentWizardForm.isViewMode .studentModalUpload:focus-within {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  box-shadow: none;
-}
 
 @media (min-width: 1400px) {
   .studentWizardForm {
@@ -6949,6 +6992,12 @@ td {
   .studentStepGrid {
     grid-template-columns: 1fr;
   }
+  .studentWizardForm .studentSearchAction {
+    align-items: stretch;
+  }
+  .studentWizardForm .studentSearchButton {
+    width: 100%;
+  }
   .studentWizardActions {
     justify-content: center;
   }
@@ -6974,6 +7023,14 @@ td {
   .studentModalUpload {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .studentModalUploadSide {
+    justify-items: stretch;
+    margin-left: 0;
+    width: 100%;
+  }
+  .studentModalUploadHelp {
+    text-align: left;
   }
   .studentWizardActions {
     flex-direction: column;
