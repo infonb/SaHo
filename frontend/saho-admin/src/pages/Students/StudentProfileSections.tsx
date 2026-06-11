@@ -23,6 +23,14 @@ export interface StudentFormState {
   mndl_id: string;
   vil_id: string;
   sch_id: string;
+  father_first: string;
+  father_middle: string;
+  father_last: string;
+  father_is_guardian: string;
+  mother_first: string;
+  mother_middle: string;
+  mother_last: string;
+  mother_is_guardian: string;
   guardian_first: string;
   guardian_middle: string;
   guardian_last: string;
@@ -63,6 +71,8 @@ interface StudentProfileSectionsProps {
   errors?: StudentFormErrors;
   validatedFields?: Set<keyof StudentFormState>;
   touchedFields?: Set<keyof StudentFormState>;
+  submitAttempted?: boolean;
+  guardianSubmitAttempted?: boolean;
   loading?: boolean;
   activeStep?: 'personal' | 'location' | 'guardian';
 }
@@ -110,7 +120,7 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
 }
 
 export default function StudentProfileSections(props: StudentProfileSectionsProps) {
-  const { mode, form, set, touch, chooseImage, sibling, siblingChecked, searchSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields } = props;
+  const { mode, form, set, touch, chooseImage, sibling, siblingChecked, searchSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -128,14 +138,61 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   const MIN_IMAGE_BYTES = 5 * 1024;
   const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
   const viewLabel = (label: string) => readOnly ? label.replace(/\*/g, '') : label;
+  const shouldShowFieldError = (key: keyof StudentFormState) => {
+    if (!errors[key]) return false;
+    if (touchedFields?.has(key)) return true;
+    if (activeStep === 'guardian') return guardianSubmitAttempted;
+    return validatedFields?.has(key) ?? false;
+  };
   const getFieldState = (key: keyof StudentFormState) => {
     if (readOnly) return 'default' as const;
     const touched = touchedFields?.has(key) ?? false;
-    if (errors[key] && touched) return 'error' as const;
+    if (shouldShowFieldError(key)) return 'error' as const;
     if (!errors[key] && touched && validatedFields?.has(key) && String(form[key] ?? '').trim()) return 'success' as const;
     return 'default' as const;
   };
-  const showMessage = (key: keyof StudentFormState) => Boolean(errors[key]) && (touchedFields?.has(key) || validatedFields?.has(key));
+  const showMessage = shouldShowFieldError;
+  const siblingSection = (
+    <div className="studentSiblingInline">
+      <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><SiblingInfoIcon /></span>Sibling Information</h3>
+      <div className="formGrid studentStepGrid">
+        <label className="field">
+          <span>{viewLabel('Does the student have any sibling in this foundation?*')}</span>
+          {readOnly ? (
+            <input className="input readonlyField" value={form.has_sibling || '-'} readOnly aria-readonly="true" tabIndex={-1} data-field="has_sibling" />
+          ) : (
+            <div className="radioRow">
+              <label><input type="radio" checked={form.has_sibling === 'Yes'} onChange={() => set('has_sibling', 'Yes')} /> Yes</label>
+              <label><input type="radio" checked={form.has_sibling === 'No'} onChange={() => set('has_sibling', 'No')} /> No</label>
+            </div>
+          )}
+        </label>
+        {form.has_sibling === 'Yes' && (
+          <>
+            <div className="studentSearchRow">
+              <Field fieldKey="sibling_aadhaar" label="Search Existing Student by Aadhaar Number*" value={form.sibling_aadhaar} onChange={v => set('sibling_aadhaar', v)} onBlur={() => touch?.('sibling_aadhaar')} maxLength={12} readOnly={readOnly} numericOnly aadhaarFormat error={showMessage('sibling_aadhaar') ? errors.sibling_aadhaar : undefined} state={getFieldState('sibling_aadhaar')} />
+              <div className="studentSearchAction">
+                {!readOnly ? <Button className="studentSearchButton" type="button" onClick={searchSibling}>Search</Button> : null}
+              </div>
+            </div>
+            {sibling ? (
+              <div className="foundCard">
+                <Avatar name={sibling.studentName} size="lg" />
+                <div>
+                  <strong>{sibling.studentName}</strong>
+                  <Badge variant="success">Student ID: {sibling.studentId}</Badge>
+                  <div className="sub">Class: {sibling.classId}</div>
+                  <div className="sub">School: {sibling.schoolName}</div>
+                </div>
+              </div>
+            ) : siblingChecked ? (
+              <div className="foundCard muted">No existing student selected.</div>
+            ) : null}
+          </>
+        )}
+      </div>
+    </div>
+  );
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach(t => t.stop());
@@ -306,9 +363,9 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
         <>
           <FormSection title="Personal Information" step="1">
             <div className="formGrid studentStepGrid">
-              <Field fieldKey="first_name" label="First Name*" value={form.first_name} onChange={v => set('first_name', v)} onBlur={() => touch?.('first_name')} readOnly={readOnly} error={showMessage('first_name') ? errors.first_name : undefined} state={getFieldState('first_name')} />
-              <Field fieldKey="middle_name" label="Middle Name" value={form.middle_name} onChange={v => set('middle_name', v)} readOnly={readOnly} state={getFieldState('middle_name')} />
-              <Field fieldKey="last_name" label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} onBlur={() => touch?.('last_name')} readOnly={readOnly} error={showMessage('last_name') ? errors.last_name : undefined} state={getFieldState('last_name')} />
+              <Field fieldKey="first_name" label="First Name*" value={form.first_name} onChange={v => set('first_name', v)} onBlur={() => touch?.('first_name')} readOnly={readOnly} alphabeticOnly error={showMessage('first_name') ? errors.first_name : undefined} state={getFieldState('first_name')} />
+              <Field fieldKey="middle_name" label="Middle Name" value={form.middle_name} onChange={v => set('middle_name', v)} onBlur={() => touch?.('middle_name')} readOnly={readOnly} alphabeticOnly state={getFieldState('middle_name')} />
+              <Field fieldKey="last_name" label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} onBlur={() => touch?.('last_name')} readOnly={readOnly} alphabeticOnly error={showMessage('last_name') ? errors.last_name : undefined} state={getFieldState('last_name')} />
               <Field fieldKey="email" label="Email ID*" type="email" value={form.email} onChange={v => set('email', v)} onBlur={() => touch?.('email')} readOnly={readOnly} error={showMessage('email') ? errors.email : undefined} state={getFieldState('email')} />
               <Field fieldKey="dob" label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} onBlur={() => touch?.('dob')} readOnly={readOnly} error={showMessage('dob') ? errors.dob : undefined} state={getFieldState('dob')} />
               <Select fieldKey="gender" label="Gender*" value={form.gender} onChange={v => set('gender', v)} onBlur={() => touch?.('gender')} options={GENDER_OPTIONS} readOnly={readOnly} error={showMessage('gender') ? errors.gender : undefined} state={getFieldState('gender')} />
@@ -316,84 +373,46 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
               <Select fieldKey="religion" label="Religion*" value={form.religion} onChange={v => set('religion', v)} onBlur={() => touch?.('religion')} options={religionOptions} readOnly={readOnly} error={showMessage('religion') ? errors.religion : undefined} state={getFieldState('religion')} />
               <Select fieldKey="caste" label="Caste*" value={form.caste} onChange={v => set('caste', v)} onBlur={() => touch?.('caste')} options={casteOptions} readOnly={readOnly} error={showMessage('caste') ? errors.caste : undefined} state={getFieldState('caste')} />
               <Select fieldKey="class_id" label="Class*" value={form.class_id} onChange={v => set('class_id', v)} onBlur={() => touch?.('class_id')} options={classOptions} readOnly={readOnly} error={showMessage('class_id') ? errors.class_id : undefined} state={getFieldState('class_id')} />
-              <Field fieldKey="aadhaar_number" label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} onBlur={() => touch?.('aadhaar_number')} maxLength={12} subText={readOnly || errors.aadhaar_number ? undefined : props.aadhaarStatus} readOnly={readOnly} numericOnly error={showMessage('aadhaar_number') ? errors.aadhaar_number : undefined} state={getFieldState('aadhaar_number')} />
+              <Field fieldKey="aadhaar_number" label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} onBlur={() => touch?.('aadhaar_number')} maxLength={12} subText={readOnly || errors.aadhaar_number ? undefined : props.aadhaarStatus} readOnly={readOnly} numericOnly aadhaarFormat error={showMessage('aadhaar_number') ? errors.aadhaar_number : undefined} state={getFieldState('aadhaar_number')} />
               <Select fieldKey="orphan_status" label="Orphan / Semi Orphan*" value={form.orphan_status} onChange={v => set('orphan_status', v)} onBlur={() => touch?.('orphan_status')} options={orphanStatusOptions} readOnly={readOnly} error={showMessage('orphan_status') ? errors.orphan_status : undefined} state={getFieldState('orphan_status')} />
-              <label className="field studentPhotoField">
-              <span>Student Photo</span>
+              <div className="field studentPhotoField">
+              <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><PhotoImageIcon /></span>Student Photo</h3>
               <div className="uploadBox studentModalUpload">
-                {form.image_url && !readOnly ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="danger"
-                    className="iconBtn uploadDeleteBtn"
-                    onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); clearPhoto(); }}
-                    aria-label="Remove student photo"
-                    title="Remove photo"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                      <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </Button>
-                ) : null}
-                {form.image_url ? <img src={form.image_url} alt="Student" /> : <span>{readOnly ? 'No photo available' : <>Select photo option<br /><small>Take photo or upload</small></>}</span>}
+                <div className="studentModalUploadPreview">
+                  {form.image_url ? <img src={form.image_url} alt="Student" /> : null}
+                  {form.image_url && !readOnly ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="danger"
+                      className="iconBtn uploadDeleteBtn"
+                      onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); clearPhoto(); }}
+                      aria-label="Remove student photo"
+                      title="Remove photo"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                        <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </Button>
+                  ) : null}
+                  <span className={uploadError ? 'studentModalUploadError' : undefined}>{uploadError || (readOnly ? 'No photo available' : 'Take photo or upload')}</span>
+                </div>
                 {!readOnly ? (
-                  <>
-                    <div className="rowFlex studentModalUploadActions">
-                      <Button type="button" variant="outline" onClick={openCamera}>Take Photo</Button>
-                      <label className="btn outline md" style={{ cursor: 'pointer' }}>
-                        Upload Photo
-                        <input accept="image/*" type="file" onChange={handlePhoto} style={{ display: 'none' }} />
-                      </label>
-                    </div>
-                    <div className="sub" style={{ marginTop: 2 }}>
-                      {uploadError ? <span style={{ color: 'var(--red)' }}>{uploadError}</span> : 'Upload size: 5KB to 1MB'}
-                    </div>
-                  </>
+                  <div className="rowFlex studentModalUploadActions">
+                    <Button type="button" variant="outline" onClick={openCamera}>
+                      <PhotoCameraIcon /> Take Photo
+                    </Button>
+                    <label className="btn outline md studentModalUploadButton">
+                      <PhotoUploadIcon /> Upload Photo
+                      <input accept="image/*" type="file" onChange={handlePhoto} style={{ display: 'none' }} />
+                    </label>
+                  </div>
                 ) : null}
               </div>
-              </label>
-            </div>
-
-            <div className="studentSiblingInline">
-              <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon">+</span>Sibling Information</h3>
-              <div className="formGrid studentStepGrid">
-                <label className="field">
-                  <span>{viewLabel('Does the student have any sibling in this foundation?*')}</span>
-                  {readOnly ? (
-                    <input className="input readonlyField" value={form.has_sibling || '-'} readOnly aria-readonly="true" tabIndex={-1} data-field="has_sibling" />
-                  ) : (
-                    <div className="radioRow">
-                      <label><input type="radio" checked={form.has_sibling === 'Yes'} onChange={() => set('has_sibling', 'Yes')} /> Yes</label>
-                      <label><input type="radio" checked={form.has_sibling === 'No'} onChange={() => set('has_sibling', 'No')} /> No</label>
-                    </div>
-                  )}
-                </label>
-                {form.has_sibling === 'Yes' && (
-                  <>
-                    <Field fieldKey="sibling_aadhaar" label="Search Existing Student by Aadhaar Number*" value={form.sibling_aadhaar} onChange={v => set('sibling_aadhaar', v)} onBlur={() => touch?.('sibling_aadhaar')} maxLength={12} readOnly={readOnly} numericOnly error={showMessage('sibling_aadhaar') ? errors.sibling_aadhaar : undefined} state={getFieldState('sibling_aadhaar')} />
-                    <div className="studentSearchAction">
-                      {!readOnly ? <Button className="studentSearchButton" type="button" onClick={searchSibling}>Search</Button> : null}
-                    </div>
-                    {sibling ? (
-                      <div className="foundCard">
-                        <Avatar name={sibling.studentName} size="lg" />
-                        <div>
-                          <strong>{sibling.studentName}</strong>
-                          <Badge variant="success">Student ID: {sibling.studentId}</Badge>
-                          <div className="sub">Class: {sibling.classId}</div>
-                          <div className="sub">School: {sibling.schoolName}</div>
-                        </div>
-                      </div>
-                    ) : siblingChecked ? (
-                      <div className="foundCard muted">No existing student selected.</div>
-                    ) : null}
-                  </>
-                )}
               </div>
             </div>
           </FormSection>
@@ -413,8 +432,8 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={closeCamera}>Cancel</Button>
-              <Button onClick={capturePhoto} disabled={!!cameraError}>Capture</Button>
+              <Button variant="outline" className="cameraFooterButton btnRed" onClick={closeCamera}>Cancel</Button>
+              <Button className="cameraFooterButton btnGreen" onClick={capturePhoto} disabled={!!cameraError}>Capture</Button>
             </>
           )
         }
@@ -456,19 +475,40 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
       ) : null}
 
       {activeStep === 'guardian' ? (
-        <FormSection title="Guardian Information" step="3">
-          <div className="formGrid studentStepGrid">
-            <Field fieldKey="guardian_first" label="Guardian First Name*" value={form.guardian_first} onChange={v => set('guardian_first', v)} onBlur={() => touch?.('guardian_first')} readOnly={readOnly} error={showMessage('guardian_first') ? errors.guardian_first : undefined} state={getFieldState('guardian_first')} />
-            <Field fieldKey="guardian_middle" label="Guardian Middle Name" value={form.guardian_middle} onChange={v => set('guardian_middle', v)} readOnly={readOnly} state={getFieldState('guardian_middle')} />
-            <Field fieldKey="guardian_last" label="Guardian Last Name*" value={form.guardian_last} onChange={v => set('guardian_last', v)} onBlur={() => touch?.('guardian_last')} readOnly={readOnly} error={showMessage('guardian_last') ? errors.guardian_last : undefined} state={getFieldState('guardian_last')} />
-            <Select fieldKey="relation" label="Relation*" value={form.relation} onChange={v => set('relation', v)} onBlur={() => touch?.('relation')} options={relationships} readOnly={readOnly} error={showMessage('relation') ? errors.relation : undefined} state={getFieldState('relation')} />
-            <Field fieldKey="phone" label="Phone Number*" value={form.phone} onChange={v => set('phone', v)} onBlur={() => touch?.('phone')} maxLength={10} numericOnly readOnly={readOnly} error={showMessage('phone') ? errors.phone : undefined} state={getFieldState('phone')} />
-            <Field fieldKey="occ" label="Occupation" value={form.occ} onChange={v => set('occ', v)} readOnly={readOnly} state={getFieldState('occ')} />
-            <FormField fieldKey="addr" label="Address" readOnly={readOnly} state={getFieldState('addr')}>
-              <textarea id="student-field-addr" data-field="addr" className={readOnly ? 'textarea readonlyField' : 'textarea'} value={form.addr} readOnly={readOnly} aria-readonly={readOnly || undefined} tabIndex={readOnly ? -1 : undefined} onChange={e => set('addr', e.target.value)} />
-            </FormField>
+        <section className="studentFormSection" aria-labelledby="student-section-other-information">
+          <h3 id="student-section-other-information" className="studentStepTitle"><span className="studentStepIcon">3</span>Other Information</h3>
+
+          <div className="studentSiblingInline">
+            <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><ParentInfoIcon /></span>Parent Information</h3>
+            <div className="formGrid studentStepGrid">
+              <Field fieldKey="father_first" label="Father First Name" value={form.father_first} onChange={v => set('father_first', v)} onBlur={() => touch?.('father_first')} readOnly={readOnly} alphabeticOnly state={getFieldState('father_first')} />
+              <Field fieldKey="father_middle" label="Father Middle Name" value={form.father_middle} onChange={v => set('father_middle', v)} onBlur={() => touch?.('father_middle')} readOnly={readOnly} alphabeticOnly state={getFieldState('father_middle')} />
+              <Field fieldKey="father_last" label="Father Last Name" value={form.father_last} onChange={v => set('father_last', v)} onBlur={() => touch?.('father_last')} readOnly={readOnly} alphabeticOnly state={getFieldState('father_last')} />
+              <CheckboxField fieldKey="father_is_guardian" label="Is Guardian" checked={form.father_is_guardian === 'Yes'} onChange={checked => set('father_is_guardian', checked ? 'Yes' : 'No')} readOnly={readOnly} />
+              <Field fieldKey="mother_first" label="Mother First Name" value={form.mother_first} onChange={v => set('mother_first', v)} onBlur={() => touch?.('mother_first')} readOnly={readOnly} alphabeticOnly state={getFieldState('mother_first')} />
+              <Field fieldKey="mother_middle" label="Mother Middle Name" value={form.mother_middle} onChange={v => set('mother_middle', v)} onBlur={() => touch?.('mother_middle')} readOnly={readOnly} alphabeticOnly state={getFieldState('mother_middle')} />
+              <Field fieldKey="mother_last" label="Mother Last Name" value={form.mother_last} onChange={v => set('mother_last', v)} onBlur={() => touch?.('mother_last')} readOnly={readOnly} alphabeticOnly state={getFieldState('mother_last')} />
+              <CheckboxField fieldKey="mother_is_guardian" label="Is Guardian" checked={form.mother_is_guardian === 'Yes'} onChange={checked => set('mother_is_guardian', checked ? 'Yes' : 'No')} readOnly={readOnly} />
+            </div>
           </div>
-        </FormSection>
+
+          <div className="studentSiblingInline">
+            <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><GuardianInfoIcon /></span>Guardian Information</h3>
+            <div className="formGrid studentStepGrid">
+              <Field fieldKey="guardian_first" label="Guardian First Name*" value={form.guardian_first} onChange={v => set('guardian_first', v)} onBlur={() => touch?.('guardian_first')} readOnly={readOnly} alphabeticOnly error={showMessage('guardian_first') ? errors.guardian_first : undefined} state={getFieldState('guardian_first')} />
+              <Field fieldKey="guardian_middle" label="Guardian Middle Name" value={form.guardian_middle} onChange={v => set('guardian_middle', v)} onBlur={() => touch?.('guardian_middle')} readOnly={readOnly} alphabeticOnly state={getFieldState('guardian_middle')} />
+              <Field fieldKey="guardian_last" label="Guardian Last Name*" value={form.guardian_last} onChange={v => set('guardian_last', v)} onBlur={() => touch?.('guardian_last')} readOnly={readOnly} alphabeticOnly error={showMessage('guardian_last') ? errors.guardian_last : undefined} state={getFieldState('guardian_last')} />
+              <Select fieldKey="relation" label="Relation*" value={form.relation} onChange={v => set('relation', v)} onBlur={() => touch?.('relation')} options={relationships} readOnly={readOnly} error={showMessage('relation') ? errors.relation : undefined} state={getFieldState('relation')} />
+              <Field fieldKey="phone" label="Phone Number*" value={form.phone} onChange={v => set('phone', v)} onBlur={() => touch?.('phone')} maxLength={10} numericOnly readOnly={readOnly} error={showMessage('phone') ? errors.phone : undefined} state={getFieldState('phone')} />
+              <Field fieldKey="occ" label="Occupation" value={form.occ} onChange={v => set('occ', v)} readOnly={readOnly} state={getFieldState('occ')} />
+              <FormField fieldKey="addr" label="Address" readOnly={readOnly} state={getFieldState('addr')}>
+                <textarea id="student-field-addr" data-field="addr" className={readOnly ? 'textarea readonlyField' : 'textarea'} value={form.addr} readOnly={readOnly} aria-readonly={readOnly || undefined} tabIndex={readOnly ? -1 : undefined} onChange={e => set('addr', e.target.value)} />
+              </FormField>
+            </div>
+          </div>
+
+          {siblingSection}
+        </section>
       ) : null}
     </FormContainer>
   );
@@ -476,13 +516,15 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
 
 type FieldState = 'default' | 'error' | 'success';
 
+function placeholderLabel(label: string) {
+  return label.replace(/\*/g, '').trim();
+}
+
 function FormField({ fieldKey, label, children, error, subText, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; children: ReactNode; error?: string; subText?: string; readOnly?: boolean; state?: FieldState }) {
   const inputId = `student-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
-  const displayLabel = readOnly ? label.replace(/\*/g, '') : label;
   return (
     <div className={`field formField has-${state}`}>
-      <label htmlFor={inputId}>{displayLabel}</label>
       {children}
       <ValidationMessage id={messageId} message={error} />
       {!error && subText ? <div id={messageId} className="formHelperText">{subText}</div> : null}
@@ -490,12 +532,27 @@ function FormField({ fieldKey, label, children, error, subText, readOnly = false
   );
 }
 
-function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLength, subText, error, readOnly = false, numericOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; type?: string; maxLength?: number; subText?: string; error?: string; readOnly?: boolean; numericOnly?: boolean; state?: FieldState }) {
-  const inputType = readOnly || numericOnly ? 'text' : type;
+function formatAadhaar(value: string) {
+  return value.replace(/\D/g, '').slice(0, 12).replace(/(\d{4})(?=\d)/g, '$1 ');
+}
+
+function formatAlphabeticName(value: string) {
+  const lettersOnly = value.replace(/[^A-Za-z]/g, '');
+  if (!lettersOnly) return '';
+  return lettersOnly.charAt(0).toUpperCase() + lettersOnly.slice(1).toLowerCase();
+}
+
+function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLength, subText, error, readOnly = false, numericOnly = false, alphabeticOnly = false, aadhaarFormat = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; type?: string; maxLength?: number; subText?: string; error?: string; readOnly?: boolean; numericOnly?: boolean; alphabeticOnly?: boolean; aadhaarFormat?: boolean; state?: FieldState }) {
+  const inputType = readOnly || numericOnly || alphabeticOnly ? 'text' : type;
   const inputId = `student-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
+  const placeholder = placeholderLabel(label);
   const handleChange = (nextValue: string) => {
-    const cleanValue = numericOnly ? nextValue.replace(/\D/g, '').slice(0, maxLength) : nextValue;
+    const cleanValue = numericOnly
+      ? nextValue.replace(/\D/g, '').slice(0, maxLength)
+      : alphabeticOnly
+      ? formatAlphabeticName(nextValue)
+      : nextValue;
     onChange(cleanValue);
   };
 
@@ -506,25 +563,100 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLen
         data-field={fieldKey}
         required={!readOnly && label.includes('*')}
         readOnly={readOnly}
+        aria-label={placeholder}
         aria-readonly={readOnly || undefined}
         aria-invalid={state === 'error' || undefined}
         aria-describedby={error || subText ? messageId : undefined}
         tabIndex={readOnly ? -1 : undefined}
-        maxLength={maxLength}
+        maxLength={aadhaarFormat ? 14 : maxLength}
         type={inputType}
-        inputMode={numericOnly ? 'numeric' : undefined}
-        pattern={numericOnly ? '\\d*' : undefined}
+        inputMode={numericOnly ? 'numeric' : alphabeticOnly ? 'text' : undefined}
+        pattern={numericOnly ? '\\d*' : alphabeticOnly ? '[A-Za-z]*' : undefined}
+        placeholder={placeholder}
         className={readOnly ? 'input readonlyField' : 'input'}
-        value={readOnly ? (value || '-') : value}
+        value={readOnly ? (aadhaarFormat && value ? formatAadhaar(value) : value || '-') : aadhaarFormat ? formatAadhaar(value) : value}
         onChange={e => handleChange(e.target.value)}
-        onBlur={onBlur}
       />
     </FormField>
+  );
+}
+
+function CheckboxField({ fieldKey, label, checked, onChange, readOnly = false }: { fieldKey: keyof StudentFormState; label: string; checked: boolean; onChange: (checked: boolean) => void; readOnly?: boolean }) {
+  return (
+    <label className="field studentCheckboxField">
+      <span className="studentCheckboxControl">
+        <input data-field={fieldKey} type="checkbox" checked={checked} disabled={readOnly} onChange={e => onChange(e.target.checked)} />
+        <span>{label}</span>
+      </span>
+    </label>
+  );
+}
+
+function PhotoCameraIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l1.4-1.8h5.8L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M12 15.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function PhotoImageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M5 5.5h14A1.5 1.5 0 0 1 20.5 7v10A1.5 1.5 0 0 1 19 18.5H5A1.5 1.5 0 0 1 3.5 17V7A1.5 1.5 0 0 1 5 5.5Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="m5.5 16 4-4 3 3 2-2 4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.5 10a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ParentInfoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M8 10.5a2.75 2.75 0 1 0 0-5.5 2.75 2.75 0 0 0 0 5.5Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M16 10.5a2.75 2.75 0 1 0 0-5.5 2.75 2.75 0 0 0 0 5.5Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3.5 19a4.5 4.5 0 0 1 9 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M11.5 19a4.5 4.5 0 0 1 9 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function GuardianInfoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M12 21s7-3.5 7-9V5.5L12 3 5 5.5V12c0 5.5 7 9 7 9Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SiblingInfoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M8.5 10a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M15.5 10a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4 18.5a4.5 4.5 0 0 1 9 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M11 18.5a4.5 4.5 0 0 1 9 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PhotoUploadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M12 16V5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="m7.5 9.5 4.5-4.5 4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 16v1.5A2.5 2.5 0 0 0 7.5 20h9A2.5 2.5 0 0 0 19 17.5V16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   );
 }
 function Select({ fieldKey, label, value, onChange, onBlur, options, subText, error, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; options: (string | [string, string])[]; subText?: string; error?: string; readOnly?: boolean; state?: FieldState }) {
   const inputId = `student-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const placeholder = placeholderLabel(label);
+  const normalizedOptions = options.map(option => Array.isArray(option) ? { value: option[0], label: option[1] } : { value: option, label: option });
   const selectedLabel = options.reduce<string>((labelValue, option) => {
     if (labelValue) return labelValue;
     if (Array.isArray(option)) return option[0] === value ? option[1] : '';
@@ -536,10 +668,51 @@ function Select({ fieldKey, label, value, onChange, onBlur, options, subText, er
       {readOnly ? (
         <input id={inputId} data-field={fieldKey} className="input readonlyField" value={selectedLabel || value || '-'} readOnly aria-readonly="true" tabIndex={-1} />
       ) : (
-        <select id={inputId} data-field={fieldKey} required={label.includes('*')} className="select" value={value} onChange={e => onChange(e.target.value)} onBlur={onBlur} aria-invalid={state === 'error' || undefined} aria-describedby={error || subText ? messageId : undefined}>
-          <option value="">Select</option>
-          {options.map(o => Array.isArray(o) ? <option key={o[0]} value={o[0]}>{o[1]}</option> : <option key={o} value={o}>{o}</option>)}
-        </select>
+        <details ref={detailsRef} className={`multiSelectFilter studentFormSelect${value ? ' hasValue' : ''}`}>
+          <summary
+            id={inputId}
+            data-field={fieldKey}
+            className="multiSelectTrigger"
+            aria-label={placeholder}
+            aria-invalid={state === 'error' || undefined}
+            aria-describedby={error || subText ? messageId : undefined}
+            onClick={(event) => {
+              event.preventDefault();
+              const shouldOpen = !detailsRef.current?.open;
+              document.querySelectorAll<HTMLDetailsElement>('.studentWizardForm .studentFormSelect[open]').forEach((details) => {
+                if (details !== detailsRef.current) details.removeAttribute('open');
+              });
+              if (shouldOpen) detailsRef.current?.setAttribute('open', '');
+              else detailsRef.current?.removeAttribute('open');
+            }}
+          >
+            <span>{selectedLabel || placeholder}</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </summary>
+          <div className="multiSelectMenu">
+            <div className="multiSelectMenuHead">
+              <span>{placeholder}</span>
+              {value ? <button type="button" onClick={() => onChange('')}>Clear</button> : null}
+            </div>
+            <div className="multiSelectOptions">
+              {normalizedOptions.length ? normalizedOptions.map(option => (
+                <button
+                  type="button"
+                  className={`multiSelectOption${value === option.value ? ' isSelected' : ''}`}
+                  key={option.value}
+                  onClick={() => {
+                    onChange(option.value);
+                    detailsRef.current?.removeAttribute('open');
+                  }}
+                >
+                  <span>{option.label}</span>
+                </button>
+              )) : <div className="multiSelectEmpty">No options available</div>}
+            </div>
+          </div>
+        </details>
       )}
     </FormField>
   );
