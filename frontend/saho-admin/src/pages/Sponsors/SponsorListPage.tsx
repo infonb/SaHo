@@ -328,17 +328,15 @@ export default function SponsorListPage() {
               onChange={type => setPending({ ...pending, type })}
             />
           </div>
-          <div className="filter-actions-group col-1 ">
-            <button className="btnRed" onClick={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); setOpenFilter(null); }}>
+          <div className="filter-actions-group col-2 d-flex  justify-content-end   gap-2">
+            <button className="clearbtn" onClick={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); setOpenFilter(null); }}>
             <img
                   src={closeIcon}
                   alt="Clear"
                   className="filterBtnIcon"
                 /> Clear
             </button>
-          </div>
-          <div className="filter-actions-group col-1 ps-0 ">
-            <button className="btnGreen" onClick={() => { setApplied({ ...pending }); pager.setPage(1); setOpenFilter(null); }}>  <img
+            <button className="gobtn" onClick={() => { setApplied({ ...pending }); pager.setPage(1); setOpenFilter(null); }}>  <img
           src={arrowIcon}
          alt="Clear"
          className="filterBtnIcon"
@@ -506,7 +504,7 @@ function SponsorModal({
       width={680}
       footer={
         <>
-          <Button
+          <Button className="clearbtn"
             variant="outline"
             className="btn btnRed"
             onClick={onClose}
