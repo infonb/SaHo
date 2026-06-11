@@ -8,7 +8,15 @@ public interface ISponsorService {
 
     void createOrUpdateSponsor(SponsorRequestDto request);
     SponsorResponseDto getSponsorById(Integer sponsorId);
-    SponsorListResponseDto getAllSponsors(Integer pageNumber, Integer pageSize);
+    SponsorListResponseDto getAllSponsors(
+            Integer pageNumber,
+            Integer pageSize,
+            String search,
+            String sponsorType,
+            String nationality,
+            String sortColumn,
+            String sortDirection
+    );
     void deleteSponsorById(Integer sponsorId, Integer modifiedBy);
 
     void assignSponsorToStudent(Integer studentId, Integer sponsorId, String createdBy);

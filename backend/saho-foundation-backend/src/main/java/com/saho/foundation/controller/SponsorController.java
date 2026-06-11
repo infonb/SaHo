@@ -56,12 +56,25 @@ getSponsorById(@PathVariable Integer sponsorId) {
 
     @GetMapping
     public ResponseEntity<ApiResponseDto<SponsorListResponseDto>> getAllSponsors(
-            @RequestParam Integer pageNumber,
-            @RequestParam Integer pageSize
+            @RequestParam(defaultValue = "1") Integer pageNumber,
+            @RequestParam(defaultValue = "100") Integer pageSize,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String nationality,
+            @RequestParam(defaultValue = "sponsor_id") String sortColumn,
+            @RequestParam(defaultValue = "DESC") String sortDirection
     ) {
 
         SponsorListResponseDto response =
-                sponsorService.getAllSponsors(pageNumber, pageSize);
+                sponsorService.getAllSponsors(
+                        pageNumber,
+                        pageSize,
+                        search,
+                        type,
+                        nationality,
+                        sortColumn,
+                        sortDirection
+                );
 
         return ResponseEntity.ok(
                 new ApiResponseDto<>(

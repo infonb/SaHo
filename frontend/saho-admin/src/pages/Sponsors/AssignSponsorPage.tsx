@@ -190,11 +190,11 @@ export default function AssignSponsorPage() {
   };
 
   return (
-    <div>
+    <div >
       <PageHeader
         title="Assign Sponsor to Students"
         subtitle="Select a sponsor, choose students and assign"
-        actions={<Button variant="outline" onClick={() => nav(-1)}>Back</Button>}
+        actions={<Button variant="outline" className="btnRed" onClick={() => nav(-1)}>Back</Button>}
       />
 
       <div className="assignGrid">
@@ -361,7 +361,7 @@ export default function AssignSponsorPage() {
                 <div className="sub" style={{ fontWeight: 800 }}>Selected {checkedStudents.length} of {visibleStudents.length}</div>
               </div>
 
-              <Button size="sm" variant="success" onClick={() => setConfirmOpen(true)} disabled={!selectedSponsor || checkedStudents.length === 0}>
+              <Button size="sm" variant="success"  onClick={() => setConfirmOpen(true)} disabled={!selectedSponsor || checkedStudents.length === 0}>
                 Assign Sponsor
               </Button>
             </div>
@@ -440,6 +440,7 @@ export default function AssignSponsorPage() {
           ) : null}
 
           <Button
+
             variant="success"
             style={{ width: '100%', marginTop: 12 }}
             disabled={!selectedSponsor || checkedStudents.length === 0}

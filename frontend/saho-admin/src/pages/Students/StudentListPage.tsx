@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deactivateStudents, exportStudentsCsv, getStudents } from '../../api/studentApi';
 import { getClasses } from '../../api/masterApi';
@@ -14,6 +14,8 @@ import { useToast } from '../../hooks/useToast';
 import type { StudentFilters, StudentView, SponsorView } from '../../types';
 import StudentDetailModal from './StudentDetailModal';
 import Modal from '../../components/common/Modal';
+import closeIcon from "../../assets/clera cross favicon.png"
+import arrowIcon from "../../assets/Go arrow favicon.png"
 const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', sponsor_status: '', is_active: '' };
 type FilterOption = { value: string; label: string };
 
@@ -720,7 +722,7 @@ export default function StudentListPage() {
   <div className="container-fluid">
 
     {/* Row 1 */}
-    <div className="row g-3">
+    <div className="row g-2">
 
       {/* Gender */}
       <div className="col-2">
@@ -828,7 +830,7 @@ export default function StudentListPage() {
     </div>
 
     {/* Row 2 */}
-<div className="row g-3 mt-1">
+<div className="row g-2 mt-1">
 
   {showDistrictFilter ? (
     <div className="col-2">
@@ -921,46 +923,43 @@ export default function StudentListPage() {
   )}
 
       {/* Empty Space */}
-      <div className="col-2"></div>
+      <div className="col-2 "></div>
 
       {/* Buttons */}
-      <div className="col-1">
+      <div className="col-1  ">
           <button
-            className="clear-filters-btn"
+            className="btnRed"
             onClick={() => {
               setPending(defaults);
               setApplied(defaults);
               setPage(1);
               setOpenFilter(null);
             }}
-          >
-            <span className="filterBtnIcon">×</span>
+          ><img
+      src={closeIcon}
+      alt="Clear"
+      className="filterBtnIcon"
+    />
             Clear
           </button>
       </div>
-      <div className="col-1">
+      <div className="col-1 ps-0 ">
           
           <button
-            className="go-filter-btn"
+            className="btnGreen"
             onClick={() => {
               setApplied({ ...pending });
               setPage(1);
               setOpenFilter(null);
             }}
           >
+            <img
+  src={arrowIcon}
+  alt="Clear"
+  className="filterBtnIcon"
+/>
             Go
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7"></path>
-            </svg>
+           
           </button>
       </div>
 
@@ -1151,9 +1150,24 @@ function MultiSelectFilter({
         ? selectedLabels[0]
         : `${selectedLabels.length} selected`;
   const isOpen = openFilter === filterKey;
+  const filterRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!filterRef.current?.contains(event.target as Node)) {
+        setOpenFilter(null);
+      }
+    };
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [isOpen, setOpenFilter]);
 
   return (
     <details
+      ref={filterRef}
       className={`multiSelectFilter${selected.length ? " hasValue" : ""}`}
       open={isOpen}
     >
