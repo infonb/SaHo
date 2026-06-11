@@ -787,17 +787,20 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         },
       };
 
-      if (isEdit && id) {
-        await updateStudent(Number(id), payload, selectedImageFile ?? undefined);
-        toast('Student updated successfully.', 'success');
+      const successMessage = isEdit ? 'Student updated successfully.' : 'Student added successfully.';
+
+      if (isEdit) {
+        if (!effectiveStudentId) throw new Error('Student id is missing for update.');
+        await updateStudent(effectiveStudentId, payload, selectedImageFile ?? undefined);
       } else {
         await createStudent(payload, selectedImageFile ?? undefined);
-        toast('Student added successfully.', 'success');
       }
       if (embedded && onSuccess) {
+        toast(successMessage, 'success');
         onSuccess();
       } else {
         nav('/students');
+        window.setTimeout(() => toast(successMessage, 'success'), 0);
       }
     } catch (error) {
       const nextErrors: StudentFormErrors = {};

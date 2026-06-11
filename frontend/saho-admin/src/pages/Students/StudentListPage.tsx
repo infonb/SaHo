@@ -569,6 +569,7 @@ export default function StudentListPage() {
             <div className="stat-card-value">{totalStudents}</div>
             <div className="stat-card-note">All enrolled</div>
           </div>
+         
           <div className="stat-card-icon">
             <svg
               viewBox="0 0 24 24"

@@ -378,42 +378,38 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
               <div className="field studentPhotoField">
               <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><PhotoImageIcon /></span>Student Photo</h3>
               <div className="uploadBox studentModalUpload">
-                {form.image_url && !readOnly ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="danger"
-                    className="iconBtn uploadDeleteBtn"
-                    onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); clearPhoto(); }}
-                    aria-label="Remove student photo"
-                    title="Remove photo"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                      <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </Button>
-                ) : null}
                 <div className="studentModalUploadPreview">
-                  {form.image_url ? <img src={form.image_url} alt="Student" /> : <span>{readOnly ? 'No photo available' : 'Take photo or upload'}</span>}
+                  {form.image_url ? <img src={form.image_url} alt="Student" /> : null}
+                  {form.image_url && !readOnly ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="danger"
+                      className="iconBtn uploadDeleteBtn"
+                      onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); clearPhoto(); }}
+                      aria-label="Remove student photo"
+                      title="Remove photo"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                        <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </Button>
+                  ) : null}
+                  <span className={uploadError ? 'studentModalUploadError' : undefined}>{uploadError || (readOnly ? 'No photo available' : 'Take photo or upload')}</span>
                 </div>
                 {!readOnly ? (
-                  <div className="studentModalUploadSide">
-                    <div className="rowFlex studentModalUploadActions">
-                      <Button type="button" variant="outline" onClick={openCamera}>
-                        <PhotoCameraIcon /> Take Photo
-                      </Button>
-                      <label className="btn outline md" style={{ cursor: 'pointer' }}>
-                        <PhotoUploadIcon /> Upload Photo
-                        <input accept="image/*" type="file" onChange={handlePhoto} style={{ display: 'none' }} />
-                      </label>
-                    </div>
-                    <div className="sub studentModalUploadHelp">
-                      {uploadError ? <span style={{ color: 'var(--red)' }}>{uploadError}</span> : 'Upload size: 5KB to 1MB'}
-                    </div>
+                  <div className="rowFlex studentModalUploadActions">
+                    <Button type="button" variant="outline" onClick={openCamera}>
+                      <PhotoCameraIcon /> Take Photo
+                    </Button>
+                    <label className="btn outline md studentModalUploadButton">
+                      <PhotoUploadIcon /> Upload Photo
+                      <input accept="image/*" type="file" onChange={handlePhoto} style={{ display: 'none' }} />
+                    </label>
                   </div>
                 ) : null}
               </div>
@@ -436,8 +432,8 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={closeCamera}>Cancel</Button>
-              <Button onClick={capturePhoto} disabled={!!cameraError}>Capture</Button>
+              <Button variant="outline" className="cameraFooterButton btnRed" onClick={closeCamera}>Cancel</Button>
+              <Button className="cameraFooterButton btnGreen" onClick={capturePhoto} disabled={!!cameraError}>Capture</Button>
             </>
           )
         }
@@ -520,13 +516,15 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
 
 type FieldState = 'default' | 'error' | 'success';
 
+function placeholderLabel(label: string) {
+  return label.replace(/\*/g, '').trim();
+}
+
 function FormField({ fieldKey, label, children, error, subText, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; children: ReactNode; error?: string; subText?: string; readOnly?: boolean; state?: FieldState }) {
   const inputId = `student-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
-  const displayLabel = readOnly ? label.replace(/\*/g, '') : label;
   return (
     <div className={`field formField has-${state}`}>
-      <label htmlFor={inputId}>{displayLabel}</label>
       {children}
       <ValidationMessage id={messageId} message={error} />
       {!error && subText ? <div id={messageId} className="formHelperText">{subText}</div> : null}
@@ -548,6 +546,7 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLen
   const inputType = readOnly || numericOnly || alphabeticOnly ? 'text' : type;
   const inputId = `student-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
+  const placeholder = placeholderLabel(label);
   const handleChange = (nextValue: string) => {
     const cleanValue = numericOnly
       ? nextValue.replace(/\D/g, '').slice(0, maxLength)
@@ -564,6 +563,7 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLen
         data-field={fieldKey}
         required={!readOnly && label.includes('*')}
         readOnly={readOnly}
+        aria-label={placeholder}
         aria-readonly={readOnly || undefined}
         aria-invalid={state === 'error' || undefined}
         aria-describedby={error || subText ? messageId : undefined}
@@ -572,10 +572,10 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLen
         type={inputType}
         inputMode={numericOnly ? 'numeric' : alphabeticOnly ? 'text' : undefined}
         pattern={numericOnly ? '\\d*' : alphabeticOnly ? '[A-Za-z]*' : undefined}
+        placeholder={placeholder}
         className={readOnly ? 'input readonlyField' : 'input'}
         value={readOnly ? (aadhaarFormat && value ? formatAadhaar(value) : value || '-') : aadhaarFormat ? formatAadhaar(value) : value}
         onChange={e => handleChange(e.target.value)}
-        onBlur={onBlur}
       />
     </FormField>
   );
@@ -584,10 +584,9 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLen
 function CheckboxField({ fieldKey, label, checked, onChange, readOnly = false }: { fieldKey: keyof StudentFormState; label: string; checked: boolean; onChange: (checked: boolean) => void; readOnly?: boolean }) {
   return (
     <label className="field studentCheckboxField">
-      <span>{label}</span>
       <span className="studentCheckboxControl">
         <input data-field={fieldKey} type="checkbox" checked={checked} disabled={readOnly} onChange={e => onChange(e.target.checked)} />
-        <span>{checked ? 'Yes' : 'No'}</span>
+        <span>{label}</span>
       </span>
     </label>
   );
@@ -655,6 +654,9 @@ function PhotoUploadIcon() {
 function Select({ fieldKey, label, value, onChange, onBlur, options, subText, error, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; options: (string | [string, string])[]; subText?: string; error?: string; readOnly?: boolean; state?: FieldState }) {
   const inputId = `student-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const placeholder = placeholderLabel(label);
+  const normalizedOptions = options.map(option => Array.isArray(option) ? { value: option[0], label: option[1] } : { value: option, label: option });
   const selectedLabel = options.reduce<string>((labelValue, option) => {
     if (labelValue) return labelValue;
     if (Array.isArray(option)) return option[0] === value ? option[1] : '';
@@ -666,10 +668,51 @@ function Select({ fieldKey, label, value, onChange, onBlur, options, subText, er
       {readOnly ? (
         <input id={inputId} data-field={fieldKey} className="input readonlyField" value={selectedLabel || value || '-'} readOnly aria-readonly="true" tabIndex={-1} />
       ) : (
-        <select id={inputId} data-field={fieldKey} required={label.includes('*')} className="select" value={value} onChange={e => onChange(e.target.value)} onBlur={onBlur} aria-invalid={state === 'error' || undefined} aria-describedby={error || subText ? messageId : undefined}>
-          <option value="">Select</option>
-          {options.map(o => Array.isArray(o) ? <option key={o[0]} value={o[0]}>{o[1]}</option> : <option key={o} value={o}>{o}</option>)}
-        </select>
+        <details ref={detailsRef} className={`multiSelectFilter studentFormSelect${value ? ' hasValue' : ''}`}>
+          <summary
+            id={inputId}
+            data-field={fieldKey}
+            className="multiSelectTrigger"
+            aria-label={placeholder}
+            aria-invalid={state === 'error' || undefined}
+            aria-describedby={error || subText ? messageId : undefined}
+            onClick={(event) => {
+              event.preventDefault();
+              const shouldOpen = !detailsRef.current?.open;
+              document.querySelectorAll<HTMLDetailsElement>('.studentWizardForm .studentFormSelect[open]').forEach((details) => {
+                if (details !== detailsRef.current) details.removeAttribute('open');
+              });
+              if (shouldOpen) detailsRef.current?.setAttribute('open', '');
+              else detailsRef.current?.removeAttribute('open');
+            }}
+          >
+            <span>{selectedLabel || placeholder}</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </summary>
+          <div className="multiSelectMenu">
+            <div className="multiSelectMenuHead">
+              <span>{placeholder}</span>
+              {value ? <button type="button" onClick={() => onChange('')}>Clear</button> : null}
+            </div>
+            <div className="multiSelectOptions">
+              {normalizedOptions.length ? normalizedOptions.map(option => (
+                <button
+                  type="button"
+                  className={`multiSelectOption${value === option.value ? ' isSelected' : ''}`}
+                  key={option.value}
+                  onClick={() => {
+                    onChange(option.value);
+                    detailsRef.current?.removeAttribute('open');
+                  }}
+                >
+                  <span>{option.label}</span>
+                </button>
+              )) : <div className="multiSelectEmpty">No options available</div>}
+            </div>
+          </div>
+        </details>
       )}
     </FormField>
   );
