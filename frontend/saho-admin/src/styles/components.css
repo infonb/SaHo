@@ -484,6 +484,8 @@ h1, h2, h3, h4, h5, h6
     transform 0.16s ease;
   white-space: nowrap;
   box-shadow: none;
+  padding:20px 12px;
+  
 }
 
 .btn.sm {
@@ -528,14 +530,18 @@ h1, h2, h3, h4, h5, h6
 
 .btnGreen
 {
-  background: #4d7a63;
-  color: #ffffff;
+  background: #4d7a63 !important;
+  color: #ffffff !important;
   min-width: 100px;
-  border-radius: 12px;
-  padding: 8px 12px;
-  border: 1px solid #4d7a63;
+  border-radius: 12px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #4d7a63 !important;
   font-size: 13px !important; 
-  line-height: 1.5;
+  line-height: 1.5 !important;
   font-weight: 600 !important;
 }
 
@@ -552,7 +558,11 @@ h1, h2, h3, h4, h5, h6
   color: #ffffff !important;
   min-width: 100px;
   border-radius: 12px !important;
-  padding: 8px 12px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px !important;
   border: 1px solid #b91c1c !important;
   font-size: 13px !important; 
   line-height: 1.5 !important;
@@ -566,56 +576,26 @@ h1, h2, h3, h4, h5, h6
   border-color:#b91c1c !important;
 }
 
-
-
-.clearBtn
-{
-  background: #b91c1c;
-  color: #ffffff;
-   min-width: 70px;
-  justify-content: center;
-  border-radius: 12px;
-  padding: 8px 12px;
-  border: 1px solid #fca5a5;
-  font-size: 13px !important;
-  line-height: 1.5;
-  font-weight: 600 !important;
+.filterBtnIcon {
+  display: block;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin-right: 0;
+  object-fit: contain;
+  
+  filter: brightness(0) invert(1);
 }
 
-.clearBtn:hover
-{
-  background:#fff !important;
-  color:#b91c1c !important;
-  border-color:#b91c1c !important;
+.btnRed:hover .filterBtnIcon {
+  filter: invert(19%) sepia(89%) saturate(2324%) hue-rotate(343deg)
+          brightness(92%) contrast(95%);
+}
+.btnGreen:hover .filterBtnIcon {
+  filter: invert(43%) sepia(14%) saturate(863%) hue-rotate(100deg)
+          brightness(92%) contrast(88%);
 }
 
-.goBtn
-{
-  background: #4d7a63;
-  color: #ffffff;
-   min-width: 70px;
-  justify-content: center;
-  border-radius: 12px;
-  padding: 8px 12px  !important;
-  border: 1px solid #4d7a63;
-  font-size: 13px !important;
-  line-height: 1.5!important;
-  font-weight: 600 !important;
-}
-
-.goBtn:hover
-{
-  background: #ffffff !important;
-  color: #4d7a63 !important;
-  border-color: #4d7a63 !important;
-}
-/* 
-.bulkToolbarActions .bulkDeleteButton:hover{
-  background: #b91c1c;
-  color: #fff;
-  border-color: #b91c1c;
-  box-shadow: none;
-} */
 
 .bulkToolbarActions:has(.bulkDeleteButton:hover) .bulkExportButton{
   background: #fff;
@@ -4941,35 +4921,19 @@ td {
   pointer-events: auto;
 }
 
-.studentTableRow:hover .student-actions .btn.iconBtn,
-.studentTableRow:focus-within .student-actions .btn.iconBtn {
+.studentTableRow:hover .student-actions .btn.iconBtn:not(.editActionButton),
+.studentTableRow:focus-within .student-actions .btn.iconBtn:not(.editActionButton) {
   color: var(--color-text2);
   border-color: var(--color-border);
   background: #ffffff;
 }
-
-.studentTableRow .student-actions .btn.iconBtn:hover {
+.studentTableRow .student-actions .btn.iconBtn:not(.editActionButton):not(.deleteActionButton):hover {
   color: var(--color-text);
   border-color: var(--color-primary-border);
   background: #f8fffd;
   transform: none;
 }
 
-.studentTableRow .student-actions .btn.iconBtn.editActionButton:hover,
-.studentTableRow:has(.editActionButton:hover) .student-actions .btn.iconBtn.deleteActionButton{
-  color: var(--color-text2);
-  border-color: var(--color-border);
-  background: #ffffff;
-  transform: none;
-}
-
-.studentTableRow .student-actions .btn.iconBtn.deleteActionButton:hover,
-.studentTableRow:has(.deleteActionButton:hover) .student-actions .btn.iconBtn.editActionButton{
-  color: #dc2626;
-  border-color: #fecaca;
-  background: #fff7f7;
-  transform: none;
-}
 
 .btn.iconBtn.deleteActionButton:hover,
 .studentTableRow .student-actions .btn.iconBtn.deleteActionButton:hover {
@@ -5592,12 +5556,12 @@ td {
 }
 
 .filter-select {
-  height: 36px;
+  /* height: 36px; */
+  padding: 8px 10px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   background: #fff;
-  color: #6b778C;
-  padding: 0 11px;
+  color: #334155;;
   font-size: 12.5px;
   transition:
     border-color 0.16s ease,
@@ -6105,7 +6069,7 @@ td {
 
 /* Filters Section */
 .student-filters-section {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   background: #fafbfc;
   border: 1px solid #eef2f7;
   border-radius:12px;
@@ -6113,7 +6077,7 @@ td {
 
 .filters-name-tag {
   margin:0px;
-  padding:10px;
+  padding:6px;
   border-radius:0px;
   font-size: 14px;
   font-weight: 700;
@@ -6195,6 +6159,18 @@ td {
   height: 36px;
   min-height: 36px;
   margin: 0;
+}
+
+.sponsor-filters-container .multiSelectOption {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.sponsor-filters-container .multiSelectOption.isSelected {
+  background: #f0fdf4;
+  color: #0f766e;
 }
 
 .filters-row {
@@ -6408,7 +6384,7 @@ td {
 }
 
 .multiSelectMenuHead {
-  padding: 10px;
+  padding: 5px 10px;
   border-bottom: 1px solid #f1f5f9;
   display: flex;
   align-items: center;
@@ -6426,7 +6402,7 @@ td {
   font-size: 12px;
   font-weight: 850;
   cursor: pointer;
-  padding: 3px 4px;
+
 }
 
 .multiSelectOptions {
@@ -7044,7 +7020,7 @@ td {
   width: 100%;
   white-space: nowrap;
 }
-
+/* 
 .clear-filters-btn {
   height: 30px;
   padding: 6px 10px;
@@ -7063,14 +7039,15 @@ td {
     border-color 0.18s ease,
     color 0.18s ease,
     box-shadow 0.18s ease;
-}
+} */
 
+/* 
 .clear-filters-btn:hover {
   border-color: #cbd5e1;
   background: #e2e8f0;
   color: #0f172a;
   transform: none;
-}
+} */
 
 .go-filter-btn {
   height: 30px;
@@ -7092,19 +7069,8 @@ td {
     box-shadow 0.18s ease;
 }
 
-.go-filter-btn:hover {
-  background: #c7f9dd;
-  border-color: #86efac;
-  box-shadow: 0 12px 26px rgba(16, 185, 129, 0.18);
-}
 
-.go-filter-btn svg {
-  transition: transform 0.2s ease;
-}
 
-.go-filter-btn:hover svg {
-  transform: none;
-}
 
 /* Table Section */
 .student-table-section {
@@ -7611,16 +7577,7 @@ td {
   border-color: #e2e8f0;
 }
 
-.filterBtnIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  margin-right: 0;
-  line-height: 1;
-  opacity: 0.8;
-}
+
 
 .student-table-section
   .tableWrap
@@ -7810,4 +7767,33 @@ html::-webkit-scrollbar-thumb:hover {
 {
   display: flex !important;
   align-items: center !important;
+}
+/* Edit Button Default */
+.studentTableRow .student-actions .btn.iconBtn.editActionButton {
+  background: #ffffff !important;
+  color: #4d7a63 !important;
+  border: 1px solid #4d7a63 !important;
+}
+
+/* Edit Button Hover */
+.studentTableRow .student-actions .btn.iconBtn.editActionButton:hover {
+  background: #4d7a63 !important;
+  color: #ffffff !important;
+  border-color: #4d7a63 !important;
+  transform: none;
+}
+
+/* Delete Button Default */
+.studentTableRow .student-actions .btn.iconBtn.deleteActionButton {
+  background: #ffffff !important;
+  color: #dc2626 !important;
+  border: 1px solid #dc2626 !important;
+}
+
+/* Delete Button Hover */
+.studentTableRow .student-actions .btn.iconBtn.deleteActionButton:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+  transform: none;
 }

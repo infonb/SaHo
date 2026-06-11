@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deactivateSponsors, getSponsors } from '../../api/sponsorApi';
 import Avatar from '../../components/common/Avatar';
@@ -12,8 +12,11 @@ import { usePagination } from '../../hooks/usePagination';
 import { useToast } from '../../hooks/useToast';
 import type { SponsorFilters, SponsorView } from '../../types';
 import "../../styles/Sponsors/SponsorListPage.css";
+import closeIcon from "../../assets/clera cross favicon.png"
+import arrowIcon from "../../assets/Go arrow favicon.png"
 
 const defaults: SponsorFilters = { search: '', type: '', nationality: '', is_active: '' };
+type SponsorFilterOption = { value: string; label: string };
 const nationalityOptions = [
   { label: 'Indian', value: '1' },
   { label: 'Foreigner', value: '2' },
@@ -47,6 +50,7 @@ export default function SponsorListPage() {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC' | null>(null);
+  const [openFilter, setOpenFilter] = useState<string | null>(null);
   const nav = useNavigate();
   const { toast } = useToast();
   const sortedItems = useMemo(() => {
@@ -82,6 +86,7 @@ export default function SponsorListPage() {
       .finally(() => setLoading(false));
   };
   useEffect(load, [applied]);
+  const nationalities = [...new Set(items.map(s => s.nationality))];
   const totalSponsors = items.length;
   const totalStudentsSponsored = items.reduce((sum, s) => sum + Number(s.students_count), 0);
   const activeSponsors = items.filter(s => s.is_active).length;
@@ -198,17 +203,17 @@ export default function SponsorListPage() {
     <div className="actions student-actions" onClick={e => e.stopPropagation()}>
       <Button size="sm" variant="outline" className="iconBtn editActionButton" onClick={(e) => { e.stopPropagation(); nav(`/sponsors/edit/${s.sponsor_id}`); }} aria-label="Edit sponsor">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-          <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </Button>
       <Button size="sm" variant="outline" className="iconBtn deleteActionButton" onClick={(e) => { e.stopPropagation(); setSingleDelete(s.sponsor_id); }} aria-label={`Delete ${s.sponsorName}`}>
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-          <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </Button>
     </div>
@@ -222,8 +227,8 @@ export default function SponsorListPage() {
           <p>Individuals and organisations supporting students</p>
         </div>
         <div className="student-list-actions sponsor-list-actions">
-          <Button className="btn btnGreen" onClick={() => nav('/sponsors/assign')}>Assign Sponsor</Button>
-          <Button className="btn btnGreen" onClick={() => nav('/sponsors/add')}>
+          <Button className="btnGreen" onClick={() => nav('/sponsors/assign')}>Assign Sponsor</Button>
+          <Button className="btnGreen" onClick={() => nav('/sponsors/add')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -289,6 +294,7 @@ export default function SponsorListPage() {
       </div>
 
       <div className="student-filters-section sponsor-filters-section">
+        <p className="filters-name-tag">Filters</p>
         <div className="filters-container sponsor-filters-container row g-2 align-items-center">
           <div className="filter-search-wrapper sponsor-search-wrapper col-4">
             <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -298,33 +304,46 @@ export default function SponsorListPage() {
             <input className="filter-search-input" placeholder="Search sponsors" value={pending.search} onChange={e => setPending({ ...pending, search: e.target.value })} />
           </div>
           <div className="filter-group col-3">
-            <select className="filter-select" value={pending.nationality} onChange={e => setPending({ ...pending, nationality: e.target.value })}>
-              <option value="">All Nationality</option>
-              {nationalityOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <SponsorSelectFilter
+              filterKey="nationality"
+              label="All Nationality"
+              value={pending.nationality}
+              options={nationalities.map(n => ({ value: n, label: n }))}
+              openFilter={openFilter}
+              setOpenFilter={setOpenFilter}
+              onChange={nationality => setPending({ ...pending, nationality })}
+            />
           </div>
           <div className="filter-group col-3">
-            <select className="filter-select" value={pending.type} onChange={e => setPending({ ...pending, type: e.target.value })}>
-              <option value="">All Types</option>
-              <option>Individual</option>
-              <option>Organisation</option>
-            </select>
+            <SponsorSelectFilter
+              filterKey="type"
+              label="All Types"
+              value={pending.type}
+              options={[
+                { value: 'Individual', label: 'Individual' },
+                { value: 'Organisation', label: 'Organisation' },
+              ]}
+              openFilter={openFilter}
+              setOpenFilter={setOpenFilter}
+              onChange={type => setPending({ ...pending, type })}
+            />
           </div>
-          <div className="filter-actions-group col-1">
-            <button className="btn clearBtn" onClick={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); }}>
-              <span className="filterBtnIcon" aria-hidden>x</span> Clear
+          <div className="filter-actions-group col-1 ">
+            <button className="btnRed" onClick={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); setOpenFilter(null); }}>
+            <img
+                  src={closeIcon}
+                  alt="Clear"
+                  className="filterBtnIcon"
+                /> Clear
             </button>
           </div>
-          <div className="filter-actions-group col-1">
-            <button className="btn goBtn" onClick={() => { setApplied({ ...pending }); pager.setPage(1); }}>
-              Go
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7"></path>
-              </svg>
+          <div className="filter-actions-group col-1 ps-0 ">
+            <button className="btnGreen" onClick={() => { setApplied({ ...pending }); pager.setPage(1); setOpenFilter(null); }}>  <img
+          src={arrowIcon}
+         alt="Clear"
+         className="filterBtnIcon"
+           />        
+             Go
             </button>
           </div>
         </div>
@@ -406,8 +425,8 @@ export default function SponsorListPage() {
                     <strong>{sponsoredCount} sponsored</strong>
                   </div>
                   <div className="sponsorCardActions">
-                    <button type="button" className="minBtn goBtn" onClick={() => nav(`/sponsors/edit/${s.sponsor_id}`)}>Edit</button>
-                    <button type="button" className="minBtn clearBtn" onClick={() => setSingleDelete(s.sponsor_id)}>Delete</button>
+                    <button type="button" className="btnGreen" onClick={() => nav(`/sponsors/edit/${s.sponsor_id}`)}>Edit</button>
+                    <button type="button" className="btnRed" onClick={() => setSingleDelete(s.sponsor_id)}>Delete</button>
                   </div>
                 </article>
               );
@@ -591,5 +610,74 @@ function SponsorModal({
 
 function Info({ label, value }: { label: string; value?: string | number | null }) {
   return <div className="field"><span>{label}</span><div className="input" style={{ background: '#f8fafc' }}>{value || '-'}</div></div>;
+}
+
+function SponsorSelectFilter({
+  filterKey,
+  label,
+  value,
+  options,
+  openFilter,
+  setOpenFilter,
+  onChange,
+}: {
+  filterKey: string;
+  label: string;
+  value: string;
+  options: SponsorFilterOption[];
+  openFilter: string | null;
+  setOpenFilter: (value: string | null) => void;
+  onChange: (value: string) => void;
+}) {
+  const isOpen = openFilter === filterKey;
+  const filterRef = useRef<HTMLDetailsElement>(null);
+  const summary = options.find(option => option.value === value)?.label ?? label;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!filterRef.current?.contains(event.target as Node)) {
+        setOpenFilter(null);
+      }
+    };
+
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, [isOpen, setOpenFilter]);
+
+  return (
+    <details ref={filterRef} className={`multiSelectFilter${value ? ' hasValue' : ''}`} open={isOpen}>
+      <summary
+        className="multiSelectTrigger"
+        onClick={(event) => {
+          event.preventDefault();
+          setOpenFilter(isOpen ? null : filterKey);
+        }}
+      >
+        <span>{summary}</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </summary>
+      <div className="multiSelectMenu">
+        <div className="multiSelectOptions">
+          {options.map(option => (
+            <button
+              type="button"
+              className={`multiSelectOption${value === option.value ? ' isSelected' : ''}`}
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setOpenFilter(null);
+              }}
+            >
+              <span>{option.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </details>
+  );
 }
 
