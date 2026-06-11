@@ -17,6 +17,10 @@ import arrowIcon from "../../assets/Go arrow favicon.png"
 
 const defaults: SponsorFilters = { search: '', type: '', nationality: '', is_active: '' };
 type SponsorFilterOption = { value: string; label: string };
+const nationalityOptions = [
+  { label: 'Indian', value: '1' },
+  { label: 'Foreigner', value: '2' },
+];
 const contribution = (value?: string | null, nationality?: string) => {
   const trimmed = String(value ?? '').trim();
   if (!trimmed) return '-';
@@ -31,6 +35,8 @@ const contribution = (value?: string | null, nationality?: string) => {
   }
   return trimmed;
 };
+const truncateText = (value: string, limit = 15) =>
+  value.length > limit ? `${value.slice(0, limit).trimEnd()}...` : value;
 
 export default function SponsorListPage() {
   const [items, setItems] = useState<SponsorView[]>([]);
@@ -41,12 +47,44 @@ export default function SponsorListPage() {
   const [checked, setChecked] = useState<number[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [singleDelete, setSingleDelete] = useState<number | null>(null);
-  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC' | null>(null);
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const nav = useNavigate();
   const { toast } = useToast();
-  const pager = usePagination(items, 5);
-  const load = () => { setLoading(true); getSponsors(applied).then(data => { setItems(data); setChecked([]); }).finally(() => setLoading(false)); };
+  const sortedItems = useMemo(() => {
+    const next = [...items];
+    if (!sortColumn || !sortDirection) return next;
+
+    const direction = sortDirection === 'ASC' ? 1 : -1;
+    next.sort((left, right) => {
+      if (sortColumn === 'sponsor_id') {
+        return ((left.sponsor_id ?? 0) - (right.sponsor_id ?? 0)) * direction;
+      }
+
+      if (sortColumn === 'sponsor_name') {
+        return (left.sponsorName ?? '').localeCompare(right.sponsorName ?? '') * direction;
+      }
+
+      return 0;
+    });
+
+    return next;
+  }, [items, sortColumn, sortDirection]);
+  const pager = usePagination(sortedItems, 10);
+  const load = () => {
+    setLoading(true);
+    getSponsors(applied, {
+      pageNumber: 1,
+      pageSize: 100,
+    })
+      .then(data => {
+        setItems(data);
+        setChecked([]);
+      })
+      .finally(() => setLoading(false));
+  };
   useEffect(load, [applied]);
   const nationalities = [...new Set(items.map(s => s.nationality))];
   const totalSponsors = items.length;
@@ -60,6 +98,44 @@ export default function SponsorListPage() {
   const toggle = (id: number) => setChecked(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
   const togglePage = () => setChecked(ids => allPageChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]);
   const confirmBulkDelete = async () => { await deactivateSponsors(checked); setBulkOpen(false); toast(`${checked.length} sponsors removed.`, 'success'); load(); };
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      if (sortDirection === null) {
+        setSortDirection('ASC');
+      } else if (sortDirection === 'ASC') {
+        setSortDirection('DESC');
+      } else {
+        setSortColumn(null);
+        setSortDirection(null);
+      }
+    } else {
+      setSortColumn(column);
+      setSortDirection('ASC');
+    }
+  };
+
+  const sortHeader = (label: string, column: string) => (
+    <button
+      type="button"
+      className="sortableHeader"
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={() => handleSort(column)}
+      aria-label={`Sort by ${label}`}
+    >
+      <span>{label}</span>
+      <span
+        className={`sortArrow${
+          sortColumn === column && sortDirection !== null
+            ? sortDirection === 'ASC'
+              ? ' asc'
+              : ' desc'
+            : ' inactive'
+        }`}
+        aria-hidden
+      />
+    </button>
+  );
 
   const confirmSingleDelete = async () => {
     if (!singleDelete) return;
@@ -95,18 +171,35 @@ export default function SponsorListPage() {
   };
 
   const rows = pager.current.map(s => [
-    <input aria-label={`Select ${s.sponsorName}`} type="checkbox" checked={checked.includes(s.sponsor_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.sponsor_id)} />,
-    <div className="rowFlex">
+    <div className="idSelectCell">
+      <input aria-label={`Select ${s.sponsorName}`} type="checkbox" checked={checked.includes(s.sponsor_id)} onClick={e => e.stopPropagation()} onChange={() => toggle(s.sponsor_id)} />
+      <span className="studentIdCell">{s.sponsor_id}</span>
+    </div>,
+    <div className="rowFlex studentCell">
       <Avatar name={s.sponsorName} size="md" />
-      <div>
-        <button type="button" className="linkButton strong sponsorNameCell" onClick={() => setSelected(s)}>{s.sponsorName}</button>
+      <div className="tableCellStack studentCellStack">
+        <button
+          type="button"
+          className="cellTopText sponsorNameCell"
+          onClick={() => setSelected(s)}
+          title={s.sponsorName}
+          aria-label={s.sponsorName}
+        >
+          {truncateText(s.sponsorName)}
+        </button>
+        <div className="cellSubText">{s.email}</div>
       </div>
     </div>,
-    <Badge variant={s.type === 'Organisation' ? 'organisation' : 'individual'}>{s.type}</Badge>,
+    <span className={`sponsorTypeBadge ${s.type === 'Organisation' ? 'organisation' : 'individual'}`}>
+      {s.type}
+    </span>,
     s.nationality,
     s.ph_no,
-    <strong>{contribution(s.contrib)}</strong>,
-    <Badge variant="assigned">{s.students_count}</Badge>,
+    (() => {
+      const value = contribution(s.contrib, s.nationality);
+      return <strong title={value}>{truncateText(value)}</strong>;
+    })(),
+    <span>{s.students_count}</span>,
     <div className="actions student-actions" onClick={e => e.stopPropagation()}>
       <Button size="sm" variant="outline" className="iconBtn editActionButton" onClick={(e) => { e.stopPropagation(); nav(`/sponsors/edit/${s.sponsor_id}`); }} aria-label="Edit sponsor">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -256,12 +349,12 @@ export default function SponsorListPage() {
         </div>
       </div>
 
-      <div className={`panel studentRecordsPanel ${hasSelection ? 'bulkModeActive' : ''}`}>
+      <div className={`panel studentRecordsPanel student-table-section ${hasSelection ? 'bulkModeActive' : ''}`}>
         <div className="sponsorRecordsHeader">
           <h3 className="panelTitle">Sponsor Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{items.length} results</span></h3>
           <div className="viewToggle" aria-label="Sponsor view mode">
-            <button type="button" className={viewMode === 'cards' ? 'active' : ''} onClick={() => setViewMode('cards')}>Cards</button>
             <button type="button" className={viewMode === 'table' ? 'active' : ''} onClick={() => setViewMode('table')}>Table</button>
+            <button type="button" className={viewMode === 'cards' ? 'active' : ''} onClick={() => setViewMode('cards')}>Cards</button>
           </div>
         </div>
 
@@ -297,16 +390,30 @@ export default function SponsorListPage() {
 
         {viewMode === 'cards' ? (
           <div className="sponsorCardGrid">
-            {loading ? [0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>) : pager.current.map(s => {
+            {loading ? [0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>) : sortedItems.slice((pager.page - 1) * pager.pageSize, pager.page * pager.pageSize).map(s => {
               const sponsoredCount = Number(s.students_count) || 0;
               return (
                 <article key={s.sponsor_id} className="sponsorCard">
                   <div className="sponsorCardTop">
                     <Avatar name={s.sponsorName} size="lg" />
                     <div className="sponsorCardIdentity">
-                      <button type="button" className="linkButton sponsorNameCell" onClick={() => setSelected(s)}>{s.sponsorName}</button>
+                      <button
+                        type="button"
+                        className="linkButton sponsorNameCell"
+                        onClick={() => setSelected(s)}
+                        title={s.sponsorName}
+                        aria-label={s.sponsorName}
+                      >
+                        {truncateText(s.sponsorName)}
+                      </button>
                       <div className="sponsorPhone">{s.ph_no || '-'}</div>
-                      <div className="sponsorMetaLine">{s.type} - {s.nationality}</div>
+                      <div className="sponsorMetaLine">
+                        <span className={`sponsorTypeBadge ${s.type === 'Organisation' ? 'organisation' : 'individual'}`}>
+                          {s.type}
+                        </span>
+                        <span className="sponsorMetaSep">-</span>
+                        <span>{s.nationality}</span>
+                      </div>
                     </div>
                   </div>
                   <div className="sponsorCardMetric">
@@ -328,15 +435,47 @@ export default function SponsorListPage() {
         ) : (
           <DataTable
             loading={loading}
-            columns={[{ key: 'select', label: '', width: '44px' }, { key: 's', label: 'Sponsor' }, { key: 't', label: 'Type' }, { key: 'n', label: 'Nationality' }, { key: 'p', label: 'Phone' }, { key: 'c', label: 'Contribution' }, { key: 'st', label: 'Students' }, { key: 'v', label: '' }]}
+            columns={[
+              {
+                key: 'id',
+                label: (
+                  <div className="idSelectCell header">
+                    <input
+                      aria-label="Select all on this page"
+                      type="checkbox"
+                      checked={allPageChecked}
+                      onChange={togglePage}
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                    <span className="sortableHeaderWrap">{sortHeader('ID', 'sponsor_id')}</span>
+                  </div>
+                ),
+                width: '92px'
+              },
+              { key: 's', label: sortHeader('SPONSOR', 'sponsor_name'), width: '240px' },
+              { key: 't', label: 'TYPE', width: '120px' },
+              { key: 'n', label: 'NATIONALITY', width: '120px' },
+              { key: 'p', label: 'PHONE', width: '120px' },
+              { key: 'c', label: 'CONTRIBUTION', width: '130px' },
+              { key: 'st', label: 'STUDENTS', width: '80px' },
+              { key: 'v', label: '', width: '90px' }
+            ]}
             rows={rows}
             rowClassName={(index) => {
               const sponsor = pager.current[index];
               return `studentTableRow${sponsor && checked.includes(sponsor.sponsor_id) ? ' isSelected' : ''}`;
             }}
+            footer={
+              <Pagination
+                total={items.length}
+                page={pager.page}
+                pageSize={pager.pageSize}
+                onChange={pager.setPage}
+                onPageSizeChange={pager.setPageSize}
+              />
+            }
           />
         )}
-        <Pagination total={items.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
       </div>
 
       <SponsorModal sponsor={selected} onClose={() => setSelected(null)} />
@@ -363,18 +502,20 @@ function SponsorModal({
     <Modal
       open={!!sponsor}
       onClose={onClose}
-      title={sponsor.sponsorName}
+      title="Sponsor Details"
       width={680}
       footer={
         <>
           <Button
             variant="outline"
+            className="btn btnRed"
             onClick={onClose}
           >
             Close
           </Button>
 
           <Button
+            className="btn btnGreen"
             onClick={() =>
               nav(`/sponsors/edit/${sponsor.sponsor_id}`)
             }
@@ -411,15 +552,15 @@ function SponsorModal({
             style={{ marginTop: 8 }}
           >
 
-            <Badge
-              variant={
+            <span
+              className={`sponsorTypeBadge ${
                 sponsor.type === 'Organisation'
                   ? 'organisation'
                   : 'individual'
-              }
+              }`}
             >
               {sponsor.type}
-            </Badge>
+            </span>
 
             <Badge variant="assigned">
               {sponsor.students_count} Students
