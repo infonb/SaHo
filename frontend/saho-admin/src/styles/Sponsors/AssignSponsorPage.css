@@ -1,0 +1,516 @@
+/* ==========================================================================
+   Assign Sponsor Page - Page-Specific Styles Only
+   Reuses shared styles from components.css (already imported globally)
+   ========================================================================== */
+
+/* --- Grid Layout --- */
+.assign-page .assignGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.assign-page .assignStack {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (min-width: 1101px) {
+  .assign-page .assignStack {
+    max-height: calc(100vh - var(--topbar-h) - 120px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding-right: 6px;
+  }
+
+  .assign-page .assignStack::-webkit-scrollbar {
+    width: 7px;
+  }
+
+  .assign-page .assignStack::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .assign-page .assignStack::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.45);
+    border-radius: 999px;
+  }
+
+  .assign-page .assignStack::-webkit-scrollbar-thumb:hover {
+    background: rgba(71, 85, 105, 0.7);
+  }
+}
+
+/* --- Selection Bar --- */
+.assign-page .between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+/* --- Column Alignment (page-specific) --- */
+.assign-page .cellCenter {
+  text-align: center;
+}
+
+/* --- Sponsor Table: fixed layout, stable columns --- */
+.assign-page .sponsorRecordsPanel .tableWrap table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* ID column: checkbox + ID, left-aligned */
+.assign-page .sponsorRecordsPanel th:nth-child(1),
+.assign-page .sponsorRecordsPanel td:nth-child(1) {
+  width: 92px !important;
+  min-width: 92px !important;
+  max-width: 92px !important;
+  text-align: left !important;
+}
+
+/* Sponsor column: left-aligned */
+.assign-page .sponsorRecordsPanel th:nth-child(2),
+.assign-page .sponsorRecordsPanel td:nth-child(2) {
+  width: 420px !important;
+  min-width: 420px !important;
+  max-width: 420px !important;
+  text-align: left !important;
+}
+.assign-page .sponsorRecordsPanel td:nth-child(2) .rowFlex.sponsorCell {
+  justify-content: flex-start;
+  align-items: center;
+}
+.assign-page .sponsorRecordsPanel td:nth-child(2) .tableCellStack.sponsorCellStack {
+  align-content: center;
+  justify-items: start;
+  text-align: left;
+  min-width: 0;
+  width: 100%;
+}
+.assign-page .sponsorRecordsPanel td:nth-child(2) .sponsorNameCell {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #0f172a;
+}
+
+/* Type column: center-aligned */
+.assign-page .sponsorRecordsPanel th:nth-child(3),
+.assign-page .sponsorRecordsPanel td:nth-child(3) {
+  width: 140px !important;
+  min-width: 140px !important;
+  max-width: 140px !important;
+  text-align: center !important;
+}
+
+/* Contribution column: left-aligned */
+.assign-page .sponsorRecordsPanel th:nth-child(4),
+.assign-page .sponsorRecordsPanel td:nth-child(4) {
+  width: 180px !important;
+  min-width: 180px !important;
+  max-width: 180px !important;
+  text-align: left !important;
+}
+
+/* Students Sponsored column: left-aligned */
+.assign-page .sponsorRecordsPanel th:nth-child(5),
+.assign-page .sponsorRecordsPanel td:nth-child(5) {
+  width: 180px !important;
+  min-width: 180px !important;
+  max-width: 180px !important;
+  text-align: left !important;
+}
+
+/* Sponsor cell (Avatar + Name + Email) */
+.assign-page .sponsorRecordsPanel .sponsorCell {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+}
+
+.assign-page .sponsorRecordsPanel .sponsorCellStack {
+  min-width: 0;
+  width: auto;
+  flex: 1 1 auto;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.assign-page .sponsorRecordsPanel .sponsorNameCell {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.assign-page .sponsorRecordsPanel .sponsorCell .cellSubText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sponsor-radio {
+  accent-color: #0f766e;
+}
+.studentIdPlain {
+  font-size: 13px;
+  font-weight: 500;
+  color: grey;
+}
+/* Type badges */
+.assign-page .typeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+
+.assign-page .typeBadge.individual {
+  color: #0f8b8d;
+  background: #dff8fb;
+  border-color: #c5eef3;
+}
+
+.assign-page .typeBadge.organisation {
+  color: #b7791f;
+  background: #fff7dc;
+  border-color: #fdecc0;
+}
+
+.assign-page .typeBadge {
+  white-space: nowrap;
+}
+
+/* Checkbox column centering */
+.assign-page .sponsorRecordsPanel .idSelectCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.assign-page .sponsorRecordsPanel .idSelectCell input[type="checkbox"] {
+  flex: 0 0 auto;
+  margin-left: 0;
+}
+
+.assign-page .sponsorRecordsPanel .studentIdCell {
+  color: #334155;
+  font-weight: 600;
+}
+
+.assign-page .sponsorRecordsPanel .table-header .filter-search-input,
+.assign-page .sponsorRecordsPanel .table-header .multiSelectTrigger {
+  font-size: 10px;
+}
+
+/* Reduce spacing between cells */
+.assign-page .sponsorRecordsPanel td {
+  padding: 6px 12px !important;
+}
+
+.assign-page .sponsorRecordsPanel th:nth-child(2),
+.assign-page .sponsorRecordsPanel td:nth-child(2),
+.assign-page .sponsorRecordsPanel th:nth-child(4),
+.assign-page .sponsorRecordsPanel td:nth-child(4),
+.assign-page .sponsorRecordsPanel th:nth-child(5),
+.assign-page .sponsorRecordsPanel td:nth-child(5) {
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+
+.assign-page .sponsorRecordsPanel th:nth-child(3),
+.assign-page .sponsorRecordsPanel td:nth-child(3) {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+.assign-page .sponsorRecordsPanel th {
+  padding: 10px 12px !important;
+}
+
+/* --- Summary Panel --- */
+.assign-summary-sticky {
+  position: sticky;
+  top: 88px;
+  align-self: start;
+  height: fit-content;
+  z-index: 2;
+}
+
+.assign-summary-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 116px);
+  overflow: visible;
+}
+
+.assignSummarySection {
+  min-width: 0;
+}
+
+.assignSummaryCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  background: #ffffff;
+}
+
+.assignSummaryEmpty {
+  display: grid;
+  place-items: center;
+  padding: 18px 10px;
+  text-align: center;
+  color: var(--color-text3);
+  gap: 10px;
+}
+
+.assignSummaryEmpty svg {
+  width: 120px;
+  height: auto;
+  opacity: 0.9;
+}
+
+.assignSummaryEmptyCompact {
+  padding: 14px 10px;
+}
+
+.assignSummaryPill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.assignDivider {
+  height: 1px;
+  background: var(--color-divider);
+  margin: 14px 0;
+}
+
+.assignSelectedStudentsSection {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.assignSelectedStudentsList {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.assignSelectedStudentsScroll {
+  margin-top: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.55) transparent;
+}
+
+.assignSelectedStudentsScroll::-webkit-scrollbar {
+  width: 7px;
+}
+
+.assignSelectedStudentsScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.assignSelectedStudentsScroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.45);
+  border-radius: 999px;
+}
+
+.assignSelectedStudentsScroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 0.7);
+}
+
+.assignSelectedStudentRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.assignSelectedStudentRow:hover {
+  background: var(--color-bg);
+}
+.assignSelectedStudentRow:not(:last-child) {
+  border-bottom: 2px solid #e2e8f0;
+}
+.assignSummaryStudentId {
+  flex: 0 0 auto;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-text3);
+  white-space: nowrap;
+  min-width: 52px;
+}
+
+.assignSummaryStudentName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.assignSummaryRemoveBtn {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text3);
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.assignSummaryRemoveBtn:hover {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.assignSummaryRemoveBtn svg {
+  display: block;
+}
+
+.assignSummaryToast {
+  margin-top: 12px;
+}
+
+.assignSelectedStudentId {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+/* --- Student Table Column Overrides (assign-specific columns) --- */
+.assign-page .student-table-section th:nth-child(1),
+.assign-page .student-table-section td:nth-child(1) {
+  width: 92px !important;
+  min-width: 92px !important;
+  max-width: 92px !important;
+  text-align: left !important;
+}
+
+.assign-page .student-table-section th:nth-child(2),
+.assign-page .student-table-section td:nth-child(2) {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+}
+
+.assign-page .student-table-section th:nth-child(3),
+.assign-page .student-table-section td:nth-child(3) {
+  width: 88px !important;
+  min-width: 88px !important;
+  max-width: 88px !important;
+}
+
+.assign-page .student-table-section th:nth-child(4),
+.assign-page .student-table-section td:nth-child(4) {
+  width: 235px !important;
+  min-width: 235px !important;
+  max-width: 235px !important;
+  text-align: left !important;
+}
+
+.assign-page .student-table-section th:nth-child(5),
+.assign-page .student-table-section td:nth-child(5) {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  text-align: center !important;
+}
+
+.assign-page .student-table-section th:nth-child(6),
+.assign-page .student-table-section td:nth-child(6) {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  text-align: center !important;
+}
+
+.assign-page .student-table-section .idSelectCell {
+  justify-content: flex-start;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1100px) {
+  .assign-page .assignGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .assign-summary-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 900px) {
+  .assign-page .sponsorRecordsPanel .table-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .assign-page .tableWrap {
+    margin: 0 -14px;
+    border-left: 0;
+    border-right: 0;
+    width: calc(100% + 28px);
+  }
+}
+
+@media (max-width: 520px) {
+  .assign-page .tableWrap th,
+  .assign-page .tableWrap td {
+    padding: 8px 10px;
+  }
+
+  .assign-page .tableWrap {
+    margin: 0 -14px;
+    border-left: 0;
+    border-right: 0;
+    width: calc(100% + 28px);
+  }
+
+  .assign-page .between {
+    gap: 10px;
+  }
+}

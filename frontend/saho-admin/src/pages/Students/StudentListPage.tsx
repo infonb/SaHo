@@ -14,22 +14,11 @@ import { useToast } from '../../hooks/useToast';
 import type { StudentFilters, StudentView, SponsorView } from '../../types';
 import StudentDetailModal from './StudentDetailModal';
 import Modal from '../../components/common/Modal';
+import MultiSelectFilter, { csvValues, toggleCsvValue } from '../../components/common/MultiSelectFilter';
+import type { FilterOption } from '../../components/common/MultiSelectFilter';
 import closeIcon from "../../assets/clera cross favicon.png"
 import arrowIcon from "../../assets/Go arrow favicon.png"
 const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', sponsor_status: '', is_active: '' };
-type FilterOption = { value: string; label: string };
-
-const csvValues = (value: string) =>
-  value
-    .split(",")
-    .map((v) => v.trim())
-    .filter(Boolean);
-const toggleCsvValue = (value: string, next: string) => {
-  const values = csvValues(value);
-  return values.includes(next)
-    ? values.filter((v) => v !== next).join(",")
-    : [...values, next].join(",");
-};
 const truncateText = (value?: string | null, maxLength = 15) => {
   const text = value?.trim() || 'N/A';
   if (text.length <= maxLength) return text;
@@ -595,7 +584,7 @@ export default function StudentListPage() {
             <div className="stat-card-note">Male students</div>
           </div>
           <div
-            className="stat-card-icon genderIcon maleIcon"
+            className="stat-card-icon"
             aria-hidden="true"
           >
             <svg viewBox="0 0 24 24" fill="none">
@@ -630,7 +619,7 @@ export default function StudentListPage() {
             <div className="stat-card-note">Female students</div>
           </div>
           <div
-            className="stat-card-icon genderIcon femaleIcon"
+            className="stat-card-icon"
             aria-hidden="true"
           >
             <svg viewBox="0 0 24 24" fill="none">
@@ -662,7 +651,7 @@ export default function StudentListPage() {
             <div className="stat-card-value">{totalSponsored}</div>
             <div className="stat-card-note">With sponsors</div>
           </div>
-          <div className="stat-card-icon sponsoredIcon" aria-hidden="true">
+          <div className="stat-card-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
               <path
                 d="M12 20.4C8.4 18.6 4.7 15.1 4.7 10.8c0-2.8 2-4.9 4.7-4.9 1.5 0 2.9.7 3.7 1.9.8-1.2 2.2-1.9 3.7-1.9 2.7 0 4.7 2.1 4.7 4.9 0 4.3-3.7 7.8-8.7 9.6Z"
@@ -1121,102 +1110,4 @@ export default function StudentListPage() {
     </div>
   );
 }
-
-function MultiSelectFilter({
-  filterKey,
-  label,
-  value,
-  options,
-  openFilter,
-  setOpenFilter,
-  onChange,
-}: {
-  filterKey: string;
-  label: string;
-  value: string;
-  options: FilterOption[];
-  openFilter: string | null;
-  setOpenFilter: (value: string | null) => void;
-  onChange: (value: string) => void;
-}) {
-  const selected = csvValues(value);
-  const selectedLabels = options
-    .filter((option) => selected.includes(option.value))
-    .map((option) => option.label);
-  const summary =
-    selectedLabels.length === 0
-      ? label
-      : selectedLabels.length === 1
-        ? selectedLabels[0]
-        : `${selectedLabels.length} selected`;
-  const isOpen = openFilter === filterKey;
-  const filterRef = useRef<HTMLDetailsElement>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const closeOnOutsideClick = (event: MouseEvent) => {
-      if (!filterRef.current?.contains(event.target as Node)) {
-        setOpenFilter(null);
-      }
-    };
-
-    document.addEventListener("mousedown", closeOnOutsideClick);
-    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
-  }, [isOpen, setOpenFilter]);
-
-  return (
-    <details
-      ref={filterRef}
-      className={`multiSelectFilter${selected.length ? " hasValue" : ""}`}
-      open={isOpen}
-    >
-      <summary
-        className="multiSelectTrigger"
-        onClick={(event) => {
-          event.preventDefault();
-          setOpenFilter(isOpen ? null : filterKey);
-        }}
-      >
-        <span>{summary}</span>
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            d="M6 9l6 6 6-6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </summary>
-      <div className="multiSelectMenu">
-        <div className="multiSelectMenuHead">
-          <span>{label}</span>
-          {selected.length ? (
-            <button type="button" onClick={() => onChange("")}>
-              Clear
-            </button>
-          ) : null}
-        </div>
-        <div className="multiSelectOptions">
-          {options.length ? (
-            options.map((option) => (
-              <label className="multiSelectOption" key={option.value}>
-                <input
-                  type="checkbox"
-                  checked={selected.includes(option.value)}
-                  onChange={() => onChange(toggleCsvValue(value, option.value))}
-                />
-                <span>{option.label}</span>
-              </label>
-            ))
-          ) : (
-            <div className="multiSelectEmpty">No options available</div>
-          )}
-        </div>
-      </div>
-    </details>
-  );
-}
-
 
