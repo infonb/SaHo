@@ -13,5 +13,7 @@ public class SponsorListResponseDto {
 
     private Integer itemCount;
 
+    private Integer totalCount;
+
     private List<SponsorResponseDto> sponsors;
 }

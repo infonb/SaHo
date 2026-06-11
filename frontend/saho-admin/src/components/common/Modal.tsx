@@ -36,10 +36,10 @@ export default function Modal({ open, onClose, title, children, footer, width = 
       <div className="modalCard" style={{ width }} onMouseDown={(e) => e.stopPropagation()}>
         <div className="modalHead">
           <h2>{title}</h2>
-          <button className="modalCloseBtn" onClick={onClose} aria-label="Close dialog" type="button">
+          <button className="studentWizardClose" onClick={onClose} aria-label="Close dialog" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>

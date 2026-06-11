@@ -87,23 +87,38 @@ public class SponsorServiceImpl
     @Transactional(readOnly = true)
     public SponsorListResponseDto getAllSponsors(
             Integer pageNumber,
-            Integer pageSize) {
+            Integer pageSize,
+            String search,
+            String sponsorType,
+            String nationality,
+            String sortColumn,
+            String sortDirection) {
 
         return entityManager.unwrap(Session.class).doReturningWork(connection -> {
             try (CallableStatement statement =
-                         connection.prepareCall("{ call getallsponsorswithpagination_v1(?, ?, ?) }")) {
+                         connection.prepareCall("{ call public.getallsponsors_v2(?, ?, ?, ?, ?, ?, ?, ?) }")) {
 
-                statement.setInt(1, pageNumber);
-                statement.setInt(2, pageSize);
-                statement.registerOutParameter(3, Types.REF_CURSOR);
+                statement.setString(1, search == null || search.trim().isEmpty() ? null : search.trim());
+                statement.setInt(2, pageNumber != null ? pageNumber : 1);
+                statement.setInt(3, pageSize != null ? pageSize : 100);
+                statement.setString(4, sponsorType == null || sponsorType.trim().isEmpty() ? null : sponsorType.trim());
+                statement.setString(5, nationality == null || nationality.trim().isEmpty() ? null : nationality.trim());
+                statement.setString(6, sortColumn == null || sortColumn.trim().isEmpty() ? null : sortColumn.trim());
+                statement.setString(7, sortDirection == null || sortDirection.trim().isEmpty() ? null : sortDirection.trim());
+                statement.registerOutParameter(8, Types.REF_CURSOR);
                 statement.execute();
 
                 List<SponsorResponseDto> sponsors =
                         new ArrayList<>();
+                Integer totalCount = 0;
 
-                try (ResultSet resultSet = (ResultSet) statement.getObject(3)) {
+                try (ResultSet resultSet = (ResultSet) statement.getObject(8)) {
                     while (resultSet.next()) {
-                        sponsors.add(mapSponsor(resultSet));
+                        SponsorResponseDto sponsor = mapSponsor(resultSet);
+                        sponsors.add(sponsor);
+                        if (totalCount == 0) {
+                            totalCount = resultSet.getInt("total_count");
+                        }
                     }
                 }
 
@@ -113,6 +128,7 @@ public class SponsorServiceImpl
                 response.setPageNumber(pageNumber);
                 response.setPageSize(pageSize);
                 response.setItemCount(sponsors.size());
+                response.setTotalCount(totalCount);
                 response.setSponsors(sponsors);
 
                 return response;

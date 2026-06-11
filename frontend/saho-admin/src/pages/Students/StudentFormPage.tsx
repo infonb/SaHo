@@ -42,6 +42,14 @@ const init: StudentFormState = {
   mndl_id: '',
   vil_id: '',
   sch_id: '',
+  father_first: '',
+  father_middle: '',
+  father_last: '',
+  father_is_guardian: 'No',
+  mother_first: '',
+  mother_middle: '',
+  mother_last: '',
+  mother_is_guardian: 'No',
   guardian_first: '',
   guardian_middle: '',
   guardian_last: '',
@@ -65,7 +73,7 @@ interface StudentFormPageProps {
 const steps = [
   { key: 'personal', label: 'Personal' },
   { key: 'location', label: 'Location' },
-  { key: 'guardian', label: 'Guardian' },
+  { key: 'guardian', label: 'Other Information' },
 ] as const;
 
 type StudentFormStep = typeof steps[number]['key'];
@@ -116,7 +124,7 @@ const fieldStepMap = steps.reduce((map, step) => {
   });
   return map;
 }, {} as Partial<Record<keyof StudentFormState, StudentFormStep>>);
-fieldStepMap.sibling_aadhaar = 'personal';
+fieldStepMap.sibling_aadhaar = 'guardian';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -136,6 +144,37 @@ const splitName = (fullName: string | null | undefined) => {
   if (parts.length === 1) return { first: parts[0], middle: '', last: '' };
   if (parts.length === 2) return { first: parts[0], middle: '', last: parts[1] };
   return { first: parts[0], middle: parts.slice(1, -1).join(' '), last: parts[parts.length - 1] };
+};
+
+const firstString = (source: Record<string, any> | null | undefined, keys: string[]) => {
+  for (const key of keys) {
+    const value = key.split('.').reduce<any>((current, part) => current?.[part], source);
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return String(value);
+    }
+  }
+  return '';
+};
+
+const firstBoolean = (source: Record<string, any> | null | undefined, keys: string[]) => {
+  for (const key of keys) {
+    const value = key.split('.').reduce<any>((current, part) => current?.[part], source);
+    if (value === undefined || value === null || value === '') continue;
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value === 1;
+    const normalized = String(value).trim().toLowerCase();
+    if (['yes', 'true', '1', 'y'].includes(normalized)) return true;
+    if (['no', 'false', '0', 'n'].includes(normalized)) return false;
+  }
+  return undefined;
+};
+
+const sameName = (a: { first: string; middle: string; last: string }, b: { first: string; middle: string; last: string }) => {
+  const normalize = (value: string) => value.trim().toLowerCase();
+  return Boolean(a.first || a.middle || a.last)
+    && normalize(a.first) === normalize(b.first)
+    && normalize(a.middle) === normalize(b.middle)
+    && normalize(a.last) === normalize(b.last);
 };
 
 function PrimaryButton(props: ComponentProps<typeof Button>) {
@@ -173,8 +212,11 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const [errors, setErrors] = useState<StudentFormErrors>({});
   const [validatedFields, setValidatedFields] = useState<Set<keyof StudentFormState>>(() => new Set());
   const [touchedFields, setTouchedFields] = useState<Set<keyof StudentFormState>>(() => new Set());
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [guardianSubmitAttempted, setGuardianSubmitAttempted] = useState(false);
   const pendingFocusField = useRef<keyof StudentFormState | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const finalSubmitRequested = useRef(false);
 
   const activeStepIndex = steps.findIndex(step => step.key === activeStep);
 
@@ -188,24 +230,97 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const updateStepErrors = (step: StudentFormStep, nextForm: StudentFormState) => {
+    const stepErrors = buildValidationErrors([step], nextForm);
+    const fieldsToValidate = getFieldsToValidate([step], nextForm);
+    setErrors(current => {
+      const next = { ...current };
+      fieldsToValidate.forEach(field => {
+        if (stepErrors[field]) next[field] = stepErrors[field];
+        else delete next[field];
+      });
+      return next;
+    });
+  };
+
   const setField = (key: keyof StudentFormState, value: string) => {
     const nextValue = key === 'aadhaar_number' || key === 'sibling_aadhaar'
       ? value.replace(/\D/g, '').slice(0, 12)
       : key === 'phone'
       ? value.replace(/\D/g, '').slice(0, 10)
       : value;
-    setErrors(current => {
-      if (!current[key]) return current;
-      const next = { ...current };
-      delete next[key];
-      return next;
-    });
     setForm((current) => {
-      if (key === 'st_id') return { ...current, st_id: nextValue, dist_id: '', mndl_id: '', vil_id: '', sch_id: '' };
-      if (key === 'dist_id') return { ...current, dist_id: nextValue, mndl_id: '', vil_id: '', sch_id: '' };
-      if (key === 'mndl_id') return { ...current, mndl_id: nextValue, vil_id: '', sch_id: '' };
-      if (key === 'vil_id') return { ...current, vil_id: nextValue, sch_id: '' };
-      return { ...current, [key]: nextValue };
+      const apply = (next: StudentFormState) => {
+        const step = fieldStepMap[key];
+        if (step) updateStepErrors(step, next);
+        return next;
+      };
+      if (key === 'st_id') return apply({ ...current, st_id: nextValue, dist_id: '', mndl_id: '', vil_id: '', sch_id: '' });
+      if (key === 'dist_id') return apply({ ...current, dist_id: nextValue, mndl_id: '', vil_id: '', sch_id: '' });
+      if (key === 'mndl_id') return apply({ ...current, mndl_id: nextValue, vil_id: '', sch_id: '' });
+      if (key === 'vil_id') return apply({ ...current, vil_id: nextValue, sch_id: '' });
+      const relationValue = (label: string) => relationships.find(([, optionLabel]) => optionLabel.trim().toLowerCase() === label.toLowerCase())?.[0] ?? current.relation;
+      if (key === 'father_is_guardian') {
+        return nextValue === 'Yes'
+          ? apply({
+              ...current,
+              father_is_guardian: 'Yes',
+              mother_is_guardian: 'No',
+              guardian_first: current.father_first,
+              guardian_middle: current.father_middle,
+              guardian_last: current.father_last,
+              relation: relationValue('Father'),
+            })
+          : apply({
+              ...current,
+              father_is_guardian: 'No',
+              guardian_first: '',
+              guardian_middle: '',
+              guardian_last: '',
+              relation: '',
+            });
+      }
+      if (key === 'mother_is_guardian') {
+        return nextValue === 'Yes'
+          ? apply({
+              ...current,
+              mother_is_guardian: 'Yes',
+              father_is_guardian: 'No',
+              guardian_first: current.mother_first,
+              guardian_middle: current.mother_middle,
+              guardian_last: current.mother_last,
+              relation: relationValue('Mother'),
+            })
+          : apply({
+              ...current,
+              mother_is_guardian: 'No',
+              guardian_first: '',
+              guardian_middle: '',
+              guardian_last: '',
+              relation: '',
+            });
+      }
+      if (key === 'father_first' || key === 'father_middle' || key === 'father_last') {
+        const next = { ...current, [key]: nextValue };
+        if (current.father_is_guardian === 'Yes') {
+          next.guardian_first = key === 'father_first' ? nextValue : current.father_first;
+          next.guardian_middle = key === 'father_middle' ? nextValue : current.father_middle;
+          next.guardian_last = key === 'father_last' ? nextValue : current.father_last;
+          next.relation = relationValue('Father');
+        }
+        return apply(next);
+      }
+      if (key === 'mother_first' || key === 'mother_middle' || key === 'mother_last') {
+        const next = { ...current, [key]: nextValue };
+        if (current.mother_is_guardian === 'Yes') {
+          next.guardian_first = key === 'mother_first' ? nextValue : current.mother_first;
+          next.guardian_middle = key === 'mother_middle' ? nextValue : current.mother_middle;
+          next.guardian_last = key === 'mother_last' ? nextValue : current.mother_last;
+          next.relation = relationValue('Mother');
+        }
+        return apply(next);
+      }
+      return apply({ ...current, [key]: nextValue });
     });
   };
   const touchField = (key: keyof StudentFormState) => {
@@ -213,6 +328,15 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       if (prev.has(key)) return prev;
       const next = new Set(prev);
       next.add(key);
+      return next;
+    });
+    const step = fieldStepMap[key];
+    if (!step) return;
+    setErrors(current => {
+      const stepErrors = buildValidationErrors([step]);
+      const next = { ...current };
+      if (stepErrors[key]) next[key] = stepErrors[key];
+      else delete next[key];
       return next;
     });
   };
@@ -448,6 +572,38 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       }
       const [firstName, ...restName] = (student.studentName || snapshot?.full_name || '').split(' ');
       const fallbackGuardian = splitName(student.guardianName ?? snapshot?.guardian_full_name);
+      const fatherName = {
+        first: firstString(student, ['fatherFirstName', 'father_first_name', 'father_first', 'fatherNameFirst', 'father.firstName', 'father.first_name']),
+        middle: firstString(student, ['fatherMiddleName', 'father_middle_name', 'father_middle', 'fatherNameMiddle', 'father.middleName', 'father.middle_name']),
+        last: firstString(student, ['fatherLastName', 'father_last_name', 'father_last', 'fatherNameLast', 'father.lastName', 'father.last_name']),
+      };
+      const motherName = {
+        first: firstString(student, ['motherFirstName', 'mother_first_name', 'mother_first', 'motherNameFirst', 'mother.firstName', 'mother.first_name']),
+        middle: firstString(student, ['motherMiddleName', 'mother_middle_name', 'mother_middle', 'motherNameMiddle', 'mother.middleName', 'mother.middle_name']),
+        last: firstString(student, ['motherLastName', 'mother_last_name', 'mother_last', 'motherNameLast', 'mother.lastName', 'mother.last_name']),
+      };
+      const fallbackFather = splitName(firstString(student, ['fatherName', 'father_name', 'father.name']));
+      const fallbackMother = splitName(firstString(student, ['motherName', 'mother_name', 'mother.name']));
+      const guardianName = {
+        first: student.guardianFirstName ?? fallbackGuardian.first,
+        middle: student.guardianMiddleName ?? fallbackGuardian.middle,
+        last: student.guardianLastName ?? fallbackGuardian.last,
+      };
+      const guardianRelationLabel = String(student.guardianRelationName || snapshot?.guardian_relation_name || '').trim().toLowerCase();
+      const father = {
+        first: fatherName.first || fallbackFather.first || (guardianRelationLabel === 'father' ? guardianName.first : ''),
+        middle: fatherName.middle || fallbackFather.middle || (guardianRelationLabel === 'father' ? guardianName.middle : ''),
+        last: fatherName.last || fallbackFather.last || (guardianRelationLabel === 'father' ? guardianName.last : ''),
+      };
+      const mother = {
+        first: motherName.first || fallbackMother.first || (guardianRelationLabel === 'mother' ? guardianName.first : ''),
+        middle: motherName.middle || fallbackMother.middle || (guardianRelationLabel === 'mother' ? guardianName.middle : ''),
+        last: motherName.last || fallbackMother.last || (guardianRelationLabel === 'mother' ? guardianName.last : ''),
+      };
+      const explicitFatherGuardian = firstBoolean(student, ['fatherIsGuardian', 'father_is_guardian', 'isFatherGuardian', 'father.isGuardian', 'father.is_guardian']);
+      const explicitMotherGuardian = firstBoolean(student, ['motherIsGuardian', 'mother_is_guardian', 'isMotherGuardian', 'mother.isGuardian', 'mother.is_guardian']);
+      const fatherIsGuardian = explicitFatherGuardian ?? (guardianRelationLabel === 'father' && sameName(father, guardianName));
+      const motherIsGuardian = explicitMotherGuardian ?? (guardianRelationLabel === 'mother' && sameName(mother, guardianName));
       const newForm: StudentFormState = {
         ...init,
         first_name: firstName,
@@ -462,9 +618,17 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         class_id: student.classId ? String(student.classId) : mapLabelToOptionValue(snapshot?.class_id, viewFallback?.classes ?? []),
         orphan_status: mapLabelToOptionValue(student.orphanStatus || snapshot?.orphan_status, ORPHAN_STATUS_OPTIONS),
         image_url: student.imageUrl ?? snapshot?.image_url ?? '',
-        guardian_first: student.guardianFirstName ?? fallbackGuardian.first,
-        guardian_middle: student.guardianMiddleName ?? fallbackGuardian.middle,
-        guardian_last: student.guardianLastName ?? fallbackGuardian.last,
+        father_first: father.first,
+        father_middle: father.middle,
+        father_last: father.last,
+        father_is_guardian: fatherIsGuardian ? 'Yes' : 'No',
+        mother_first: mother.first,
+        mother_middle: mother.middle,
+        mother_last: mother.last,
+        mother_is_guardian: motherIsGuardian ? 'Yes' : 'No',
+        guardian_first: guardianName.first,
+        guardian_middle: guardianName.middle,
+        guardian_last: guardianName.last,
         phone: student.phoneNumber ?? snapshot?.guardian_phone ?? '',
         occ: student.occ ?? snapshot?.guardian_occ ?? '',
         addr: student.addr ?? '',
@@ -567,7 +731,11 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     e.preventDefault();
     if (isView) return;
     if (loading) return;
+    if (activeStep !== 'guardian' || !finalSubmitRequested.current) return;
+    finalSubmitRequested.current = false;
 
+    setSubmitAttempted(true);
+    if (activeStep === 'guardian') setGuardianSubmitAttempted(true);
     const isValid = validateAndApply(steps.map(step => step.key));
     if (!isValid) {
       return;
@@ -578,7 +746,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       setErrors(nextErrors);
       setValidatedFields(new Set(['aadhaar_number']));
       pendingFocusField.current = 'aadhaar_number';
-      if (activeStep !== 'personal') setActiveStep('personal');
+      if ((activeStep as StudentFormStep) !== 'personal') setActiveStep('personal');
       else focusField('aadhaar_number');
       return;
     }
@@ -620,17 +788,20 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         },
       };
 
-      if (isEdit && id) {
-        await updateStudent(Number(id), payload, selectedImageFile ?? undefined);
-        toast('Student updated successfully.', 'success');
+      const successMessage = isEdit ? 'Student updated successfully.' : 'Student added successfully.';
+
+      if (isEdit) {
+        if (!effectiveStudentId) throw new Error('Student id is missing for update.');
+        await updateStudent(effectiveStudentId, payload, selectedImageFile ?? undefined);
       } else {
         await createStudent(payload, selectedImageFile ?? undefined);
-        toast('Student registered successfully.', 'success');
       }
       if (embedded && onSuccess) {
+        toast(successMessage, 'success');
         onSuccess();
       } else {
         nav('/students');
+        window.setTimeout(() => toast(successMessage, 'success'), 0);
       }
     } catch (error) {
       const nextErrors: StudentFormErrors = {};
@@ -667,6 +838,11 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     }
   };
 
+  const submitFinalStep = () => {
+    finalSubmitRequested.current = true;
+    formRef.current?.requestSubmit();
+  };
+
   const currentCastes = useMemo(() => castes, [castes]);
   const currentClasses = useMemo(() => classes, [classes]);
   const currentRelationships = useMemo(() => relationships, [relationships]);
@@ -675,36 +851,28 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     ? 'Aadhaar number must be exactly 12 digits.'
     : aadhaarStatus || (aadhaarValidating ? 'Checking Aadhaar...' : '');
   const goBack = () => setActiveStep(steps[Math.max(0, activeStepIndex - 1)].key);
-  const buildValidationErrors = (stepKeys: StudentFormStep[]) => {
+  const buildValidationErrors = (stepKeys: StudentFormStep[], formState: StudentFormState = form) => {
     const requiredFields = stepKeys.flatMap(step => stepRequiredFields[step]);
     const nextErrors: StudentFormErrors = {};
 
     requiredFields.forEach(field => {
-      const value = form[field];
+      const value = formState[field];
       if (value === undefined || value === null || String(value).trim() === '') {
         nextErrors[field] = `${requiredFieldLabels[field] ?? field} is required`;
       }
     });
 
     if (stepKeys.includes('personal')) {
-      if (form.email.trim() && !emailPattern.test(form.email.trim())) {
+      if (formState.email.trim() && !emailPattern.test(formState.email.trim())) {
         nextErrors.email = 'Enter a valid email address';
       }
 
-      if (form.aadhaar_number.trim() && !/^\d{12}$/.test(form.aadhaar_number)) {
+      if (formState.aadhaar_number.trim() && !/^\d{12}$/.test(formState.aadhaar_number)) {
         nextErrors.aadhaar_number = 'Aadhaar Number must contain exactly 12 digits.';
       }
 
-      if (form.has_sibling === 'Yes') {
-        if (!form.sibling_aadhaar.trim()) {
-          nextErrors.sibling_aadhaar = 'Search Existing Student by Aadhaar Number is required';
-        } else if (!/^\d{12}$/.test(form.sibling_aadhaar)) {
-          nextErrors.sibling_aadhaar = 'Aadhaar Number must contain exactly 12 digits.';
-        }
-      }
-
-      if (form.dob.trim()) {
-        const dobValue = form.dob.trim();
+      if (formState.dob.trim()) {
+        const dobValue = formState.dob.trim();
         const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dobValue);
         const date = match ? new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00`) : new Date('invalid');
         const today = new Date();
@@ -732,23 +900,84 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     }
 
     if (stepKeys.includes('guardian')) {
-      if (form.phone.trim() && !/^\d{10}$/.test(form.phone.trim())) {
+      if (formState.phone.trim() && !/^\d{10}$/.test(formState.phone.trim())) {
         nextErrors.phone = 'Phone Number must contain exactly 10 digits.';
+      }
+      if (formState.has_sibling === 'Yes') {
+        if (!formState.sibling_aadhaar.trim()) {
+          nextErrors.sibling_aadhaar = 'Search Existing Student by Aadhaar Number is required';
+        } else if (!/^\d{12}$/.test(formState.sibling_aadhaar)) {
+          nextErrors.sibling_aadhaar = 'Aadhaar Number must contain exactly 12 digits.';
+        }
       }
     }
 
     return nextErrors;
   };
-  const validateAndApply = (stepKeys: StudentFormStep[]) => {
-    const nextErrors = buildValidationErrors(stepKeys);
+  const getFieldsToValidate = (stepKeys: StudentFormStep[], formState: StudentFormState = form) => {
     const fieldsToValidate = stepKeys.flatMap(step => stepRequiredFields[step]);
     if (stepKeys.includes('personal')) {
       fieldsToValidate.push('email', 'aadhaar_number', 'dob');
-      if (form.has_sibling === 'Yes') fieldsToValidate.push('sibling_aadhaar');
+      if (formState.has_sibling === 'Yes') fieldsToValidate.push('sibling_aadhaar');
     }
     if (stepKeys.includes('guardian')) {
       fieldsToValidate.push('phone');
+      if (formState.has_sibling === 'Yes') fieldsToValidate.push('sibling_aadhaar');
     }
+    return fieldsToValidate;
+  };
+  const clearStepValidation = (step: StudentFormStep) => {
+    const fieldsToClear = new Set(getFieldsToValidate([step]));
+    setValidatedFields(current => new Set([...current].filter(field => !fieldsToClear.has(field))));
+    setErrors(current => {
+      const next = { ...current };
+      fieldsToClear.forEach(field => {
+        if (!touchedFields.has(field)) delete next[field];
+      });
+      return next;
+    });
+  };
+  const clearGuardianDisplayState = () => {
+    setErrors(current => {
+      const next = { ...current };
+      ([
+        'father_first',
+        'father_middle',
+        'father_last',
+        'mother_first',
+        'mother_middle',
+        'mother_last',
+        'guardian_first',
+        'guardian_middle',
+        'guardian_last',
+        'relation',
+        'phone',
+        'occ',
+        'addr',
+      ] as (keyof StudentFormState)[]).forEach(field => {
+        if (!touchedFields.has(field)) delete next[field];
+      });
+      return next;
+    });
+    setValidatedFields(current => new Set([...current].filter(field => !([
+      'father_first',
+      'father_middle',
+      'father_last',
+      'mother_first',
+      'mother_middle',
+      'mother_last',
+      'guardian_first',
+      'guardian_middle',
+      'guardian_last',
+      'relation',
+      'phone',
+      'occ',
+      'addr',
+    ] as (keyof StudentFormState)[]).includes(field))));
+  };
+  const validateAndApply = (stepKeys: StudentFormStep[]) => {
+    const nextErrors = buildValidationErrors(stepKeys);
+    const fieldsToValidate = getFieldsToValidate(stepKeys);
     setErrors(nextErrors);
     setValidatedFields(new Set(fieldsToValidate));
 
@@ -765,7 +994,12 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   };
   const goNext = () => {
     if (!validateAndApply([activeStep])) return;
-    setActiveStep(steps[Math.min(steps.length - 1, activeStepIndex + 1)].key);
+    const nextStep = steps[Math.min(steps.length - 1, activeStepIndex + 1)].key;
+    if (nextStep === 'guardian') {
+      clearGuardianDisplayState();
+      setGuardianSubmitAttempted(false);
+    }
+    setActiveStep(nextStep);
   };
   const goToStep = (index: number) => {
     if (isView) {
@@ -834,13 +1068,15 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         errors={errors}
         validatedFields={validatedFields}
         touchedFields={touchedFields}
+        submitAttempted={submitAttempted}
+        guardianSubmitAttempted={guardianSubmitAttempted}
         loading={metaLoading || editLoading}
         activeStep={activeStep}
       />
       {!isView ? (
         <div className="studentWizardActions" aria-label="Form actions">
           {activeStep === 'guardian' ? (
-            <PrimaryButton loading={loading || metaLoading || editLoading} className="btn btnGreen">{isEdit ? 'Save Changes' : 'Register Student'}</PrimaryButton>
+            <PrimaryButton type="button" onClick={submitFinalStep} loading={loading || metaLoading || editLoading} className="btn btnGreen">{isEdit ? 'Save Changes' : 'Register Student'}</PrimaryButton>
           ) : (
             <PrimaryButton type="button" className="btn btnGreen" onClick={goNext} disabled={metaLoading || editLoading}>Next</PrimaryButton>
           )}

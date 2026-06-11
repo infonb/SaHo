@@ -1,0 +1,197 @@
+/* Sponsor sorting matches the student table look and feel */
+.sponsor-list-page th .sortableHeaderWrap,
+.sponsor-list-page th .sortableHeader {
+  display: inline-flex;
+  align-items: center;
+  /* gap: 8px; */
+}
+
+.sponsor-list-page th .sortableHeader {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  padding: 0;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.sponsor-list-page th .sortArrow {
+  width: 14px;
+  height: 14px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.sponsor-list-page th .sortArrow.inactive::before {
+  content: "\2195";
+}
+
+.sponsor-list-page th .sortArrow.asc::before {
+  content: "\2191";
+  color: #0f766e;
+}
+
+.sponsor-list-page th .sortArrow.desc::before {
+  content: "\2193";
+  color: #0f766e;
+}
+
+.sponsor-list-page th .sortArrow::after {
+  content: none;
+}
+
+.sponsorTypeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  /* letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap; */
+}
+
+.sponsorTypeBadge.individual {
+  color: #0f8b8d;
+  background: #dff8fb;
+  border: 1px solid #c5eef3;
+}
+
+.sponsorTypeBadge.organisation {
+  color: #b7791f;
+  background: #fff7dc;
+  border: 1px solid #fdecc0;
+}
+
+.sponsorMetaLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sponsorMetaSep {
+  color: var(--color-text3);
+  font-weight: 700;
+}
+
+.sponsor-list-page .sponsorNameCell {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.sponsor-list-page button.sponsorNameCell {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+}
+
+.sponsor-list-page .sponsorNameCell:hover {
+  color: #047857;
+  text-decoration: none;
+}
+
+.sponsor-list-page .sponsorCardIdentity .sponsorNameCell {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #0f172a;
+}
+
+.sponsor-list-page .sponsorCard .sponsorNameCell {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.sponsor-list-page .tableWrap table {
+  table-layout: fixed;
+}
+
+.sponsor-list-page th,
+.sponsor-list-page td {
+  padding: 8px 12px !important;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.sponsor-list-page th:nth-child(1),
+.sponsor-list-page td:nth-child(1) {
+  width: 92px;
+  min-width: 92px;
+  max-width: 92px;
+}
+
+.sponsor-list-page th:nth-child(2),
+.sponsor-list-page td:nth-child(2) {
+  text-align: left;
+  width: 240px;
+  min-width: 240px;
+  max-width: 240px;
+  padding-left: 12px;
+}
+
+.sponsor-list-page th:nth-child(3),
+.sponsor-list-page td:nth-child(3) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sponsor-list-page th:nth-child(4),
+.sponsor-list-page td:nth-child(4) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.sponsor-list-page th:nth-child(5),
+.sponsor-list-page td:nth-child(5) {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.sponsor-list-page th:nth-child(6),
+.sponsor-list-page td:nth-child(6) {
+  width: 130px;
+  min-width: 130px;
+  max-width: 130px;
+}
+
+.sponsor-list-page th:nth-child(7),
+.sponsor-list-page td:nth-child(7) {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+}
+
+.sponsor-list-page th:nth-child(8),
+.sponsor-list-page td:nth-child(8) {
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+}

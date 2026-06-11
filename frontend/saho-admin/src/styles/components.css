@@ -1331,6 +1331,17 @@ h1, h2, h3, h4, h5, h6
   max-width: 760px;
 }
 
+
+.input,
+.select,
+.textarea {
+  /* min-height: auto; */
+  padding: 8px 10px;
+  border-radius: 10px;
+  border-color: #e2e8f0;
+  font-size: 13px;
+}
+
 .input,
 .select,
 .textarea {
@@ -1340,7 +1351,7 @@ h1, h2, h3, h4, h5, h6
   border-radius: var(--r-md);
   padding: 10px 12px;
   color: var(--color-text);
-  min-height: 40px;
+  max-height: 40px;
   box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
   transition:
     border-color 0.18s ease,
@@ -1462,7 +1473,6 @@ h1, h2, h3, h4, h5, h6
 }
 
 .uploadBox {
-  min-height: 92px;
   border: 1px dashed var(--color-divider);
   border-radius: var(--r-md);
   display: grid;
@@ -1981,15 +1991,18 @@ tr.clickable:hover {
 }
 
 .pageBtn.active {
-  background: #991b1b;
+  /* background: #991b1b; */
+  background: #0f766e;
   color: #ffffff;
-  box-shadow: 0 6px 16px rgba(153, 27, 27, 0.2);
+  box-shadow: none;
+  border: 0.5px solid #0f766e;
 }
 
 .pageBtn:hover,
 .pageNav:hover {
-  background: var(--br-100);
-  color: var(--color-text);
+  background: #fff;
+  color: #0f766e;
+  border: 0.5px solid #0f766e;
 }
 
 .pageBtn:disabled,
@@ -2005,9 +2018,64 @@ tr.clickable:hover {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-surface);
-  color: var(--color-text2);
+  color: #6b778C;
   font-weight: 800;
   padding: 0 28px 0 11px;
+}
+
+.pagination .multiSelectFilter {
+  width: 62px;
+  min-width: 62px;
+}
+
+.pagination .multiSelectTrigger {
+  width: 62px;
+  min-width: 62px;
+  padding: 7px 8px 7px 10px;
+  justify-content: space-between;
+}
+
+.pagination .multiSelectTrigger span {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pagination .multiSelectMenu {
+  left: auto;
+  right: 0;
+  top: auto;
+  bottom: calc(100% + 8px);
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+  padding: 4px 0;
+}
+
+.pagination .multiSelectOptions {
+  max-height: 180px;
+}
+
+.pagination .multiSelectMenuHead {
+  display: none;
+}
+
+.pagination .multiSelectOption {
+  appearance: none;
+  -webkit-appearance: none;
+  width: calc(100% - 12px);
+  margin: 2px 6px;
+  padding: 7px 10px;
+  justify-content: center;
+  text-align: center;
+  border: 0;
+  background: transparent;
+}
+
+.pagination .multiSelectOption span {
+  width: 100%;
+  text-align: center;
 }
 
 .modalOverlay {
@@ -2048,37 +2116,6 @@ tr.clickable:hover {
   margin: 0;
 }
 
-.modalCloseBtn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #64748b;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  margin-left: auto;
-  padding: 0;
-  cursor: pointer;
-}
-
-.modalCloseBtn:hover {
-  border-color: #ef4444;
-  color: #dc2626;
-  background: #fef2f2;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.08);
-}
-
-.modalCloseBtn svg,
-.modalCloseBtn .filterBtnIcon {
-  display: block;
-  width: 14px;
-  height: 14px;
-  filter: none;
-}
-
 .modalBody {
   padding: 8px 20px 20px;
   overflow-y: auto;
@@ -2101,10 +2138,10 @@ tr.clickable:hover {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  z-index: 60;
+  z-index: 1000;
 }
 
-.toast {
+.appToast {
   padding: 12px 14px;
   border-radius: var(--r-md);
   box-shadow: var(--shadow-md);
@@ -2114,7 +2151,13 @@ tr.clickable:hover {
   animation: toastIn 0.2s ease;
 }
 
-.toast.error {
+.toastStack .appToast {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.appToast.appToastError {
   background: var(--red-bg);
   color: var(--red);
   border-color: var(--red-border);
@@ -4275,15 +4318,6 @@ svg {
   border-color: #e2e8f0;
 }
 
-.input,
-.select,
-.textarea {
-  min-height: 36px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border-color: #e2e8f0;
-  font-size: 13px;
-}
 
 .textarea {
   min-height: 72px;
@@ -4435,8 +4469,8 @@ td {
 }
 
 .pageBtn.active {
-  background: #0f766e;
-  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.16);
+  /* background: #0f766e; */
+  /* box-shadow: 0 8px 18px rgba(15, 118, 110, 0.16); */
 }
 
 .pageSizeSelect {
@@ -5352,6 +5386,8 @@ td {
   align-items: center;
   margin-bottom: 8px;
   gap: 12px;
+  align-items:center; 
+  padding:10px
 }
 
 .sponsorCardGrid {
@@ -5359,6 +5395,20 @@ td {
   grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
   gap: 18px;
 }
+
+.sponsor-list-page .tableWrap th:nth-child(4),
+.sponsor-list-page .tableWrap td:nth-child(4),
+.sponsor-list-page .tableWrap th:nth-child(8),
+.sponsor-list-page .tableWrap td:nth-child(8) {
+  text-align: center;
+}
+
+.sponsor-list-page .tableWrap td:nth-child(4) .badge,
+.sponsor-list-page .tableWrap td:nth-child(8) .badge {
+  margin-inline: auto;
+}
+
+
 
 .sponsorCard,
 .eventCard {
@@ -5569,7 +5619,7 @@ td {
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   background: #fff;
-  color: #334155;
+  color: #334155;;
   font-size: 12.5px;
   transition:
     border-color 0.16s ease,
@@ -5952,25 +6002,7 @@ td {
   opacity: 0.07;
 }
 
-/* .student-stat-card.total {
-  --card-accent: #22c55e;
-}
 
-.student-stat-card.boys {
-  --card-accent: #f59e0b;
-}
-
-.student-stat-card.girls {
-  --card-accent: #8b5cf6;
-}
-
-.student-stat-card.sponsored {
-  --card-accent: #22c55e;
-}
-
-.student-stat-card.orphans {
-  --card-accent: #f59e0b;
-} */
 
 .student-stat-card.boys .genderIcon {
   background: #dbeafe;
@@ -6282,7 +6314,7 @@ td {
   background: #ffffff;
   font-size: 13px;
   font-weight: 600;
-  color: #334155;
+  color: #6b778c;
   cursor: pointer;
   transition:
     border-color 0.18s ease,
@@ -6490,10 +6522,9 @@ td {
   padding: 18px 22px 22px;
 }
 .studentWizardForm {
-  --student-control-height: 46px;
-  --student-control-radius: 10px;
+  --student-control-radius: 12px;
   --student-control-border: 1px;
-  --student-field-font: 13px;
+  --student-field-font: 12px;
   --student-label-color: #6b7280;
   --student-error: #e11d48;
   --student-error-bg: #fff1f2;
@@ -6542,12 +6573,9 @@ td {
 }
 
 .studentWizardClose {
-  /* width: var(--student-control-height);
-  height: var(--student-control-height); */
-  width: 36px;
-  height: 36px;
-  border: var(--student-control-border) solid #e2e8f0;
-  border-radius: var(--student-control-radius);
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   background: #ffffff;
   color: #64748b;
   cursor: pointer;
@@ -6564,11 +6592,9 @@ td {
   background: #fef2f2;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.08);
 }
-.studentWizardClose svg,
-.studentWizardClose .filterBtnIcon {
-  width: 14px;
-  height: 14px;
-  filter: none;
+.studentWizardClose svg {
+  width: 16px;
+  height: 16px;
 }
 .studentStepIndicator {
   display: grid;
@@ -6578,10 +6604,9 @@ td {
   width: 100%;
 }
 .studentStepPill {
-  min-height: 46px;
-  padding: 0 14px;
+  padding: 8px 12px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #ffffff;
   color: #64748b;
   font-size: 12px;
@@ -6599,14 +6624,17 @@ td {
 }
 
 .studentStepPill span {
-  width: 20px;
-  height: 20px;
+  inline-size: 20px;
+  padding: 4px;
+  aspect-ratio: 1;
+  box-sizing: border-box;
   border-radius: 999px;
   display: grid;
   place-items: center;
   background: #f1f5f9;
   color: #64748b;
   font-size: 11px;
+  line-height: 1;
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
@@ -6636,15 +6664,17 @@ td {
 .studentStepTitle {
   margin: 0 0 18px;
   color: #6b7280;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 900;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 .studentStepIcon {
-  width: 28px;
-  height: 28px;
+  inline-size: 28px;
+  padding: 7px;
+  aspect-ratio: 1;
+  box-sizing: border-box;
   border-radius: 8px;
   display: grid;
   place-items: center;
@@ -6652,6 +6682,13 @@ td {
   color: #10b981;
   font-size: 12px;
   font-weight: 900;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+.studentStepIcon svg {
+  inline-size: 14px;
+  block-size: 14px;
+  display: block;
 }
 .studentStepGrid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -6666,12 +6703,10 @@ td {
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   background: #ffffff;
-  padding: 20px;
+  padding: 18px 20px;
 }
 .studentSiblingInline {
   margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #eef2f7;
 }
 .studentSiblingInline .studentStepTitle {
   margin-bottom: 14px;
@@ -6683,7 +6718,7 @@ td {
 .studentWizardForm .field > label,
 .studentWizardForm .formField > label {
   color: var(--student-label-color);
-  font-size: var(--student-field-font);
+  font-size: 12px;
   font-weight: 800;
   line-height: 1.25;
 }
@@ -6691,20 +6726,59 @@ td {
 .studentWizardForm .input,
 .studentWizardForm .select,
 .studentWizardForm .textarea {
-  min-height: var(--student-control-height);
-  height: var(--student-control-height);
-  border-radius: var(--student-control-radius);
-  border: var(--student-control-border) solid #d1d5db;
+  block-size: auto;
+  max-block-size: none;
+  line-height: 1.35 !important;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
   background: #ffffff;
-  color: #0f172a;
-  font-size: var(--student-field-font);
-  padding: 10px 12px;
-  box-shadow: none;
+  color: #334155;
+  font-size: 10px !important;
+  font-weight: 600;
+  padding: 8px 12px !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+.studentWizardForm .select {
+  padding-right: 34px !important;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+.studentWizardForm .multiSelectFilter {
+  width: 100%;
+}
+.studentWizardForm .studentFormSelect .multiSelectOption {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.studentWizardForm .studentFormSelect .multiSelectOption.isSelected {
+  background: #f0fdf4;
+  color: #0f766e;
+}
+.studentWizardForm .formField.has-error .multiSelectTrigger {
+  border-color: var(--student-error);
+  background: #fffafa;
+}
+.studentWizardForm .formField.has-success .multiSelectTrigger {
+  border-color: var(--student-success);
 }
 .studentWizardForm .textarea {
-  min-height: var(--student-control-height);
-  height: var(--student-control-height);
+  min-block-size: auto;
   resize: none;
+}
+.studentWizardForm .input::placeholder,
+.studentWizardForm .textarea::placeholder {
+  color: #334155;
+  opacity: 1;
+}
+.studentWizardForm .multiSelectTrigger {
+  font-size: 10px;
+  font-weight: 600;
+  color: #334155;
 }
 
 .studentWizardForm .input:hover,
@@ -6716,9 +6790,11 @@ td {
 .studentWizardForm .input:focus,
 .studentWizardForm .select:focus,
 .studentWizardForm .textarea:focus {
-  outline: 0;
+  outline: none;
   border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+  box-shadow:
+    0 0 0 4px rgba(16, 185, 129, 0.12),
+    0 1px 2px rgba(15, 23, 42, 0.03);
 }
 .studentWizardForm .formField.has-error .input,
 .studentWizardForm .formField.has-error .select,
@@ -6742,7 +6818,7 @@ td {
   align-items: center;
   gap: 6px;
   color: rgba(225, 29, 72, 0.9);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1.35;
   margin-top: 2px;
@@ -6778,10 +6854,12 @@ td {
 .studentPhotoField {
   grid-column: 1 / -1;
 }
+.studentPhotoField .studentStepTitle {
+  margin-bottom: 10px;
+}
 .studentModalUpload {
-  min-height: var(--student-control-height);
-  border: var(--student-control-border) dashed #d1d5db;
-  border-radius: var(--student-control-radius);
+  border: 1px solid #d9d9d9;
+  border-radius: 12px;
   background: #ffffff;
   gap: 12px;
   padding: 8px 12px;
@@ -6789,10 +6867,26 @@ td {
   align-items: center;
   justify-content: space-between;
   text-align: left;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
+  flex-wrap: nowrap;
+}
+.studentModalUploadPreview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.studentModalUploadPreview span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.studentModalUploadError {
+  color: var(--red);
 }
 .studentModalUpload img {
   width: 40px;
@@ -6801,24 +6895,112 @@ td {
   object-fit: cover;
   flex: 0 0 auto;
 }
-.studentModalUpload:hover,
-.studentModalUpload:focus-within {
-  border-color: #10b981;
-  background: #f8fffd;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
+.studentModalUploadPreview .uploadDeleteBtn {
+  position: static;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  padding: 7px;
+  border-radius: 10px;
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #dc2626;
+  flex: 0 0 auto;
+  box-shadow: none;
+}
+.studentModalUploadPreview .uploadDeleteBtn:hover,
+.studentModalUploadPreview .uploadDeleteBtn:focus {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #dc2626;
+  box-shadow: none;
+  transform: none;
+}
+.studentModalUploadPreview .uploadDeleteBtn svg {
+  width: 14px;
+  height: 14px;
+}
+.studentModalUploadPreview .uploadDeleteBtn svg path {
+  stroke: currentColor;
 }
 .studentModalUploadActions {
   justify-content: flex-start;
   gap: 10px;
-  flex-wrap: wrap;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  margin-left: auto;
 }
 .studentModalUploadActions .btn,
 .studentModalUploadActions .btn.outline,
 .studentModalUploadActions label.btn {
-  height: var(--student-control-height);
-  min-height: var(--student-control-height);
-  border-radius: var(--student-control-radius);
-  font-size: var(--student-field-font);
+  box-sizing: border-box;
+  appearance: none;
+  margin: 0;
+  border-radius: 12px;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 700;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transform: none;
+  transition: none;
+}
+.studentModalUploadActions .btn:hover,
+.studentModalUploadActions .btn:focus,
+.studentModalUploadActions .btn:focus-visible,
+.studentModalUploadActions .btn.outline:hover,
+.studentModalUploadActions .btn.outline:focus,
+.studentModalUploadActions .btn.outline:focus-visible,
+.studentModalUploadActions label.btn:hover,
+.studentModalUploadActions label.btn:focus,
+.studentModalUploadActions label.btn:focus-visible {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text2);
+  box-shadow: none;
+  outline: 0;
+  transform: none;
+}
+.studentModalUploadActions .btn svg,
+.studentModalUploadActions label.btn svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+.modalFooter .cameraFooterButton {
+  box-sizing: border-box;
+  min-width: 100px;
+  border-radius: 12px;
+  padding: 10px 14px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+}
+.studentCheckboxField {
+  align-self: start;
+}
+.studentCheckboxControl {
+  color: #334155;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.studentCheckboxControl input {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: #10b981;
 }
 .studentWizardForm .foundCard {
   border: 0;
@@ -6827,22 +7009,39 @@ td {
   box-shadow: none;
   padding: 0;
 }
+.studentWizardForm .studentSearchRow {
+  display: contents;
+}
+.studentWizardForm .studentSearchRow .formField {
+  min-width: 0;
+}
 .studentWizardForm .studentSearchAction {
   display: flex;
-  align-items: flex-start;
-  padding-top: calc((var(--student-field-font) * 1.25) + 5px);
+  align-items: center;
+  align-self: end;
+  padding-top: 0;
 }
 .studentWizardForm .studentSearchButton {
-  height: var(--student-control-height);
-  min-height: var(--student-control-height);
   border-radius: var(--student-control-radius);
-  font-size: var(--student-field-font);
-  background: #0f766e;
-  border-color: #0f766e;
+  font-size: 12px;
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+  min-width: 140px;
+  padding: 10px 18px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 .studentWizardForm .studentSearchButton:hover {
-  background: #0d5f59;
-  border-color: #0d5f59;
+  background: #047857;
+  border-color: #047857;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
   transform: none;
 }
 .studentWizardActions {
@@ -6851,21 +7050,28 @@ td {
   align-items: center;
   gap: 10px;
   padding: 14px 0;
-  border-top: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
 }
 .studentWizardActions .btn {
-  height: var(--student-control-height);
-  min-height: var(--student-control-height);
-  border-radius: var(--student-control-radius);
-  font-size: var(--student-field-font);
+  border-radius: 12px;
+  font-size: 12px;
   min-width: 140px;
-  padding: 0 18px;
+  padding: 10px 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   transition:
     background-color 0.18s ease,
     border-color 0.18s ease,
     color 0.18s ease,
     box-shadow 0.18s ease;
+}
+.studentWizardActions .btnGreen,
+.studentWizardActions .btnRed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1 !important;
 }
 .studentSecondaryButton,
 .studentWizardActions .btn-cancel,
@@ -6942,12 +7148,6 @@ td {
   border-style: solid;
   background: #f8fafc;
 }
-.studentWizardForm.isViewMode .studentModalUpload:hover,
-.studentWizardForm.isViewMode .studentModalUpload:focus-within {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  box-shadow: none;
-}
 
 @media (min-width: 1400px) {
   .studentWizardForm {
@@ -6982,11 +7182,14 @@ td {
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  .studentStepPill {
-    min-height: 40px;
-  }
   .studentStepGrid {
     grid-template-columns: 1fr;
+  }
+  .studentWizardForm .studentSearchAction {
+    align-items: stretch;
+  }
+  .studentWizardForm .studentSearchButton {
+    width: 100%;
   }
   .studentWizardActions {
     justify-content: center;
@@ -7000,10 +7203,6 @@ td {
   .studentWizardHeaderTop {
     gap: 10px;
   }
-  .studentWizardClose {
-    width: 38px;
-    height: 38px;
-  }
   .studentStepTitle {
     font-size: 15px;
   }
@@ -7011,8 +7210,11 @@ td {
     padding: 16px;
   }
   .studentModalUpload {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+  }
+  .studentModalUploadActions {
+    margin-left: auto;
   }
   .studentWizardActions {
     flex-direction: column;

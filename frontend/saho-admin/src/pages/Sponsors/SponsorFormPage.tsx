@@ -1,20 +1,134 @@
 import { type ChangeEvent, type FormEvent, type PointerEvent, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { createSponsor, getSponsorById, updateSponsor, setCurrentUserId } from '../../api/sponsorApi';
+import axios from 'axios';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { createSponsor, getSponsorById, setCurrentUserId, updateSponsor } from '../../api/sponsorApi';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import PageHeader from '../../components/common/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
-import "../../styles/Sponsors/SponsorFormPage.css";
+import type { SponsorView } from '../../types';
+import '../../styles/Sponsors/SponsorFormPage.css';
 
-const init = { name: '', email: '', dob: '', ph_no: '', type: 'Individual', nationality: 'Indian', contrib: '', loc: '', image_url: '' };
+type SponsorFormMode = 'create' | 'edit' | 'view';
+
+interface SponsorFormState {
+  name: string;
+  email: string;
+  dob: string;
+  ph_no: string;
+  type: 'Individual' | 'Organisation';
+  nationality: string;
+  contrib: string;
+  loc: string;
+  image_url: string;
+}
+
+type SponsorFormErrors = Partial<Record<keyof SponsorFormState, string>>;
+
+const init: SponsorFormState = {
+  name: '',
+  email: '',
+  dob: '',
+  ph_no: '',
+  type: 'Individual',
+  nationality: 'Indian',
+  contrib: '',
+  loc: '',
+  image_url: '',
+};
+
+const formFieldKeys: (keyof SponsorFormState)[] = [
+  'name',
+  'email',
+  'dob',
+  'ph_no',
+  'type',
+  'nationality',
+  'contrib',
+  'loc',
+];
+
+const nationalityOptions = ['Indian', 'Foreigner'];
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phonePattern = /^\d{10}$/;
+const MIN_IMAGE_BYTES = 5 * 1024;
+const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
+
+const mapSponsorToForm = (sponsor: SponsorView): SponsorFormState => ({
+  name: sponsor.sponsorName ?? '',
+  email: sponsor.email ?? '',
+  dob: sponsor.dob ?? '',
+  ph_no: sponsor.ph_no ?? '',
+  type: sponsor.type ?? 'Individual',
+  nationality: sponsor.nationality ?? 'Indian',
+  contrib: String(sponsor.contrib ?? ''),
+  loc: sponsor.loc ?? '',
+  image_url: sponsor.image_url ?? '',
+});
+
+const validateSponsorField = (
+  key: keyof SponsorFormState,
+  form: SponsorFormState,
+): string | undefined => {
+  const value = String(form[key] ?? '').trim();
+
+  switch (key) {
+    case 'name':
+      if (!value) return 'Sponsor name is required.';
+      if (value.length < 2) return 'Enter a valid sponsor name.';
+      return undefined;
+    case 'email':
+      if (!value) return 'Email is required.';
+      if (!emailPattern.test(value)) return 'Enter a valid email address.';
+      return undefined;
+    case 'dob':
+      if (!value) return 'Date of birth is required.';
+      return undefined;
+    case 'ph_no':
+      if (!value) return 'Phone number is required.';
+      if (!phonePattern.test(value)) return 'Enter a valid 10 digit phone number.';
+      return undefined;
+    case 'type':
+      if (!value) return 'Type is required.';
+      return undefined;
+    case 'nationality':
+      if (!value) return 'Nationality is required.';
+      return undefined;
+    case 'contrib':
+      if (!value) return 'Contribution is required.';
+      return undefined;
+    default:
+      return undefined;
+  }
+};
+
+const validateSponsorForm = (form: SponsorFormState): SponsorFormErrors => {
+  const nextErrors: SponsorFormErrors = {};
+  formFieldKeys.forEach((key) => {
+    const error = validateSponsorField(key, form);
+    if (error) nextErrors[key] = error;
+  });
+  return nextErrors;
+};
+
+const modeFromPath = (pathname: string): SponsorFormMode => {
+  if (pathname.includes('/sponsors/view/')) return 'view';
+  if (pathname.includes('/sponsors/edit/')) return 'edit';
+  return 'create';
+};
 
 export default function SponsorFormPage() {
   const { id } = useParams();
-  const isEdit = !!id;
-  const [form, setForm] = useState(init);
-  const [loading, setLoading] = useState(false);
+  const location = useLocation();
+  const mode = modeFromPath(location.pathname);
+  const isView = mode === 'view';
+  const isEdit = mode === 'edit';
+  const [form, setForm] = useState<SponsorFormState>(init);
+  const [errors, setErrors] = useState<SponsorFormErrors>({});
+  const [touchedFields, setTouchedFields] = useState<Set<keyof SponsorFormState>>(() => new Set());
+  const [loadingSponsor, setLoadingSponsor] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -23,7 +137,12 @@ export default function SponsorFormPage() {
   const [cropUrl, setCropUrl] = useState<string | null>(null);
   const [cropScale, setCropScale] = useState(1);
   const [cropOffset, setCropOffset] = useState({ x: 0, y: 0 });
-  const [cropDragStart, setCropDragStart] = useState<{ pointerX: number; pointerY: number; offsetX: number; offsetY: number } | null>(null);
+  const [cropDragStart, setCropDragStart] = useState<{
+    pointerX: number;
+    pointerY: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cropFrameRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -31,11 +150,7 @@ export default function SponsorFormPage() {
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const nationalityOptions = ['Indian', 'Foreigner'];
-  const MIN_IMAGE_BYTES = 5 * 1024;
-  const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
 
-  // Set user ID in API module when component mounts or user changes
   useEffect(() => {
     if (user?.user_id) {
       setCurrentUserId(user.user_id);
@@ -43,34 +158,87 @@ export default function SponsorFormPage() {
   }, [user?.user_id]);
 
   useEffect(() => {
-  if (!id) return;
+    if (!id || mode === 'create') return;
 
-  getSponsorById(Number(id)).then((s) => {
-    if (!s) return;
+    let active = true;
+    setLoadingSponsor(true);
 
-    setForm({
-      name: s.sponsorName ?? '',
-      email: s.email ?? '',
-      dob: s.dob ?? '',
-      ph_no: s.ph_no ?? '',
-      type: s.type ?? 'Individual',
-      nationality: s.nationality ?? 'Indian',
-      contrib: String(s.contrib ?? ''),
-      loc: s.loc ?? '',
-      image_url: s.image_url ?? ''
+    getSponsorById(Number(id))
+      .then((sponsor) => {
+        if (!active) return;
+        if (!sponsor) {
+          toast('Sponsor not found.', 'error');
+          nav('/sponsors', { replace: true });
+          return;
+        }
+        setForm(mapSponsorToForm(sponsor));
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.error('[SponsorFormPage] load sponsor failed', error);
+        toast('Unable to load sponsor details.', 'error');
+      })
+      .finally(() => {
+        if (active) setLoadingSponsor(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id, mode, nav, toast]);
+
+  const setField = (key: keyof SponsorFormState, value: string) => {
+    const nextValue =
+      key === 'ph_no'
+        ? value.replace(/\D/g, '').slice(0, 10)
+        : value;
+
+    setForm((current) => ({ ...current, [key]: nextValue }));
+    setErrors((current) => {
+      if (!current[key]) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
     });
-  });
-}, [id]);
+  };
 
-  const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const touchField = (key: keyof SponsorFormState) => {
+    if (isView) return;
+    setTouchedFields((current) => {
+      if (current.has(key)) return current;
+      const next = new Set(current);
+      next.add(key);
+      return next;
+    });
+  };
+
+  const handleFieldBlur = (key: keyof SponsorFormState) => {
+    if (isView) return;
+    touchField(key);
+    const nextError = validateSponsorField(key, form);
+    setErrors((current) => {
+      const next = { ...current };
+      if (nextError) next[key] = nextError;
+      else delete next[key];
+      return next;
+    });
+  };
+
+  const fieldState = (key: keyof SponsorFormState) => {
+    if (isView) return 'default' as const;
+    const touched = touchedFields.has(key);
+    if (errors[key] && touched) return 'error' as const;
+    if (!errors[key] && touched && String(form[key] ?? '').trim()) return 'success' as const;
+    return 'default' as const;
+  };
 
   const stopCamera = () => {
-    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
   };
 
   useEffect(() => {
-    if (!cameraOpen) return;
+    if (isView || !cameraOpen) return;
     if (capturedUrl) return;
 
     let cancelled = false;
@@ -82,170 +250,74 @@ export default function SponsorFormPage() {
           setCameraError('Camera is not supported in this browser.');
           return;
         }
+
         stopCamera();
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: 'environment' } },
           audio: false,
         });
+
         if (cancelled) {
-          stream.getTracks().forEach(t => t.stop());
+          stream.getTracks().forEach((track) => track.stop());
           return;
         }
+
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.muted = true;
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
         }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Unable to access camera';
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : 'Unable to access camera';
         setCameraError(msg);
       }
     };
 
     start();
+
     return () => {
       cancelled = true;
       stopCamera();
     };
-  }, [cameraOpen, capturedUrl]);
+  }, [cameraOpen, capturedUrl, isView]);
 
-  const uploadPhoto = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const uploadPhoto = (event: ChangeEvent<HTMLInputElement>) => {
+    if (isView) return;
+    const file = event.target.files?.[0];
     if (!file) return;
 
     if (file.size < MIN_IMAGE_BYTES || file.size > MAX_IMAGE_BYTES) {
-      const msg = 'Upload photo size must be between 5KB and 1MB.';
-      setUploadError(msg);
-      toast(msg, 'error');
-      e.target.value = '';
+      const message = 'Upload photo size must be between 5KB and 1MB.';
+      setUploadError(message);
+      toast(message, 'error');
+      event.target.value = '';
       return;
     }
 
     if (!file.type.startsWith('image/')) {
-      const msg = 'Please upload a valid image file.';
-      setUploadError(msg);
-      toast(msg, 'error');
-      e.target.value = '';
+      const message = 'Please upload a valid image file.';
+      setUploadError(message);
+      toast(message, 'error');
+      event.target.value = '';
       return;
     }
 
     setUploadError(null);
-
     if (form.image_url?.startsWith('blob:')) {
-      try { URL.revokeObjectURL(form.image_url); } catch { /* ignore */ }
-    }
-
-    set('image_url', URL.createObjectURL(file));
-    e.target.value = '';
-  };
-
-  const closeCrop = () => {
-    setCropUrl(null);
-    setCropScale(1);
-    setCropOffset({ x: 0, y: 0 });
-    setCropDragStart(null);
-  };
-
-  const openCrop = () => {
-    if (!form.image_url) return;
-    setUploadError(null);
-    setCropScale(1);
-    setCropOffset({ x: 0, y: 0 });
-    setCropUrl(form.image_url);
-  };
-
-  const startCropDrag = (e: PointerEvent<HTMLImageElement>) => {
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    setCropDragStart({ pointerX: e.clientX, pointerY: e.clientY, offsetX: cropOffset.x, offsetY: cropOffset.y });
-  };
-
-  const moveCropDrag = (e: PointerEvent<HTMLImageElement>) => {
-    if (!cropDragStart) return;
-    setCropOffset({
-      x: cropDragStart.offsetX + e.clientX - cropDragStart.pointerX,
-      y: cropDragStart.offsetY + e.clientY - cropDragStart.pointerY,
-    });
-  };
-
-  const endCropDrag = () => setCropDragStart(null);
-
-  const resetCrop = () => {
-    setCropScale(1);
-    setCropOffset({ x: 0, y: 0 });
-  };
-
-  const useCroppedPhoto = () => {
-    if (!cropUrl) return;
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const frameSize = cropFrameRef.current?.clientWidth ?? 360;
-      const outputSize = 640;
-      const baseScale = Math.max(frameSize / img.naturalWidth, frameSize / img.naturalHeight) * cropScale;
-      const drawnWidth = img.naturalWidth * baseScale;
-      const drawnHeight = img.naturalHeight * baseScale;
-      const dx = (frameSize - drawnWidth) / 2 + cropOffset.x;
-      const dy = (frameSize - drawnHeight) / 2 + cropOffset.y;
-      const outputRatio = outputSize / frameSize;
-      const canvas = document.createElement('canvas');
-      canvas.width = outputSize;
-      canvas.height = outputSize;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, outputSize, outputSize);
-      ctx.drawImage(img, dx * outputRatio, dy * outputRatio, drawnWidth * outputRatio, drawnHeight * outputRatio);
-      canvas.toBlob(blob => {
-        if (!blob) return;
-        if (form.image_url?.startsWith('blob:')) {
-          try { URL.revokeObjectURL(form.image_url); } catch { /* ignore */ }
-        }
-        set('image_url', URL.createObjectURL(blob));
-        closeCrop();
-      }, 'image/jpeg', 0.88);
-    };
-    img.onerror = () => setUploadError('Unable to crop this photo. Try uploading the image again.');
-    img.src = cropUrl;
-  };
-
-  const capturePhoto = async () => {
-    const v = videoRef.current;
-    if (!v || !v.videoWidth || !v.videoHeight) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = v.videoWidth;
-    canvas.height = v.videoHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-
-    const makeBlob = (q: number) => new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', q));
-    let blob = await makeBlob(0.92);
-    if (!blob) return;
-    if (blob.size > MAX_IMAGE_BYTES) {
-      for (const q of [0.85, 0.78, 0.7, 0.62, 0.55, 0.48, 0.4]) {
-        const b = await makeBlob(q);
-        if (!b) continue;
-        blob = b;
-        if (blob.size <= MAX_IMAGE_BYTES) break;
+      try {
+        URL.revokeObjectURL(form.image_url);
+      } catch {
+        // ignore
       }
     }
-    if (blob.size > MAX_IMAGE_BYTES) {
-      const msg = 'Captured photo is too large (max 1MB). Please try again or use upload.';
-      setUploadError(msg);
-      toast(msg, 'error');
-      return;
-    }
 
-    stopCamera();
-    if (capturedUrl) URL.revokeObjectURL(capturedUrl);
-    setCapturedUrl(URL.createObjectURL(blob));
+    setField('image_url', URL.createObjectURL(file));
+    event.target.value = '';
   };
 
   const openCamera = () => {
+    if (isView) return;
     if (capturedUrl) {
       URL.revokeObjectURL(capturedUrl);
       setCapturedUrl(null);
@@ -265,22 +337,15 @@ export default function SponsorFormPage() {
   };
 
   const useCapturedPhoto = () => {
-    if (!capturedUrl) return;
+    if (isView || !capturedUrl) return;
     setUploadError(null);
-    set('image_url', capturedUrl);
+    setField('image_url', capturedUrl);
     setCapturedUrl(null);
     setCameraOpen(false);
   };
 
-  const clearPhoto = () => {
-    setUploadError(null);
-    if (form.image_url?.startsWith('blob:')) {
-      try { URL.revokeObjectURL(form.image_url); } catch { /* ignore */ }
-    }
-    set('image_url', '');
-  };
-
   const retakePhoto = () => {
+    if (isView) return;
     if (capturedUrl) {
       URL.revokeObjectURL(capturedUrl);
       setCapturedUrl(null);
@@ -289,125 +354,402 @@ export default function SponsorFormPage() {
     setCameraError(null);
   };
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const clearPhoto = () => {
+    if (isView) return;
+    setUploadError(null);
+    if (form.image_url?.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(form.image_url);
+      } catch {
+        // ignore
+      }
+    }
+    setField('image_url', '');
+  };
+
+  const openCrop = () => {
+    if (isView || !form.image_url) return;
+    setUploadError(null);
+    setCropScale(1);
+    setCropOffset({ x: 0, y: 0 });
+    setCropUrl(form.image_url);
+  };
+
+  const closeCrop = () => {
+    setCropUrl(null);
+    setCropScale(1);
+    setCropOffset({ x: 0, y: 0 });
+    setCropDragStart(null);
+  };
+
+  const startCropDrag = (event: PointerEvent<HTMLImageElement>) => {
+    if (isView) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setCropDragStart({
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      offsetX: cropOffset.x,
+      offsetY: cropOffset.y,
+    });
+  };
+
+  const moveCropDrag = (event: PointerEvent<HTMLImageElement>) => {
+    if (isView || !cropDragStart) return;
+    setCropOffset({
+      x: cropDragStart.offsetX + event.clientX - cropDragStart.pointerX,
+      y: cropDragStart.offsetY + event.clientY - cropDragStart.pointerY,
+    });
+  };
+
+  const endCropDrag = () => setCropDragStart(null);
+
+  const resetCrop = () => {
+    if (isView) return;
+    setCropScale(1);
+    setCropOffset({ x: 0, y: 0 });
+  };
+
+  const useCroppedPhoto = () => {
+    if (isView || !cropUrl) return;
+
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => {
+      const frameSize = cropFrameRef.current?.clientWidth ?? 360;
+      const outputSize = 640;
+      const baseScale = Math.max(frameSize / image.naturalWidth, frameSize / image.naturalHeight) * cropScale;
+      const drawnWidth = image.naturalWidth * baseScale;
+      const drawnHeight = image.naturalHeight * baseScale;
+      const dx = (frameSize - drawnWidth) / 2 + cropOffset.x;
+      const dy = (frameSize - drawnHeight) / 2 + cropOffset.y;
+      const outputRatio = outputSize / frameSize;
+      const canvas = document.createElement('canvas');
+      canvas.width = outputSize;
+      canvas.height = outputSize;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, outputSize, outputSize);
+      ctx.drawImage(image, dx * outputRatio, dy * outputRatio, drawnWidth * outputRatio, drawnHeight * outputRatio);
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        if (form.image_url?.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(form.image_url);
+          } catch {
+            // ignore
+          }
+        }
+        setField('image_url', URL.createObjectURL(blob));
+        closeCrop();
+      }, 'image/jpeg', 0.88);
+    };
+    image.onerror = () => setUploadError('Unable to crop this photo. Try uploading the image again.');
+    image.src = cropUrl;
+  };
+
+  const capturePhoto = async () => {
+    if (isView) return;
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const makeBlob = (quality: number) =>
+      new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+
+    let blob = await makeBlob(0.92);
+    if (!blob) return;
+
+    if (blob.size > MAX_IMAGE_BYTES) {
+      for (const quality of [0.85, 0.78, 0.7, 0.62, 0.55, 0.48, 0.4]) {
+        const nextBlob = await makeBlob(quality);
+        if (!nextBlob) continue;
+        blob = nextBlob;
+        if (blob.size <= MAX_IMAGE_BYTES) break;
+      }
+    }
+
+    if (blob.size > MAX_IMAGE_BYTES) {
+      const message = 'Captured photo is too large (max 1MB). Please try again or use upload.';
+      setUploadError(message);
+      toast(message, 'error');
+      return;
+    }
+
+    stopCamera();
+    if (capturedUrl) URL.revokeObjectURL(capturedUrl);
+    setCapturedUrl(URL.createObjectURL(blob));
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (isView) return;
+
+    const nextErrors = validateSponsorForm(form);
+    setErrors(nextErrors);
+    setTouchedFields(new Set(formFieldKeys));
+
+    if (Object.keys(nextErrors).length > 0) {
+      toast('Please fix the highlighted fields.', 'error');
+      return;
+    }
+
+    setSaving(true);
     try {
       const payload = {
         sponsorName: form.name.trim(),
-        email: form.email,
+        email: form.email.trim(),
         dob: form.dob,
-        ph_no: form.ph_no,
-        type: form.type as 'Individual' | 'Organisation',
-        nationality: form.nationality,
+        ph_no: form.ph_no.trim(),
+        type: form.type,
+        nationality: form.nationality.trim(),
         contrib: form.contrib.trim(),
-        loc: form.loc || null,
-        image_url: form.image_url || null
+        loc: form.loc.trim() || null,
+        image_url: form.image_url || null,
       };
-if (isEdit) {
-  await updateSponsor(Number(id), {
-    ...payload,
-    modified_by: user?.user_id ?? 1
-  });
-} else {
-  await createSponsor({
-    ...payload,
-    created_by: user?.user_id ?? 1
-  });
-}
 
-      
+      if (isEdit) {
+        await updateSponsor(Number(id), {
+          ...payload,
+          modified_by: user?.user_id ?? 1,
+        });
+      } else {
+        await createSponsor({
+          ...payload,
+          created_by: user?.user_id ?? 1,
+        });
+      }
+
       toast(isEdit ? 'Sponsor updated.' : 'Sponsor added.', 'success');
       nav('/sponsors');
-    } catch {
-      toast('Unable to save sponsor.', 'error');
+    } catch (error) {
+      console.error('[SponsorFormPage] save sponsor failed', error);
+      if (axios.isAxiosError(error)) {
+        const data: any = error.response?.data;
+        const serverMessage = String(data?.message ?? data?.error ?? data?.detail ?? '').trim();
+        toast(serverMessage ? `Unable to save sponsor: ${serverMessage}` : 'Unable to save sponsor. Please try again.', 'error');
+      } else {
+        toast('Unable to save sponsor.', 'error');
+      }
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
+  const pageTitle = isView ? 'View Sponsor' : isEdit ? 'Edit Sponsor' : 'Add Sponsor';
+  const pageSubtitle = 'Sponsor profile and contribution details';
+  const sponsorLoading = loadingSponsor && (mode === 'edit' || mode === 'view');
+
   return (
-    <form onSubmit={submit}>
-      <PageHeader title={isEdit ? 'Edit Sponsor' : 'Add Sponsor'} subtitle="Sponsor profile and contribution details" actions={<Button type="button" className="btn btnRed"variant="outline" onClick={() => nav(-1)}>Back</Button>} />
+    <form className="studentWizardForm" onSubmit={handleSubmit} noValidate>
+      <PageHeader
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        actions={
+          <button type="button" className="studentWizardClose" onClick={() => nav('/sponsors')} aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        }
+      />
+
       <div className="panel">
-        <div className="sponsorPhotoDock">
-          <div className="field">
-            <span>Sponsor Photo</span>
-            <div className={`studentPhotoUpload ${form.image_url ? 'hasImage' : ''}`}>
-              <input ref={fileInputRef} className="photoFileInput" accept="image/*" type="file" onChange={uploadPhoto} />
-              <button type="button" className="studentPhotoAvatarButton" onClick={() => form.image_url ? setPhotoOpen(true) : fileInputRef.current?.click()} aria-label={form.image_url ? 'Preview sponsor photo' : 'Upload sponsor photo'}>
-                {form.image_url ? (
-                  <img src={form.image_url} alt="Selected sponsor" />
-                ) : (
-                  <div className="studentPhotoPlaceholder" aria-hidden>
-                    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="32" cy="22" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path d="M14 52c0-11 8-18 18-18s18 7 18 18H14Z" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+        {sponsorLoading ? (
+          <div className="sub">Loading sponsor details...</div>
+        ) : (
+          <>
+            <div className="formGrid">
+              <SponsorField
+                fieldKey="name"
+                label="Name*"
+                value={form.name}
+                onChange={(value) => setField('name', value)}
+                onBlur={() => handleFieldBlur('name')}
+                error={touchedFields.has('name') ? errors.name : undefined}
+                state={fieldState('name')}
+                readOnly={isView}
+              />
+              <SponsorField
+                fieldKey="email"
+                label="Email*"
+                type="email"
+                value={form.email}
+                onChange={(value) => setField('email', value)}
+                onBlur={() => handleFieldBlur('email')}
+                error={touchedFields.has('email') ? errors.email : undefined}
+                state={fieldState('email')}
+                readOnly={isView}
+              />
+              <SponsorField
+                fieldKey="dob"
+                label="Date of Birth*"
+                type="date"
+                value={form.dob}
+                onChange={(value) => setField('dob', value)}
+                onBlur={() => handleFieldBlur('dob')}
+                error={touchedFields.has('dob') ? errors.dob : undefined}
+                state={fieldState('dob')}
+                readOnly={isView}
+              />
+              <SponsorField
+                fieldKey="ph_no"
+                label="Phone Number*"
+                value={form.ph_no}
+                onChange={(value) => setField('ph_no', value)}
+                onBlur={() => handleFieldBlur('ph_no')}
+                error={touchedFields.has('ph_no') ? errors.ph_no : undefined}
+                state={fieldState('ph_no')}
+                readOnly={isView}
+                numericOnly
+                maxLength={10}
+              />
+              <SponsorSelect
+                fieldKey="nationality"
+                label="Nationality*"
+                value={form.nationality}
+                onChange={(value) => setField('nationality', value)}
+                onBlur={() => handleFieldBlur('nationality')}
+                options={nationalityOptions}
+                error={touchedFields.has('nationality') ? errors.nationality : undefined}
+                state={fieldState('nationality')}
+                readOnly={isView}
+              />
+              <SponsorField
+                fieldKey="contrib"
+                label="Contribution*"
+                value={form.contrib}
+                onChange={(value) => setField('contrib', value)}
+                onBlur={() => handleFieldBlur('contrib')}
+                error={touchedFields.has('contrib') ? errors.contrib : undefined}
+                state={fieldState('contrib')}
+                readOnly={isView}
+              />
+              <SponsorSelect
+                fieldKey="type"
+                label="Type*"
+                value={form.type}
+                onChange={(value) => setField('type', value as SponsorFormState['type'])}
+                onBlur={() => handleFieldBlur('type')}
+                options={['Individual', 'Organisation']}
+                error={touchedFields.has('type') ? errors.type : undefined}
+                state={fieldState('type')}
+                readOnly={isView}
+              />
+              <SponsorField
+                fieldKey="loc"
+                label="Location"
+                value={form.loc}
+                onChange={(value) => setField('loc', value)}
+                onBlur={() => handleFieldBlur('loc')}
+                readOnly={isView}
+              />
+            </div>
+
+            <div className="field studentPhotoField" style={{ marginTop: 6 }}>
+              <span>Sponsor Photo</span>
+              <div className="uploadBox studentModalUpload">
+                {form.image_url && !isView ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="danger"
+                    className="iconBtn uploadDeleteBtn"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      clearPhoto();
+                    }}
+                    aria-label="Remove sponsor photo"
+                    title="Remove photo"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                      <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                  </div>
+                  </Button>
+                ) : null}
+                {form.image_url ? (
+                  <img src={form.image_url} alt="Sponsor" />
+                ) : (
+                  <span>{isView ? 'No photo available' : <>Select photo option<br /><small>Take photo or upload</small></>}</span>
                 )}
-              </button>
-              <div className="studentPhotoMeta">
-                <div className="studentPhotoTitle">{form.image_url ? 'Photo selected' : 'No photo selected'}</div>
-                <div className={`studentPhotoHelp ${uploadError ? 'isError' : ''}`}>
-                  {uploadError ?? 'JPG or PNG, 5KB to 1MB.'}
-                </div>
-              </div>
-              <div className="studentPhotoActions">
-                <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                  <span aria-hidden>📁</span>
-                  {form.image_url ? 'Change' : 'Upload'}
-                </Button>
-                <Button type="button" size="sm" variant="outline" onClick={openCamera}>
-                  <span aria-hidden>📷</span>
-                  Take Photo
-                </Button>
-                <Button type="button" size="sm" variant="outline" onClick={openCrop} disabled={!form.image_url}>
-                  <span aria-hidden>✂</span>
-                  Crop
-                </Button>
-                <Button type="button" size="sm" variant="ghost" className="photoRemoveButton" onClick={clearPhoto} disabled={!form.image_url}>
-                  <span aria-hidden>🗑</span>
-                  Remove
-                </Button>
+                {!isView ? (
+                  <>
+                    <div className="rowFlex studentModalUploadActions">
+                      <Button type="button" variant="outline" onClick={openCamera}>
+                        Take Photo
+                      </Button>
+                      <label className="btn outline md" style={{ cursor: 'pointer' }}>
+                        Upload Photo
+                        <input
+                          ref={fileInputRef}
+                          accept="image/*"
+                          type="file"
+                          onChange={uploadPhoto}
+                          style={{ display: 'none' }}
+                          disabled={isView}
+                        />
+                      </label>
+                    </div>
+                    <div className="sub" style={{ marginTop: 2 }}>
+                      {uploadError ? <span style={{ color: 'var(--red)' }}>{uploadError}</span> : 'Upload size: 5KB to 1MB'}
+                    </div>
+                  </>
+                ) : null}
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="formGrid">
-          <Field label="Name*" value={form.name} onChange={v => set('name', v)} />
-          <Field label="Email*" type="email" value={form.email} onChange={v => set('email', v)} />
-          <Field label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} />
-          <Field label="Phone Number*" value={form.ph_no} onChange={v => set('ph_no', v)} />
-          <label className="field">
-            <span>Nationality*</span>
-            <select required className="select" value={form.nationality} onChange={e => set('nationality', e.target.value)}>
-              {nationalityOptions.map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </label>
-          <Field label="Contribution*" value={form.contrib} onChange={v => set('contrib', v)} />
-          <label className="field">
-            <span>Type*</span>
-            <select required className="select" value={form.type} onChange={e => set('type', e.target.value)}>
-              <option>Individual</option>
-              <option>Organisation</option>
-            </select>
-          </label>
-          <Field label="Location" value={form.loc} onChange={v => set('loc', v)} />
-        </div>
-
-        <div className="modalFooter" style={{ paddingInline: 0 }}>
-          <Button type="button" className="clearbtn" variant="outline" onClick={() => nav('/sponsors')}>Cancel</Button>
-          <Button className="btn btnGreen" loading={loading}>{isEdit ? 'Save changes' : 'Add Sponsor'}</Button>
-        </div>
+            <div className="modalFooter" style={{ paddingInline: 0 }}>
+              {isView ? (
+                <>
+                  <Button type="button" className="btn btnRed" variant="outline" onClick={() => nav('/sponsors')}>
+                    Close
+                  </Button>
+                  <Button type="button" className="btn btnGreen" onClick={() => nav(`/sponsors/edit/${id}`)}>
+                    Edit Sponsor
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button type="button" className="btn btnRed" variant="outline" onClick={() => nav('/sponsors')}>
+                    Cancel
+                  </Button>
+                  <Button className="btn btnGreen" loading={saving}>
+                    {isEdit ? 'Save changes' : 'Add Sponsor'}
+                  </Button>
+                </>
+              )}
+            </div>
+          </>
+        )}
 
         <Modal
-          open={photoOpen && !!form.image_url}
+          open={photoOpen && !!form.image_url && !isView}
           onClose={() => setPhotoOpen(false)}
           title="Sponsor Photo"
           width={520}
-          footer={<><Button type="button" variant="outline" onClick={() => setPhotoOpen(false)}>Close</Button><Button type="button" onClick={() => { setPhotoOpen(false); openCrop(); }}>Crop Photo</Button></>}
+          footer={(
+            <>
+              <Button type="button" variant="outline" onClick={() => setPhotoOpen(false)}>
+                Close
+              </Button>
+              <Button type="button" onClick={() => { setPhotoOpen(false); openCrop(); }}>
+                Crop Photo
+              </Button>
+            </>
+          )}
         >
           <div className="photoPreviewWrap">
             {form.image_url ? <img className="photoPreview" src={form.image_url} alt="Sponsor preview" /> : null}
@@ -415,16 +757,20 @@ if (isEdit) {
         </Modal>
 
         <Modal
-          open={!!cropUrl}
+          open={!!cropUrl && !isView}
           onClose={closeCrop}
           title="Crop Sponsor Photo"
           width={560}
-          footer={
+          footer={(
             <>
-              <Button type="button" variant="outline" onClick={() => { closeCrop(); fileInputRef.current?.click(); }}>Choose Another</Button>
-              <Button type="button" onClick={useCroppedPhoto}>Use Photo</Button>
+              <Button type="button" variant="outline" onClick={() => { closeCrop(); fileInputRef.current?.click(); }}>
+                Choose Another
+              </Button>
+              <Button type="button" onClick={useCroppedPhoto}>
+                Use Photo
+              </Button>
             </>
-          }
+          )}
         >
           <div className="photoCropModal">
             <div className="photoCropFrame" ref={cropFrameRef}>
@@ -434,7 +780,7 @@ if (isEdit) {
                   alt="Crop preview"
                   draggable={false}
                   style={{ transform: `translate(${cropOffset.x}px, ${cropOffset.y}px) scale(${cropScale})` }}
-                  onDragStart={e => e.preventDefault()}
+                  onDragStart={(event) => event.preventDefault()}
                   onPointerDown={startCropDrag}
                   onPointerMove={moveCropDrag}
                   onPointerUp={endCropDrag}
@@ -446,20 +792,22 @@ if (isEdit) {
             <div className="photoCropControls">
               <label>
                 Zoom
-                <input type="range" min="1" max="2.4" step="0.05" value={cropScale} onChange={e => setCropScale(Number(e.target.value))} />
+                <input type="range" min="1" max="2.4" step="0.05" value={cropScale} onChange={(event) => setCropScale(Number(event.target.value))} />
               </label>
-              <Button type="button" size="sm" variant="outline" onClick={resetCrop}>Reset</Button>
+              <Button type="button" size="sm" variant="outline" onClick={resetCrop}>
+                Reset
+              </Button>
             </div>
             <div className="sub">Drag the photo to position it inside the square crop area.</div>
           </div>
         </Modal>
 
         <Modal
-          open={cameraOpen}
+          open={cameraOpen && !isView}
           onClose={closeCamera}
           title="Take Photo"
           width={680}
-          footer={
+          footer={(
             capturedUrl ? (
               <>
                 <Button variant="outline" onClick={retakePhoto}>Retake</Button>
@@ -471,13 +819,13 @@ if (isEdit) {
                 <Button onClick={capturePhoto} disabled={!!cameraError}>Capture</Button>
               </>
             )
-          }
+          )}
         >
           {cameraError ? (
             <div className="toast error" style={{ position: 'static' }}>
               {cameraError}
               <div className="sub" style={{ marginTop: 8 }}>
-                If camera permission is blocked, use “Upload Photo” instead.
+                If camera permission is blocked, use upload instead.
               </div>
             </div>
           ) : capturedUrl ? (
@@ -488,7 +836,12 @@ if (isEdit) {
             <div style={{ display: 'grid', placeItems: 'center' }}>
               <video
                 ref={videoRef}
-                style={{ width: 'min(560px, 100%)', borderRadius: 'var(--r-lg)', border: '1px solid var(--color-border)', background: '#0b1220' }}
+                style={{
+                  width: 'min(560px, 100%)',
+                  borderRadius: 'var(--r-lg)',
+                  border: '1px solid var(--color-border)',
+                  background: '#0b1220',
+                }}
                 playsInline
                 autoPlay
                 muted
@@ -501,6 +854,133 @@ if (isEdit) {
   );
 }
 
-function Field({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
-  return <label className="field"><span>{label}</span><input className="input" required={label.includes('*')} type={type} value={value} onChange={e => onChange(e.target.value)} /></label>;
+function ValidationMessage({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <div id={id} className="validationMessage" role="alert">
+      <span aria-hidden="true">!</span>
+      {message}
+    </div>
+  );
+}
+
+function SponsorField({
+  fieldKey,
+  label,
+  value,
+  onChange,
+  onBlur,
+  type = 'text',
+  maxLength,
+  error,
+  readOnly = false,
+  numericOnly = false,
+  state = 'default',
+}: {
+  fieldKey: keyof SponsorFormState;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  type?: string;
+  maxLength?: number;
+  error?: string;
+  readOnly?: boolean;
+  numericOnly?: boolean;
+  state?: 'default' | 'error' | 'success';
+}) {
+  const inputId = `sponsor-field-${fieldKey}`;
+  const messageId = `${inputId}-message`;
+
+  const handleChange = (nextValue: string) => {
+    const cleanValue = numericOnly ? nextValue.replace(/\D/g, '').slice(0, maxLength) : nextValue;
+    onChange(cleanValue);
+  };
+
+  return (
+    <label className={`field formField has-${state}`}>
+      <span>{readOnly ? label.replace(/\*/g, '') : label}</span>
+      <input
+        id={inputId}
+        data-field={fieldKey}
+        required={!readOnly && label.includes('*')}
+        readOnly={readOnly}
+        aria-readonly={readOnly || undefined}
+        aria-invalid={state === 'error' || undefined}
+        aria-describedby={error ? messageId : undefined}
+        tabIndex={readOnly ? -1 : undefined}
+        maxLength={maxLength}
+        type={readOnly || numericOnly ? 'text' : type}
+        inputMode={numericOnly ? 'numeric' : undefined}
+        pattern={numericOnly ? '\\d*' : undefined}
+        className={readOnly ? 'input readonlyField' : 'input'}
+        value={readOnly ? (value || '-') : value}
+        onChange={(event) => handleChange(event.target.value)}
+        onBlur={onBlur}
+      />
+      <ValidationMessage id={messageId} message={error} />
+    </label>
+  );
+}
+
+function SponsorSelect({
+  fieldKey,
+  label,
+  value,
+  onChange,
+  onBlur,
+  options,
+  error,
+  readOnly = false,
+  state = 'default',
+}: {
+  fieldKey: keyof SponsorFormState;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  options: string[];
+  error?: string;
+  readOnly?: boolean;
+  state?: 'default' | 'error' | 'success';
+}) {
+  const inputId = `sponsor-field-${fieldKey}`;
+  const messageId = `${inputId}-message`;
+
+  return (
+    <label className={`field formField has-${state}`}>
+      <span>{readOnly ? label.replace(/\*/g, '') : label}</span>
+      {readOnly ? (
+        <input
+          id={inputId}
+          data-field={fieldKey}
+          className="input readonlyField"
+          value={value || '-'}
+          readOnly
+          aria-readonly="true"
+          tabIndex={-1}
+        />
+      ) : (
+        <select
+          id={inputId}
+          data-field={fieldKey}
+          required={label.includes('*')}
+          className="select"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onBlur={onBlur}
+          aria-invalid={state === 'error' || undefined}
+          aria-describedby={error ? messageId : undefined}
+        >
+          <option value="">Select</option>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      )}
+      <ValidationMessage id={messageId} message={error} />
+    </label>
+  );
 }

@@ -140,6 +140,28 @@ const mapFrontendToBackend = (
   };
 };
 
+const normalizeSponsorTypeFilter = (value?: string): string | undefined => {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+
+  if (trimmed === '1' || trimmed === '2') return trimmed;
+  if (trimmed.toLowerCase().startsWith('org')) return '2';
+  if (trimmed.toLowerCase().startsWith('ind')) return '1';
+
+  return trimmed;
+};
+
+const normalizeNationalityFilter = (value?: string): string | undefined => {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+
+  if (trimmed === '1' || trimmed === '2') return trimmed;
+  if (trimmed.toLowerCase().startsWith('for')) return '2';
+  if (trimmed.toLowerCase().startsWith('ind')) return '1';
+
+  return trimmed;
+};
+
 // ===============================
 // BACKEND -> FRONTEND MAPPING
 // ===============================
@@ -184,15 +206,38 @@ const mapBackendToFrontend = (sponsor: any): SponsorView => ({
 // ===============================
 
 export const getSponsors = async (
-  filters?: Partial<SponsorFilters>
+  filters?: Partial<SponsorFilters>,
+  options?: {
+    pageNumber?: number;
+    pageSize?: number;
+    sortColumn?: string;
+    sortDirection?: 'ASC' | 'DESC';
+  }
 ): Promise<SponsorView[]> => {
 
   try {
 
     const params = new URLSearchParams();
 
-    params.append('pageNumber', '1');
-    params.append('pageSize', '100');
+    params.append('pageNumber', String(options?.pageNumber ?? 1));
+    params.append('pageSize', String(options?.pageSize ?? 100));
+    if (filters?.search?.trim()) {
+      params.append('search', filters.search.trim());
+    }
+    const typeFilter = normalizeSponsorTypeFilter(filters?.type);
+    if (typeFilter) {
+      params.append('type', typeFilter);
+    }
+    const nationalityFilter = normalizeNationalityFilter(filters?.nationality);
+    if (nationalityFilter) {
+      params.append('nationality', nationalityFilter);
+    }
+    if (options?.sortColumn) {
+      params.append('sortColumn', options.sortColumn);
+    }
+    if (options?.sortDirection) {
+      params.append('sortDirection', options.sortDirection);
+    }
 
     const response = await apiClient.get<ApiResponse<any>>(
       '/sponsors',
@@ -211,45 +256,7 @@ export const getSponsors = async (
 
     const sponsors: SponsorView[] = sponsorList.map(mapBackendToFrontend);
 
-    // ===============================
-    // FRONTEND FILTERS
-    // ===============================
-
-    let filtered = sponsors;
-
-    if (filters?.is_active !== undefined) {
-
-      filtered = filtered.filter(
-        s => s.is_active === (filters.is_active !== 'false')
-      );
-    }
-
-    if (filters?.type) {
-
-      filtered = filtered.filter(
-        s => s.type === filters.type
-      );
-    }
-
-    if (filters?.nationality) {
-
-      filtered = filtered.filter(
-        s => s.nationality === filters.nationality
-      );
-    }
-
-    if (filters?.search) {
-
-      const q = filters.search.toLowerCase();
-
-      filtered = filtered.filter(
-        s =>
-          s.sponsorName.toLowerCase().includes(q) ||
-          s.email.toLowerCase().includes(q)
-      );
-    }
-
-    return filtered;
+    return sponsors;
 
   } catch (error) {
 
