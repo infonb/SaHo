@@ -398,7 +398,7 @@ if (isEdit) {
         </div>
 
         <div className="modalFooter" style={{ paddingInline: 0 }}>
-          <Button type="button" className="btn btnRed" variant="outline" onClick={() => nav('/sponsors')}>Cancel</Button>
+          <Button type="button" className="clearbtn" variant="outline" onClick={() => nav('/sponsors')}>Cancel</Button>
           <Button className="btn btnGreen" loading={loading}>{isEdit ? 'Save changes' : 'Add Sponsor'}</Button>
         </div>
 

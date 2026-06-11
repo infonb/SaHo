@@ -449,7 +449,7 @@ export default function CreateEvent() {
               Reset Form
             </Button>
             <Button
-            className="btn btnGreen"
+            className="btnGreen"
               type="submit"
               variant="primary"
               loading={loading}

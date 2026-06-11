@@ -194,7 +194,7 @@ export default function AssignSponsorPage() {
       <PageHeader
         title="Assign Sponsor to Students"
         subtitle="Select a sponsor, choose students and assign"
-        actions={<Button variant="outline" className="btnRed" onClick={() => nav(-1)}>Back</Button>}
+        actions={<Button variant="outline" className="clearbtn" onClick={() => nav(-1)}>Back</Button>}
       />
 
       <div className="assignGrid">
@@ -442,6 +442,7 @@ export default function AssignSponsorPage() {
           <Button
 
             variant="success"
+            className="btnGreen"
             style={{ width: '100%', marginTop: 12 }}
             disabled={!selectedSponsor || checkedStudents.length === 0}
             onClick={() => setConfirmOpen(true)}

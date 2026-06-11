@@ -925,9 +925,9 @@ export default function StudentListPage() {
       <div className="col-2 "></div>
 
       {/* Buttons */}
-      <div className="col-1  ">
+      <div className="col-2 d-flex  justify-content-end   gap-2" >
           <button
-            className="btnRed"
+            className="clearbtn"
             onClick={() => {
               setPending(defaults);
               setApplied(defaults);
@@ -941,11 +941,11 @@ export default function StudentListPage() {
     />
             Clear
           </button>
-      </div>
-      <div className="col-1 ps-0 ">
+     
+
           
           <button
-            className="btnGreen"
+            className="gobtn"
             onClick={() => {
               setApplied({ ...pending });
               setPage(1);
