@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
 import DataTable from '../../components/common/DataTable';
 import Pagination from '../../components/common/Pagination';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import PageHeader from '../../components/common/PageHeader';
 import { getDistricts, getMandals, getStates, getVillages } from '../../api/locationApi';
-import { cancelReminder, getReminders, type ReminderDto } from '../../api/remindersApi';
+import { deleteReminder, getReminders, type ReminderDto } from '../../api/remindersApi';
 import { usePagination } from '../../hooks/usePagination';
 import closeIcon from '../../assets/clera cross favicon.png';
 import arrowIcon from '../../assets/Go arrow favicon.png';
+import { useToast } from '../../hooks/useToast';
 
 // Event status type
 type EventStatus = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
@@ -264,6 +266,7 @@ const initialFilters: EventFilters = {
 
 export default function ViewEvents() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [filters, setFilters] = useState<EventFilters>(initialFilters);
   const [pending, setPending] = useState<EventFilters>(initialFilters);
   const [loading, setLoading] = useState(false);
@@ -275,6 +278,7 @@ export default function ViewEvents() {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   const [states, setStates] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
@@ -286,7 +290,7 @@ export default function ViewEvents() {
 
   useEffect(() => {
     let mounted = true;
-    getStates().then(data => { if (mounted) setStates(data); }).catch(() => {});
+    getStates().then(data => { if (mounted) setStates(data); }).catch(() => { });
     return () => { mounted = false; };
   }, []);
 
@@ -386,13 +390,19 @@ export default function ViewEvents() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Cancel this event?')) return;
+    setDeleteTarget(id);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteTarget === null) return;
+    const id = deleteTarget;
+    setDeleteTarget(null);
     try {
-      await cancelReminder(id, 1);
+      await deleteReminder(id);
+      toast('Event cancelled successfully', 'success');
       await load();
     } catch (e) {
-      console.error('Cancel reminder failed', e);
-      alert('Failed to cancel reminder.');
+      toast('Failed to cancel event. Please try again.', 'error');
     }
   };
 
@@ -461,6 +471,7 @@ export default function ViewEvents() {
   const upcomingCount = filteredEvents.filter(event => event.status === 'upcoming').length;
   const ongoingCount = filteredEvents.filter(event => event.status === 'ongoing').length;
   const completedCount = filteredEvents.filter(event => event.status === 'completed').length;
+  const cancelledCount = filteredEvents.filter(event => event.status === 'cancelled').length;
   const stateOptions: FilterOption[] = states.map((state: any) => ({
     value: String(state.stId ?? state.st_id),
     label: state.stName ?? state.st_name,
@@ -785,8 +796,12 @@ export default function ViewEvents() {
                   <div className="sponsorCardIdentity">
                     <div className="sponsorNameCell reminderCardTitle" title={event.title}>{limitText(event.title, EVENT_CARD_TITLE_LIMIT)}</div>
                   </div>
-                  <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />
+                  <div className="eventCardFooter">
+                    <span>{event.state}</span>
+                    <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />
+                  </div>
                 </div>
+
                 <div className="sponsorCardMetric">
                   <span>Status</span>
                   <strong><StatusBadge status={event.status} /></strong>
@@ -808,10 +823,10 @@ export default function ViewEvents() {
           <DataTable
             loading={loading}
             columns={[
-              { key: 'date', label: 'Date' },
-              { key: 'event', label: 'Event Name' },
-              { key: 'status', label: 'Status' },
-              { key: 'venue', label: 'Venue' },
+              { key: 'date', label: 'Date', width: '140px' },
+              { key: 'event', label: 'Event Name', width: '280px' },
+              { key: 'status', label: 'Status', width: '140px' },
+              { key: 'venue', label: 'Venue', width: '220px' },
               { key: 'actions', label: '', width: '92px' },
             ]}
             rows={eventRows}
@@ -1034,6 +1049,16 @@ export default function ViewEvents() {
           }
         }
       `}</style>}
+
+      <ConfirmModal
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Cancel Event"
+        message="Are you sure you want to cancel this event?"
+        confirmLabel="Confirm"
+        danger
+      />
     </div>
   );
 }

@@ -6254,33 +6254,49 @@ td {
 
 .eventRecordsPanel .tableWrap th,
 .eventRecordsPanel .tableWrap td {
-  text-align: center;
   vertical-align: middle;
 }
 
 .eventRecordsPanel .tableWrap td .eventTableTitle {
-  justify-items: center;
+  justify-items: start;
+  text-align: left;
+}
+
+.eventRecordsPanel .tableWrap th:nth-child(1),
+.eventRecordsPanel .tableWrap td:nth-child(1),
+.eventRecordsPanel .tableWrap th:nth-child(2),
+.eventRecordsPanel .tableWrap td:nth-child(2),
+.eventRecordsPanel .tableWrap th:nth-child(4),
+.eventRecordsPanel .tableWrap td:nth-child(4) {
+  text-align: left;
+}
+
+.eventRecordsPanel .tableWrap th:nth-child(3),
+.eventRecordsPanel .tableWrap td:nth-child(3) {
   text-align: center;
 }
 
-.eventRecordsPanel .tableWrap td:nth-child(4) {
-  display: table-cell;
-}
 
-.eventRecordsPanel .tableWrap td:nth-child(3) .status-badge,
+
+
+/* .eventRecordsPanel .tableWrap td:nth-child(4) {
+  display: table-cell;
+} */
+
+/* .eventRecordsPanel .tableWrap td:nth-child(3) .status-badge,
 .eventRecordsPanel .tableWrap td:last-child .student-actions {
   margin-left: auto;
   margin-right: auto;
-}
+} */
 
-.eventRecordsPanel .tableWrap td:nth-child(4) {
+/* .eventRecordsPanel .tableWrap td:nth-child(4) {
   text-align: center;
-}
+} */
 
-.eventRecordsPanel .tableWrap td:nth-child(4) .reminderTableVenue {
+/* .eventRecordsPanel .tableWrap td:nth-child(4) .reminderTableVenue {
   margin-left: auto;
   margin-right: auto;
-}
+} */
 
 .eventRecordsPanel .tableWrap td:last-child .student-actions {
   justify-content: center;
@@ -7344,6 +7360,7 @@ td {
   font-weight: 700;
   line-height: 1.35;
   margin-top: 2px;
+  white-space: pre-line;
 }
 .validationMessage span {
   width: 16px;
