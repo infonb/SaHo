@@ -6665,6 +6665,21 @@ td {
 .studentWizardForm .multiSelectFilter {
   width: 100%;
 }
+.studentWizardForm .studentFormSelect.hasValue .multiSelectTrigger {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+.studentWizardForm .studentFormSelect:hover .multiSelectTrigger {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+.studentWizardForm .studentFormSelect[open] .multiSelectTrigger {
+  background: #f8fffd;
+  border-color: #10b981;
+  color: #334155;
+}
 .studentWizardForm .studentFormSelect .multiSelectOption {
   width: 100%;
   border: 0;
@@ -6823,17 +6838,17 @@ td {
   min-width: 0;
   padding: 7px;
   border-radius: 10px;
-  background: #fee2e2;
-  border-color: #fecaca;
-  color: #dc2626;
+  background: #ffffff !important;
+  border: 1px solid #dc2626 !important;
+  color: #dc2626 !important;
   flex: 0 0 auto;
   box-shadow: none;
 }
 .studentModalUploadPreview .uploadDeleteBtn:hover,
 .studentModalUploadPreview .uploadDeleteBtn:focus {
-  background: #fee2e2;
-  border-color: #fecaca;
-  color: #dc2626;
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
   box-shadow: none;
   transform: none;
 }
@@ -6862,13 +6877,20 @@ td {
   line-height: 1.2;
   font-weight: 700;
   padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1f2937;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   cursor: pointer;
   transform: none;
-  transition: none;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 .studentModalUploadActions .btn:hover,
 .studentModalUploadActions .btn:focus,
@@ -6879,9 +6901,9 @@ td {
 .studentModalUploadActions label.btn:hover,
 .studentModalUploadActions label.btn:focus,
 .studentModalUploadActions label.btn:focus-visible {
-  background: var(--color-surface);
-  border-color: var(--color-border);
-  color: var(--color-text2);
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #14532d;
   box-shadow: none;
   outline: 0;
   transform: none;

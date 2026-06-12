@@ -26,8 +26,8 @@ export default function ConfirmModal({ open, onClose, onConfirm, icon = 'Remove'
       width={640}
       footer={(
         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-          <Button variant="outline" className={danger ? undefined : 'btnRed'} style={danger ? undefined : { width: 140}} onClick={onClose} size="sm" >Cancel</Button>
-          <Button variant={danger ? 'danger' : 'primary'} className={danger ? undefined : 'btnGreen'} style={danger ? undefined : { width: 140 }} onClick={onConfirm} size="sm">{confirmLabel}</Button>
+          <Button variant="outline" className="btnGreen" style={{ width: 140 }} onClick={onClose} size="sm">Cancel</Button>
+          <Button variant={danger ? 'danger' : 'primary'} className={danger ? 'btnRed' : 'btnGreen'} style={{ width: 140 }} onClick={onConfirm} size="sm">{confirmLabel}</Button>
         </div>
       )}
     >

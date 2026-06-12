@@ -379,7 +379,6 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
               <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><PhotoImageIcon /></span>Student Photo</h3>
               <div className="uploadBox studentModalUpload">
                 <div className="studentModalUploadPreview">
-                  {form.image_url ? <img src={form.image_url} alt="Student" /> : null}
                   {form.image_url && !readOnly ? (
                     <Button
                       type="button"
@@ -399,6 +398,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
                       </svg>
                     </Button>
                   ) : null}
+                  {form.image_url ? <img src={form.image_url} alt="Student" /> : null}
                   <span className={uploadError ? 'studentModalUploadError' : undefined}>{uploadError || (readOnly ? 'No photo available' : 'Take photo or upload')}</span>
                 </div>
                 {!readOnly ? (
@@ -427,8 +427,8 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
         footer={
           capturedUrl ? (
             <>
-              <Button variant="outline" onClick={retakePhoto}>Retake</Button>
-              <Button onClick={useCapturedPhoto}>Use Photo</Button>
+              <Button variant="outline" className="cameraFooterButton btnRed" onClick={retakePhoto}>Retake</Button>
+              <Button className="cameraFooterButton btnGreen" onClick={useCapturedPhoto}>Use Photo</Button>
             </>
           ) : (
             <>

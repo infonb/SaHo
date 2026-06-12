@@ -857,13 +857,13 @@ export default function SponsorFormPage() {
           footer={(
             capturedUrl ? (
               <>
-                <Button variant="outline" onClick={retakePhoto}>Retake</Button>
-                <Button onClick={useCapturedPhoto}>Use Photo</Button>
+                <Button variant="outline" className="cameraFooterButton btnRed" onClick={retakePhoto}>Retake</Button>
+                <Button className="cameraFooterButton btnGreen" onClick={useCapturedPhoto}>Use Photo</Button>
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={closeCamera}>Cancel</Button>
-                <Button onClick={capturePhoto} disabled={!!cameraError}>Capture</Button>
+                <Button variant="outline" className="cameraFooterButton btnRed" onClick={closeCamera}>Cancel</Button>
+                <Button className="cameraFooterButton btnGreen" onClick={capturePhoto} disabled={!!cameraError}>Capture</Button>
               </>
             )
           )}
