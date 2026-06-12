@@ -234,6 +234,7 @@ export default function ViewEvents() {
   const upcomingCount = filteredEvents.filter(event => event.status === 'upcoming').length;
   const ongoingCount = filteredEvents.filter(event => event.status === 'ongoing').length;
   const completedCount = filteredEvents.filter(event => event.status === 'completed').length;
+  const cancelledCount = filteredEvents.filter(event => event.status === 'cancelled').length;
   const monthDays = Array.from({ length: 30 }, (_, index) => index + 1);
   const eventsByDay = filteredEvents.reduce<Record<number, EventData[]>>((acc, event) => {
     const day = new Date(event.date).getDate();
@@ -256,11 +257,73 @@ export default function ViewEvents() {
         }
       />
 
-      <div className="statGrid eventStatsGrid" style={{ marginBottom: 14 }}>
-        <div className="statCard eventStatCard"><div className="statLabel">TOTAL EVENTS</div><div className="statValue">{filteredEvents.length}</div><div className="statNote">Matching current filters</div></div>
-        <div className="statCard eventStatCard"><div className="statLabel">UPCOMING</div><div className="statValue">{upcomingCount}</div><div className="statNote">Scheduled ahead</div></div>
-        <div className="statCard eventStatCard"><div className="statLabel">ONGOING</div><div className="statValue">{ongoingCount}</div><div className="statNote">Active programs</div></div>
-        <div className="statCard eventStatCard"><div className="statLabel">COMPLETED</div><div className="statValue">{completedCount}</div><div className="statNote">Finished events</div></div>
+      <div className="student-stats-grid" style={{ marginBottom: 24 }}>
+        <div className="student-stat-card total">
+          <div className="stat-card-content">
+            <div className="stat-card-label">Total Events</div>
+            <div className="stat-card-value">{filteredEvents.length}</div>
+            <div className="stat-card-note">Matching current filters</div>
+          </div>
+          <div className="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+        </div>
+        <div className="student-stat-card total">
+          <div className="stat-card-content">
+            <div className="stat-card-label">Upcoming</div>
+            <div className="stat-card-value">{upcomingCount}</div>
+            <div className="stat-card-note">Scheduled ahead</div>
+          </div>
+          <div className="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v5l3 3"></path>
+            </svg>
+          </div>
+        </div>
+        <div className="student-stat-card total">
+          <div className="stat-card-content">
+            <div className="stat-card-label">Ongoing</div>
+            <div className="stat-card-value">{ongoingCount}</div>
+            <div className="stat-card-note">Active programs</div>
+          </div>
+          <div className="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </div>
+        </div>
+        <div className="student-stat-card total">
+          <div className="stat-card-content">
+            <div className="stat-card-label">Completed</div>
+            <div className="stat-card-value">{completedCount}</div>
+            <div className="stat-card-note">Finished events</div>
+          </div>
+          <div className="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5"></path>
+            </svg>
+          </div>
+        </div>
+        <div className="student-stat-card total">
+          <div className="stat-card-content">
+            <div className="stat-card-label">Cancelled</div>
+            <div className="stat-card-value">{cancelledCount}</div>
+            <div className="stat-card-note">Cancelled events</div>
+          </div>
+          <div className="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* Filters Section */}

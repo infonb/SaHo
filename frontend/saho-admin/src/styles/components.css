@@ -985,6 +985,7 @@ h1, h2, h3, h4, h5, h6
   margin: 0 0 14px;
   font-size: 16px;
   color: var(--color-text);
+  
 }
 
 .filterBar {
@@ -4420,7 +4421,7 @@ table {
 
 th {
   padding: 10px 12px;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.3px;
   background: #f8fafc;
   color: #7a8798;
@@ -4440,6 +4441,7 @@ td {
 
 .strong {
   font-weight: 760;
+  font-size: 12.5px;
 }
 
 .sub {
@@ -4912,11 +4914,11 @@ td {
   padding-right: 6px;
   text-align: center;
 }
-
+/* 
 .studentRecordsPanel .tableWrap th:last-child {
   font-size: 0;
   color: transparent;
-}
+} */
 
 .studentRecordsPanel .tableWrap td:last-child {
   overflow: visible;
@@ -5340,12 +5342,6 @@ td {
 }
 
 /* Premium CRM surfaces */
-.sponsorStatsGrid,
-.eventStatsGrid {
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
-  gap: 16px;
-  margin-bottom: 24px;
-}
 
 .viewToggle {
   display: inline-flex;
@@ -5535,19 +5531,6 @@ td {
   padding-top: 2px;
 }
 
-.sponsorStatsGrid .stat-card-icon {
-  right: 20px;
-  top: 16px;
-}
-
-.sponsorStatsGrid .stat-card-value {
-  margin-top: 6px;
-}
-
-.sponsorStatsGrid .stat-card-note {
-  margin-top: 5px;
-}
-
 .filterBarInline {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -5636,22 +5619,6 @@ td {
   background: #f8fafc;
   color: #94a3b8;
   cursor: not-allowed;
-}
-
-.eventStatsGrid .eventStatCard:nth-child(1) {
-  --accent: #0f766e;
-}
-
-.eventStatsGrid .eventStatCard:nth-child(2) {
-  --accent: #2563eb;
-}
-
-.eventStatsGrid .eventStatCard:nth-child(3) {
-  --accent: #d97706;
-}
-
-.eventStatsGrid .eventStatCard:nth-child(4) {
-  --accent: #16a34a;
 }
 
 .eventsWorkspace {
@@ -5966,6 +5933,7 @@ td {
   margin-bottom: 24px;
 }
 
+
 .student-stat-card {
   position: relative;
   min-height: 112px;
@@ -5978,9 +5946,10 @@ td {
     inset 0 1px 0 rgba(255, 255, 255, 0.86);
   overflow: hidden;
   transition: all 0.25s ease;
-  background: #f5faf7;
+  background: #ffff;
   border-left: 3px solid #b7c9c0;
 }
+
 
 .student-stat-card::before {
   display: none;
@@ -6001,8 +5970,6 @@ td {
   );
   opacity: 0.07;
 }
-
-
 
 .student-stat-card.boys .genderIcon {
   background: #dbeafe;
@@ -6068,6 +6035,7 @@ td {
   font-weight: 600;
 }
 
+
 .stat-card-icon {
   position: absolute;
   right: 22px;
@@ -6078,7 +6046,7 @@ td {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--card-accent, #0f766e) 12%, #ffffff);
+  background: color-mix(in srgb, var(--card-accent, #4DCF94) 12%, #ffffff);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
@@ -7544,8 +7512,8 @@ td {
   display: grid;
   gap: 4px;
   min-width: 0;
-  justify-items: center;
-  text-align: center;
+  justify-items: start;
+  text-align: left;
 }
 
 .student-table-section td:nth-child(5) .tableCellStack,
@@ -7984,6 +7952,19 @@ html::-webkit-scrollbar-thumb:hover {
 {
   display: flex !important;
   align-items: center !important;
+}
+/* Find this in your component.css: */
+.student-table-section .idSelectCell input[type="checkbox"] {
+  flex: 0 0 auto;
+  margin-left: 0;
+}
+
+/* ---> PASTE THE NEW CODE DIRECTLY HERE <--- */
+.student-table-section .idSelectCell .studentIdCell {
+  display: inline-block;
+  width: 35px;         
+  text-align: left;    
+  font-variant-numeric: tabular-nums; 
 }
 /* Edit Button Default */
 .studentTableRow .student-actions .btn.iconBtn.editActionButton {
