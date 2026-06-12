@@ -21,7 +21,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import type { StudentView } from '../../types';
 import StudentProfileSections, { type StudentFormState, type StudentFormErrors, GENDER_OPTIONS, ORPHAN_STATUS_OPTIONS, RELIGION_OPTIONS } from './StudentProfileSections';
-import closeIcon from '../../assets/clera cross favicon.png';
 
 const init: StudentFormState = {
   first_name: '',
@@ -126,7 +125,11 @@ const fieldStepMap = steps.reduce((map, step) => {
 }, {} as Partial<Record<keyof StudentFormState, StudentFormStep>>);
 fieldStepMap.sibling_aadhaar = 'guardian';
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailPattern = /^[^\s@]+@(gmail\.com|nichebit\.com)$/i;
+
+function normalizeDateValue(value: string) {
+  return value.replace(/^(\d{4})\d+-(\d{2})-(\d{2})$/, '$1-$2-$3');
+}
 
 const getAge = (dateValue: string) => {
   const date = new Date(`${dateValue}T00:00:00`);
@@ -178,7 +181,7 @@ const sameName = (a: { first: string; middle: string; last: string }, b: { first
 };
 
 function PrimaryButton(props: ComponentProps<typeof Button>) {
-  return <Button {...props} className={`studentPrimaryButton ${props.className ?? ''}`} />;
+  return <Button {...props} className={props.className ?? ''} />;
 }
 
 function SecondaryButton(props: ComponentProps<typeof Button>) {
@@ -248,6 +251,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       ? value.replace(/\D/g, '').slice(0, 12)
       : key === 'phone'
       ? value.replace(/\D/g, '').slice(0, 10)
+      : key === 'dob'
+      ? normalizeDateValue(value)
       : value;
     setForm((current) => {
       const apply = (next: StudentFormState) => {
@@ -864,7 +869,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
 
     if (stepKeys.includes('personal')) {
       if (formState.email.trim() && !emailPattern.test(formState.email.trim())) {
-        nextErrors.email = 'Enter a valid email address';
+        nextErrors.email = 'Email must end with @gmail.com or @nichebit.com';
       }
 
       if (formState.aadhaar_number.trim() && !/^\d{12}$/.test(formState.aadhaar_number)) {
@@ -1029,7 +1034,10 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             <h2>{title} Student</h2>
           </div>
           <button type="button" className="studentWizardClose" onClick={cancel} aria-label="Close">
-            <img src={closeIcon} alt="" className="filterBtnIcon" aria-hidden="true" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
         <div className="studentStepIndicator" aria-label="Student form steps">

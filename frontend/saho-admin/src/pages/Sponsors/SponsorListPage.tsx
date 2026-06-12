@@ -369,19 +369,29 @@ export default function SponsorListPage() {
               </div>
             </div>
             <div className="bulkToolbarActions">
-              <Button size="sm" variant="outline" onClick={exportSponsorsCsv} tabIndex={hasSelection ? 0 : -1}>
+              <button className="btn btnGreen" onClick={exportSponsorsCsv} tabIndex={hasSelection ? 0 : -1}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M12 3v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 17v3h16v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 Export CSV
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="bulkDeleteButton"
+              </button>
+              <button
+                className="btn btnRed"
                 onClick={() => setBulkOpen(true)}
                 disabled={!hasSelection}
                 tabIndex={hasSelection ? 0 : -1}
               >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M10 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 Delete selected
-              </Button>
+              </button>
             </div>
           </div>
         </div>
