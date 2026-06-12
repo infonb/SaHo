@@ -39,6 +39,11 @@ export default function DataTable({
     <div className="tableWrap">
       <div className="tableScroll">
         <table>
+          <colgroup>
+            {columns.map((c) => (
+              <col key={c.key} style={{ width: c.width }} />
+            ))}
+          </colgroup>
           <thead>
             <tr>
               {columns.map((c) => (

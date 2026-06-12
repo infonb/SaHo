@@ -238,7 +238,7 @@ export default function SponsorListPage() {
         </div>
       </div>
 
-      <div className="student-stats-grid sponsor-stats-grid">
+      <div className="student-stats-grid">
         <div className="student-stat-card total">
           <div className="stat-card-content">
             <div className="stat-card-label">Total Sponsors</div>
@@ -254,7 +254,7 @@ export default function SponsorListPage() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card active">
+        <div className="student-stat-card total" style={{ '--card-accent': '#22c55e' } as React.CSSProperties}>
           <div className="stat-card-content">
             <div className="stat-card-label">Active</div>
             <div className="stat-card-value">{activeSponsors}</div>
@@ -266,20 +266,20 @@ export default function SponsorListPage() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card pending">
+         {/* <div className="student-stat-card total" style={{ '--card-accent': '#f59e0b' } as React.CSSProperties}>
           <div className="stat-card-content">
             <div className="stat-card-label">Pending</div>
             <div className="stat-card-value">{pendingSponsors}</div>
             <div className="stat-card-note">Needs attention</div>
-          </div>
+          </div> 
           <div className="stat-card-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="9"></circle>
               <path d="M12 7v5l3 3"></path>
             </svg>
           </div>
-        </div>
-        <div className="student-stat-card sponsored">
+        </div> */}
+        <div className="student-stat-card total" style={{ '--card-accent': '#22c55e' } as React.CSSProperties}>
           <div className="stat-card-content">
             <div className="stat-card-label">Sponsored Students</div>
             <div className="stat-card-value">{totalStudentsSponsored}</div>
