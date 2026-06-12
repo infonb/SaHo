@@ -1,17 +1,88 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
+import DataTable from '../../components/common/DataTable';
+import Pagination from '../../components/common/Pagination';
 import PageHeader from '../../components/common/PageHeader';
 import { getDistricts, getMandals, getStates, getVillages } from '../../api/locationApi';
 import { cancelReminder, getReminders, type ReminderDto } from '../../api/remindersApi';
+import { usePagination } from '../../hooks/usePagination';
+import closeIcon from '../../assets/clera cross favicon.png';
+import arrowIcon from '../../assets/Go arrow favicon.png';
 
 // Event status type
 type EventStatus = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+type FilterOption = { value: string; label: string };
+
+const csvValues = (value?: string | null) =>
+  (value ?? '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+const toggleCsvValue = (value: string | undefined, next: string) => {
+  const values = csvValues(value);
+  return values.includes(next)
+    ? values.filter((v) => v !== next).join(',')
+    : [...values, next].join(',');
+};
+
+const limitText = (value: string | null | undefined, maxLength: number) => {
+  const text = String(value ?? '').trim();
+  if (!text) return '-';
+  return text.length > maxLength ? `${text.slice(0, maxLength).trim()}...` : text;
+};
+
+const EVENT_CARD_TITLE_LIMIT = 30;
+const EVENT_CARD_LOCATION_LIMIT = 25;
+const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+const uniqueCsvValues = (values: Array<string | null | undefined>) =>
+  Array.from(new Set(values.flatMap((value) => csvValues(value))));
+
+const optionId = (item: any, camelKey: string, snakeKey: string) =>
+  String(item?.[camelKey] ?? item?.[snakeKey] ?? '');
+
+const optionName = (item: any, camelKey: string, snakeKey: string) =>
+  String(item?.[camelKey] ?? item?.[snakeKey] ?? '');
+
+const csvNames = (
+  value: string | null | undefined,
+  options: any[],
+  idKeys: [string, string],
+  nameKeys: [string, string],
+) => {
+  const ids = csvValues(value);
+  if (!ids.length) return '-';
+
+  const names = ids.map((id) => {
+    const found = options.find((option) => optionId(option, idKeys[0], idKeys[1]) === id);
+    return found ? optionName(found, nameKeys[0], nameKeys[1]) : id;
+  });
+
+  return names.filter(Boolean).join(', ') || '-';
+};
+
+const stateNamesForEvent = (event: EventData, states: any[], districts: any[]) => {
+  const directStateNames = csvNames(event.state, states, ['stId', 'st_id'], ['stName', 'st_name']);
+  if (directStateNames !== '-') return directStateNames;
+
+  const derivedStateIds = csvValues(event.district)
+    .map((districtId) => {
+      const district = districts.find((item) => optionId(item, 'distId', 'dist_id') === districtId);
+      return district ? optionId(district, 'stId', 'st_id') : '';
+    })
+    .filter(Boolean);
+
+  if (!derivedStateIds.length) return '-';
+  return csvNames(derivedStateIds.join(','), states, ['stId', 'st_id'], ['stName', 'st_name']);
+};
 
 // Event data type
 interface EventData {
   id: number;
   title: string;
+  description: string;
   date: string;
   venue: string;
   state: string;
@@ -74,27 +145,112 @@ function ActionButtons({
   onDelete: (id: number) => void;
 }) {
   return (
-    <div className="action-buttons">
-      <button
-        className="action-btn edit"
+    <div className="actions student-actions" onClick={(event) => event.stopPropagation()}>
+      <Button
+        size="sm"
+        variant="outline"
+        className="iconBtn editActionButton"
         title="Edit Event"
-        onClick={() => onEdit(event.id)}
+        aria-label="Edit event"
+        onClick={(clickEvent) => {
+          clickEvent.stopPropagation();
+          onEdit(event.id);
+        }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-      </button>
-      <button
-        className="action-btn delete"
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className="iconBtn deleteActionButton"
         title="Cancel Event"
-        onClick={() => onDelete(event.id)}
+        aria-label="Cancel event"
+        onClick={(clickEvent) => {
+          clickEvent.stopPropagation();
+          onDelete(event.id);
+        }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-      </button>
+      </Button>
     </div>
+  );
+}
+
+function MultiSelectFilter({
+  filterKey,
+  label,
+  value,
+  options,
+  openFilter,
+  setOpenFilter,
+  onChange,
+}: {
+  filterKey: string;
+  label: string;
+  value: string;
+  options: FilterOption[];
+  openFilter: string | null;
+  setOpenFilter: (value: string | null) => void;
+  onChange: (value: string) => void;
+}) {
+  const selected = csvValues(value);
+  const selectedLabels = options
+    .filter((option) => selected.includes(option.value))
+    .map((option) => option.label);
+  const summary =
+    selectedLabels.length === 0
+      ? label
+      : selectedLabels.length === 1
+        ? selectedLabels[0]
+        : `${selectedLabels.length} selected`;
+  const isOpen = openFilter === filterKey;
+
+  return (
+    <details className={`multiSelectFilter${selected.length ? ' hasValue' : ''}`} open={isOpen}>
+      <summary
+        className="multiSelectTrigger"
+        onClick={(event) => {
+          event.preventDefault();
+          setOpenFilter(isOpen ? null : filterKey);
+        }}
+      >
+        <span>{summary}</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </summary>
+      <div className="multiSelectMenu">
+        <div className="multiSelectMenuHead">
+          <span>{label}</span>
+          {selected.length ? <button type="button" onClick={() => onChange('')}>Clear</button> : null}
+        </div>
+        <div className="multiSelectOptions">
+          {options.length ? (
+            options.map((option) => (
+              <label className="multiSelectOption" key={option.value}>
+                <input
+                  type="checkbox"
+                  checked={selected.includes(option.value)}
+                  onChange={() => onChange(toggleCsvValue(value, option.value))}
+                />
+                <span>{option.label}</span>
+              </label>
+            ))
+          ) : (
+            <div className="multiSelectEmpty">No options available</div>
+          )}
+        </div>
+      </div>
+    </details>
   );
 }
 
@@ -109,14 +265,24 @@ const initialFilters: EventFilters = {
 export default function ViewEvents() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<EventFilters>(initialFilters);
+  const [pending, setPending] = useState<EventFilters>(initialFilters);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reminders, setReminders] = useState<ReminderDto[]>([]);
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
+  const [openFilter, setOpenFilter] = useState<string | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
 
   const [states, setStates] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
   const [mandals, setMandals] = useState<any[]>([]);
   const [villages, setVillages] = useState<any[]>([]);
+  const [displayDistricts, setDisplayDistricts] = useState<any[]>([]);
+  const [displayMandals, setDisplayMandals] = useState<any[]>([]);
+  const [displayVillages, setDisplayVillages] = useState<any[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -125,28 +291,28 @@ export default function ViewEvents() {
   }, []);
 
   useEffect(() => {
-    if (!filters.stateId) {
+    if (!pending.stateId) {
       setDistricts([]);
       return;
     }
-    getDistricts(Number(filters.stateId)).then(d => setDistricts(d)).catch(() => setDistricts([]));
-  }, [filters.stateId]);
+    getDistricts(Number(csvValues(pending.stateId)[0])).then(d => setDistricts(d)).catch(() => setDistricts([]));
+  }, [pending.stateId]);
 
   useEffect(() => {
-    if (!filters.districtId) {
+    if (!pending.districtId) {
       setMandals([]);
       return;
     }
-    getMandals(Number(filters.districtId)).then(m => setMandals(m)).catch(() => setMandals([]));
-  }, [filters.districtId]);
+    getMandals(Number(csvValues(pending.districtId)[0])).then(m => setMandals(m)).catch(() => setMandals([]));
+  }, [pending.districtId]);
 
   useEffect(() => {
-    if (!filters.mandalId) {
+    if (!pending.mandalId) {
       setVillages([]);
       return;
     }
-    getVillages(Number(filters.mandalId)).then(v => setVillages(v)).catch(() => setVillages([]));
-  }, [filters.mandalId]);
+    getVillages(Number(csvValues(pending.mandalId)[0])).then(v => setVillages(v)).catch(() => setVillages([]));
+  }, [pending.mandalId]);
 
   const load = async () => {
     setLoading(true);
@@ -164,6 +330,56 @@ export default function ViewEvents() {
   useEffect(() => {
     load();
   }, []);
+
+  useEffect(() => {
+    if (!openFilter) return;
+
+    const closeOpenFilter = (event: MouseEvent) => {
+      if ((event.target as HTMLElement).closest('.multiSelectFilter')) return;
+      setOpenFilter(null);
+    };
+
+    document.addEventListener('mousedown', closeOpenFilter);
+    return () => document.removeEventListener('mousedown', closeOpenFilter);
+  }, [openFilter]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadDisplayLocations = async () => {
+      const stateIds = uniqueCsvValues(reminders.map((reminder) => reminder.stIdCsv));
+      const districtIds = uniqueCsvValues(reminders.map((reminder) => reminder.distIdsCsv));
+      const mandalIds = uniqueCsvValues(reminders.map((reminder) => reminder.mndlIdsCsv));
+
+      try {
+        const districtLists = await Promise.all(stateIds.map((id) => getDistricts(Number(id))));
+        const mandalLists = await Promise.all(districtIds.map((id) => getMandals(Number(id))));
+        const villageLists = await Promise.all(mandalIds.map((id) => getVillages(Number(id))));
+
+        if (!mounted) return;
+        setDisplayDistricts(districtLists.flat());
+        setDisplayMandals(mandalLists.flat());
+        setDisplayVillages(villageLists.flat());
+      } catch {
+        if (!mounted) return;
+        setDisplayDistricts([]);
+        setDisplayMandals([]);
+        setDisplayVillages([]);
+      }
+    };
+
+    if (reminders.length) {
+      loadDisplayLocations();
+    } else {
+      setDisplayDistricts([]);
+      setDisplayMandals([]);
+      setDisplayVillages([]);
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [reminders]);
 
   const handleEdit = (id: number) => {
     navigate(`/reminders/create?remId=${id}`);
@@ -185,6 +401,7 @@ export default function ViewEvents() {
     const events: EventData[] = reminders.map(r => ({
       id: r.remId,
       title: r.title,
+      description: r.description ?? '',
       date: r.eventDate,
       venue: r.venue,
       state: r.stIdCsv ?? '',
@@ -194,22 +411,25 @@ export default function ViewEvents() {
       status: r.status === false ? 'cancelled' : inferStatus(r.eventDate),
     }));
 
-    const includesId = (csv: string, id: string) =>
-      csv.split(',').map(s => s.trim()).filter(Boolean).includes(id);
+    const includesAnyId = (eventCsv: string, filterCsv: string) => {
+      const eventIds = csvValues(eventCsv);
+      return csvValues(filterCsv).some(id => eventIds.includes(id));
+    };
 
     return events.filter(event => {
-      if (filters.stateId && !includesId(event.state ?? '', filters.stateId)) return false;
-      if (filters.districtId && !includesId(event.district ?? '', filters.districtId)) return false;
-      if (filters.mandalId && !includesId(event.mandal ?? '', filters.mandalId)) return false;
-      if (filters.villageId && !includesId(event.village ?? '', filters.villageId)) return false;
-      if (filters.status && event.status !== (filters.status as EventStatus)) return false;
+      if (filters.stateId && !includesAnyId(event.state ?? '', filters.stateId)) return false;
+      if (filters.districtId && !includesAnyId(event.district ?? '', filters.districtId)) return false;
+      if (filters.mandalId && !includesAnyId(event.mandal ?? '', filters.mandalId)) return false;
+      if (filters.villageId && !includesAnyId(event.village ?? '', filters.villageId)) return false;
+      if (filters.status && !csvValues(filters.status).includes(event.status)) return false;
       return true;
     });
   }, [filters, reminders]);
+  const pager = usePagination(filteredEvents, 5);
 
   // Handle filter changes
   const handleFilterChange = (key: keyof EventFilters, value: string) => {
-    setFilters(f => {
+    setPending(f => {
       const newFilters = { ...f, [key]: value };
       // Reset dependent filters
       if (key === 'stateId') {
@@ -228,21 +448,89 @@ export default function ViewEvents() {
 
   const handleClearFilters = () => {
     setFilters(initialFilters);
+    setPending(initialFilters);
+    setOpenFilter(null);
   };
 
-  const hasActiveFilters = filters.stateId || filters.districtId || filters.mandalId || filters.villageId || filters.status;
+  const applyFilters = () => {
+    setFilters({ ...pending });
+    setOpenFilter(null);
+  };
+
+  const hasActiveFilters = pending.stateId || pending.districtId || pending.mandalId || pending.villageId || pending.status;
   const upcomingCount = filteredEvents.filter(event => event.status === 'upcoming').length;
   const ongoingCount = filteredEvents.filter(event => event.status === 'ongoing').length;
   const completedCount = filteredEvents.filter(event => event.status === 'completed').length;
-  const monthDays = Array.from({ length: 30 }, (_, index) => index + 1);
-  const eventsByDay = filteredEvents.reduce<Record<number, EventData[]>>((acc, event) => {
-    const day = new Date(event.date).getDate();
-    acc[day] = [...(acc[day] ?? []), event];
+  const stateOptions: FilterOption[] = states.map((state: any) => ({
+    value: String(state.stId ?? state.st_id),
+    label: state.stName ?? state.st_name,
+  }));
+  const districtOptions: FilterOption[] = districts.map((district: any) => ({
+    value: String(district.distId ?? district.dist_id),
+    label: district.distName ?? district.dist_name,
+  }));
+  const mandalOptions: FilterOption[] = mandals.map((mandal: any) => ({
+    value: String(mandal.mndlId ?? mandal.mndl_id),
+    label: mandal.mndlName ?? mandal.mndl_name,
+  }));
+  const villageOptions: FilterOption[] = villages.map((village: any) => ({
+    value: String(village.vilId ?? village.vil_id),
+    label: village.vilName ?? village.vil_name,
+  }));
+  const statusOptions: FilterOption[] = [
+    { value: 'upcoming', label: 'Upcoming' },
+    { value: 'ongoing', label: 'Ongoing' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+  ];
+  const calendarYear = calendarMonth.getFullYear();
+  const calendarMonthIndex = calendarMonth.getMonth();
+  const eventsByDate = filteredEvents.reduce<Record<string, EventData[]>>((acc, event) => {
+    acc[event.date] = [...(acc[event.date] ?? []), event];
     return acc;
   }, {});
+  const calendarStart = new Date(calendarYear, calendarMonthIndex, 1);
+  calendarStart.setDate(calendarStart.getDate() - calendarStart.getDay());
+  const calendarDays = Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(calendarStart);
+    date.setDate(calendarStart.getDate() + index);
+    const dateKey = [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, '0'),
+      String(date.getDate()).padStart(2, '0'),
+    ].join('-');
+
+    return {
+      date,
+      dateKey,
+      day: date.getDate(),
+      isCurrentMonth: date.getMonth() === calendarMonthIndex,
+    };
+  });
+  const calendarTitle = calendarMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const goCalendarMonth = (offset: number) => {
+    setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
+  };
   const nextReminders = filteredEvents
     .filter(event => event.status !== 'completed' && event.status !== 'cancelled')
     .slice(0, 4);
+  const eventRows = pager.current.map(event => [
+    <span className="reminderTablePlainDate">
+      {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+    </span>,
+    <div className="eventTableTitle">
+      <strong>{event.title}</strong>
+    </div>,
+    <StatusBadge status={event.status} />,
+    <span className="reminderTableVenue" title={event.venue || '-'}>
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M12 21s7-4.8 7-11a7 7 0 1 0-14 0c0 6.2 7 11 7 11Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="12" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
+      </svg>
+      {limitText(event.venue, 28)}
+    </span>,
+    <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />,
+  ]);
 
   return (
     <div className="page-enter">
@@ -264,117 +552,110 @@ export default function ViewEvents() {
       </div>
 
       {/* Filters Section */}
-      <div className="panel">
+      <div className="panel reminder-filters-section">
         <div className="filters-header">
           <h3 className="panelTitle">Filters</h3>
-          {hasActiveFilters && (
-            <button className="clear-filters-btn" onClick={handleClearFilters}>
-              Clear Filters
-            </button>
-          )}
         </div>
 
-        <div className="filters-grid">
-          {/* State Filter */}
+        <div className="reminderFiltersGrid">
           <div className="filter-group">
-            <label className="filter-label">State</label>
-            <select
-              className="filter-select"
-              value={filters.stateId}
-              onChange={e => handleFilterChange('stateId', e.target.value)}
-            >
-              <option value="">All States</option>
-              {states.map((state: any) => (
-                <option key={state.stId ?? state.st_id} value={state.stId ?? state.st_id}>
-                  {state.stName ?? state.st_name}
-                </option>
-              ))}
-            </select>
+            <MultiSelectFilter
+              filterKey="state"
+              label="All States"
+              value={pending.stateId}
+              options={stateOptions}
+              openFilter={openFilter}
+              setOpenFilter={setOpenFilter}
+              onChange={(value) => handleFilterChange('stateId', value)}
+            />
           </div>
 
-          {/* District Filter */}
           <div className="filter-group">
-            <label className="filter-label">District</label>
-            <select
-              className="filter-select"
-              value={filters.districtId}
-              onChange={e => handleFilterChange('districtId', e.target.value)}
-              disabled={!filters.stateId}
-            >
-              <option value="">All Districts</option>
-              {districts.map(district => (
-                <option key={district.distId ?? district.dist_id} value={district.distId ?? district.dist_id}>
-                  {district.distName ?? district.dist_name}
-                </option>
-              ))}
-            </select>
+            <MultiSelectFilter
+              filterKey="district"
+              label="All Districts"
+              value={pending.districtId ?? ''}
+              options={districtOptions}
+              openFilter={openFilter}
+              setOpenFilter={setOpenFilter}
+              onChange={(value) => handleFilterChange('districtId', value)}
+            />
           </div>
 
-          {/* Mandal Filter */}
           <div className="filter-group">
-            <label className="filter-label">Mandal</label>
-            <select
-              className="filter-select"
-              value={filters.mandalId}
-              onChange={e => handleFilterChange('mandalId', e.target.value)}
-              disabled={!filters.districtId}
-            >
-              <option value="">All Mandals</option>
-              {mandals.map(mandal => (
-                <option key={mandal.mndlId ?? mandal.mndl_id} value={mandal.mndlId ?? mandal.mndl_id}>
-                  {mandal.mndlName ?? mandal.mndl_name}
-                </option>
-              ))}
-            </select>
+            <MultiSelectFilter
+              filterKey="mandal"
+              label="All Mandals"
+              value={pending.mandalId ?? ''}
+              options={mandalOptions}
+              openFilter={openFilter}
+              setOpenFilter={setOpenFilter}
+              onChange={(value) => handleFilterChange('mandalId', value)}
+            />
           </div>
 
-          {/* Village Filter */}
           <div className="filter-group">
-            <label className="filter-label">Village</label>
-            <select
-              className="filter-select"
-              value={filters.villageId}
-              onChange={e => handleFilterChange('villageId', e.target.value)}
-              disabled={!filters.mandalId}
-            >
-              <option value="">All Villages</option>
-              {villages.map(village => (
-                <option key={village.vilId ?? village.vil_id} value={village.vilId ?? village.vil_id}>
-                  {village.vilName ?? village.vil_name}
-                </option>
-              ))}
-            </select>
+            <MultiSelectFilter
+              filterKey="village"
+              label="All Villages"
+              value={pending.villageId ?? ''}
+              options={villageOptions}
+              openFilter={openFilter}
+              setOpenFilter={setOpenFilter}
+              onChange={(value) => handleFilterChange('villageId', value)}
+            />
           </div>
 
-          {/* Status Filter */}
           <div className="filter-group">
-            <label className="filter-label">Status</label>
-            <select
-              className="filter-select"
-              value={filters.status}
-              onChange={e => handleFilterChange('status', e.target.value)}
-            >
-              <option value="">All Status</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="ongoing">Ongoing</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+            <MultiSelectFilter
+              filterKey="status"
+              label="All Status"
+              value={pending.status ?? ''}
+              options={statusOptions}
+              openFilter={openFilter}
+              setOpenFilter={setOpenFilter}
+              onChange={(value) => handleFilterChange('status', value)}
+            />
+          </div>
+
+          <div className="filter-actions-group reminderFilterActions">
+            <button className="btnRed" onClick={handleClearFilters}>
+              <img src={closeIcon} alt="Clear" className="filterBtnIcon" />
+              Clear
+            </button>
+            <button className="btnGreen" onClick={applyFilters}>
+              <img src={arrowIcon} alt="Go" className="filterBtnIcon" />
+              Go
+            </button>
           </div>
         </div>
       </div>
 
       <div className="eventsWorkspace">
         <section className="panel eventCalendarPanel">
-          <div className="table-header">
-            <h3 className="panelTitle">Event Calendar</h3>
-            <span className="event-count">May 2026</span>
+          <div className="calendarHeader">
+            <button type="button" className="calendarNavButton" aria-label="Previous month" onClick={() => goCalendarMonth(-1)}>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <h3 className="calendarTitle">{calendarTitle}</h3>
+            <button type="button" className="calendarNavButton" aria-label="Next month" onClick={() => goCalendarMonth(1)}>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+          <div className="eventCalendarWeekdays">
+            {WEEKDAYS.map(day => <span key={day}>{day}</span>)}
           </div>
           <div className="eventCalendarGrid">
-            {monthDays.map(day => (
-              <div key={day} className={`eventCalendarDay ${eventsByDay[day]?.length ? 'hasEvent' : ''}`}>
+            {calendarDays.map(({ dateKey, day, isCurrentMonth }) => (
+              <div key={dateKey} className={`eventCalendarDay ${!isCurrentMonth ? 'isMuted' : ''} ${eventsByDate[dateKey]?.length ? 'hasEvent' : ''}`}>
                 <span>{day}</span>
-                {eventsByDay[day]?.slice(0, 2).map(event => <small key={event.id}>{event.title}</small>)}
+                {eventsByDate[dateKey]?.slice(0, 2).map((event, eventIndex) => (
+                  <small key={event.id} className={`calendarEventTone${eventIndex % 4}`}>{event.title}</small>
+                ))}
               </div>
             ))}
           </div>
@@ -385,11 +666,24 @@ export default function ViewEvents() {
             <h3 className="panelTitle">Reminders</h3>
             <span className="event-count">{nextReminders.length} active</span>
           </div>
-          {nextReminders.length ? nextReminders.map(event => (
-            <div key={event.id} className="reminderItem">
-              <div>
+          {nextReminders.length ? nextReminders.map((event, index) => (
+            <div key={event.id} className={`reminderItem reminderTone${index % 3}`}>
+              <span className="reminderDot" aria-hidden />
+              <div className="reminderItemBody">
                 <strong>{event.title}</strong>
-                <span>{event.date} - {event.venue}</span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path d="M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path d="M12 21s7-4.8 7-11a7 7 0 1 0-14 0c0 6.2 7 11 7 11Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="12" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
+                  </svg>
+                  {limitText(event.venue, 24)}
+                </span>
               </div>
               <StatusBadge status={event.status} />
             </div>
@@ -397,48 +691,72 @@ export default function ViewEvents() {
         </aside>
       </div>
 
-      <div className="panel eventCardsPanel">
-        <div className="table-header">
-          <h3 className="panelTitle">Event Cards</h3>
-          <span className="event-count">{filteredEvents.length} event(s) found</span>
+      <div className="panel studentRecordsPanel eventRecordsPanel">
+        <div className="sponsorRecordsHeader">
+          <h3 className="panelTitle">Event Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{filteredEvents.length} results</span></h3>
+          <div className="viewToggle" aria-label="Event view mode">
+            <button type="button" className={viewMode === 'table' ? 'active' : ''} onClick={() => setViewMode('table')}>Table</button>
+            <button type="button" className={viewMode === 'cards' ? 'active' : ''} onClick={() => setViewMode('cards')}>Cards</button>
+          </div>
         </div>
 
         {error ? <div className="toast error" style={{ position: 'static', marginBottom: 12 }}>{error}</div> : null}
 
-        {loading ? (
-          <div className="eventCardGrid">
-            {[0, 1, 2].map(i => <div key={i} className="eventCard"><div className="skeleton" style={{ height: 160 }} /></div>)}
+        {loading && viewMode === 'cards' ? (
+          <div className="sponsorCardGrid">
+            {[0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>)}
           </div>
-        ) : filteredEvents.length === 0 ? (
+        ) : !loading && filteredEvents.length === 0 ? (
           <div className="empty-state">
             <p>No events found matching your filters.</p>
             {hasActiveFilters && <Button variant="outline" size="sm" onClick={handleClearFilters}>Clear Filters</Button>}
           </div>
-        ) : (
-          <div className="eventCardGrid">
-            {filteredEvents.map(event => (
-              <article key={event.id} className="eventCard">
-                <div className="eventCardHeader">
+        ) : viewMode === 'cards' ? (
+          <div className="sponsorCardGrid">
+            {pager.current.map(event => (
+              <article key={event.id} className="sponsorCard reminderRecordCard">
+                <div className="sponsorCardTop">
                   <div className="eventDateBadge">
                     <strong>{new Date(event.date).getDate()}</strong>
                     <span>{new Date(event.date).toLocaleString('en-US', { month: 'short' })}</span>
                   </div>
-                  <StatusBadge status={event.status} />
+                  <div className="sponsorCardIdentity">
+                    <div className="sponsorNameCell reminderCardTitle" title={event.title}>{limitText(event.title, EVENT_CARD_TITLE_LIMIT)}</div>
+                  </div>
+                  <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />
                 </div>
-                <h3>{event.title}</h3>
-                <p>{event.venue}</p>
-                <div className="eventMeta">
-                  <span>{event.village}</span>
-                  <span>{event.mandal}, {event.district}</span>
+                <div className="sponsorCardMetric">
+                  <span>Status</span>
+                  <strong><StatusBadge status={event.status} /></strong>
                 </div>
-                <div className="eventCardFooter">
-                  <span>{event.state}</span>
-                  <ActionButtons event={event} />
+                <div className="sponsorCountCard">
+                  <span>Venue</span>
+                  <strong className="reminderLocationText" title={event.venue || '-'}>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                      <path d="M12 21s7-4.8 7-11a7 7 0 1 0-14 0c0 6.2 7 11 7 11Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="12" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
+                    </svg>
+                    {limitText(event.venue, EVENT_CARD_LOCATION_LIMIT)}
+                  </strong>
                 </div>
               </article>
             ))}
           </div>
+        ) : (
+          <DataTable
+            loading={loading}
+            columns={[
+              { key: 'date', label: 'Date' },
+              { key: 'event', label: 'Event Name' },
+              { key: 'status', label: 'Status' },
+              { key: 'venue', label: 'Venue' },
+              { key: 'actions', label: '', width: '92px' },
+            ]}
+            rows={eventRows}
+            rowClassName="studentTableRow"
+          />
         )}
+        <Pagination total={filteredEvents.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
       </div>
 
       {false && <style>{`

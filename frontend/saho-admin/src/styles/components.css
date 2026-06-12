@@ -4409,7 +4409,7 @@ svg {
 }
 
 .tableWrap {
-  /* border-radius: 12px; */
+  border-radius: 12px;
   border-color: #e7ebf1;
   box-shadow: none;
 }
@@ -5656,23 +5656,90 @@ td {
 
 .eventsWorkspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
-  gap: 14px;
-  margin: 14px 0;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 20px;
+  margin: 18px 0;
+}
+
+.eventCalendarPanel {
+  padding: 22px 26px 28px;
+}
+
+.calendarHeader {
+  display: grid;
+  grid-template-columns: 34px auto 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+
+.calendarNavButton {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #dbe4ef;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #334155;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.calendarNavButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.calendarTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 850;
+  color: #0f172a;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.calendarNewEventButton {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 18px;
+  border-radius: 7px;
+  background: #047857;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.eventCalendarWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.eventCalendarWeekdays span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  text-align: center;
 }
 
 .eventCalendarGrid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
+  gap: 0;
 }
 
 .eventCalendarDay {
   min-height: 78px;
-  border: 1px solid #e6ebf2;
-  border-radius: 12px;
-  background: #fff;
-  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  padding: 6px 5px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -5683,9 +5750,14 @@ td {
 }
 
 .eventCalendarDay span {
-  font-weight: 850;
-  color: #334155;
+  font-weight: 700;
+  color: #172033;
   font-size: 12px;
+  line-height: 1;
+}
+
+.eventCalendarDay.isMuted span {
+  color: #b8c2d3;
 }
 
 .eventCalendarDay small {
@@ -5693,50 +5765,148 @@ td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 3px 6px;
-  background: #ecfdf5;
-  color: #0f766e;
-  font-size: 10px;
+  background: #dff6ee;
+  color: #007f69;
+  font-size: 9px;
   font-weight: 800;
+  line-height: 1.1;
+}
+
+.eventCalendarDay .calendarEventTone1 {
+  background: #e8f2fb;
+  color: #075985;
+}
+
+.eventCalendarDay .calendarEventTone2 {
+  background: #eeeafe;
+  color: #5b21b6;
+}
+
+.eventCalendarDay .calendarEventTone3 {
+  background: #fce8df;
+  color: #9a3412;
 }
 
 .eventCalendarDay.hasEvent {
-  border-color: rgba(20, 184, 166, 0.34);
-  background: linear-gradient(180deg, #ffffff, #f0fdfa);
+  background: transparent;
+}
+
+.eventCalendarDay.isSelected {
+  background: #f1f4f8;
 }
 
 .eventCalendarDay:hover {
-  transform: translateY(-2px);
-  border-color: #99f6e4;
+  transform: none;
+  background: #f8fafc;
 }
 
 .reminderPanel {
   align-self: start;
+  padding: 22px 22px 26px;
+  min-height: 100%;
+}
+
+.reminderPanel .table-header {
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.reminderPanel .event-count {
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 13px;
+  background: #dff6ee;
+  color: #007f69;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.reminderPanel .status-badge {
+  align-self: start;
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  font-size: 10px;
+  line-height: 1;
+  min-width: auto;
+  white-space: nowrap;
+  border-radius: 999px;
 }
 
 .reminderItem {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px;
-  border: 1px solid #e6ebf2;
-  border-radius: 12px;
-  background: #fff;
-  margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: flex-start;
+  column-gap: 10px;
+  row-gap: 0;
+  padding: 0 0 18px;
+  border: 0;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: 18px;
+}
+
+.reminderItem:last-child {
+  margin-bottom: 0;
+}
+
+.reminderDot {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: #22a06b;
+}
+
+.reminderTone0 .reminderDot {
+  background: #df5936;
+}
+
+.reminderTone1 .reminderDot {
+  background: #f5a623;
+}
+
+.reminderTone2 .reminderDot {
+  background: #22a06b;
+}
+
+.reminderItemBody {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
 }
 
 .reminderItem strong {
   display: block;
-  font-size: 12.5px;
+  font-size: 14px;
+  font-weight: 850;
   color: #0f172a;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .reminderItem span {
-  display: block;
-  margin-top: 3px;
-  font-size: 11.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 0;
+  font-size: 11px;
   color: #64748b;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reminderItem span svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
 }
 
 .eventCardGrid {
@@ -5749,6 +5919,9 @@ td {
   padding: 14px;
   overflow: hidden;
   position: relative;
+  min-height: 246px;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
 }
 
 .eventCard:before {
@@ -5792,12 +5965,33 @@ td {
   margin: 14px 0 5px;
   font-size: 16px;
   color: #0f172a;
+  line-height: 1.25;
+  min-height: 40px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .eventCard p {
   margin: 0;
   color: #475569;
   font-size: 13px;
+  line-height: 1.35;
+  min-height: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventCard .eventDescription {
+  margin-top: 8px;
+  color: #64748b;
+  min-height: 34px;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .eventMeta {
@@ -5806,6 +6000,13 @@ td {
   margin: 12px 0;
   color: #64748b;
   font-size: 12px;
+  align-self: end;
+}
+
+.eventMeta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .eventCardFooter {
@@ -5813,6 +6014,405 @@ td {
   border-top: 1px solid #edf2f7;
   color: #64748b;
   font-size: 12px;
+  min-width: 0;
+}
+
+.eventCardFooter > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventRecordsPanel {
+  overflow: hidden;
+}
+
+.eventRecordsPanel .sponsorCardGrid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 12px;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.reminderRecordCard {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 132px;
+  padding: 20px 20px 16px;
+  gap: 10px;
+  grid-template-rows: 56px auto auto;
+  border-radius: 14px;
+}
+
+.reminderRecordCard:before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(90deg, #0f766e, #14b8a6, #22c55e);
+}
+
+.reminderRecordCard .sponsorCardTop {
+  align-items: start;
+  gap: 8px;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e6edf5;
+}
+
+.reminderRecordCard .eventDateBadge {
+  width: 34px;
+  height: 38px;
+  border-radius: 0;
+  flex: 0 0 auto;
+  place-items: start center;
+  background: transparent;
+}
+
+.reminderRecordCard .eventDateBadge strong {
+  font-size: 18px;
+  font-weight: 900;
+  color: #0f766e;
+}
+
+.reminderRecordCard .eventDateBadge span {
+  font-size: 10px;
+  font-weight: 900;
+  color: #64748b;
+}
+
+.reminderRecordCard .sponsorCardIdentity {
+  gap: 0;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.reminderRecordCard .sponsorCardMetric {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.reminderRecordCard .sponsorCountCard {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  min-width: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 10px;
+}
+
+.reminderRecordCard .sponsorCardActions {
+  align-self: end;
+  margin-top: 0;
+  width: 100%;
+}
+
+.reminderRecordCard .sponsorCardActions .btnGreen,
+.reminderRecordCard .sponsorCardActions .btnRed {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.reminderRecordCard .actions.student-actions {
+  align-self: start;
+  justify-content: flex-end;
+  gap: 6px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.reminderRecordCard:hover .actions.student-actions,
+.reminderRecordCard:focus-within .actions.student-actions {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.reminderRecordCard .actions.student-actions .iconBtn {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  border-radius: 8px;
+  background: #ffffff !important;
+}
+
+.reminderRecordCard .actions.student-actions .iconBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.reminderRecordCard .actions.student-actions .editActionButton {
+  color: #4d7a63 !important;
+  border: 1px solid #4d7a63 !important;
+}
+
+.reminderRecordCard .actions.student-actions .editActionButton:hover {
+  background: #4d7a63 !important;
+  color: #ffffff !important;
+  border-color: #4d7a63 !important;
+  transform: none;
+}
+
+.reminderRecordCard .actions.student-actions .deleteActionButton {
+  color: #dc2626 !important;
+  border: 1px solid #dc2626 !important;
+}
+
+.reminderRecordCard .actions.student-actions .deleteActionButton:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+  transform: none;
+}
+
+.reminderCardTitle,
+.reminderCardVenue,
+.reminderLocationText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reminderRecordCard .reminderCardTitle {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  margin-bottom: 0;
+  max-height: 34px;
+  min-height: 0;
+  font-size: 14px;
+  line-height: 1.18;
+  font-weight: 900;
+}
+
+.reminderCardVenue,
+.reminderLocationText {
+  display: block;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.reminderRecordCard .sponsorCountCard span {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+}
+
+.reminderRecordCard .sponsorCountCard strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 0 1 auto;
+  max-width: 58%;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #475569;
+  font-size: 11px;
+  line-height: 1;
+  text-align: right;
+}
+
+.reminderRecordCard .sponsorCountCard strong svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+
+.reminderRecordCard .sponsorCardMetric span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+}
+
+.reminderRecordCard .sponsorCardMetric strong {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 20px;
+}
+
+.reminderRecordCard .status-badge {
+  padding: 4px 10px;
+  font-size: 11px;
+  line-height: 1;
+  border-radius: 999px;
+  min-width: 76px;
+  text-align: center;
+}
+
+.eventTableTitle {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.eventTableTitle strong {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.3;
+}
+
+.eventTableTitle span {
+  color: #64748b;
+  font-size: 11.5px;
+  line-height: 1.3;
+}
+
+.reminderTableDate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.reminderTableDate > span {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.reminderTablePlainDate {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.reminderTableDateBadge {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  flex: 0 0 40px;
+  background: #fef0e8;
+}
+
+.reminderTableDateBadge strong {
+  font-size: 15px;
+  color: #b45309;
+}
+
+.reminderTableDateBadge span {
+  font-size: 9px;
+  color: #9a3412;
+}
+
+.eventRecordsPanel .tableWrap tbody tr:nth-child(3n + 2) .reminderTableDateBadge {
+  background: #fff3d8;
+}
+
+.eventRecordsPanel .tableWrap tbody tr:nth-child(3n + 2) .reminderTableDateBadge strong,
+.eventRecordsPanel .tableWrap tbody tr:nth-child(3n + 2) .reminderTableDateBadge span {
+  color: #92400e;
+}
+
+.eventRecordsPanel .tableWrap tbody tr:nth-child(3n) .reminderTableDateBadge {
+  background: #dcf8ef;
+}
+
+.eventRecordsPanel .tableWrap tbody tr:nth-child(3n) .reminderTableDateBadge strong,
+.eventRecordsPanel .tableWrap tbody tr:nth-child(3n) .reminderTableDateBadge span {
+  color: #0f766e;
+}
+
+.reminderTableVenue {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 260px;
+  width: fit-content;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reminderTableVenue svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+
+.eventRecordsPanel .tableWrap th:not(:first-child),
+.eventRecordsPanel .tableWrap td:not(:first-child) {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.eventRecordsPanel .tableWrap th,
+.eventRecordsPanel .tableWrap td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.eventRecordsPanel .tableWrap td .eventTableTitle {
+  justify-items: center;
+  text-align: center;
+}
+
+.eventRecordsPanel .tableWrap td:nth-child(4) {
+  display: table-cell;
+}
+
+.eventRecordsPanel .tableWrap td:nth-child(3) .status-badge,
+.eventRecordsPanel .tableWrap td:last-child .student-actions {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.eventRecordsPanel .tableWrap td:nth-child(4) {
+  text-align: center;
+}
+
+.eventRecordsPanel .tableWrap td:nth-child(4) .reminderTableVenue {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.eventRecordsPanel .tableWrap td:last-child .student-actions {
+  justify-content: center;
+}
+
+@media (max-width: 1400px) {
+  .eventRecordsPanel .sponsorCardGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .eventRecordsPanel .sponsorCardGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .status-badge {
@@ -6161,6 +6761,42 @@ td {
   margin-bottom: 4px;
 }
 
+.reminder-filters-section {
+  padding: 0;
+  margin-bottom: 18px;
+  overflow: visible;
+}
+
+.reminder-filters-section .filters-header {
+  margin: 0;
+  padding: 14px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.reminderFiltersGrid {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  align-items: center;
+}
+
+.reminderFiltersGrid .filter-group {
+  min-width: 0;
+  display: block;
+}
+
+.reminderFiltersGrid .multiSelectTrigger {
+  font-size: 10px;
+}
+
+.reminderFilterActions {
+  align-self: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
 .sponsor-filters-container {
   display: flex;
   flex-wrap: wrap;
@@ -6492,7 +7128,7 @@ td {
 .multiSelectEmpty {
   padding: 14px 10px;
   color: #94a3b8;
-  /* font-size: 13px; */
+  font-size: 12px; 
   font-weight: 700;
   text-align: center;
 }
