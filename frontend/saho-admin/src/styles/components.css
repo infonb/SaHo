@@ -7426,6 +7426,7 @@ td {
   font-weight: 700;
   line-height: 1.35;
   margin-top: 2px;
+  white-space: pre-line;
 }
 .validationMessage span {
   width: 16px;
