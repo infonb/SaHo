@@ -290,7 +290,7 @@ export default function ViewEvents() {
 
   useEffect(() => {
     let mounted = true;
-    getStates().then(data => { if (mounted) setStates(data); }).catch(() => {});
+    getStates().then(data => { if (mounted) setStates(data); }).catch(() => { });
     return () => { mounted = false; };
   }, []);
 
@@ -797,8 +797,8 @@ export default function ViewEvents() {
                     <div className="sponsorNameCell reminderCardTitle" title={event.title}>{limitText(event.title, EVENT_CARD_TITLE_LIMIT)}</div>
                   </div>
                   <div className="eventCardFooter">
-                  <span>{event.state}</span>
-                  <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />
+                    <span>{event.state}</span>
+                    <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />
                   </div>
                 </div>
 
@@ -823,10 +823,10 @@ export default function ViewEvents() {
           <DataTable
             loading={loading}
             columns={[
-              { key: 'date', label: 'Date' },
-              { key: 'event', label: 'Event Name' },
-              { key: 'status', label: 'Status' },
-              { key: 'venue', label: 'Venue' },
+              { key: 'date', label: 'Date', width: '140px' },
+              { key: 'event', label: 'Event Name', width: '280px' },
+              { key: 'status', label: 'Status', width: '140px' },
+              { key: 'venue', label: 'Venue', width: '220px' },
               { key: 'actions', label: '', width: '92px' },
             ]}
             rows={eventRows}
