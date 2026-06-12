@@ -28,5 +28,6 @@ public class ReminderResponseDto {
     private Integer createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer totalCount;
 }
 

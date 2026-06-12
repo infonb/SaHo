@@ -704,7 +704,7 @@ export default function EventFormPage() {
                   label="Event Date *"
                   type="date"
                   value={form.eventDate}
-                  onChange={v => { setField('eventDate', v); touchField('eventDate'); }}
+                  onChange={v => setField('eventDate', v)}
                   error={showMessage('eventDate') ? errors.eventDate : undefined}
                   state={getFieldState('eventDate')}
                   htmlMin={new Date().toISOString().split('T')[0]}

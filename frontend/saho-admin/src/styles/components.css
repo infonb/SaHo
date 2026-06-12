@@ -5926,26 +5926,17 @@ td {
   min-height: 132px;
   padding: 20px 20px 16px;
   gap: 10px;
-  grid-template-rows: 56px auto auto;
+  grid-template-rows: 56px auto auto auto;
   border-radius: 14px;
-}
-
-.reminderRecordCard:before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 4px;
-  border-radius: 14px 14px 0 0;
-  background: linear-gradient(90deg, #0f766e, #14b8a6, #22c55e);
+  border-left: 3px solid #b7c9c0;
 }
 
 .reminderRecordCard .sponsorCardTop {
   align-items: start;
   gap: 8px;
   min-width: 0;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e6edf5;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding-bottom: 0;
 }
 
 .reminderRecordCard .eventDateBadge {
@@ -6069,6 +6060,11 @@ td {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.reminderRecordCard .sponsorNameCell,
+.reminderRecordCard .sponsorNameCell:hover {
+  text-decoration: none;
 }
 
 .reminderRecordCard .reminderCardTitle {

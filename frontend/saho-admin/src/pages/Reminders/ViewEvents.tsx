@@ -5,8 +5,8 @@ import DataTable from '../../components/common/DataTable';
 import Pagination from '../../components/common/Pagination';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import PageHeader from '../../components/common/PageHeader';
-import { getDistricts, getMandals, getStates, getVillages } from '../../api/locationApi';
-import { deleteReminder, getReminders, type ReminderDto } from '../../api/remindersApi';
+import { getDistricts, getMandals, getSchools, getStates, getVillages } from '../../api/locationApi';
+import { cancelReminder, getReminders, type ReminderDto } from '../../api/remindersApi';
 import { usePagination } from '../../hooks/usePagination';
 import closeIcon from '../../assets/clera cross favicon.png';
 import arrowIcon from '../../assets/Go arrow favicon.png';
@@ -106,10 +106,12 @@ const inferStatus = (eventDate: string): EventStatus => {
 
 // Filter state interface
 interface EventFilters {
+  search: string;
   stateId: string;
   districtId?: string;
   mandalId?: string;
   villageId?: string;
+  schId?: string;
   status?: string;
 }
 
@@ -257,17 +259,18 @@ function MultiSelectFilter({
 }
 
 const initialFilters: EventFilters = {
+  search: '',
   stateId: '',
   districtId: '',
   mandalId: '',
   villageId: '',
+  schId: '',
   status: '',
 };
 
 export default function ViewEvents() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [filters, setFilters] = useState<EventFilters>(initialFilters);
   const [pending, setPending] = useState<EventFilters>(initialFilters);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -284,6 +287,7 @@ export default function ViewEvents() {
   const [districts, setDistricts] = useState<any[]>([]);
   const [mandals, setMandals] = useState<any[]>([]);
   const [villages, setVillages] = useState<any[]>([]);
+  const [schools, setSchools] = useState<any[]>([]);
   const [displayDistricts, setDisplayDistricts] = useState<any[]>([]);
   const [displayMandals, setDisplayMandals] = useState<any[]>([]);
   const [displayVillages, setDisplayVillages] = useState<any[]>([]);
@@ -318,11 +322,19 @@ export default function ViewEvents() {
     getVillages(Number(csvValues(pending.mandalId)[0])).then(v => setVillages(v)).catch(() => setVillages([]));
   }, [pending.mandalId]);
 
-  const load = async () => {
+  useEffect(() => {
+    if (!pending.villageId) {
+      setSchools([]);
+      return;
+    }
+    getSchools(Number(csvValues(pending.villageId)[0])).then(s => setSchools(s)).catch(() => setSchools([]));
+  }, [pending.villageId]);
+
+  const load = async (apiFilters?: import('../../api/remindersApi').ReminderFilterParams) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getReminders();
+      const data = await getReminders(apiFilters);
       setReminders(data);
     } catch {
       setError('Unable to load events from the database.');
@@ -398,7 +410,7 @@ export default function ViewEvents() {
     const id = deleteTarget;
     setDeleteTarget(null);
     try {
-      await deleteReminder(id);
+      await cancelReminder(id);
       toast('Event cancelled successfully', 'success');
       await load();
     } catch (e) {
@@ -406,72 +418,72 @@ export default function ViewEvents() {
     }
   };
 
-  // Filtered events based on selection
-  const filteredEvents = useMemo(() => {
-    const events: EventData[] = reminders.map(r => ({
-      id: r.remId,
-      title: r.title,
-      description: r.description ?? '',
-      date: r.eventDate,
-      venue: r.venue,
-      state: r.stIdCsv ?? '',
-      district: r.distIdsCsv ?? '',
-      mandal: r.mndlIdsCsv ?? '',
-      village: r.vilIdsCsv ?? '',
-      status: r.status === false ? 'cancelled' : inferStatus(r.eventDate),
-    }));
+  const events = useMemo(() => reminders.map(r => ({
+    id: r.remId,
+    title: r.title,
+    description: r.description ?? '',
+    date: r.eventDate,
+    venue: r.venue,
+    state: r.stIdCsv ?? '',
+    district: r.distIdsCsv ?? '',
+    mandal: r.mndlIdsCsv ?? '',
+    village: r.vilIdsCsv ?? '',
+    status: r.status === false ? 'cancelled' : inferStatus(r.eventDate),
+  })), [reminders]);
+  const pager = usePagination(events, 5);
 
-    const includesAnyId = (eventCsv: string, filterCsv: string) => {
-      const eventIds = csvValues(eventCsv);
-      return csvValues(filterCsv).some(id => eventIds.includes(id));
-    };
-
-    return events.filter(event => {
-      if (filters.stateId && !includesAnyId(event.state ?? '', filters.stateId)) return false;
-      if (filters.districtId && !includesAnyId(event.district ?? '', filters.districtId)) return false;
-      if (filters.mandalId && !includesAnyId(event.mandal ?? '', filters.mandalId)) return false;
-      if (filters.villageId && !includesAnyId(event.village ?? '', filters.villageId)) return false;
-      if (filters.status && !csvValues(filters.status).includes(event.status)) return false;
-      return true;
-    });
-  }, [filters, reminders]);
-  const pager = usePagination(filteredEvents, 5);
-
-  // Handle filter changes
   const handleFilterChange = (key: keyof EventFilters, value: string) => {
     setPending(f => {
       const newFilters = { ...f, [key]: value };
-      // Reset dependent filters
+      if (key === 'search') return newFilters;
       if (key === 'stateId') {
         newFilters.districtId = '';
         newFilters.mandalId = '';
         newFilters.villageId = '';
+        newFilters.schId = '';
       } else if (key === 'districtId') {
         newFilters.mandalId = '';
         newFilters.villageId = '';
+        newFilters.schId = '';
       } else if (key === 'mandalId') {
         newFilters.villageId = '';
+        newFilters.schId = '';
+      } else if (key === 'villageId') {
+        newFilters.schId = '';
       }
       return newFilters;
     });
   };
 
+  const applyFilters = () => {
+    setOpenFilter(null);
+    const apiFilters: import('../../api/remindersApi').ReminderFilterParams = {};
+    if (pending.search) apiFilters.search = pending.search;
+    if (pending.schId) {
+      apiFilters.schIdsCsv = pending.schId;
+    } else if (pending.villageId) {
+      apiFilters.mndlIdsCsv = pending.mandalId;
+    } else if (pending.districtId) {
+      apiFilters.distIdsCsv = pending.districtId;
+    } else if (pending.stateId) {
+      apiFilters.stateIdsCsv = pending.stateId;
+    }
+    if (pending.status) apiFilters.status = pending.status;
+    apiFilters.pageSize = 10000;
+    load(apiFilters);
+  };
+
   const handleClearFilters = () => {
-    setFilters(initialFilters);
     setPending(initialFilters);
     setOpenFilter(null);
+    load();
   };
 
-  const applyFilters = () => {
-    setFilters({ ...pending });
-    setOpenFilter(null);
-  };
-
-  const hasActiveFilters = pending.stateId || pending.districtId || pending.mandalId || pending.villageId || pending.status;
-  const upcomingCount = filteredEvents.filter(event => event.status === 'upcoming').length;
-  const ongoingCount = filteredEvents.filter(event => event.status === 'ongoing').length;
-  const completedCount = filteredEvents.filter(event => event.status === 'completed').length;
-  const cancelledCount = filteredEvents.filter(event => event.status === 'cancelled').length;
+  const hasActiveFilters = pending.search || pending.stateId || pending.districtId || pending.mandalId || pending.villageId || pending.schId || pending.status;
+  const upcomingCount = events.filter(event => event.status === 'upcoming').length;
+  const ongoingCount = events.filter(event => event.status === 'ongoing').length;
+  const completedCount = events.filter(event => event.status === 'completed').length;
+  const cancelledCount = events.filter(event => event.status === 'cancelled').length;
   const stateOptions: FilterOption[] = states.map((state: any) => ({
     value: String(state.stId ?? state.st_id),
     label: state.stName ?? state.st_name,
@@ -488,6 +500,10 @@ export default function ViewEvents() {
     value: String(village.vilId ?? village.vil_id),
     label: village.vilName ?? village.vil_name,
   }));
+  const schoolOptions: FilterOption[] = schools.map((school: any) => ({
+    value: String(school.schId ?? school.sch_id),
+    label: school.schName ?? school.sch_name,
+  }));
   const statusOptions: FilterOption[] = [
     { value: 'upcoming', label: 'Upcoming' },
     { value: 'ongoing', label: 'Ongoing' },
@@ -496,7 +512,7 @@ export default function ViewEvents() {
   ];
   const calendarYear = calendarMonth.getFullYear();
   const calendarMonthIndex = calendarMonth.getMonth();
-  const eventsByDate = filteredEvents.reduce<Record<string, EventData[]>>((acc, event) => {
+  const eventsByDate = events.reduce<Record<string, EventData[]>>((acc, event) => {
     acc[event.date] = [...(acc[event.date] ?? []), event];
     return acc;
   }, {});
@@ -522,7 +538,7 @@ export default function ViewEvents() {
   const goCalendarMonth = (offset: number) => {
     setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
   };
-  const nextReminders = filteredEvents
+  const nextReminders = events
     .filter(event => event.status !== 'completed' && event.status !== 'cancelled')
     .slice(0, 4);
   const eventRows = pager.current.map(event => [
@@ -559,7 +575,7 @@ export default function ViewEvents() {
         <div className="student-stat-card total">
           <div className="stat-card-content">
             <div className="stat-card-label">Total Events</div>
-            <div className="stat-card-value">{filteredEvents.length}</div>
+            <div className="stat-card-value">{events.length}</div>
             <div className="stat-card-note">Matching current filters</div>
           </div>
           <div className="stat-card-icon">
@@ -625,81 +641,110 @@ export default function ViewEvents() {
       </div>
 
       {/* Filters Section */}
-      <div className="panel reminder-filters-section">
-        <div className="filters-header">
-          <h3 className="panelTitle">Filters</h3>
-        </div>
-
-        <div className="reminderFiltersGrid">
-          <div className="filter-group">
-            <MultiSelectFilter
-              filterKey="state"
-              label="All States"
-              value={pending.stateId}
-              options={stateOptions}
-              openFilter={openFilter}
-              setOpenFilter={setOpenFilter}
-              onChange={(value) => handleFilterChange('stateId', value)}
-            />
+      <div className="student-filters-section">
+        <p className="filters-name-tag">Filters</p>
+        <div className="container-fluid">
+          <div className="row g-2">
+            <div className="col-2">
+              <MultiSelectFilter
+                filterKey="state"
+                label="All States"
+                value={pending.stateId}
+                options={stateOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) => handleFilterChange('stateId', value)}
+              />
+            </div>
+            <div className="col-2">
+              <MultiSelectFilter
+                filterKey="district"
+                label="All Districts"
+                value={pending.districtId ?? ''}
+                options={districtOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) => handleFilterChange('districtId', value)}
+              />
+            </div>
+            <div className="col-2">
+              <MultiSelectFilter
+                filterKey="mandal"
+                label="All Mandals"
+                value={pending.mandalId ?? ''}
+                options={mandalOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) => handleFilterChange('mandalId', value)}
+              />
+            </div>
+            <div className="col-2">
+              <MultiSelectFilter
+                filterKey="village"
+                label="All Villages"
+                value={pending.villageId ?? ''}
+                options={villageOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) => handleFilterChange('villageId', value)}
+              />
+            </div>
+            <div className="col-4">
+              <div className="filter-search-wrapper">
+                <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+                <input
+                  className="filter-search-input"
+                  placeholder="Search events..."
+                  value={pending.search}
+                  onChange={e => handleFilterChange('search', e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') applyFilters(); }}
+                />
+              </div>
+            </div>
           </div>
-
-          <div className="filter-group">
-            <MultiSelectFilter
-              filterKey="district"
-              label="All Districts"
-              value={pending.districtId ?? ''}
-              options={districtOptions}
-              openFilter={openFilter}
-              setOpenFilter={setOpenFilter}
-              onChange={(value) => handleFilterChange('districtId', value)}
-            />
-          </div>
-
-          <div className="filter-group">
-            <MultiSelectFilter
-              filterKey="mandal"
-              label="All Mandals"
-              value={pending.mandalId ?? ''}
-              options={mandalOptions}
-              openFilter={openFilter}
-              setOpenFilter={setOpenFilter}
-              onChange={(value) => handleFilterChange('mandalId', value)}
-            />
-          </div>
-
-          <div className="filter-group">
-            <MultiSelectFilter
-              filterKey="village"
-              label="All Villages"
-              value={pending.villageId ?? ''}
-              options={villageOptions}
-              openFilter={openFilter}
-              setOpenFilter={setOpenFilter}
-              onChange={(value) => handleFilterChange('villageId', value)}
-            />
-          </div>
-
-          <div className="filter-group">
-            <MultiSelectFilter
-              filterKey="status"
-              label="All Status"
-              value={pending.status ?? ''}
-              options={statusOptions}
-              openFilter={openFilter}
-              setOpenFilter={setOpenFilter}
-              onChange={(value) => handleFilterChange('status', value)}
-            />
-          </div>
-
-          <div className="filter-actions-group reminderFilterActions">
-            <button className="btnRed" onClick={handleClearFilters}>
-              <img src={closeIcon} alt="Clear" className="filterBtnIcon" />
-              Clear
-            </button>
-            <button className="btnGreen" onClick={applyFilters}>
-              <img src={arrowIcon} alt="Go" className="filterBtnIcon" />
-              Go
-            </button>
+          <div className="row g-2 mt-1">
+            <div className="col-2">
+              <MultiSelectFilter
+                filterKey="status"
+                label="All Status"
+                value={pending.status ?? ''}
+                options={statusOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) => handleFilterChange('status', value)}
+              />
+            </div>
+            {pending.villageId ? (
+              <div className="col-2">
+                <MultiSelectFilter
+                  filterKey="school"
+                  label="All Schools"
+                  value={pending.schId ?? ''}
+                  options={schoolOptions}
+                  openFilter={openFilter}
+                  setOpenFilter={setOpenFilter}
+                  onChange={(value) => handleFilterChange('schId', value)}
+                />
+              </div>
+            ) : (
+              <div className="col-2" />
+            )}
+            <div className="col-2" />
+            <div className="col-2" />
+            <div className="col-2" />
+            <div className="col-2 d-flex justify-content-end gap-2">
+              <button className="clearbtn" onClick={handleClearFilters}>
+                <img src={closeIcon} alt="Clear" className="filterBtnIcon" />
+                Clear
+              </button>
+              <button className="gobtn" onClick={applyFilters}>
+                <img src={arrowIcon} alt="Go" className="filterBtnIcon" />
+                Go
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -766,7 +811,7 @@ export default function ViewEvents() {
 
       <div className="panel studentRecordsPanel eventRecordsPanel">
         <div className="sponsorRecordsHeader">
-          <h3 className="panelTitle">Event Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{filteredEvents.length} results</span></h3>
+          <h3 className="panelTitle">Event Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{events.length} results</span></h3>
           <div className="viewToggle" aria-label="Event view mode">
             <button type="button" className={viewMode === 'table' ? 'active' : ''} onClick={() => setViewMode('table')}>Table</button>
             <button type="button" className={viewMode === 'cards' ? 'active' : ''} onClick={() => setViewMode('cards')}>Cards</button>
@@ -779,7 +824,7 @@ export default function ViewEvents() {
           <div className="sponsorCardGrid">
             {[0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>)}
           </div>
-        ) : !loading && filteredEvents.length === 0 ? (
+        ) : !loading && events.length === 0 ? (
           <div className="empty-state">
             <p>No events found matching your filters.</p>
             {hasActiveFilters && <Button variant="outline" size="sm" onClick={handleClearFilters}>Clear Filters</Button>}
@@ -796,19 +841,14 @@ export default function ViewEvents() {
                   <div className="sponsorCardIdentity">
                     <div className="sponsorNameCell reminderCardTitle" title={event.title}>{limitText(event.title, EVENT_CARD_TITLE_LIMIT)}</div>
                   </div>
-                  <div className="eventCardFooter">
-                    <span>{event.state}</span>
-                    <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />
-                  </div>
                 </div>
-
                 <div className="sponsorCardMetric">
                   <span>Status</span>
                   <strong><StatusBadge status={event.status} /></strong>
                 </div>
                 <div className="sponsorCountCard">
                   <span>Venue</span>
-                  <strong className="reminderLocationText" title={event.venue || '-'}>
+                  <strong title={event.venue || '-'}>
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden>
                       <path d="M12 21s7-4.8 7-11a7 7 0 1 0-14 0c0 6.2 7 11 7 11Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                       <circle cx="12" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
@@ -816,6 +856,7 @@ export default function ViewEvents() {
                     {limitText(event.venue, EVENT_CARD_LOCATION_LIMIT)}
                   </strong>
                 </div>
+                <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />
               </article>
             ))}
           </div>
@@ -833,7 +874,7 @@ export default function ViewEvents() {
             rowClassName="studentTableRow"
           />
         )}
-        <Pagination total={filteredEvents.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
+        <Pagination total={events.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
       </div>
 
       {false && <style>{`
