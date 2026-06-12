@@ -648,20 +648,6 @@ h1, h2, h3, h4, h5, h6
           brightness(92%) contrast(88%);
 }
 
-.bulkToolbarActions:has(.bulkDeleteButton:hover) .bulkExportButton{
-  background: #fff;
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  box-shadow: none;
-}
-
-.bulkToolbarActions:has(.bulkExportButton:hover) .bulkDeleteButton{
-  background: #fff;
-  color: #b91c1c;
-  border-color: #fca5a5;
-  box-shadow: none;
-}
-
 .student-list-actions .maxBtn{
   min-width: 0;
 }
@@ -4104,76 +4090,6 @@ svg {
   color: #4d7a63 !important;
   border-color: #4d7a63 !important;
 } */
-/* 
-.exportBtn{
-  background: var(--color-primary);
-  color: #fff;
-  border: 1px solid var(--color-primary);
-}
-
-.deleteBtn{
-  background: #fff;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
-}
-
-.bulkToolbarActions .btn.exportBtn{
-  background: var(--color-primary);
-  color: #fff;
-  border: 1px solid var(--color-primary);
-  box-shadow: 0 1px 0 rgba(255,255,255,.18) inset;
-}
-
-.bulkToolbarActions .btn.deleteBtn{
-  background: #fff;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
-}
-
-.exportBtn:hover{
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
-  box-shadow: 0 1px 0 rgba(255,255,255,.18) inset;
-  transform: none;
-}
-
-.deleteBtn:hover{
-  background: #b91c1c;
-  color: #fff;
-  border-color: #b91c1c;
-  box-shadow: none;
-  transform: none;
-}
-
-.bulkToolbarActions .btn.exportBtn:hover{
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
-}
-
-.bulkToolbarActions .btn.deleteBtn:hover{
-  background: #b91c1c;
-  color: #fff;
-  border-color: #b91c1c;
-}
-
-.bulkToolbarActions:has(.deleteBtn:hover) .exportBtn{
-  background: #fff;
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  box-shadow: none;
-  transform: none;
-} */
-
-.bulkToolbarActions:has(.exportBtn:hover) .deleteBtn{
-  background: #fff;
-  color: #b91c1c;
-  border-color: #fca5a5;
-  box-shadow: none;
-  transform: none;
-}
-
 .btn.outline {
   border-color: #e3e8ef;
   background: #fff;
@@ -4907,11 +4823,11 @@ td {
 
 .studentRecordsPanel .tableWrap th:last-child,
 .studentRecordsPanel .tableWrap td:last-child {
-  width: 72px;
-  min-width: 72px;
-  max-width: 72px;
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
   padding-left: 4px;
-  padding-right: 6px;
+  padding-right: 12px;
   text-align: center;
 }
 /* 
@@ -7359,6 +7275,8 @@ td {
   background: transparent;
   text-align: left;
 }
+.studentWizardForm .studentFormSelect .multiSelectOption:hover,
+.studentWizardForm .studentFormSelect .multiSelectOption:focus-visible,
 .studentWizardForm .studentFormSelect .multiSelectOption.isSelected {
   background: #f0fdf4;
   color: #0f766e;
@@ -7457,6 +7375,9 @@ td {
 
 .studentPhotoField {
   grid-column: 1 / -1;
+}
+.sponsorPhotoField {
+  padding-top: 10px;
 }
 .studentPhotoField .studentStepTitle {
   margin-bottom: 10px;
@@ -7676,6 +7597,7 @@ td {
   align-items: center;
   justify-content: center;
   line-height: 1 !important;
+  padding: 6px 10px !important;
 }
 .studentSecondaryButton,
 .studentWizardActions .btn-cancel,
@@ -7695,7 +7617,7 @@ td {
 .studentWizardActions .btn-next,
 .studentWizardActions .btn-register,
 .studentWizardActions
-  .btn:not(.outline):not(.ghost):not(.danger):not(.success) {
+  .btn:not(.outline):not(.ghost):not(.danger):not(.success):not(.btnGreen):not(.btnRed) {
   background: #10b981;
   border-color: #10b981;
   color: #ffffff;
@@ -7706,7 +7628,7 @@ td {
 .studentWizardActions .btn-next:hover:not(:disabled),
 .studentWizardActions .btn-register:hover,
 .studentWizardActions
-  .btn:not(.outline):not(.ghost):not(.danger):not(.success):hover {
+  .btn:not(.outline):not(.ghost):not(.danger):not(.success):not(.btnGreen):not(.btnRed):hover {
   background: #047857;
   border-color: #047857;
   box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);

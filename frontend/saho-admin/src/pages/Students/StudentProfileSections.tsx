@@ -105,10 +105,10 @@ function FormContainer({ children }: { children: ReactNode }) {
   return <div className="studentFormContainer">{children}</div>;
 }
 
-function FormSection({ title, step, children }: { title: string; step: string; children: ReactNode }) {
+function FormSection({ title, step, icon, children }: { title: string; step: string; icon?: ReactNode; children: ReactNode }) {
   return (
     <section className="studentFormSection" aria-labelledby={`student-section-${step}`}>
-      <h3 id={`student-section-${step}`} className="studentStepTitle"><span className="studentStepIcon">{step}</span>{title}</h3>
+      <h3 id={`student-section-${step}`} className="studentStepTitle"><span className="studentStepIcon">{icon ?? step}</span>{title}</h3>
       {children}
     </section>
   );
@@ -361,7 +361,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
     <FormContainer>
       {activeStep === 'personal' ? (
         <>
-          <FormSection title="Personal Information" step="1">
+          <FormSection title="Personal Information" step="1" icon={<ProfileInfoIcon />}>
             <div className="formGrid studentStepGrid">
               <Field fieldKey="first_name" label="First Name*" value={form.first_name} onChange={v => set('first_name', v)} onBlur={() => touch?.('first_name')} readOnly={readOnly} alphabeticOnly error={showMessage('first_name') ? errors.first_name : undefined} state={getFieldState('first_name')} />
               <Field fieldKey="middle_name" label="Middle Name" value={form.middle_name} onChange={v => set('middle_name', v)} onBlur={() => touch?.('middle_name')} readOnly={readOnly} alphabeticOnly state={getFieldState('middle_name')} />
@@ -542,6 +542,10 @@ function formatAlphabeticName(value: string) {
   return lettersOnly.charAt(0).toUpperCase() + lettersOnly.slice(1).toLowerCase();
 }
 
+function normalizeDateValue(value: string) {
+  return value.replace(/^(\d{4})\d+-(\d{2})-(\d{2})$/, '$1-$2-$3');
+}
+
 function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLength, subText, error, readOnly = false, numericOnly = false, alphabeticOnly = false, aadhaarFormat = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; type?: string; maxLength?: number; subText?: string; error?: string; readOnly?: boolean; numericOnly?: boolean; alphabeticOnly?: boolean; aadhaarFormat?: boolean; state?: FieldState }) {
   const inputType = readOnly || numericOnly || alphabeticOnly ? 'text' : type;
   const inputId = `student-field-${fieldKey}`;
@@ -552,6 +556,8 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLen
       ? nextValue.replace(/\D/g, '').slice(0, maxLength)
       : alphabeticOnly
       ? formatAlphabeticName(nextValue)
+      : type === 'date'
+      ? normalizeDateValue(nextValue)
       : nextValue;
     onChange(cleanValue);
   };
@@ -597,6 +603,15 @@ function PhotoCameraIcon() {
     <svg viewBox="0 0 24 24" aria-hidden>
       <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l1.4-1.8h5.8L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
       <path d="M12 15.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function ProfileInfoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="currentColor" />
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="currentColor" />
     </svg>
   );
 }
@@ -663,6 +678,17 @@ function Select({ fieldKey, label, value, onChange, onBlur, options, subText, er
     return option === value ? option : '';
   }, '');
 
+  useEffect(() => {
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!detailsRef.current?.contains(event.target as Node)) {
+        detailsRef.current?.removeAttribute('open');
+      }
+    };
+
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, []);
+
   return (
     <FormField fieldKey={fieldKey} label={label} error={error} subText={subText} readOnly={readOnly} state={state}>
       {readOnly ? (
@@ -692,10 +718,6 @@ function Select({ fieldKey, label, value, onChange, onBlur, options, subText, er
             </svg>
           </summary>
           <div className="multiSelectMenu">
-            <div className="multiSelectMenuHead">
-              <span>{placeholder}</span>
-              {value ? <button type="button" onClick={() => onChange('')}>Clear</button> : null}
-            </div>
             <div className="multiSelectOptions">
               {normalizedOptions.length ? normalizedOptions.map(option => (
                 <button
@@ -704,6 +726,7 @@ function Select({ fieldKey, label, value, onChange, onBlur, options, subText, er
                   key={option.value}
                   onClick={() => {
                     onChange(option.value);
+                    onBlur?.();
                     detailsRef.current?.removeAttribute('open');
                   }}
                 >

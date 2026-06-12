@@ -8,7 +8,6 @@ import PageHeader from '../../components/common/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import type { SponsorView } from '../../types';
-import '../../styles/Sponsors/SponsorFormPage.css';
 
 type SponsorFormMode = 'create' | 'edit' | 'view';
 
@@ -17,7 +16,7 @@ interface SponsorFormState {
   email: string;
   dob: string;
   ph_no: string;
-  type: 'Individual' | 'Organisation';
+  type: '' | 'Individual' | 'Organisation';
   nationality: string;
   contrib: string;
   loc: string;
@@ -31,8 +30,8 @@ const init: SponsorFormState = {
   email: '',
   dob: '',
   ph_no: '',
-  type: 'Individual',
-  nationality: 'Indian',
+  type: '',
+  nationality: '',
   contrib: '',
   loc: '',
   image_url: '',
@@ -50,7 +49,7 @@ const formFieldKeys: (keyof SponsorFormState)[] = [
 ];
 
 const nationalityOptions = ['Indian', 'Foreigner'];
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailPattern = /^[^\s@]+@(gmail\.com|nichebit\.com)$/i;
 const phonePattern = /^\d{10}$/;
 const MIN_IMAGE_BYTES = 5 * 1024;
 const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
@@ -76,18 +75,38 @@ const validateSponsorField = (
   switch (key) {
     case 'name':
       if (!value) return 'Sponsor name is required.';
+      if (!/^[A-Za-z ]+$/.test(value)) return 'Sponsor name should contain only letters.';
       if (value.length < 2) return 'Enter a valid sponsor name.';
       return undefined;
     case 'email':
       if (!value) return 'Email is required.';
-      if (!emailPattern.test(value)) return 'Enter a valid email address.';
+      if (!emailPattern.test(value)) return 'Email must end with @gmail.com or @nichebit.com.';
       return undefined;
     case 'dob':
       if (!value) return 'Date of birth is required.';
+      {
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+        const date = match ? new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00`) : new Date('invalid');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const year = match ? Number(match[1]) : NaN;
+
+        if (
+          !match ||
+          Number.isNaN(date.getTime()) ||
+          !Number.isFinite(year) ||
+          year < 1900 ||
+          year > today.getFullYear() ||
+          date.getFullYear() !== year
+        ) {
+          return 'Enter a valid Date of Birth.';
+        }
+        if (date > today) return 'Date of Birth cannot be in the future.';
+      }
       return undefined;
     case 'ph_no':
       if (!value) return 'Phone number is required.';
-      if (!phonePattern.test(value)) return 'Enter a valid 10 digit phone number.';
+      if (!phonePattern.test(value)) return 'Phone Number must contain exactly 10 digits.';
       return undefined;
     case 'type':
       if (!value) return 'Type is required.';
@@ -97,11 +116,23 @@ const validateSponsorField = (
       return undefined;
     case 'contrib':
       if (!value) return 'Contribution is required.';
+      if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'Contribution must be a valid amount.';
       return undefined;
     default:
       return undefined;
   }
 };
+
+function formatSponsorName(value: string) {
+  return value
+    .replace(/[^A-Za-z ]/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/[A-Za-z]+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+}
+
+function normalizeDateValue(value: string) {
+  return value.replace(/^(\d{4})\d+-(\d{2})-(\d{2})$/, '$1-$2-$3');
+}
 
 const validateSponsorForm = (form: SponsorFormState): SponsorFormErrors => {
   const nextErrors: SponsorFormErrors = {};
@@ -191,6 +222,10 @@ export default function SponsorFormPage() {
     const nextValue =
       key === 'ph_no'
         ? value.replace(/\D/g, '').slice(0, 10)
+        : key === 'name'
+        ? formatSponsorName(value)
+        : key === 'dob'
+        ? normalizeDateValue(value)
         : value;
 
     setForm((current) => ({ ...current, [key]: nextValue }));
@@ -503,6 +538,8 @@ export default function SponsorFormPage() {
 
     setSaving(true);
     try {
+      if (!form.type) return;
+
       const payload = {
         sponsorName: form.name.trim(),
         email: form.email.trim(),
@@ -562,15 +599,18 @@ export default function SponsorFormPage() {
         }
       />
 
-      <div className="panel">
-        {sponsorLoading ? (
+      {sponsorLoading ? (
+        <section className="studentFormSection">
           <div className="sub">Loading sponsor details...</div>
-        ) : (
-          <>
-            <div className="formGrid">
+        </section>
+      ) : (
+        <section className="studentFormSection" aria-labelledby="sponsor-section-profile">
+            <h3 id="sponsor-section-profile" className="studentStepTitle"><span className="studentStepIcon"><ProfileInfoIcon /></span>Personal Information</h3>
+            <div className="formGrid studentStepGrid">
               <SponsorField
                 fieldKey="name"
                 label="Name*"
+                placeholder="Name"
                 value={form.name}
                 onChange={(value) => setField('name', value)}
                 onBlur={() => handleFieldBlur('name')}
@@ -581,6 +621,7 @@ export default function SponsorFormPage() {
               <SponsorField
                 fieldKey="email"
                 label="Email*"
+                placeholder="Email ID"
                 type="email"
                 value={form.email}
                 onChange={(value) => setField('email', value)}
@@ -593,6 +634,7 @@ export default function SponsorFormPage() {
                 fieldKey="dob"
                 label="Date of Birth*"
                 type="date"
+                placeholder="Date of Birth"
                 value={form.dob}
                 onChange={(value) => setField('dob', value)}
                 onBlur={() => handleFieldBlur('dob')}
@@ -603,6 +645,7 @@ export default function SponsorFormPage() {
               <SponsorField
                 fieldKey="ph_no"
                 label="Phone Number*"
+                placeholder="Phone Number"
                 value={form.ph_no}
                 onChange={(value) => setField('ph_no', value)}
                 onBlur={() => handleFieldBlur('ph_no')}
@@ -615,6 +658,7 @@ export default function SponsorFormPage() {
               <SponsorSelect
                 fieldKey="nationality"
                 label="Nationality*"
+                placeholder="Nationality"
                 value={form.nationality}
                 onChange={(value) => setField('nationality', value)}
                 onBlur={() => handleFieldBlur('nationality')}
@@ -626,6 +670,7 @@ export default function SponsorFormPage() {
               <SponsorField
                 fieldKey="contrib"
                 label="Contribution*"
+                placeholder="Contribution"
                 value={form.contrib}
                 onChange={(value) => setField('contrib', value)}
                 onBlur={() => handleFieldBlur('contrib')}
@@ -636,6 +681,7 @@ export default function SponsorFormPage() {
               <SponsorSelect
                 fieldKey="type"
                 label="Type*"
+                placeholder="Type"
                 value={form.type}
                 onChange={(value) => setField('type', value as SponsorFormState['type'])}
                 onBlur={() => handleFieldBlur('type')}
@@ -647,6 +693,7 @@ export default function SponsorFormPage() {
               <SponsorField
                 fieldKey="loc"
                 label="Location"
+                placeholder="Location"
                 value={form.loc}
                 onChange={(value) => setField('loc', value)}
                 onBlur={() => handleFieldBlur('loc')}
@@ -654,37 +701,40 @@ export default function SponsorFormPage() {
               />
             </div>
 
-            <div className="field studentPhotoField" style={{ marginTop: 6 }}>
-              <span>Sponsor Photo</span>
+            <div className="field studentPhotoField sponsorPhotoField">
+              <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><PhotoImageIcon /></span>Sponsor Photo</h3>
               <div className="uploadBox studentModalUpload">
-                {form.image_url && !isView ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="danger"
-                    className="iconBtn uploadDeleteBtn"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      clearPhoto();
-                    }}
-                    aria-label="Remove sponsor photo"
-                    title="Remove photo"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                      <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </Button>
-                ) : null}
-                {form.image_url ? (
-                  <img src={form.image_url} alt="Sponsor" />
-                ) : (
-                  <span>{isView ? 'No photo available' : <>Select photo option<br /><small>Take photo or upload</small></>}</span>
-                )}
+                <div className="studentModalUploadPreview">
+                  {form.image_url && !isView ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="danger"
+                      className="iconBtn uploadDeleteBtn"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        clearPhoto();
+                      }}
+                      aria-label="Remove sponsor photo"
+                      title="Remove photo"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                        <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </Button>
+                  ) : null}
+                  {form.image_url ? (
+                    <img src={form.image_url} alt="Sponsor" />
+                  ) : null}
+                  <span className={uploadError ? 'studentModalUploadError' : undefined}>
+                    {uploadError || (isView ? 'No photo available' : 'Take photo or upload')}
+                  </span>
+                </div>
                 {!isView ? (
                   <>
                     <div className="rowFlex studentModalUploadActions">
@@ -703,9 +753,6 @@ export default function SponsorFormPage() {
                         />
                       </label>
                     </div>
-                    <div className="sub" style={{ marginTop: 2 }}>
-                      {uploadError ? <span style={{ color: 'var(--red)' }}>{uploadError}</span> : 'Upload size: 5KB to 1MB'}
-                    </div>
                   </>
                 ) : null}
               </div>
@@ -723,19 +770,19 @@ export default function SponsorFormPage() {
                 </>
               ) : (
                 <>
-                  <Button type="button" className="btn btnRed" variant="outline" onClick={() => nav('/sponsors')}>
+                  <Button type="button" className="btnRed" variant="outline" onClick={() => nav('/sponsors')}>
                     Cancel
                   </Button>
-                  <Button className="btn btnGreen" loading={saving}>
+                  <Button className="btnGreen" loading={saving}>
                     {isEdit ? 'Save changes' : 'Add Sponsor'}
                   </Button>
                 </>
               )}
             </div>
-          </>
-        )}
+        </section>
+      )}
 
-        <Modal
+      <Modal
           open={photoOpen && !!form.image_url && !isView}
           onClose={() => setPhotoOpen(false)}
           title="Sponsor Photo"
@@ -754,9 +801,9 @@ export default function SponsorFormPage() {
           <div className="photoPreviewWrap">
             {form.image_url ? <img className="photoPreview" src={form.image_url} alt="Sponsor preview" /> : null}
           </div>
-        </Modal>
+      </Modal>
 
-        <Modal
+      <Modal
           open={!!cropUrl && !isView}
           onClose={closeCrop}
           title="Crop Sponsor Photo"
@@ -800,9 +847,9 @@ export default function SponsorFormPage() {
             </div>
             <div className="sub">Drag the photo to position it inside the square crop area.</div>
           </div>
-        </Modal>
+      </Modal>
 
-        <Modal
+      <Modal
           open={cameraOpen && !isView}
           onClose={closeCamera}
           title="Take Photo"
@@ -848,8 +895,7 @@ export default function SponsorFormPage() {
               />
             </div>
           )}
-        </Modal>
-      </div>
+      </Modal>
     </form>
   );
 }
@@ -864,9 +910,29 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
   );
 }
 
+function ProfileInfoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="currentColor" />
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PhotoImageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M5 5.5h14A1.5 1.5 0 0 1 20.5 7v10A1.5 1.5 0 0 1 19 18.5H5A1.5 1.5 0 0 1 3.5 17V7A1.5 1.5 0 0 1 5 5.5Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="m5.5 16 4-4 3 3 2-2 4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.5 10a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
 function SponsorField({
   fieldKey,
   label,
+  placeholder,
   value,
   onChange,
   onBlur,
@@ -879,6 +945,7 @@ function SponsorField({
 }: {
   fieldKey: keyof SponsorFormState;
   label: string;
+  placeholder?: string;
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
@@ -893,18 +960,23 @@ function SponsorField({
   const messageId = `${inputId}-message`;
 
   const handleChange = (nextValue: string) => {
-    const cleanValue = numericOnly ? nextValue.replace(/\D/g, '').slice(0, maxLength) : nextValue;
+    const cleanValue = numericOnly
+      ? nextValue.replace(/\D/g, '').slice(0, maxLength)
+      : type === 'date'
+      ? normalizeDateValue(nextValue)
+      : nextValue;
     onChange(cleanValue);
   };
 
   return (
-    <label className={`field formField has-${state}`}>
-      <span>{readOnly ? label.replace(/\*/g, '') : label}</span>
+    <div className={`field formField has-${state}`}>
+      {readOnly ? <span>{label.replace(/\*/g, '')}</span> : null}
       <input
         id={inputId}
         data-field={fieldKey}
         required={!readOnly && label.includes('*')}
         readOnly={readOnly}
+        aria-label={!readOnly ? label.replace(/\*/g, '') : undefined}
         aria-readonly={readOnly || undefined}
         aria-invalid={state === 'error' || undefined}
         aria-describedby={error ? messageId : undefined}
@@ -914,21 +986,22 @@ function SponsorField({
         inputMode={numericOnly ? 'numeric' : undefined}
         pattern={numericOnly ? '\\d*' : undefined}
         className={readOnly ? 'input readonlyField' : 'input'}
+        placeholder={readOnly ? undefined : placeholder ?? label.replace(/\*/g, '')}
         value={readOnly ? (value || '-') : value}
         onChange={(event) => handleChange(event.target.value)}
         onBlur={onBlur}
       />
       <ValidationMessage id={messageId} message={error} />
-    </label>
+    </div>
   );
 }
 
 function SponsorSelect({
   fieldKey,
   label,
+  placeholder,
   value,
   onChange,
-  onBlur,
   options,
   error,
   readOnly = false,
@@ -936,6 +1009,7 @@ function SponsorSelect({
 }: {
   fieldKey: keyof SponsorFormState;
   label: string;
+  placeholder?: string;
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
@@ -946,10 +1020,23 @@ function SponsorSelect({
 }) {
   const inputId = `sponsor-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const selectedLabel = options.find((option) => option === value) ?? '';
+
+  useEffect(() => {
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!detailsRef.current?.contains(event.target as Node)) {
+        detailsRef.current?.removeAttribute('open');
+      }
+    };
+
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, []);
 
   return (
-    <label className={`field formField has-${state}`}>
-      <span>{readOnly ? label.replace(/\*/g, '') : label}</span>
+    <div className={`field formField has-${state}`}>
+      {readOnly ? <span>{label.replace(/\*/g, '')}</span> : null}
       {readOnly ? (
         <input
           id={inputId}
@@ -961,26 +1048,52 @@ function SponsorSelect({
           tabIndex={-1}
         />
       ) : (
-        <select
-          id={inputId}
-          data-field={fieldKey}
-          required={label.includes('*')}
-          className="select"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onBlur={onBlur}
-          aria-invalid={state === 'error' || undefined}
-          aria-describedby={error ? messageId : undefined}
+        <details
+          ref={detailsRef}
+          className={`multiSelectFilter studentFormSelect sponsorFormSelect${value ? ' hasValue' : ''}`}
         >
-          <option value="">Select</option>
-          {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+          <summary
+            id={inputId}
+            data-field={fieldKey}
+            className="multiSelectTrigger"
+            aria-label={label.replace(/\*/g, '')}
+            aria-invalid={state === 'error' || undefined}
+            aria-describedby={error ? messageId : undefined}
+            onClick={(event) => {
+              event.preventDefault();
+              const shouldOpen = !detailsRef.current?.open;
+              document.querySelectorAll<HTMLDetailsElement>('.sponsorFormSelect[open]').forEach((details) => {
+                if (details !== detailsRef.current) details.removeAttribute('open');
+              });
+              if (shouldOpen) detailsRef.current?.setAttribute('open', '');
+              else detailsRef.current?.removeAttribute('open');
+            }}
+          >
+            <span>{selectedLabel || placeholder || label.replace(/\*/g, '')}</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </summary>
+          <div className="multiSelectMenu">
+            <div className="multiSelectOptions">
+              {options.map((option) => (
+                <button
+                  type="button"
+                  className={`multiSelectOption${value === option ? ' isSelected' : ''}`}
+                  key={option}
+                  onClick={() => {
+                    onChange(option);
+                    detailsRef.current?.removeAttribute('open');
+                  }}
+                >
+                  <span>{option}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </details>
       )}
       <ValidationMessage id={messageId} message={error} />
-    </label>
+    </div>
   );
 }
