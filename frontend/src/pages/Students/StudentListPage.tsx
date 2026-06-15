@@ -368,7 +368,7 @@ export default function StudentListPage() {
             onClick={() => setSelected(s)}
             title={s.full_name}
           >
-            {truncateText(s.full_name, 15)}
+            {truncateText(s.full_name, 25)}
           </button>
           <div className="cellSubText">{s.gender}</div>
         </div>
@@ -958,10 +958,10 @@ export default function StudentListPage() {
 </div>
 
       <div
-        className={`student-table-section studentRecordsPanel ${hasSelection ? "bulkModeActive" : ""}`}
+        className={`panel studentRecordsPanel student-table-section ${hasSelection ? "bulkModeActive" : ""}`}
       >
-        <div className="table-header">
-          <h3 className="table-title">Student Records <span className="results-count">{total} results</span></h3>
+        <div className="sponsorRecordsHeader">
+          <h3 className="panelTitle">Student Records <span className="results-count" style={{ marginLeft: '10px' }}>{total} results</span></h3>
           {fetching ? <span className="table-updating">Updating...</span> : null}
         </div>
 
@@ -1039,39 +1039,41 @@ export default function StudentListPage() {
           </div>
         </div>
 
-        <DataTable
-          loading={loading}
-          loadingRowCount={Math.min(pageSize, 20)}
-          columns={[
-            { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
-            { key: 'student', label: sortHeader('STUDENT', 'student_name'), width: '250px' },
-            { key: 'age', label: sortHeader('AGE', 'age'), width: '92px' },
-            { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
-            { key: 'school', label: 'SCHOOL', width: '235px' },
-            { key: 'guardian', label: 'GUARDIAN', width: '210px' },
-            { key: 'orphan', label: 'STATUS', width: '150px' },
-            { key: 'sponsor', label: 'SPONSOR', width: '120px' },
-            { key: 'actions', label: '', width: '100px' }
-          ]}
-          rows={rows}
-          onRowClick={(index) => setSelected(students[index] ?? null)}
-          rowClassName={(index) => {
-            const student = students[index];
-            return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
-          }}
-          footer={
-            <Pagination
-              total={total}
-              page={page}
-              pageSize={pageSize}
-              onChange={setPage}
-              onPageSizeChange={(nextPageSize) => {
-                setPageSize(nextPageSize);
-                setPage(1);
-              }}
-            />
-          }
-        />
+        <div className="studentTableOuter">
+          <DataTable
+            loading={loading}
+            loadingRowCount={Math.min(pageSize, 20)}
+            columns={[
+              { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
+              { key: 'student', label: sortHeader('STUDENT', 'student_name'), width: '250px' },
+              { key: 'age', label: sortHeader('AGE', 'age'), width: '92px' },
+              { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
+              { key: 'school', label: 'SCHOOL', width: '235px' },
+              { key: 'guardian', label: 'GUARDIAN', width: '210px' },
+              { key: 'orphan', label: 'STATUS', width: '150px' },
+              { key: 'sponsor', label: 'SPONSOR', width: '120px' },
+              { key: 'actions', label: '', width: '100px' }
+            ]}
+            rows={rows}
+            onRowClick={(index) => setSelected(students[index] ?? null)}
+            rowClassName={(index) => {
+              const student = students[index];
+              return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
+            }}
+            footer={
+              <Pagination
+                total={total}
+                page={page}
+                pageSize={pageSize}
+                onChange={setPage}
+                onPageSizeChange={(nextPageSize) => {
+                  setPageSize(nextPageSize);
+                  setPage(1);
+                }}
+              />
+            }
+          />
+        </div>
       </div>
       <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
       <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.sponsorName ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
