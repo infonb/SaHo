@@ -375,7 +375,7 @@ export default function SponsorListPage() {
                   <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M4 17v3h16v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                Export CSV
+                &nbsp;Export CSV
               </button>
               <button
                 className="btn btnRed"
@@ -390,7 +390,7 @@ export default function SponsorListPage() {
                   <path d="M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                Delete selected
+                &nbsp;Delete selected
               </button>
             </div>
           </div>

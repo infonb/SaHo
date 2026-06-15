@@ -569,9 +569,10 @@ export default function AssignSponsorPage() {
                   ) : (
                     <div className="col-2" />
                   )}
+                  <div className="col-2" />
                   <div className="col-2" style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                     <button
-                      className="btnRed"
+                      className="clearbtn"
                       onClick={() => {
                         setPending(filtersDefault);
                         setApplied(filtersDefault);
@@ -582,7 +583,7 @@ export default function AssignSponsorPage() {
                       Clear
                     </button>
                     <button
-                      className="btnGreen"
+                      className="gobtn"
                       onClick={() => {
                         setApplied({ ...pending });
                         setPage(1);
@@ -596,6 +597,7 @@ export default function AssignSponsorPage() {
                 </div>
               </div>
             </div>
+            
 
             <div className={`bulkToolbarShell ${checkedStudents.length > 0 ? 'isActive' : ''}`} aria-hidden={checkedStudents.length === 0}>
               <div className="selectHeaderRow studentBulkToolbar">
@@ -702,17 +704,14 @@ export default function AssignSponsorPage() {
                     <div key={s.id} className="assignSelectedStudentRow">
                       <span className="studentIdPlain">{s.id}</span>
                       <span className="assignSummaryStudentName" title={s.name}>{s.name}</span>
-                      <button
-                        type="button"
-                        className="assignSummaryRemoveBtn"
-                        onClick={() => toggleStudent(s.id)}
+                     	  <button type="button" className="studentWizardClose" onClick={() => toggleStudent(s.id)}
                         aria-label={`Remove student ${s.id}`}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                          <path d="M18 6 6 18" />
-                          <path d="M6 6l12 12" />
-                        </svg>
-                      </button>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
                     </div>
                   ))}
                 </div>
@@ -743,17 +742,17 @@ export default function AssignSponsorPage() {
           </div>
         </div>
       </div>
-
-      <ConfirmModal
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={confirmAssign}
-        title="Confirm Assignment"
-        icon="Assign"
-        confirmLabel="Yes, Assign"
-        danger={false}
-        message={`Assign ${checkedStudents.length} students to ${selectedSponsor?.sponsorName}?`}
-      />
+<ConfirmModal
+  open={confirmOpen}
+  onClose={() => setConfirmOpen(false)}
+  onConfirm={confirmAssign}
+  title="Confirm Assignment"
+  icon="Assign"
+  confirmLabel="Yes, Assign"
+  danger={false}
+  cancelDanger={true}
+  message={`Assign ${checkedStudents.length} students to ${selectedSponsor?.sponsorName}?`}
+/>
     </div>
   );
 }

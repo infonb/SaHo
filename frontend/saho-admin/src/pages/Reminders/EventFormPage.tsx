@@ -73,10 +73,6 @@ const fieldStepMap = steps.reduce((map, step) => {
   return map;
 }, {} as Partial<Record<keyof EventFormState, EventFormStep>>);
 
-function PrimaryButton(props: ComponentProps<typeof Button>) {
-  return <Button {...props} className={`studentPrimaryButton ${props.className ?? ''}`} />;
-}
-
 function SecondaryButton(props: ComponentProps<typeof Button>) {
   return <Button {...props} variant="outline" className={`studentSecondaryButton ${props.className ?? ''}`} />;
 }
@@ -848,14 +844,14 @@ export default function EventFormPage() {
 
       <div className="studentWizardActions" aria-label="Form actions">
         {activeStep === steps[steps.length - 1].key ? (
-          <PrimaryButton loading={loading || metaLoading} className="btn btnGreen">{isEdit ? 'Save Changes' : 'Create Event'}</PrimaryButton>
+          <Button loading={loading || metaLoading} className="btnGreen">{isEdit ? 'Save Changes' : 'Create Event'}</Button>
         ) : (
-          <PrimaryButton type="button" className="btn btnGreen" onClick={goNext} disabled={metaLoading}>Next</PrimaryButton>
+          <Button type="button" className="btnGreen" onClick={goNext} disabled={metaLoading}>Next</Button>
         )}
         {activeStep === steps[0].key ? (
-          <SecondaryButton type="button" className="btn btnRed" onClick={cancel}>Cancel</SecondaryButton>
+          <SecondaryButton type="button" className="btnRed" onClick={cancel}>Cancel</SecondaryButton>
         ) : (
-          <SecondaryButton type="button" className="btn btnRed" onClick={goBack}>Back</SecondaryButton>
+          <SecondaryButton type="button" className="btnRed" onClick={goBack}>Back</SecondaryButton>
         )}
       </div>
     </form>
