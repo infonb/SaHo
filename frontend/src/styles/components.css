@@ -584,15 +584,15 @@ h1, h2, h3, h4, h5, h6
 .gobtn {
   background: #4d7a63 !important;
   color: #ffffff !important;
-  min-width: 95px;
+  /* min-width: 95px; */
   border-radius: 12px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 8px;
+  padding: 8px 10px;
   border: 1px solid #4d7a63 !important;
-  font-size: 12px !important; 
+  font-size: 10px !important; 
   line-height: 1.5 !important;
   font-weight: 600 !important;
  
@@ -608,15 +608,14 @@ h1, h2, h3, h4, h5, h6
 .clearbtn {
   background: #b91c1c !important;
   color: #ffffff !important;
-  min-width: 95px;
   border-radius: 12px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 8px !important;
+  padding: 8px 0px !important;
   border: 1px solid #b91c1c !important;
-  font-size: 12px !important;
+  font-size: 10px !important;
   line-height: 1.5 !important;
   font-weight: 600 !important;
   transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
@@ -3998,52 +3997,6 @@ svg {
   white-space: nowrap;
 }
 
-.clearBtn{
-  background: #fff;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
-}
-
-.goBtn{
-  background: #0f766e;
-  color: #fff;
-  border: 1px solid #0f766e;
-}
-
-.clearBtn:hover{
-  background: #b91c1c;
-  color: #fff;
-  border-color: #b91c1c;
-  box-shadow: none;
-  transform: none;
-}
-
-.goBtn:hover{
-  background: #0f766e;
-  color: #fff;
-  border-color: #0f766e;
-  box-shadow: none;
-  transform: none;
-}
-
-.filter-actions-row:has(.clearBtn:hover) .goBtn,
-.filter-actions-group:has(.clearBtn:hover) .goBtn{
-  background: #fff;
-  color: #0f766e;
-  border-color: #0f766e;
-  box-shadow: none;
-  transform: none;
-}
-
-.filter-actions-row:has(.goBtn:hover) .clearBtn,
-.filter-actions-group:has(.goBtn:hover) .clearBtn{
-  background: #fff;
-  color: #b91c1c;
-  border-color: #fca5a5;
-  box-shadow: none;
-  transform: none;
-}
-
 .goBtn svg{
   transition: transform .18s ease;
 }
@@ -4071,25 +4024,8 @@ svg {
   color: #ffffff !important;
   border-color: #b91c1c !important;
 }
+ */
 
-.goBtn
-{
-  background: #4d7a63;
-  color: #ffffff;
-  border-radius: 12px;
-  padding: 8px 12px;
-  border: 1px solid #4d7a63;
-  font-size: 13px !important;
-  line-height: 1.5;
-  font-weight: 600 !important;
-}
-
-.goBtn:hover
-{
-  background: #ffffff !important;
-  color: #4d7a63 !important;
-  border-color: #4d7a63 !important;
-} */
 .btn.outline {
   border-color: #e3e8ef;
   background: #fff;
