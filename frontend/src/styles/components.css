@@ -594,7 +594,7 @@ h1, h2, h3, h4, h5, h6
   border: 1px solid #4d7a63 !important;
   font-size: 10px !important; 
   line-height: 1.5 !important;
-  font-weight: 600 !important;
+  font-weight: bold !important; 
  
 }
 
@@ -617,7 +617,7 @@ h1, h2, h3, h4, h5, h6
   border: 1px solid #b91c1c !important;
   font-size: 10px !important;
   line-height: 1.5 !important;
-  font-weight: 600 !important;
+  font-weight: bold !important;
   transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
