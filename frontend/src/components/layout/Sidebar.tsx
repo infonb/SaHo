@@ -1,12 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const DashboardIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M4 11L12 4l8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M5 12v7a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+// const DashboardIcon = () => (
+//   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+//     <path d="M4 11L12 4l8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+//     <path d="M5 12v7a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+//   </svg>
+// );
 const StudentsIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M4 10l8-5 8 5-8 5-8-5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
@@ -38,7 +38,7 @@ const groups = [
   // { title: 'Overview', items: [{ icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' }] },
   {
     items: [
-    { icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' },
+    // { icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' },
       { icon: <StudentsIcon />, label: 'Students', to: '/view-students' },
       { icon: <SponsorsIcon />, label: 'Sponsors', to: '/sponsors' },
       { icon: <RemindersIcon />, label: 'Reminders', to: '/reminders' },
