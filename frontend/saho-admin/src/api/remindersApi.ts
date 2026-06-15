@@ -16,6 +16,7 @@ export interface ReminderDto {
   createdBy?: number | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  totalCount?: number | null;
 }
 
 export interface ReminderCreatePayload {
@@ -32,8 +33,30 @@ export interface ReminderCreatePayload {
   updatedBy: number;
 }
 
-export const getReminders = async (): Promise<ReminderDto[]> => {
-  const res = await apiClient.get('/reminders');
+export interface ReminderFilterParams {
+  search?: string;
+  pageNumber?: number;
+  pageSize?: number;
+  stateIdsCsv?: string;
+  distIdsCsv?: string;
+  mndlIdsCsv?: string;
+  vilIdsCsv?: string;
+  schIdsCsv?: string;
+  status?: string;
+}
+
+export const getReminders = async (filters?: ReminderFilterParams): Promise<ReminderDto[]> => {
+  const params: Record<string, string> = {};
+  if (filters?.search) params.search = filters.search;
+  if (filters?.pageNumber) params.pageNumber = String(filters.pageNumber);
+  if (filters?.pageSize) params.pageSize = String(filters.pageSize);
+  if (filters?.stateIdsCsv) params.stateIdsCsv = filters.stateIdsCsv;
+  if (filters?.distIdsCsv) params.distIdsCsv = filters.distIdsCsv;
+  if (filters?.mndlIdsCsv) params.mndlIdsCsv = filters.mndlIdsCsv;
+  if (filters?.vilIdsCsv) params.vilIdsCsv = filters.vilIdsCsv;
+  if (filters?.schIdsCsv) params.schIdsCsv = filters.schIdsCsv;
+  if (filters?.status) params.status = filters.status;
+  const res = await apiClient.get('/reminders', { params });
   return res.data ?? [];
 };
 

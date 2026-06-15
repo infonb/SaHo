@@ -26,15 +26,35 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReminderResponseDto> getRemindersAdmin() {
+    public List<ReminderResponseDto> getRemindersAdmin(com.saho.foundation.dto.ReminderFilterDto filter) {
+        com.saho.foundation.dto.ReminderFilterDto f = filter != null ? filter : new com.saho.foundation.dto.ReminderFilterDto();
+        final com.saho.foundation.dto.ReminderFilterDto safeFilter = f;
         return jdbcTemplate.execute((ConnectionCallback<List<ReminderResponseDto>>) con -> {
             String cursorName = "reminders_admin_ref";
-            try (PreparedStatement ps = con.prepareStatement(
+            try (CallableStatement cs = con.prepareCall(
                     """
-                    CALL public.getreminders_admin_v2(CAST(? AS refcursor))
+                    CALL public.getreminders_admin_v3(
+                        CAST(? AS text),
+                        CAST(? AS integer),
+                        CAST(? AS integer),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS text),
+                        CAST(? AS refcursor)
+                    )
                     """)) {
-                ps.setString(1, cursorName);
-                ps.execute();
+                cs.setString(1, safeFilter.getSearch());
+                cs.setInt(2, safeFilter.getPageNumber() != null ? safeFilter.getPageNumber() : 1);
+                cs.setInt(3, safeFilter.getPageSize() != null ? safeFilter.getPageSize() : 10000);
+                cs.setString(4, safeFilter.getStateIdsCsv());
+                cs.setString(5, safeFilter.getDistIdsCsv());
+                cs.setString(6, safeFilter.getMndlIdsCsv());
+                cs.setString(7, safeFilter.getVilIdsCsv());
+                cs.setString(8, safeFilter.getStatus());
+                cs.setString(9, cursorName);
+                cs.execute();
             }
 
             try (Statement statement = con.createStatement();
@@ -170,6 +190,7 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
                 .createdBy((Integer) getOptionalObject(rs, "created_by"))
                 .createdAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
                 .updatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
+                .totalCount(rs.getObject("total_count") != null ? rs.getInt("total_count") : null)
                 .build();
     }
 

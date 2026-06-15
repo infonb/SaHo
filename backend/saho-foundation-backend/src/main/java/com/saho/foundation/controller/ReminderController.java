@@ -1,5 +1,6 @@
 package com.saho.foundation.controller;
 
+import com.saho.foundation.dto.ReminderFilterDto;
 import com.saho.foundation.dto.ReminderRequestDto;
 import com.saho.foundation.dto.ReminderResponseDto;
 import com.saho.foundation.dto.ReminderCancelRequestDto;
@@ -17,8 +18,26 @@ public class ReminderController {
     private final ReminderService reminderService;
 
     @GetMapping
-    public List<ReminderResponseDto> getRemindersAdmin() {
-        return reminderService.getRemindersAdmin();
+    public List<ReminderResponseDto> getRemindersAdmin(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Integer pageNumber,
+            @RequestParam(required = false) Integer pageSize,
+            @RequestParam(required = false) String stateIdsCsv,
+            @RequestParam(required = false) String distIdsCsv,
+            @RequestParam(required = false) String mndlIdsCsv,
+            @RequestParam(required = false) String vilIdsCsv,
+            @RequestParam(required = false) String status) {
+        ReminderFilterDto filter = ReminderFilterDto.builder()
+                .search(search)
+                .pageNumber(pageNumber)
+                .pageSize(pageSize)
+                .stateIdsCsv(stateIdsCsv)
+                .distIdsCsv(distIdsCsv)
+                .mndlIdsCsv(mndlIdsCsv)
+                .vilIdsCsv(vilIdsCsv)
+                .status(status)
+                .build();
+        return reminderService.getRemindersAdmin(filter);
     }
 
     @GetMapping("/{remId}")

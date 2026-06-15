@@ -516,7 +516,7 @@ function SponsorModal({
         <>
           <Button className="clearbtn"
             variant="outline"
-            className="btn btnRed"
+            
             onClick={onClose}
           >
             Close
