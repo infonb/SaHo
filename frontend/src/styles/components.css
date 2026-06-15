@@ -5296,7 +5296,6 @@ td {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
   gap: 12px;
   align-items:center; 
   padding:10px
@@ -5376,7 +5375,7 @@ td {
   font-size: 15px;
   color: #718096;
   font-weight: 500;
-  line-height: 1.12;
+  line-height: 2.15;
 }
 
 .sponsorCardIdentity .sponsorMetaLine {
@@ -5911,6 +5910,18 @@ td {
   overflow: hidden;
 }
 
+.eventRecordsPanel .eventRecordsContent {
+  width: 100%;
+}
+
+.eventRecordsPanel .eventTableOuter {
+  padding: 14px;
+}
+
+.studentRecordsPanel .studentTableOuter {
+  padding: 14px;
+}
+
 .eventRecordsPanel .sponsorCardGrid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 18px;
@@ -5924,11 +5935,25 @@ td {
   min-width: 0;
   max-width: 100%;
   min-height: 132px;
-  padding: 20px 20px 16px;
+  padding: 22px 20px 16px;
   gap: 10px;
   grid-template-rows: 56px auto auto auto;
+  overflow: hidden;
+  border: 1px solid #dce8ef;
+  border-left: 1px solid #d2e0d9;
   border-radius: 14px;
-  border-left: 3px solid #b7c9c0;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+}
+
+.reminderRecordCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(90deg, #0f766e 0%, #10b981 100%);
 }
 
 .reminderRecordCard .sponsorCardTop {
@@ -5936,6 +5961,7 @@ td {
   gap: 8px;
   min-width: 0;
   grid-template-columns: auto minmax(0, 1fr);
+  padding-right: 62px;
   padding-bottom: 0;
 }
 
@@ -5971,8 +5997,9 @@ td {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  padding: 0;
   border: 0;
+  border-top: 1px solid #e2e8f0;
+  padding: 10px 0 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
@@ -6001,7 +6028,12 @@ td {
 }
 
 .reminderRecordCard .actions.student-actions {
-  align-self: start;
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 2;
+  width: auto;
+  min-width: 0;
   justify-content: flex-end;
   gap: 6px;
   opacity: 0;
@@ -6017,6 +6049,7 @@ td {
 }
 
 .reminderRecordCard .actions.student-actions .iconBtn {
+  display:flex;
   flex: 0 0 26px;
   width: 26px;
   height: 26px;
@@ -8561,6 +8594,7 @@ html::-webkit-scrollbar-thumb:hover {
 }
 /* Edit Button Default */
 .studentTableRow .student-actions .btn.iconBtn.editActionButton {
+  display:flex;
   background: #ffffff !important;
   color: #4d7a63 !important;
   border: 1px solid #4d7a63 !important;
@@ -8576,6 +8610,7 @@ html::-webkit-scrollbar-thumb:hover {
 
 /* Delete Button Default */
 .studentTableRow .student-actions .btn.iconBtn.deleteActionButton {
+  display:flex;
   background: #ffffff !important;
   color: #dc2626 !important;
   border: 1px solid #dc2626 !important;

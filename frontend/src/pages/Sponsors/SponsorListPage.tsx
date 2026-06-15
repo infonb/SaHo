@@ -72,7 +72,7 @@ export default function SponsorListPage() {
 
     return next;
   }, [items, sortColumn, sortDirection]);
-  const pager = usePagination(sortedItems, 10);
+  const pager = usePagination(sortedItems, 5);
   const load = () => {
     setLoading(true);
     getSponsors(applied, {
@@ -281,9 +281,9 @@ export default function SponsorListPage() {
         </div> */}
         <div className="student-stat-card total" style={{ '--card-accent': '#22c55e' } as React.CSSProperties}>
           <div className="stat-card-content">
-            <div className="stat-card-label">Sponsored Students</div>
+            <div className="stat-card-label">Students</div>
             <div className="stat-card-value">{totalStudentsSponsored}</div>
-            <div className="stat-card-note">Across sponsors</div>
+            <div className="stat-card-note">Sponsored</div>
           </div>
           <div className="stat-card-icon sponsoredIcon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
@@ -347,7 +347,7 @@ export default function SponsorListPage() {
         </div>
       </div>
 
-      <div className={`panel studentRecordsPanel student-table-section ${hasSelection ? 'bulkModeActive' : ''}`}>
+      <div className={`panel studentRecordsPanel sponsorRecordsPanel ${viewMode === 'table' ? 'student-table-section' : ''} ${hasSelection ? 'bulkModeActive' : ''}`}>
         <div className="sponsorRecordsHeader">
           <h3 className="panelTitle">Sponsor Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{items.length} results</span></h3>
           <div className="viewToggle" aria-label="Sponsor view mode">
@@ -356,6 +356,7 @@ export default function SponsorListPage() {
           </div>
         </div>
 
+        {viewMode === 'table' && (
         <div className={`bulkToolbarShell ${hasSelection ? 'isActive' : ''}`} aria-hidden={!hasSelection}>
           <div className="selectHeaderRow studentBulkToolbar">
             <div className="bulkToolbarInfo">
@@ -395,94 +396,140 @@ export default function SponsorListPage() {
             </div>
           </div>
         </div>
+        )}
 
         {viewMode === 'cards' ? (
-          <div className="sponsorCardGrid">
-            {loading ? [0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>) : sortedItems.slice((pager.page - 1) * pager.pageSize, pager.page * pager.pageSize).map(s => {
-              const sponsoredCount = Number(s.students_count) || 0;
-              return (
-                <article key={s.sponsor_id} className="sponsorCard">
-                  <div className="sponsorCardTop">
-                    <Avatar name={s.sponsorName} size="lg" />
-                    <div className="sponsorCardIdentity">
-                      <button
-                        type="button"
-                        className="linkButton sponsorNameCell"
-                        onClick={() => setSelected(s)}
-                        title={s.sponsorName}
-                        aria-label={s.sponsorName}
-                      >
-                        {truncateText(s.sponsorName)}
-                      </button>
-                      <div className="sponsorPhone">{s.ph_no || '-'}</div>
-                      <div className="sponsorMetaLine">
+          <>
+            <div className="sponsorCardGrid">
+              {loading ? [0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>) : sortedItems.slice((pager.page - 1) * pager.pageSize, pager.page * pager.pageSize).map(s => {
+                const sponsoredCount = Number(s.students_count) || 0;
+                return (
+                  <article key={s.sponsor_id} className="sponsorCard reminderRecordCard sponsorRecordCard">
+                    <div className="sponsorCardTop">
+                      <Avatar name={s.sponsorName} size="lg" />
+                      <div className="sponsorCardIdentity">
+                        <button
+                          type="button"
+                          className="linkButton sponsorNameCell"
+                          onClick={() => setSelected(s)}
+                          title={s.sponsorName}
+                          aria-label={s.sponsorName}
+                        >
+                          {truncateText(s.sponsorName, 7)}
+                        </button>
+                        <div className="sponsorPhone">{s.ph_no || '-'}</div>
+                        <div className="sponsorMetaLine">
                         <span className={`sponsorTypeBadge ${s.type === 'Organisation' ? 'organisation' : 'individual'}`}>
                           {s.type}
                         </span>
-                        <span className="sponsorMetaSep">-</span>
-                        <span>{s.nationality}</span>
+                        <span className="sponsorNationalityBadge">{s.nationality}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="sponsorCardMetric">
-                    <span>Contribution</span>
-                    <strong>{contribution(s.contrib, s.nationality)}</strong>
-                  </div>
-                  <div className="sponsorCountCard">
-                    <span>Students Sponsored</span>
-                    <strong>{sponsoredCount} sponsored</strong>
-                  </div>
-                  <div className="sponsorCardActions">
-                    <button type="button" className="btnGreen" onClick={() => nav(`/sponsors/edit/${s.sponsor_id}`)}>Edit</button>
-                    <button type="button" className="btnRed" onClick={() => setSingleDelete(s.sponsor_id)}>Delete</button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                    <div className="sponsorMetricsGrid">
+                      <div className="sponsorCardMetric">
+                        <span>Contribution</span>
+                        <strong>{contribution(s.contrib, s.nationality)}</strong>
+                      </div>
+                      <div className="sponsorCountCard">
+                        <span>Students</span>
+                        <strong>{sponsoredCount}</strong>
+                      </div>
+                    </div>
+                    <div className="actions student-actions" onClick={(event) => event.stopPropagation()}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="iconBtn editActionButton"
+                        title="Edit Sponsor"
+                        aria-label="Edit sponsor"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          nav(`/sponsors/edit/${s.sponsor_id}`);
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                          <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="iconBtn deleteActionButton"
+                        title="Delete Sponsor"
+                        aria-label={`Delete ${s.sponsorName}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setSingleDelete(s.sponsor_id);
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                          <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </Button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <Pagination
+              total={items.length}
+              page={pager.page}
+              pageSize={pager.pageSize}
+              onChange={pager.setPage}
+              onPageSizeChange={pager.setPageSize}
+            />
+          </>
         ) : (
-          <DataTable
-            loading={loading}
-            columns={[
-              {
-                key: 'id',
-                label: (
-                  <div className="idSelectCell header">
-                    <input
-                      aria-label="Select all on this page"
-                      type="checkbox"
-                      checked={allPageChecked}
-                      onChange={togglePage}
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                    <span className="sortableHeaderWrap">{sortHeader('ID', 'sponsor_id')}</span>
-                  </div>
-                ),
-                width: '92px'
-              },
-              { key: 's', label: sortHeader('SPONSOR', 'sponsor_name'), width: '240px' },
-              { key: 't', label: 'TYPE', width: '120px' },
-              { key: 'n', label: 'NATIONALITY', width: '120px' },
-              { key: 'p', label: 'PHONE', width: '120px' },
-              { key: 'c', label: 'CONTRIBUTION', width: '130px' },
-              { key: 'st', label: 'STUDENTS', width: '80px' },
-              { key: 'v', label: '', width: '90px' }
-            ]}
-            rows={rows}
-            rowClassName={(index) => {
-              const sponsor = pager.current[index];
-              return `studentTableRow${sponsor && checked.includes(sponsor.sponsor_id) ? ' isSelected' : ''}`;
-            }}
-            footer={
-              <Pagination
-                total={items.length}
-                page={pager.page}
-                pageSize={pager.pageSize}
-                onChange={pager.setPage}
-                onPageSizeChange={pager.setPageSize}
-              />
-            }
-          />
+          <div className="sponsorTableOuter">
+            <DataTable
+              loading={loading}
+              columns={[
+                {
+                  key: 'id',
+                  label: (
+                    <div className="idSelectCell header">
+                      <input
+                        aria-label="Select all on this page"
+                        type="checkbox"
+                        checked={allPageChecked}
+                        onChange={togglePage}
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                      <span className="sortableHeaderWrap">{sortHeader('ID', 'sponsor_id')}</span>
+                    </div>
+                  ),
+                  width: '92px'
+                },
+                { key: 's', label: sortHeader('SPONSOR', 'sponsor_name'), width: '240px' },
+                { key: 't', label: 'TYPE', width: '120px' },
+                { key: 'n', label: 'NATIONALITY', width: '120px' },
+                { key: 'p', label: 'PHONE', width: '120px' },
+                { key: 'c', label: 'CONTRIBUTION', width: '130px' },
+                { key: 'st', label: 'STUDENTS', width: '80px' },
+                { key: 'v', label: '', width: '90px' }
+              ]}
+              rows={rows}
+              rowClassName={(index) => {
+                const sponsor = pager.current[index];
+                return `studentTableRow${sponsor && checked.includes(sponsor.sponsor_id) ? ' isSelected' : ''}`;
+              }}
+              footer={
+                <Pagination
+                  total={items.length}
+                  page={pager.page}
+                  pageSize={pager.pageSize}
+                  onChange={pager.setPage}
+                  onPageSizeChange={pager.setPageSize}
+                />
+              }
+            />
+          </div>
         )}
       </div>
 

@@ -809,7 +809,7 @@ export default function ViewEvents() {
         </aside>
       </div>
 
-      <div className="panel studentRecordsPanel eventRecordsPanel">
+      <div className={`panel studentRecordsPanel eventRecordsPanel ${viewMode === 'table' ? 'student-table-section' : ''}`}>
         <div className="sponsorRecordsHeader">
           <h3 className="panelTitle">Event Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{events.length} results</span></h3>
           <div className="viewToggle" aria-label="Event view mode">
@@ -818,6 +818,7 @@ export default function ViewEvents() {
           </div>
         </div>
 
+        <div className="eventRecordsContent">
         {error ? <div className="toast error" style={{ position: 'static', marginBottom: 12 }}>{error}</div> : null}
 
         {loading && viewMode === 'cards' ? (
@@ -861,20 +862,34 @@ export default function ViewEvents() {
             ))}
           </div>
         ) : (
-          <DataTable
-            loading={loading}
-            columns={[
-              { key: 'date', label: 'Date', width: '140px' },
-              { key: 'event', label: 'Event Name', width: '280px' },
-              { key: 'status', label: 'Status', width: '140px' },
-              { key: 'venue', label: 'Venue', width: '220px' },
-              { key: 'actions', label: '', width: '92px' },
-            ]}
-            rows={eventRows}
-            rowClassName="studentTableRow"
-          />
+          <div className="eventTableOuter">
+            <DataTable
+              loading={loading}
+              columns={[
+                { key: 'date', label: 'Date', width: '140px' },
+                { key: 'event', label: 'Event Name', width: '280px' },
+                { key: 'status', label: 'Status', width: '140px' },
+                { key: 'venue', label: 'Venue', width: '220px' },
+                { key: 'actions', label: '', width: '92px' },
+              ]}
+              rows={eventRows}
+              rowClassName="studentTableRow"
+              footer={
+                <Pagination
+                  total={events.length}
+                  page={pager.page}
+                  pageSize={pager.pageSize}
+                  onChange={pager.setPage}
+                  onPageSizeChange={pager.setPageSize}
+                />
+              }
+            />
+          </div>
         )}
-        <Pagination total={events.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
+        {viewMode === 'cards' ? (
+          <Pagination total={events.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
+        ) : null}
+        </div>
       </div>
 
       {false && <style>{`
