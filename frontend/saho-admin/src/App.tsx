@@ -2,7 +2,6 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppLayout from './components/layout/AppLayout';
 import LoginPage from './pages/Login/LoginPage';
-import DashboardPage from './pages/Dashboard/DashboardPage';
 import StudentListPage from './pages/Students/StudentListPage';
 import StudentFormPage from './pages/Students/StudentFormPage';
 import SponsorListPage from './pages/Sponsors/SponsorListPage';
@@ -28,7 +27,6 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<Guard><AppLayout /></Guard>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
             <Route path="view-students" element={<StudentListPage />} />
             <Route path="students" element={<StudentListPage />} />
             <Route path="add-student" element={<StudentFormPage />} />
