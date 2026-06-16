@@ -6,6 +6,7 @@ import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
 import sahoImg from '../../assets/saho_Img.png';
 import logo from '../../assets/logo.png';
+import '../../styles/Topbar.css'
 
 export const LeafLogo = () => (
   <svg className="brandMark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -36,7 +37,7 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
   };
 
   const goDashboard = () => {
-    window.location.href = '/dashboard';
+    window.location.href = '/view-students';
   };
 
   return (
@@ -65,7 +66,7 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
         <div className="topbarTitle">Admin Dashboard</div>
       </div>
 
-      <div ref={ref} style={{ position: 'relative' }}>
+      {/* <div ref={ref} style={{ position: 'relative' }}>
         <button className="userIconButton" aria-label="User menu" onClick={() => setOpen(value => !value)}>
           <Avatar name={user?.username ?? 'Admin'} size="md" />
         </button>
@@ -85,7 +86,31 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
             <Button variant="ghost" onClick={signOut}>Sign Out</Button>
           </div>
         )}
-      </div>
+      </div> */}
+
+    <div className="userTooltipWrapper">
+  <button className="userIconButton" aria-label="User menu">
+    <Avatar name={user?.username ?? 'Admin'} size="md" />
+  </button>
+
+  <div className="userTooltip">
+    <div className="tooltipName">
+      {user?.username || 'Admin User'}
+    </div>
+
+    <div className="tooltipEmail">
+      {user?.email_id}
+    </div>
+
+    <button
+      className="tooltipLogout"
+      onClick={signOut}
+    >
+      Sign Out
+    </button>
+  </div>
+</div>
+
     </header>
   );
 }

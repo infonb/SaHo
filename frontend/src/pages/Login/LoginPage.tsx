@@ -26,7 +26,7 @@ export default function LoginPage() {
     try {
       const { user, token } = await loginUser(email, password);
       auth.login(user, token);
-      navigate("/dashboard");
+      navigate("/view-students");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to sign in.");
     } finally {

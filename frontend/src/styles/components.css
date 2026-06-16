@@ -13,123 +13,6 @@ h1, h2, h3, h4, h5, h6
 
 
 
-.topbar {
-  position: fixed;
-  inset: 0 0 auto 0;
-  height: var(--topbar-h);
-  background: #ffffff;
-  color: var(--color-text);
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 clamp(16px, 2vw, 28px);
-  padding-left: 0;
-  border-bottom: 1px solid #e5e9f0;
-  box-shadow: var(--shadow-sm);
-  transition:
-    padding 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
-
-.topbarLeft {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  min-width: 0;
-  flex: 0 0 auto;
-  padding-left: 0;
-  gap: 12px;
-}
-
-.topbarSidebarSlot {
-  width: 48px;
-  min-width: 48px;
-  display: flex;
-  justify-content: center;
-  flex: 0 0 auto;
-  padding: 0;
-  margin: 0;
-  flex-shrink: 0;
-}
-
-.topbarTitle {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 18px;
-  color: var(--color-text);
-  white-space: nowrap;
-}
-
-.topbarBrand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.topbarBrand .brandMark {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 auto;
-}
-
-.brandLogoButton {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  border-radius: 12px;
-  cursor: pointer;
-  line-height: 0;
-}
-
-.brandLogoButton:focus-visible {
-  outline: 3px solid rgba(94, 234, 212, 0.35);
-  outline-offset: 2px;
-}
-
-.topbarBrand .brandLogo {
-  height: 52px;
-  padding: 4px 8px;
-  width: auto;
-  flex: 0 0 auto;
-  display: block;
-}
-
-.sidebarToggle {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--r-md);
-  background: var(--color-surface);
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  color: var(--color-text2);
-  box-shadow: var(--shadow-sm);
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    background 0.18s ease;
-}
-
-.sidebarToggle:hover {
-  border-color: var(--color-primary-border);
-  color: var(--color-primary);
-  transform: translateY(-1px);
-}
-
-.sidebarToggle span {
-  width: 17px;
-  height: 2px;
-  border-radius: 999px;
-  background: currentColor;
-}
-
 .brand {
   display: flex;
   align-items: center;
@@ -172,43 +55,6 @@ h1, h2, h3, h4, h5, h6
   color: var(--color-primary);
 }
 
-.userIconButton {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  border-radius: 999px;
-  line-height: 0;
-  cursor: pointer;
-}
-
-.topbar .userIconButton .avatar {
-  width: 38px;
-  height: 38px;
-  font-size: 12px;
-  font-weight: 600;
-  background: #3b6d11;
-  color: #ffffff;
-  border-radius: 50%;
-  border: 2px solid #c0dd97;
-}
-
-.topbar .userIconButton:hover .avatar {
-  background: #27500a;
-}
-
-.dropdown {
-  position: absolute;
-  right: 0;
-  top: 52px;
-  background: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-lg);
-  width: min(280px, calc(100vw - 32px));
-  padding: 16px;
-  animation: slideUp 0.16s ease both;
-}
 
 .sidebar {
   position: fixed;
@@ -499,34 +345,6 @@ h1, h2, h3, h4, h5, h6
   padding: 0 16px;
   font-size: 14px;
 }
-
-/* .maxBtn{
-  height: 34px;
-  padding: 0 12px;
-  font-size: 13px;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
-  white-space: nowrap;
-} */
-
-/* .maxBtnPrimary{
-  background: var(--color-primary);
-  color: #ffffff;
-  border: 1px solid var(--color-primary);
-  box-shadow: 0 1px 0 rgba(255,255,255,.18) inset;
-}
-
-.maxBtnDanger{
-  background: #fff;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
-} */
 
 .btnGreen
 {
@@ -1926,7 +1744,7 @@ tr.clickable:hover {
   color: var(--color-text3);
 }
 
-.strong {
+/* .strong {
   font-weight: 800;
   color: var(--color-text);
 }
@@ -1935,7 +1753,7 @@ tr.clickable:hover {
   font-size: 12px;
   color: var(--color-text3);
   margin-top: 3px;
-}
+} */
 
 .pagination {
   display: flex;
@@ -2520,11 +2338,11 @@ tr.clickable:hover {
   gap: 16px;
 }
 
-.rowFlex {
+/* .rowFlex {
   display: flex;
   align-items: center;
   gap: 10px;
-}
+} */
 
 .studentNameCell,
 .sponsorNameCell,
@@ -2725,11 +2543,11 @@ svg {
     padding: 0 16px;
   }
 
-  .topbarLeft {
+  /* .topbarLeft {
     gap: 12px;
-  }
+  } */
 
-  .topbarBrand {
+  /* .topbarBrand {
     gap: 8px;
   }
 
@@ -2744,7 +2562,7 @@ svg {
 
   .topbarBrand .brandName {
     font-size: 17px;
-  }
+  } */
 
   .topbarTitle {
     font-size: 16px;
@@ -2879,11 +2697,11 @@ svg {
     padding: 0 12px;
   }
 
-  .topbarLeft {
+  /* .topbarLeft {
     gap: 8px;
-  }
+  } */
 
-  .topbarBrand {
+  /* .topbarBrand {
     gap: 7px;
   }
 
@@ -2902,7 +2720,7 @@ svg {
 
   .topbarBrand .brandSub {
     display: none;
-  }
+  } */
 
   .topbarTitle {
     display: block;
@@ -2970,9 +2788,9 @@ svg {
     width: 100%;
   }
 
-  .rowFlex {
+  /* .rowFlex {
     align-items: flex-start;
-  }
+  } */
 
   .paginationSummary {
     font-size: 12px;
@@ -3478,20 +3296,7 @@ svg {
   overflow-x: hidden;
 }
 
-.dashboard-header {
-  width: 100%;
-  transition: all 0.3s ease;
-}
 
-.headerSidebarToggle {
-  flex: 0 0 auto;
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  justify-content: center;
-  flex-shrink: 0;
-  margin: 0;
-}
 
 .sidebar-overlay {
   display: none;
@@ -3548,31 +3353,6 @@ svg {
     --sidebar-w: var(--sidebar-collapsed-w);
   }
 
-  .dashboard-header {
-    left: 0;
-    right: 0;
-    z-index: 70;
-    height: var(--topbar-h);
-    padding: 0 16px;
-  }
-
-  .sidebar-open .dashboard-header {
-    box-shadow: 0 12px 34px rgba(15, 23, 42, 0.12);
-  }
-
-  .headerSidebarToggle {
-    height: 42px;
-    border-radius: 13px;
-    margin-right: 2px;
-    transition: all 0.3s ease;
-  }
-
-  .headerSidebarToggle[aria-expanded="true"] {
-    border-color: var(--color-primary-border);
-    color: var(--color-primary);
-    background: #f0fdfa;
-    box-shadow: 0 8px 20px rgba(15, 118, 110, 0.12);
-  }
 
   .mobile-sidebar {
     top: var(--topbar-h);
@@ -3808,20 +3588,6 @@ svg {
   padding: 0 clamp(14px, 1.7vw, 22px);
 }
 
-.topbarBrand {
-  gap: 8px;
-}
-
-.topbarBrand .brandMark {
-  width: 28px;
-  height: 28px;
-}
-
-.brandName,
-.topbarBrand .brandName {
-  font-size: 16px;
-  font-weight: 850;
-}
 
 .brandSub {
   font-size: 8px;
@@ -3850,12 +3616,6 @@ svg {
   font-size: 11px;
 }
 
-.dropdown {
-  top: 44px;
-  border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
-}
 
 .sidebar {
   background: linear-gradient(180deg, #182131 0%, #141d2c 52%, #111827 100%);
@@ -3977,54 +3737,6 @@ svg {
   background: #0f766e;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset;
 }
-/* 
-.btn.primary:hover {
-  background: #0f5f59;
-  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.14);
-/* } */
-/* 
-.minBtn{
-  height: 30px;
-  padding: 0 14px;
-  border-radius: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.goBtn svg{
-  transition: transform .18s ease;
-}
-
-.goBtn:hover svg{
-  transform: none;
-} */ 
-
-/* 
-.clearBtn
-{
-  background: #ffffff;
-  color: #b91c1c;
-  border-radius: 12px;
-  padding: 8px 12px;
-  border: 1px solid #fca5a5;
-  font-size: 13px !important;
-  line-height: 1.5;
-  font-weight: 600 !important;
-}
-
-.clearBtn:hover
-{
-  background: #b91c1c !important;
-  color: #ffffff !important;
-  border-color: #b91c1c !important;
-}
- */
 
 .btn.outline {
   border-color: #e3e8ef;
@@ -4654,12 +4366,12 @@ td {
   transform: none;
 }
 
-.divider {
+/* .divider {
   border: 0.5px solid #6e7280;
   height: 35px !important;
   width: 0px !important;
   margin: 0px 15px;
-}
+} */
 
 /* Selected sidebar item: calm row highlight with left line, icon stays unchanged. */
 .sidebar .navItem.active,
@@ -4711,51 +4423,6 @@ td {
   padding-left: 14px;
 }
 
-.headerSidebarToggle,
-.headerSidebarToggle[aria-expanded="true"] {
-  width: 40px;
-  height: 40px;
-  margin-left: 0;
-  margin-right: 0;
-  transform: none;
-}
-
-.headerSidebarToggle:hover {
-  transform: none;
-}
-
-@media (max-width: 900px) {
-  .topbar {
-    padding-left: 13px;
-  }
-
-  .headerSidebarToggle,
-  .headerSidebarToggle[aria-expanded="true"] {
-    width: 42px;
-    height: 42px;
-    margin-left: 0;
-    margin-right: 0;
-    transform: none;
-  }
-}
-
-/* Toggle icon states: three lines opens sidebar, X closes it. */
-.headerSidebarToggle {
-  position: relative;
-}
-
-.headerSidebarToggle.closeIcon {
-  gap: 0;
-}
-
-.headerSidebarToggle .sidebarCancelIcon {
-  width: 20px;
-  height: 20px;
-  stroke: currentColor;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  flex: 0 0 auto;
-}
 
 .studentRecordsPanel .tableWrap th:last-child,
 .studentRecordsPanel .tableWrap td:last-child {
@@ -4766,11 +4433,7 @@ td {
   padding-right: 12px;
   text-align: center;
 }
-/* 
-.studentRecordsPanel .tableWrap th:last-child {
-  font-size: 0;
-  color: transparent;
-} */
+
 
 .studentRecordsPanel .tableWrap td:last-child {
   overflow: visible;
@@ -7767,34 +7430,7 @@ td {
   width: 100%;
   white-space: nowrap;
 }
-/* 
-.clear-filters-btn {
-  height: 30px;
-  padding: 6px 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #f1f5f9;
-  color: #334155;
-  font-weight: 800;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition:
-    background-color 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease;
-} */
 
-/* 
-.clear-filters-btn:hover {
-  border-color: #cbd5e1;
-  background: #e2e8f0;
-  color: #0f172a;
-  transform: none;
-} */
 
 .go-filter-btn {
   height: 30px;
