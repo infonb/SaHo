@@ -584,13 +584,13 @@ h1, h2, h3, h4, h5, h6
 .gobtn {
   background: #4d7a63 !important;
   color: #ffffff !important;
-  /* min-width: 95px; */
-  border-radius: 12px !important;
+   min-width: 65px;
+  border-radius: 13px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 10px;
+   gap: 5px;
+  padding: 7.5px 10px;
   border: 1px solid #4d7a63 !important;
   font-size: 10px !important; 
   line-height: 1.5 !important;
@@ -608,12 +608,13 @@ h1, h2, h3, h4, h5, h6
 .clearbtn {
   background: #b91c1c !important;
   color: #ffffff !important;
-  border-radius: 12px !important;
+  min-width: 65px;
+  border-radius: 13px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 10px !important;
+   gap: 5px;
+  padding: 7.5px 10px !important;
   border: 1px solid #b91c1c !important;
   font-size: 10px !important;
   line-height: 1.5 !important;
@@ -6605,7 +6606,7 @@ td {
 
 .student-filters-section .container-fluid {
   padding: 10px;
-  font-size: 13px !important;
+  font-size: 10px !important;
 }
 
 .student-filters-section .filter-search-input,
@@ -6691,7 +6692,7 @@ td {
 }
 
 .sponsor-filters-container .filter-search-wrapper {
-  min-height: 36px;
+  min-height: 32px;
 }
 
 .sponsor-filters-container .filter-search-input,
@@ -6700,11 +6701,12 @@ td {
 .sponsor-filters-container .goBtn,
 .sponsor-filters-container .btnRed,
 .sponsor-filters-container .btnGreen {
-  width: 100%;
-  height: 36px;
+  /* width: 100%;
+  height: 36px; */
   min-width: 0;
-  min-height: 36px;
+  min-height: 32px;
   margin: 0;
+  border-radius: 12px;
 }
 
 .sponsor-filters-container .multiSelectOption {
@@ -6730,6 +6732,7 @@ td {
   position: relative;
   min-width: 0;
   grid-column: span 2;
+  
 }
 
 .filter-empty-slot {
@@ -7422,8 +7425,8 @@ td {
   width: auto;
   height: auto;
   min-width: 0;
-  padding: 7px;
-  border-radius: 10px;
+  padding: 4px 5px;
+  border-radius: 8px;
   background: #ffffff !important;
   border: 1px solid #dc2626 !important;
   color: #dc2626 !important;
@@ -7601,7 +7604,8 @@ td {
   align-items: center;
   justify-content: center;
   line-height: 1 !important;
-  padding: 6px 10px !important;
+    min-width: 140px;
+  padding: 10px 28px !important;
 }
 .studentSecondaryButton,
 .studentWizardActions .btn-cancel,
