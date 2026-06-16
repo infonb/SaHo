@@ -1,8 +1,28 @@
 import Button from './Button';
 import Modal from './Modal';
 
-interface Props { open: boolean; onClose: () => void; onConfirm: () => void; icon?: string; title: string; message: string; confirmLabel?: string; danger?: boolean; }
-export default function ConfirmModal({ open, onClose, onConfirm, icon = 'Remove', title, message, confirmLabel = 'Yes, Remove', danger = true }: Props) {
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  icon?: string;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  danger?: boolean;
+  cancelDanger?: boolean;
+}
+export default function ConfirmModal({
+  open,
+  onClose,
+  onConfirm,
+  icon = 'Remove',
+  title,
+  message,
+  confirmLabel = 'Yes, Remove',
+  danger = true,
+  cancelDanger = false
+}: Props){
   const iconSvg = danger ? (
     <svg width="46" height="46" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect width="24" height="24" rx="6" fill="#fee2e2" />
@@ -26,7 +46,15 @@ export default function ConfirmModal({ open, onClose, onConfirm, icon = 'Remove'
       width={640}
       footer={(
         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-          <Button variant="outline" className="btnGreen" style={{ width: 140 }} onClick={onClose} size="sm">Cancel</Button>
+             <Button
+  variant="outline"
+  className={cancelDanger ? "btnRed" : "btnGreen"}
+  style={{ width: 140 }}
+  onClick={onClose}
+  size="sm"
+>
+  Cancel
+</Button>
           <Button variant={danger ? 'danger' : 'primary'} className={danger ? 'btnRed' : 'btnGreen'} style={{ width: 140 }} onClick={onConfirm} size="sm">{confirmLabel}</Button>
         </div>
       )}

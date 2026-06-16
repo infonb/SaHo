@@ -532,12 +532,12 @@ export default function StudentListPage() {
               <path d="M8 9l4 4 4-4" />
               <path d="M4 17v3h16v-3" />
             </svg>
-            Import CSV
+            &nbsp;Import CSV
           </button>
           <button type="button" className="btn btnGreen" onClick={() => nav("/students/add")}>
             <svg
               width="16"
-              height="16"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -548,7 +548,7 @@ export default function StudentListPage() {
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
-            Add Student
+            &nbsp;Add Student
           </button>
         </div>
       </div>
@@ -915,7 +915,8 @@ export default function StudentListPage() {
       <div className="col-2 "></div>
 
       {/* Buttons */}
-      <div className="col-2 d-flex  justify-content-end   gap-2" >
+      <div className="filter-actions-group col-2 d-flex  justify-content-end   gap-2">
+          
           <button
             className="clearbtn"
             onClick={() => {
@@ -931,25 +932,13 @@ export default function StudentListPage() {
     />
             Clear
           </button>
-     
-
-          
-          <button
-            className="gobtn"
-            onClick={() => {
-              setApplied({ ...pending });
-              setPage(1);
-              setOpenFilter(null);
-            }}
-          >
-            <img
-  src={arrowIcon}
-  alt="Clear"
-  className="filterBtnIcon"
-/>
-            Go
-           
-          </button>
+        <button className="gobtn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>  <img
+          src={arrowIcon}
+         alt="Clear"
+         className="filterBtnIcon"
+           />        
+             Go
+            </button>
       </div>
 
     </div>
@@ -985,7 +974,7 @@ export default function StudentListPage() {
                   <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M4 17v3h16v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                Export CSV
+                       &nbsp;Export CSV
               </button>
               <button
                 className="btn btnRed"
@@ -1033,7 +1022,7 @@ export default function StudentListPage() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                Delete selected
+                   &nbsp;Delete selected
               </button>
             </div>
           </div>

@@ -326,7 +326,7 @@
   max-height: 300px;
   overflow-y: auto;
   display: grid;
-  gap: 8px;
+  gap: 2px;
   padding-right: 4px;
   scrollbar-width: thin;
   scrollbar-color: rgba(100, 116, 139, 0.55) transparent;
@@ -353,7 +353,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px;
+  padding: 3px 10px;
   border-radius: 8px;
   transition: background 0.15s;
 }
@@ -376,15 +376,15 @@
 .assignSummaryStudentName {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* overflow: hidden;
+  text-overflow: ellipsis; */
   white-space: nowrap;
   font-weight: 800;
   font-size: 13px;
   color: var(--color-text);
 }
 
-.assignSummaryRemoveBtn {
+/* .assignSummaryRemoveBtn {
   flex: 0 0 28px;
   width: 28px;
   height: 28px;
@@ -397,16 +397,16 @@
   cursor: pointer;
   transition: all 0.15s;
   padding: 0;
-}
+} */
 
-.assignSummaryRemoveBtn:hover {
+/* .assignSummaryRemoveBtn:hover {
   background: var(--red-bg);
   color: var(--red);
 }
 
 .assignSummaryRemoveBtn svg {
   display: block;
-}
+} */
 
 .assignSummaryToast {
   margin-top: 12px;
