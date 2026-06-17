@@ -68,19 +68,40 @@ export default function AdminsPage() {
     a.email_id,
     <Badge variant="admin">{a.role}</Badge>,
     new Date(a.created_at).toLocaleDateString(),
-    <div className="actions">
-      <Button size="sm" variant="outline" onClick={() => startEdit(a)}>
-        Edit
+    <div className="actions student-actions">
+      <Button
+        size="sm"
+        variant="outline"
+        className="iconBtn editActionButton"
+        onClick={() => startEdit(a)}
+        aria-label={`Edit ${a.username}`}
+      >
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </Button>
       {a.user_id !== 1 && (
-        <Button size="sm" variant="danger" onClick={() => setRevoke(a)}>
-          Revoke
+        <Button
+          size="sm"
+          variant="outline"
+          className="iconBtn deleteActionButton"
+          onClick={() => setRevoke(a)}
+          aria-label={`Delete ${a.username}`}
+        >
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </Button>
       )}
     </div>,
   ]);
   return (
-    <div>
+    <div className="admin-access-page">
       <PageHeader
         title="Admin Access"
         subtitle="Manage system users and permissions"
@@ -113,17 +134,20 @@ export default function AdminsPage() {
           { key: "x", label: "Actions" },
         ]}
         rows={rows}
+        rowClassName="studentTableRow"
       />
       <Modal
         open={open}
         onClose={() => setOpen(false)}
         title={editing ? "Edit Admin" : "Grant Access"}
+        width={760}
         footer={
           <>
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button className="btnRed" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button
+              className="btnGreen"
               onClick={() =>
                 document.getElementById("admin-form-submit")?.click()
               }
@@ -133,51 +157,53 @@ export default function AdminsPage() {
           </>
         }
       >
-        <form id="admin-form" onSubmit={submit}>
-          <div className="formGrid">
-            <label className="field">
-              <span>Username*</span>
-              <input
-                required
-                className="input"
-                value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })}
-              />
-            </label>
-            <label className="field">
-              <span>Email*</span>
-              <input
-                required
-                className="input"
-                value={form.email_id}
-                onChange={(e) => setForm({ ...form, email_id: e.target.value })}
-              />
-            </label>
-            <label className="field">
-              <span>Password{editing ? "" : "*"}</span>
-              <input
-                required={!editing}
-                className="input"
-                type="password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-              />
-            </label>
-            <label className="field">
-              <span>Role*</span>
-              <select
-                className="select"
-                value={form.role}
-                onChange={(e) =>
-                  setForm({ ...form, role: e.target.value as User["role"] })
-                }
-              >
-                <option>Admin</option>
-                <option>Volunteer</option>
-                <option>Student</option>
-              </select>
-            </label>
-          </div>
+        <form id="admin-form" className="studentWizardForm" onSubmit={submit}>
+          <section className="studentFormSection">
+            <div className="formGrid studentStepGrid">
+              <label className="field">
+                <span>Username*</span>
+                <input
+                  required
+                  className="input"
+                  value={form.username}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                />
+              </label>
+              <label className="field">
+                <span>Email*</span>
+                <input
+                  required
+                  className="input"
+                  value={form.email_id}
+                  onChange={(e) => setForm({ ...form, email_id: e.target.value })}
+                />
+              </label>
+              <label className="field">
+                <span>Password{editing ? "" : "*"}</span>
+                <input
+                  required={!editing}
+                  className="input"
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                />
+              </label>
+              <label className="field">
+                <span>Role*</span>
+                <select
+                  className="select"
+                  value={form.role}
+                  onChange={(e) =>
+                    setForm({ ...form, role: e.target.value as User["role"] })
+                  }
+                >
+                  <option>Admin</option>
+                  <option>Volunteer</option>
+                  <option>Student</option>
+                </select>
+              </label>
+            </div>
+          </section>
           <button id="admin-form-submit" hidden type="submit" />
         </form>
       </Modal>

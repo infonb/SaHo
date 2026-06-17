@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 export type FilterOption = { value: string; label: string };
 
 export const csvValues = (value: string) =>
@@ -30,6 +32,7 @@ export default function MultiSelectFilter({
   setOpenFilter: (value: string | null) => void;
   onChange: (value: string) => void;
 }) {
+  const filterRef = useRef<HTMLDetailsElement>(null);
   const selected = csvValues(value);
   const selectedLabels = options
     .filter((option) => selected.includes(option.value))
@@ -42,8 +45,21 @@ export default function MultiSelectFilter({
         : `${selectedLabels.length} selected`;
   const isOpen = openFilter === filterKey;
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (filterRef.current?.contains(event.target as Node)) return;
+      setOpenFilter(null);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isOpen, setOpenFilter]);
+
   return (
     <details
+      ref={filterRef}
       className={`multiSelectFilter${selected.length ? " hasValue" : ""}`}
       open={isOpen}
     >

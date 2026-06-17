@@ -361,11 +361,12 @@ export default function SponsorListPage() {
           <div className="selectHeaderRow studentBulkToolbar">
             <div className="bulkToolbarInfo">
               <label className="bulkSelectAll">
-                <input type="checkbox" checked={allPageChecked} onChange={togglePage} tabIndex={hasSelection ? 0 : -1} />
-                <span>Select all on this page</span>
+                {/* <input type="checkbox" checked={allPageChecked} onChange={togglePage} tabIndex={hasSelection ? 0 : -1} /> */}
+                <span   >Select all on this page</span>
               </label>
               <div className="selectedCount">
-                <strong>{checked.length}</strong> selected
+                Selected
+                 <span>{checked.length}</span>
                 <span>of {items.length}</span>
               </div>
             </div>
