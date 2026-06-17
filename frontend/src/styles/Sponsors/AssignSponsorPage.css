@@ -361,9 +361,9 @@
 .assignSelectedStudentRow:hover {
   background: var(--color-bg);
 }
-.assignSelectedStudentRow:not(:last-child) {
+/* .assignSelectedStudentRow:not(:last-child) {
   border-bottom: 2px solid #e2e8f0;
-}
+} */
 .assignSummaryStudentId {
   flex: 0 0 auto;
   font-weight: 600;

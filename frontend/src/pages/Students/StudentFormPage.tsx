@@ -99,7 +99,7 @@ const requiredFieldLabels: Partial<Record<keyof StudentFormState, string>> = {
   caste: 'Caste',
   class_id: 'Class',
   aadhaar_number: 'Aadhaar Number',
-  orphan_status: 'Orphan / Semi Orphan',
+  orphan_status: 'Orphan / Single Parent',
   st_id: 'State',
   dist_id: 'District',
   mndl_id: 'Mandal',
@@ -1086,12 +1086,12 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
           {activeStep === 'guardian' ? (
             <PrimaryButton type="button" onClick={submitFinalStep} loading={loading || metaLoading || editLoading} className="btn btnGreen">{isEdit ? 'Save Changes' : 'Register Student'}</PrimaryButton>
           ) : (
-            <PrimaryButton type="button" className="btn btnGreen" onClick={goNext} disabled={metaLoading || editLoading}>Next</PrimaryButton>
+            <PrimaryButton type="button" className="btnGreen" onClick={goNext} disabled={metaLoading || editLoading}>Next</PrimaryButton>
           )}
           {activeStep === 'personal' ? (
-            <SecondaryButton type="button" className="btn btnRed" onClick={cancel}>Cancel</SecondaryButton>
+            <SecondaryButton type="button" className="btnRed" onClick={cancel}>Cancel</SecondaryButton>
           ) : (
-            <SecondaryButton type="button" className="btn btnRed" onClick={goBack}>Back</SecondaryButton>
+            <SecondaryButton type="button" className="btnRed" onClick={goBack}>Back</SecondaryButton>
           )}
         </div>
       ) : null}

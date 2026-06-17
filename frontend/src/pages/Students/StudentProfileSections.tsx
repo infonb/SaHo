@@ -172,11 +172,11 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
             <div className="studentSearchRow">
               <Field fieldKey="sibling_aadhaar" label="Search Existing Student by Aadhaar Number*" value={form.sibling_aadhaar} onChange={v => set('sibling_aadhaar', v)} onBlur={() => touch?.('sibling_aadhaar')} maxLength={12} readOnly={readOnly} numericOnly aadhaarFormat error={showMessage('sibling_aadhaar') ? errors.sibling_aadhaar : undefined} state={getFieldState('sibling_aadhaar')} />
               <div className="studentSearchAction">
-                {!readOnly ? <Button className="studentSearchButton" type="button" onClick={searchSibling}>Search</Button> : null}
+                {!readOnly ? <Button className="gobtn" type="button" onClick={searchSibling}>Search</Button> : null}
               </div>
-            </div>
+            </div >
             {sibling ? (
-              <div className="foundCard">
+              <div className="foundCard ">
                 <Avatar name={sibling.studentName} size="lg" />
                 <div>
                   <strong>{sibling.studentName}</strong>
@@ -374,45 +374,45 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
               <Select fieldKey="caste" label="Caste*" value={form.caste} onChange={v => set('caste', v)} onBlur={() => touch?.('caste')} options={casteOptions} readOnly={readOnly} error={showMessage('caste') ? errors.caste : undefined} state={getFieldState('caste')} />
               <Select fieldKey="class_id" label="Class*" value={form.class_id} onChange={v => set('class_id', v)} onBlur={() => touch?.('class_id')} options={classOptions} readOnly={readOnly} error={showMessage('class_id') ? errors.class_id : undefined} state={getFieldState('class_id')} />
               <Field fieldKey="aadhaar_number" label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} onBlur={() => touch?.('aadhaar_number')} maxLength={12} subText={readOnly || errors.aadhaar_number ? undefined : props.aadhaarStatus} readOnly={readOnly} numericOnly aadhaarFormat error={showMessage('aadhaar_number') ? errors.aadhaar_number : undefined} state={getFieldState('aadhaar_number')} />
-              <Select fieldKey="orphan_status" label="Orphan / Semi Orphan*" value={form.orphan_status} onChange={v => set('orphan_status', v)} onBlur={() => touch?.('orphan_status')} options={orphanStatusOptions} readOnly={readOnly} error={showMessage('orphan_status') ? errors.orphan_status : undefined} state={getFieldState('orphan_status')} />
+              <Select fieldKey="orphan_status" label="Orphan / Single Parent*" value={form.orphan_status} onChange={v => set('orphan_status', v)} onBlur={() => touch?.('orphan_status')} options={orphanStatusOptions} readOnly={readOnly} error={showMessage('orphan_status') ? errors.orphan_status : undefined} state={getFieldState('orphan_status')} />
               <div className="field studentPhotoField">
-              <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><PhotoImageIcon /></span>Student Photo</h3>
-              <div className="uploadBox studentModalUpload">
-                <div className="studentModalUploadPreview">
-                  {form.image_url && !readOnly ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="danger"
-                      className="iconBtn uploadDeleteBtn"
-                      onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); clearPhoto(); }}
-                      aria-label="Remove student photo"
-                      title="Remove photo"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                        <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </Button>
-                  ) : null}
-                  {form.image_url ? <img src={form.image_url} alt="Student" /> : null}
-                  <span className={uploadError ? 'studentModalUploadError' : undefined}>{uploadError || (readOnly ? 'No photo available' : 'Take photo or upload')}</span>
-                </div>
-                {!readOnly ? (
-                  <div className="rowFlex studentModalUploadActions">
-                    <Button type="button" variant="outline" onClick={openCamera}>
-                      <PhotoCameraIcon /> Take Photo
-                    </Button>
-                    <label className="btn outline md studentModalUploadButton">
-                      <PhotoUploadIcon /> Upload Photo
-                      <input accept="image/*" type="file" onChange={handlePhoto} style={{ display: 'none' }} />
-                    </label>
+                <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><PhotoImageIcon /></span>Student Photo</h3>
+                <div className="uploadBox studentModalUpload">
+                  <div className="studentModalUploadPreview">
+                    {form.image_url && !readOnly ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="danger"
+                        className="iconBtn uploadDeleteBtn"
+                        onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); clearPhoto(); }}
+                        aria-label="Remove student photo"
+                        title="Remove photo"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                          <path d="M3 6h18" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M10 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M14 11v6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </Button>
+                    ) : null}
+                    {form.image_url ? <img src={form.image_url} alt="Student" /> : null}
+                    <span className={uploadError ? 'studentModalUploadError' : undefined}>{uploadError || (readOnly ? 'No photo available' : 'Take photo or upload')}</span>
                   </div>
-                ) : null}
-              </div>
+                  {!readOnly ? (
+                    <div className="rowFlex studentModalUploadActions">
+                      <Button type="button" variant="outline" onClick={openCamera}>
+                        <PhotoCameraIcon /> Take Photo
+                      </Button>
+                      <label className="btn outline md studentModalUploadButton">
+                        <PhotoUploadIcon /> Upload Photo
+                        <input accept="image/*" type="file" onChange={handlePhoto} style={{ display: 'none' }} />
+                      </label>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           </FormSection>
@@ -555,10 +555,10 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLen
     const cleanValue = numericOnly
       ? nextValue.replace(/\D/g, '').slice(0, maxLength)
       : alphabeticOnly
-      ? formatAlphabeticName(nextValue)
-      : type === 'date'
-      ? normalizeDateValue(nextValue)
-      : nextValue;
+        ? formatAlphabeticName(nextValue)
+        : type === 'date'
+          ? normalizeDateValue(nextValue)
+          : nextValue;
     onChange(cleanValue);
   };
 

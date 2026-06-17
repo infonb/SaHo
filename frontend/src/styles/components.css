@@ -532,13 +532,13 @@ h1, h2, h3, h4, h5, h6
 {
   background: #4d7a63 !important;
   color: #ffffff !important;
-  min-width: 100px;
+  min-width: 85px;
   border-radius: 12px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 7.5px 10px;
   border: 1px solid #4d7a63 !important;
   font-size: 13px !important; 
   line-height: 1.5 !important;
@@ -558,13 +558,13 @@ h1, h2, h3, h4, h5, h6
 {
   background: #b91c1c !important;
   color: #ffffff !important;
-  min-width: 100px;
-  border-radius: 12px !important;
+  min-width: 85px;
+  border-radius: 13px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 10px !important;
+  padding: 7.5px 10px !important;
   border: 1px solid #b91c1c !important;
   font-size: 13px !important; 
   line-height: 1.5 !important;
@@ -7541,8 +7541,16 @@ td {
   box-shadow: none;
   padding: 0;
 }
+.studentSiblingInline .foundCard {
+  grid-column: 2 / -1;
+  margin-top: -8px;
+}
 .studentWizardForm .studentSearchRow {
-  display: contents;
+  display: grid;
+  grid-column: span 3;
+  grid-template-columns: minmax(260px, 340px) auto;
+  align-items: end;
+  gap: 20px;
 }
 .studentWizardForm .studentSearchRow .formField {
   min-width: 0;
@@ -7718,6 +7726,15 @@ td {
   }
   .studentStepGrid {
     grid-template-columns: 1fr;
+  }
+  .studentWizardForm .studentSearchRow {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .studentSiblingInline .foundCard {
+    grid-column: 1 / -1;
+    margin-top: 0;
   }
   .studentWizardForm .studentSearchAction {
     align-items: stretch;
@@ -8337,6 +8354,19 @@ td {
   > td {
   background-color: #f8fafc;
   border-top-color: #e2e8f0;
+}
+
+.admin-access-page .tableWrap tbody tr.studentTableRow:hover > td {
+  background-color: #f8fafc;
+  border-top-color: #e2e8f0;
+}
+
+.admin-access-page .tableWrap th {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 
