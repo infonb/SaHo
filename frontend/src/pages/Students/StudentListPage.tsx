@@ -417,7 +417,7 @@ export default function StudentListPage() {
             onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }}
             title={getSponsorDisplayName(s) ?? '--'}
           >
-            {getSponsorDisplayName(s) ? (
+            {getSponsorDisplayName(s) ? ( 
               <Avatar name={getSponsorDisplayName(s) ?? ''} size="md" />
             ) : (
               <div className="avatar md">--</div>

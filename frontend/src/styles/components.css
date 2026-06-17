@@ -496,8 +496,8 @@ h1, h2, h3, h4, h5, h6
 
 .btn.md {
   height: 40px;
-  padding: 0 16px;
-  font-size: 14px;
+  padding: 6px 12px;
+  font-size: 13px;
 }
 
 /* .maxBtn{
@@ -538,7 +538,7 @@ h1, h2, h3, h4, h5, h6
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 7.5px 10px;
+  padding: 6px 12px;
   border: 1px solid #4d7a63 !important;
   font-size: 13px !important; 
   line-height: 1.5 !important;
@@ -564,7 +564,7 @@ h1, h2, h3, h4, h5, h6
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 7.5px 10px !important;
+  padding: 6px 12px  !important;
   border: 1px solid #b91c1c !important;
   font-size: 13px !important; 
   line-height: 1.5 !important;
@@ -3970,7 +3970,7 @@ svg {
 
 .btn.md {
   height: 36px;
-  padding: 0 14px;
+  padding: 6px 12px;
   font-size: 13px;
 }
 
