@@ -41,7 +41,6 @@ export default function App() {
             <Route path="sponsors/assign" element={<AssignSponsorPage />} />
             <Route path="reminders" element={<ViewEvents />} />
             <Route path="reminders/create" element={<EventFormPage />} />
-            <Route path="reminders/view/:id" element={<EventFormPage mode="view" />} />
             <Route path="volunteers" element={<VolunteerListPage />} />
             <Route path="volunteers/add" element={<VolunteerFormPage />} />
             <Route path="volunteers/edit/:id" element={<VolunteerFormPage />} />
