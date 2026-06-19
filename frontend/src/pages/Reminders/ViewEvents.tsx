@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
 import DataTable from '../../components/common/DataTable';
@@ -11,9 +11,11 @@ import { usePagination } from '../../hooks/usePagination';
 import closeIcon from '../../assets/clera cross favicon.png';
 import arrowIcon from '../../assets/Go arrow favicon.png';
 import { useToast } from '../../hooks/useToast';
+import EventDetailModal from './EventDetailModal';
 
 // Event status type
 type EventStatus = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+type ReminderPanelFilter = EventStatus | 'all';
 type FilterOption = { value: string; label: string };
 
 const csvValues = (value?: string | null) =>
@@ -38,6 +40,19 @@ const limitText = (value: string | null | undefined, maxLength: number) => {
 const EVENT_CARD_TITLE_LIMIT = 30;
 const EVENT_CARD_LOCATION_LIMIT = 25;
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const CALENDAR_STATUS_LEGEND: { status: EventStatus; label: string }[] = [
+  { status: 'upcoming', label: 'Upcoming' },
+  { status: 'ongoing', label: 'Ongoing' },
+  { status: 'completed', label: 'Completed' },
+  { status: 'cancelled', label: 'Cancelled' },
+];
+const REMINDER_PANEL_FILTERS: { value: ReminderPanelFilter; label: string }[] = [
+  { value: 'all', label: 'All Reminders' },
+  { value: 'upcoming', label: 'Upcoming' },
+  { value: 'ongoing', label: 'Ongoing' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
 
 const uniqueCsvValues = (values: Array<string | null | undefined>) =>
   Array.from(new Set(values.flatMap((value) => csvValues(value))));
@@ -281,6 +296,9 @@ export default function ViewEvents() {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
+  const [reminderPanelFilter, setReminderPanelFilter] = useState<ReminderPanelFilter>('all');
+  const reminderPanelFilterRef = useRef<HTMLDetailsElement | null>(null);
+  const [selectedReminder, setSelectedReminder] = useState<ReminderDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   const [states, setStates] = useState<any[]>([]);
@@ -360,6 +378,18 @@ export default function ViewEvents() {
   }, [openFilter]);
 
   useEffect(() => {
+    const closeReminderPanelFilter = (event: MouseEvent) => {
+      const filterElement = reminderPanelFilterRef.current;
+      if (!filterElement?.open) return;
+      if (filterElement.contains(event.target as Node)) return;
+      filterElement.removeAttribute('open');
+    };
+
+    document.addEventListener('mousedown', closeReminderPanelFilter);
+    return () => document.removeEventListener('mousedown', closeReminderPanelFilter);
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
 
     const loadDisplayLocations = async () => {
@@ -398,7 +428,12 @@ export default function ViewEvents() {
   }, [reminders]);
 
   const handleEdit = (id: number) => {
-    navigate(`/reminders/create?remId=${id}`);
+    const eventSnapshot = reminders.find(reminder => reminder.remId === id) ?? null;
+    navigate(`/reminders/create?remId=${id}`, { state: { eventSnapshot } });
+  };
+
+  const handleView = (id: number) => {
+    setSelectedReminder(reminders.find(reminder => reminder.remId === id) ?? null);
   };
 
   const handleDelete = async (id: number) => {
@@ -513,6 +548,7 @@ export default function ViewEvents() {
   const calendarYear = calendarMonth.getFullYear();
   const calendarMonthIndex = calendarMonth.getMonth();
   const eventsByDate = events.reduce<Record<string, EventData[]>>((acc, event) => {
+    if (event.status === 'cancelled') return acc;
     acc[event.date] = [...(acc[event.date] ?? []), event];
     return acc;
   }, {});
@@ -538,9 +574,11 @@ export default function ViewEvents() {
   const goCalendarMonth = (offset: number) => {
     setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
   };
-  const nextReminders = events
-    .filter(event => event.status !== 'completed' && event.status !== 'cancelled')
-    .slice(0, 4);
+  const visibleReminders = events
+    .filter(event => reminderPanelFilter === 'all' || event.status === reminderPanelFilter);
+  const reminderPanelCountLabel = reminderPanelFilter === 'all'
+    ? 'Total'
+    : REMINDER_PANEL_FILTERS.find((filter) => filter.value === reminderPanelFilter)?.label ?? 'Reminders';
   const eventRows = pager.current.map(event => [
     <span className="reminderTablePlainDate">
       {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -558,6 +596,13 @@ export default function ViewEvents() {
     </span>,
     <ActionButtons event={event} onEdit={handleEdit} onDelete={handleDelete} />,
   ]);
+  const eventLocationOptions = useMemo(() => ({
+    states,
+    districts: displayDistricts.length ? displayDistricts : districts,
+    mandals: displayMandals.length ? displayMandals : mandals,
+    villages: displayVillages.length ? displayVillages : villages,
+    schools,
+  }), [states, displayDistricts, districts, displayMandals, mandals, displayVillages, villages, schools]);
 
   return (
     <div className="page-enter">
@@ -763,6 +808,14 @@ export default function ViewEvents() {
                 <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
+            <div className="calendarStatusLegend" aria-label="Event status legend">
+              {CALENDAR_STATUS_LEGEND.map((item) => (
+                <span key={item.status} className={`calendarLegendItem is-${item.status}`}>
+                  <span aria-hidden="true" />
+                  {item.label}
+                </span>
+              ))}
+            </div>
           </div>
           <div className="eventCalendarWeekdays">
             {WEEKDAYS.map(day => <span key={day}>{day}</span>)}
@@ -771,8 +824,8 @@ export default function ViewEvents() {
             {calendarDays.map(({ dateKey, day, isCurrentMonth }) => (
               <div key={dateKey} className={`eventCalendarDay ${!isCurrentMonth ? 'isMuted' : ''} ${eventsByDate[dateKey]?.length ? 'hasEvent' : ''}`}>
                 <span>{day}</span>
-                {eventsByDate[dateKey]?.slice(0, 2).map((event, eventIndex) => (
-                  <small key={event.id} className={`calendarEventTone${eventIndex % 4}`}>{event.title}</small>
+                {eventsByDate[dateKey]?.slice(0, 2).map((event) => (
+                  <small key={event.id} className={`calendarEventStatus-${event.status}`}>{event.title}</small>
                 ))}
               </div>
             ))}
@@ -782,30 +835,57 @@ export default function ViewEvents() {
         <aside className="panel reminderPanel">
           <div className="table-header">
             <h3 className="panelTitle">Reminders</h3>
-            <span className="event-count">{nextReminders.length} active</span>
+            <span className={`event-count status-${reminderPanelFilter}`}>{visibleReminders.length} {reminderPanelCountLabel}</span>
           </div>
-          {nextReminders.length ? nextReminders.map((event, index) => (
-            <div key={event.id} className={`reminderItem reminderTone${index % 3}`}>
-              <span className="reminderDot" aria-hidden />
-              <div className="reminderItemBody">
-                <strong>{event.title}</strong>
-                <span>
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-                    <path d="M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </span>
-                <span>
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-                    <path d="M12 21s7-4.8 7-11a7 7 0 1 0-14 0c0 6.2 7 11 7 11Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx="12" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
-                  </svg>
-                  {limitText(event.venue, 24)}
-                </span>
-              </div>
-              <StatusBadge status={event.status} />
+          <details className="reminderPanelFilter" ref={reminderPanelFilterRef}>
+            <summary>
+              <span className={`reminderPanelFilterDot status-${reminderPanelFilter}`} aria-hidden="true" />
+              <span>{REMINDER_PANEL_FILTERS.find((filter) => filter.value === reminderPanelFilter)?.label}</span>
+            </summary>
+            <div className="reminderPanelFilterMenu" role="menu" aria-label="Filter reminders by status">
+              {REMINDER_PANEL_FILTERS.map((filter) => (
+                <button
+                  key={filter.value}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={reminderPanelFilter === filter.value}
+                  className={`reminderPanelFilterOption status-${filter.value} ${reminderPanelFilter === filter.value ? 'active' : ''}`}
+                  onClick={(event) => {
+                    setReminderPanelFilter(filter.value);
+                    event.currentTarget.closest('details')?.removeAttribute('open');
+                  }}
+                >
+                  <span className={`reminderPanelFilterDot status-${filter.value}`} aria-hidden="true" />
+                  <span>{filter.label}</span>
+                  <span className="reminderPanelFilterCheck" aria-hidden="true">✓</span>
+                </button>
+              ))}
             </div>
-          )) : <div className="empty-state"><p>No active reminders.</p></div>}
+          </details>
+          <div className="reminderList">
+            {visibleReminders.length ? visibleReminders.map((event) => (
+              <div key={event.id} className={`reminderItem reminderStatus-${event.status}`}>
+                <span className="reminderDot" aria-hidden />
+                <div className="reminderItemBody">
+                  <strong>{event.title}</strong>
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                      <path d="M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </span>
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                      <path d="M12 21s7-4.8 7-11a7 7 0 1 0-14 0c0 6.2 7 11 7 11Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="12" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
+                    </svg>
+                    {limitText(event.venue, 24)}
+                  </span>
+                </div>
+                <StatusBadge status={event.status} />
+              </div>
+            )) : <div className="empty-state"><p>No reminders found.</p></div>}
+          </div>
         </aside>
       </div>
 
@@ -833,7 +913,7 @@ export default function ViewEvents() {
         ) : viewMode === 'cards' ? (
           <div className="sponsorCardGrid">
             {pager.current.map(event => (
-              <article key={event.id} className="sponsorCard reminderRecordCard">
+              <article key={event.id} className="sponsorCard reminderRecordCard" onClick={() => handleView(event.id)} role="button" tabIndex={0} onKeyDown={(keyEvent) => { if (keyEvent.key === 'Enter' || keyEvent.key === ' ') { keyEvent.preventDefault(); handleView(event.id); } }}>
                 <div className="sponsorCardTop">
                   <div className="eventDateBadge">
                     <strong>{new Date(event.date).getDate()}</strong>
@@ -874,6 +954,10 @@ export default function ViewEvents() {
               ]}
               rows={eventRows}
               rowClassName="studentTableRow"
+              onRowClick={(index) => {
+                const event = pager.current[index];
+                if (event) handleView(event.id);
+              }}
               footer={
                 <Pagination
                   total={events.length}
@@ -1020,22 +1104,22 @@ export default function ViewEvents() {
 
         .status-upcoming {
           background: var(--blue-bg);
-          color: var(--blue);
+          color: #475569;
         }
 
         .status-ongoing {
           background: var(--amber-bg);
-          color: var(--amber);
+          color: #475569;
         }
 
         .status-completed {
           background: var(--green-bg);
-          color: var(--green);
+          color: #475569;
         }
 
         .status-cancelled {
           background: var(--red-bg);
-          color: var(--red);
+          color: #475569;
         }
 
         .action-buttons {
@@ -1114,6 +1198,12 @@ export default function ViewEvents() {
         message="Are you sure you want to cancel this event?"
         confirmLabel="Confirm"
         danger
+      />
+      <EventDetailModal
+        eventId={selectedReminder?.remId ?? null}
+        eventSnapshot={selectedReminder}
+        onClose={() => setSelectedReminder(null)}
+        locationOptions={eventLocationOptions}
       />
     </div>
   );
