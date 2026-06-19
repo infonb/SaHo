@@ -45,25 +45,6 @@ export interface ReminderFilterParams {
   status?: string;
 }
 
-const normalizeReminder = (r: any): ReminderDto => ({
-  remId: Number(r?.remId ?? r?.rem_id ?? r?.id),
-  title: r?.title ?? '',
-  description: r?.description ?? null,
-  eventDate: r?.eventDate ?? r?.event_date ?? '',
-  venue: r?.venue ?? '',
-  stIdCsv: r?.stIdCsv ?? r?.st_id_csv ?? null,
-  distIdsCsv: r?.distIdsCsv ?? r?.dist_ids_csv ?? null,
-  mndlIdsCsv: r?.mndlIdsCsv ?? r?.mndl_ids_csv ?? null,
-  vilIdsCsv: r?.vilIdsCsv ?? r?.vil_ids_csv ?? null,
-  schIdsCsv: r?.schIdsCsv ?? r?.sch_ids_csv ?? null,
-  classIdsCsv: r?.classIdsCsv ?? r?.class_ids_csv ?? null,
-  status: r?.status ?? null,
-  createdBy: r?.createdBy ?? r?.created_by ?? null,
-  createdAt: r?.createdAt ?? r?.created_at ?? null,
-  updatedAt: r?.updatedAt ?? r?.updated_at ?? null,
-  totalCount: r?.totalCount ?? r?.total_count ?? null,
-});
-
 export const getReminders = async (filters?: ReminderFilterParams): Promise<ReminderDto[]> => {
   const params: Record<string, string> = {};
   if (filters?.search) params.search = filters.search;
@@ -76,12 +57,12 @@ export const getReminders = async (filters?: ReminderFilterParams): Promise<Remi
   if (filters?.schIdsCsv) params.schIdsCsv = filters.schIdsCsv;
   if (filters?.status) params.status = filters.status;
   const res = await apiClient.get('/reminders', { params });
-  return (res.data ?? []).map(normalizeReminder);
+  return res.data ?? [];
 };
 
 export const getReminderById = async (remId: number): Promise<ReminderDto | undefined> => {
   const res = await apiClient.get(`/reminders/${remId}`);
-  return res.data ? normalizeReminder(res.data) : undefined;
+  return res.data ?? undefined;
 };
 
 export const createReminder = async (payload: ReminderCreatePayload): Promise<number> => {

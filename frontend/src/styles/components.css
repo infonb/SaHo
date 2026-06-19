@@ -5141,11 +5141,10 @@ td {
   grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
   gap: 20px;
   margin: 18px 0;
-  align-items: start;
 }
 
 .eventCalendarPanel {
-  padding: 0 26px 28px;
+  padding: 22px 26px 28px;
 }
 
 .calendarHeader {
@@ -5153,14 +5152,12 @@ td {
   grid-template-columns: 34px auto 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 20px;
-  margin: 0 -26px 26px;
-  padding: 18px 24px 16px;
-  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 26px;
 }
 
 .calendarNavButton {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border: 1px solid #dbe4ef;
   border-radius: 7px;
   background: #ffffff;
@@ -5177,52 +5174,11 @@ td {
 
 .calendarTitle {
   margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  min-width:120px;
-  text-align:center;
+  font-size: 16px;
+  font-weight: 850;
   color: #0f172a;
   line-height: 1;
   white-space: nowrap;
-}
-
-.calendarStatusLegend {
-  grid-column: 5;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 14px;
-  min-width: 0;
-  font-size: 12px;
-  font-weight: 650;
-  color: #334155;
-  white-space: nowrap;
-}
-
-.calendarLegendItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.calendarLegendItem > span {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #2563eb;
-  flex: 0 0 auto;
-}
-
-.calendarLegendItem.is-ongoing > span {
-  background: #d97706;
-}
-
-.calendarLegendItem.is-completed > span {
-  background: #16a34a;
-}
-
-.calendarLegendItem.is-cancelled > span {
-  background: #dc2626;
 }
 
 .calendarNewEventButton {
@@ -5277,7 +5233,7 @@ td {
 
 .eventCalendarDay span {
   font-weight: 700;
-  color: #4B5570;
+  color: #172033;
   font-size: 12px;
   line-height: 1;
 }
@@ -5293,36 +5249,26 @@ td {
   white-space: nowrap;
   border-radius: 4px;
   padding: 3px 6px;
-  background: #dbeafe;
-  color: #475569;
-  font-size: 10px;
+  background: #dff6ee;
+  color: #007f69;
+  font-size: 9px;
   font-weight: 800;
   line-height: 1.1;
-  border-left: 3px solid #2563eb;
 }
 
-.eventCalendarDay .calendarEventStatus-upcoming {
-  background: #dbeafe;
-  color: #475569;
-  border-left-color: #2563eb;
+.eventCalendarDay .calendarEventTone1 {
+  background: #e8f2fb;
+  color: #075985;
 }
 
-.eventCalendarDay .calendarEventStatus-ongoing {
-  background: #fef3c7;
-  color: #475569;
-  border-left-color: #d97706;
+.eventCalendarDay .calendarEventTone2 {
+  background: #eeeafe;
+  color: #5b21b6;
 }
 
-.eventCalendarDay .calendarEventStatus-completed {
-  background: #dcfce7;
-  color: #475569;
-  border-left-color: #16a34a;
-}
-
-.eventCalendarDay .calendarEventStatus-cancelled {
-  background: #fee2e2;
-  color: #475569;
-  border-left-color: #dc2626;
+.eventCalendarDay .calendarEventTone3 {
+  background: #fce8df;
+  color: #9a3412;
 }
 
 .eventCalendarDay.hasEvent {
@@ -5340,33 +5286,16 @@ td {
 
 .reminderPanel {
   align-self: start;
-  display: flex;
-  flex-direction: column;
   padding: 22px 22px 26px;
-  height: 610px;
-  max-height: 610px;
-  min-height: 0;
-  overflow: hidden;
+  min-height: 100%;
 }
 
 .reminderPanel .table-header {
-  flex: 0 0 auto;
-  display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 22px;
 }
 
-.reminderPanel .panelTitle {
-  display: flex;
-  align-items: center;
-  margin: 0;
-  line-height: 1;
-}
-
 .reminderPanel .event-count {
-  display: inline-flex;
-  align-items: center;
   border: 0;
   border-radius: 999px;
   padding: 4px 13px;
@@ -5375,192 +5304,6 @@ td {
   font-size: 11px;
   font-weight: 800;
   line-height: 1;
-}
-
-.reminderPanel .event-count.status-upcoming {
-  background: #dbeafe;
-  color: #475569;
-}
-
-.reminderPanel .event-count.status-ongoing {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.reminderPanel .event-count.status-completed {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.reminderPanel .event-count.status-cancelled {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.reminderPanelFilter {
-  --reminder-status-dot-size: 8px;
-  --reminder-status-dot-gap: 10px;
-  --reminder-status-dot-inset: 10px;
-  flex: 0 0 auto;
-  position: relative;
-  width: calc(100% + var(--reminder-status-dot-inset));
-  margin: -12px 0 12px calc(var(--reminder-status-dot-inset) * -1);
-}
-
-.reminderPanelFilter summary {
-  min-height: 33px;
-  border: 1px solid #dbe4ef;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #0f172a;
-  display: flex;
-  align-items: center;
-  gap: var(--reminder-status-dot-gap);
-  list-style: none;
-  padding: 7.5px 10px 7.5px var(--reminder-status-dot-inset);
-  font-size: 12px;
-  font-weight: 750;
-  line-height: 1;
-  cursor: pointer;
-  position: relative;
-  box-shadow: none;
-}
-
-.reminderPanelFilter summary::-webkit-details-marker {
-  display: none;
-}
-
-.reminderPanelFilter summary::after {
-  content: "";
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  border-right: 1.6px solid #64748b;
-  border-bottom: 1.6px solid #64748b;
-  transform: translateY(-35%) rotate(-135deg);
-}
-
-.reminderPanelFilter[open] summary {
-  border-color: #8ddfd2;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(141, 223, 210, 0.18);
-}
-
-.reminderPanelFilter:not([open]) summary::after {
-  transform: translateY(-65%) rotate(45deg);
-}
-
-.reminderPanelFilterMenu {
-  position: absolute;
-  z-index: 20;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  border: 1px solid #dbe4ef;
-  border-radius: 13px;
-  background: #ffffff;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-  padding: 6px 0;
-  overflow: hidden;
-}
-
-.reminderPanelFilterOption {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--reminder-status-dot-gap);
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #0f172a;
-  font-size: 11px;
-  font-weight: 750;
-  line-height: 1;
-  padding: 9px 12px 9px var(--reminder-status-dot-inset);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background 0.16s ease,
-    color 0.16s ease;
-}
-
-.reminderPanelFilterOption.status-upcoming,
-.reminderPanelFilterOption.status-ongoing,
-.reminderPanelFilterOption.status-completed,
-.reminderPanelFilterOption.status-cancelled {
-  background: transparent !important;
-  color: #0f172a !important;
-}
-
-.reminderPanelFilterDot {
-  width: var(--reminder-status-dot-size);
-  height: var(--reminder-status-dot-size);
-  flex: 0 0 auto;
-  border-radius: 999px;
-  background: #64748b;
-}
-
-.reminderPanelFilterOption:hover,
-.reminderPanelFilterOption:focus-visible,
-.reminderPanelFilterOption.active {
-  outline: none;
-  background: #f8fafc !important;
-  color: #0f172a !important;
-}
-
-.reminderPanelFilterOption.active {
-  font-weight: 850;
-}
-
-.reminderPanelFilterCheck {
-  margin-left: auto;
-  color: #0f766e;
-  font-size: 12px;
-  font-weight: 900;
-  opacity: 0;
-  text-align: right;
-}
-
-.reminderPanelFilterOption.active .reminderPanelFilterCheck {
-  opacity: 1;
-}
-
-.reminderPanelFilterDot.status-upcoming {
-  background: #2563eb;
-}
-
-.reminderPanelFilterOption.status-upcoming.active,
-.reminderPanelFilterOption.status-upcoming:hover {
-  color: #0f172a;
-}
-
-.reminderPanelFilterDot.status-ongoing {
-  background: #d97706;
-}
-
-.reminderPanelFilterOption.status-ongoing.active,
-.reminderPanelFilterOption.status-ongoing:hover {
-  color: #0f172a;
-}
-
-.reminderPanelFilterDot.status-completed {
-  background: #16a34a;
-}
-
-.reminderPanelFilterOption.status-completed.active,
-.reminderPanelFilterOption.status-completed:hover {
-  color: #0f172a;
-}
-
-.reminderPanelFilterDot.status-cancelled {
-  background: #dc2626;
-}
-
-.reminderPanelFilterOption.status-cancelled.active,
-.reminderPanelFilterOption.status-cancelled:hover {
-  color: #0f172a;
 }
 
 .reminderPanel .status-badge {
@@ -5574,74 +5317,11 @@ td {
   border-radius: 999px;
 }
 
-.reminderList {
-  flex: 1 1 auto;
-  min-height: 0;
-  box-sizing: border-box;
-  padding: 0 12px 18px 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scroll-behavior: smooth;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.34) transparent;
-}
-
-.reminderList::-webkit-scrollbar {
-  width: 4px;
-}
-
-.reminderList::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 999px;
-}
-
-.reminderList::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.34);
-  border: 0;
-  border-radius: 999px;
-}
-
-.reminderList::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.52);
-}
-
-.reminderList::-webkit-scrollbar-thumb:active {
-  background: rgba(100, 116, 139, 0.68);
-}
-
-.reminderList::-webkit-scrollbar-button {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
-}
-
-.reminderList::-webkit-scrollbar-button:single-button,
-.reminderList::-webkit-scrollbar-button:double-button,
-.reminderList::-webkit-scrollbar-button:vertical:start,
-.reminderList::-webkit-scrollbar-button:vertical:end,
-.reminderList::-webkit-scrollbar-button:horizontal:start,
-.reminderList::-webkit-scrollbar-button:horizontal:end {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
-}
-
-.reminderList::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
 .reminderItem {
-  --reminder-status-dot-size: 8px;
-  --reminder-status-dot-gap: 10px;
   display: grid;
-  grid-template-columns: var(--reminder-status-dot-size) minmax(0, 1fr) auto;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
   align-items: flex-start;
-  column-gap: var(--reminder-status-dot-gap);
+  column-gap: 10px;
   row-gap: 0;
   padding: 0 0 18px;
   border: 0;
@@ -5656,28 +5336,23 @@ td {
 }
 
 .reminderDot {
-  width: var(--reminder-status-dot-size);
-  height: var(--reminder-status-dot-size);
-  align-self: start;
-  margin-top: calc((12px * 1.25 - var(--reminder-status-dot-size)) / 2);
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
   border-radius: 999px;
-  background: #2563eb;
+  background: #22a06b;
 }
 
-.reminderStatus-upcoming .reminderDot {
-  background: #2563eb;
+.reminderTone0 .reminderDot {
+  background: #df5936;
 }
 
-.reminderStatus-ongoing .reminderDot {
-  background: #d97706;
+.reminderTone1 .reminderDot {
+  background: #f5a623;
 }
 
-.reminderStatus-completed .reminderDot {
-  background: #16a34a;
-}
-
-.reminderStatus-cancelled .reminderDot {
-  background: #dc2626;
+.reminderTone2 .reminderDot {
+  background: #22a06b;
 }
 
 .reminderItemBody {
@@ -5688,7 +5363,7 @@ td {
 
 .reminderItem strong {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 850;
   color: #0f172a;
   line-height: 1.25;
@@ -6279,22 +5954,22 @@ td {
 
 .status-upcoming {
   background: #dbeafe;
-  color: #475569;
+  color: #1e40af;
 }
 
 .status-ongoing {
   background: #fef3c7;
-  color: #475569;
+  color: #a16207;
 }
 
 .status-completed {
   background: #dcfce7;
-  color: #475569;
+  color: #15803d;
 }
 
 .status-cancelled {
   background: #fee2e2;
-  color: #475569;
+  color: #b91c1c;
 }
 
 .action-buttons {
@@ -6334,17 +6009,6 @@ td {
 @media (max-width: 900px) {
   .eventsWorkspace {
     grid-template-columns: 1fr;
-  }
-
-  .calendarHeader {
-    grid-template-columns: 34px auto 34px;
-  }
-
-  .calendarStatusLegend {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    row-gap: 8px;
   }
 
   .eventCalendarGrid {
