@@ -60,18 +60,32 @@ export default function Sidebar({ open }: { open: boolean }) {
   const sidebarState = open ? 'expanded' : 'collapsed';
 
   return (
-    <aside className={`mobile-sidebar sidebar ${sidebarState}`} data-sidebar-state={sidebarState}>
-      <div className="sidebarHead" />
-      {groups.map(group => (
+    <aside
+      className={`mobile-sidebar sidebar ${sidebarState}`}
+      data-sidebar-state={sidebarState}
+    >
+      {groups.map((group) => (
         <div className="navGroup" key={group.title ?? group.items[0].label}>
-          {group.title && <div className="navSection" aria-hidden={!open}>{group.title}</div>}
-          {group.items.map(item => {
-            const active = item.label === 'Students'
-              ? pathname === '/view-students' || pathname.startsWith('/students')
-              : pathname === item.to || (item.to !== '/dashboard' && pathname.startsWith(`${item.to}/`));
+          {group.title && (
+            <div className="navSection" aria-hidden={!open}>
+              {group.title}
+            </div>
+          )}
+          {group.items.map((item) => {
+            const active =
+              item.label === "Students"
+                ? pathname === "/view-students" ||
+                  pathname.startsWith("/students")
+                : pathname === item.to ||
+                  (item.to !== "/dashboard" &&
+                    pathname.startsWith(`${item.to}/`));
             return (
               <div className="nav-item" key={item.label}>
-                <Link className={`nav-link navItem ${active ? 'active' : ''}`} to={item.to} title={!open ? item.label : undefined}>
+                <Link
+                  className={`nav-link navItem ${active ? "active" : ""}`}
+                  to={item.to}
+                  title={!open ? item.label : undefined}
+                >
                   <span className="navIcon">{item.icon}</span>
                   <span className="navLabel">{item.label}</span>
                 </Link>
@@ -80,7 +94,11 @@ export default function Sidebar({ open }: { open: boolean }) {
           })}
         </div>
       ))}
-      <button className="sidebarSignOut" onClick={signOut} title={!open ? 'Sign Out' : undefined}>
+      <button
+        className="sidebarSignOut"
+        onClick={signOut}
+        title={!open ? "Sign Out" : undefined}
+      >
         <span className="navIcon">S</span>
         <span className="navLabel">Sign Out</span>
       </button>
