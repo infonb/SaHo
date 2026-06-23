@@ -17,5 +17,6 @@ public class ReminderFilterDto {
     private String distIdsCsv;
     private String mndlIdsCsv;
     private String vilIdsCsv;
+    private String schIdsCsv;
     private String status;
 }

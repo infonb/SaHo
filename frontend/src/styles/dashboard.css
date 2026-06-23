@@ -167,40 +167,100 @@
 }
 
 .addStudentCard {
-  background: linear-gradient(135deg, #e8f7e8 0%, #dff0de 100%);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #cfe7d1;
+  border-radius: 16px;
+  box-shadow: 0 10px 26px rgba(34, 105, 54, 0.08);
+  min-height: 170px;
+  padding: 13px;
+  display: flex;
+  flex-direction: column;
+}
+
+.addStudentCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 38%);
+}
+
+.addStudentBadge {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #1f8a3b;
+  background: #e3f3df;
+  box-shadow: inset 0 0 0 1px rgba(31, 138, 59, 0.06);
+}
+
+.addStudentBadge svg {
+  width: 20px;
+  height: 20px;
+}
+
+.addStudentHeader {
+  margin-top: 4px;
+}
+
+.addStudentHeader span {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.addStudentDescription {
+  margin: 12px 0 0;
+  max-width: 210px;
+  color: #718096;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .addStudentContent {
   flex: 1;
-  display: grid;
-  grid-template-columns: 92px 1fr;
-  gap: 10px;
-  align-items: center;
-  margin-top: 6px;
-}
-
-.addStudentContent img {
-  width: 92px;
-  height: 92px;
-  object-fit: contain;
-}
-
-.addStudentContent p {
-  margin: 0 0 10px;
-  color: #18502b;
-  font-size: 12px;
-  line-height: 1.4;
-  max-width: 155px;
+  display: flex;
+  align-items: flex-end;
+  margin-top: 14px;
+  position: relative;
+  z-index: 1;
+  align-items: flex-end;
 }
 
 .addStudentContent button {
+  width: 70%;
+  min-height: 56px;
   border: 0;
-  border-radius: 8px;
-  padding: 9px 16px;
+  border-radius: 10px;
+  padding: 0 18px;
   background: #1f6b35;
   color: #fff;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.addStudentContent button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* .addStudentContent button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(31, 126, 56, 0.3);
+  filter: brightness(1.02);
+} */
+
+.addStudentContent button:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 16px rgba(31, 126, 56, 0.22);
 }
 
 .cardHeader {
