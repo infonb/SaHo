@@ -554,7 +554,7 @@ export default function StudentListPage() {
       </div>
 
       <div className="student-stats-grid">
-        <div className="student-stat-card total">
+        <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Total Students</div>
             <div className="stat-card-value">{totalStudents}</div>
@@ -577,7 +577,7 @@ export default function StudentListPage() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card boys">
+        <div className="reminderRecordCard boys">
           <div className="stat-card-content">
             <div className="stat-card-label">Boys</div>
             <div className="stat-card-value">{totalBoys}</div>
@@ -612,7 +612,7 @@ export default function StudentListPage() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card girls">
+        <div className="reminderRecordCard girls">
           <div className="stat-card-content">
             <div className="stat-card-label">Girls</div>
             <div className="stat-card-value">{totalGirls}</div>
@@ -645,7 +645,7 @@ export default function StudentListPage() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card sponsored">
+        <div className="reminderRecordCard sponsored">
           <div className="stat-card-content">
             <div className="stat-card-label">Sponsored</div>
             <div className="stat-card-value">{totalSponsored}</div>
@@ -682,7 +682,7 @@ export default function StudentListPage() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card orphans">
+        <div className="reminderRecordCard orphans">
           <div className="stat-card-content">
             <div className="stat-card-label">Orphans</div>
             <div className="stat-card-value">{totalOrphans}</div>

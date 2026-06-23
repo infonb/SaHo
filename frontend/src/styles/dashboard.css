@@ -1,0 +1,626 @@
+.dashboardScreen {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboardHero {
+  display: flex;
+  align-items: flex-end;
+}
+
+.dashboardGreeting h1 {
+  margin: 0;
+  font-size: 23px;
+  color: #0f172a;
+}
+
+.dashboardGreeting p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.dashboardTopRow,
+.dashboardMiddleRow,
+.dashboardBottomRow {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboardTopRow {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.dashboardMiddleRow {
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.dashboardBottomRow {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.dashboardCard {
+  background: #fff;
+  border: 1px solid #e9edf2;
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+}
+
+.statCard,
+.addStudentCard,
+.chartCard,
+.eventsCard,
+.dashboardDonutCard {
+  padding: 13px;
+}
+
+.statCard,
+.addStudentCard {
+  height: 100%;
+  min-height: 170px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.chartCard,
+.eventsCard {
+  height: 424px;
+  padding: 24px 24px 18px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.dashboardDonutCard {
+  min-height: 272px;
+}
+
+.statHeader,
+.addStudentTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.statIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #1f6b35;
+  background: #edf7ec;
+  flex: 0 0 auto;
+}
+
+.statIcon.purple {
+  color: #7c3aed;
+  background: #f1ecff;
+}
+
+.statIcon.green {
+  color: #1f6b35;
+  background: #e6f4e7;
+}
+
+.statIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.statValue {
+  display: block;
+  margin-top: 10px;
+  font-size: 36px;
+  line-height: 1;
+  color: #111827;
+  font-weight: 800;
+}
+
+.tone-green {
+  color: #1f6b35;
+}
+
+.tone-blue {
+  color: #3b62df;
+}
+
+.tone-pink {
+  color: #f04a7d;
+}
+
+.statSplit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  color: #111827;
+  font-size: 13px;
+}
+
+.dividerLine {
+  width: 1px;
+  height: 20px;
+  background: #d9dee6;
+}
+
+.categoryRows {
+  flex: 1;
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.categoryRows div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.addStudentCard {
+  background: linear-gradient(135deg, #e8f7e8 0%, #dff0de 100%);
+}
+
+.addStudentContent {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.addStudentContent img {
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+}
+
+.addStudentContent p {
+  margin: 0 0 10px;
+  color: #18502b;
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 155px;
+}
+
+.addStudentContent button {
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 16px;
+  background: #1f6b35;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.cardHeader h2,
+.dashboardDonutCard h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.pillButton,
+.linkButton,
+.calendarButton {
+  border: 0;
+  background: transparent;
+  color: #1f6b35;
+  font-weight: 700;
+  padding: 0;
+}
+
+.pillButton {
+  border: 1px solid #e3e7ee;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  background: #fff;
+  font-size: 14px;
+}
+
+.chartLegend {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  font-size: 13px;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.chartLegend span,
+.donutLegendRow span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendDot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.legendDot.blue { background: #4f71e6; }
+.legendDot.green { background: #3fb34f; }
+.legendDot.pink { background: #f04a7d; }
+.legendDot.orange { background: #f5a524; }
+.legendDot.purple { background: #8b5cf6; }
+
+.chartWrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0;
+}
+
+.dashboardEmptyState {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  padding: 18px;
+  border: 1px dashed #d7dde7;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 13px;
+  text-align: center;
+}
+
+.dashboardLineChart {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  overflow: visible;
+  display: block;
+}
+
+.chartGrid {
+  stroke: #edf0f4;
+  stroke-width: 1;
+}
+
+.chartAxisLabel {
+  fill: #94a3b8;
+  font-size: 12px;
+}
+
+.chartYear {
+  fill: #64748b;
+  font-size: 12px;
+}
+
+.chartAxisLine {
+  stroke: #dfe6ef;
+  stroke-width: 1.2;
+}
+
+.chartLine {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.chartLine.blue { stroke: #4f71e6; }
+.chartLine.pink { stroke: #ec4a87; }
+.chartLine.green { stroke: #2eaf4a; }
+
+.chartDot {
+  fill: #fff;
+  stroke-width: 2;
+}
+
+.chartDot.blue,
+.chartValue.blue {
+  stroke: #4f71e6;
+  fill: #4f71e6;
+}
+
+.chartDot.pink,
+.chartValue.pink {
+  stroke: #ec4a87;
+  fill: #ec4a87;
+}
+
+.chartDot.green,
+.chartValue.green {
+  stroke: #2eaf4a;
+  fill: #2eaf4a;
+}
+
+.chartValue {
+  font-size: 10px;
+  /* font-weight: 700; */
+}
+
+.eventsTitle {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.eventList {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0;
+}
+
+.eventRow {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #edf2f7;
+  transition: background 0.15s;
+  border-radius: 8px;
+  margin: 0 -8px;
+  padding: 14px 8px;
+}
+
+.eventRow:last-child {
+  border-bottom: 0;
+}
+
+.eventRow:hover {
+  background: #f8fafc;
+}
+
+.eventDateBox {
+  width: 56px;
+  height: 60px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.eventDateBox.tone-green { background: #eaf7e7; }
+.eventDateBox.tone-amber { background: #fff3dd; }
+.eventDateBox.tone-purple { background: #f0eaff; }
+
+.eventMonth {
+  font-size: 10px;
+  font-weight: 800;
+  color: #2f7a35;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.eventDay {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.eventInfo {
+  min-width: 0;
+}
+
+.eventTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventVenue {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventDateTime {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.eventClockIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.eventDateTimeInner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.eventFullDate {
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.eventTime {
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.donutLayout {
+  display: grid;
+  grid-template-columns: 214px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.donutWrap {
+  position: relative;
+  width: 184px;
+  height: 184px;
+  margin: 0 auto;
+}
+
+.donutWrap svg {
+  width: 100%;
+  height: 100%;
+}
+
+.donutTrack {
+  fill: none;
+  stroke: #eef2f7;
+}
+
+.donutSeg {
+  fill: none;
+}
+
+.donutCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  transform: translateY(0);
+}
+
+.donutCenter strong {
+  font-size: 29px;
+  line-height: 1;
+  color: #111827;
+  font-weight: 800;
+}
+
+.donutCenter span {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.donutLegend {
+  display: grid;
+  gap: 12px;
+  padding-left: 8px;
+}
+
+.donutLegendRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: #334155;
+}
+
+.donutLegendRow span {
+  min-width: 0;
+}
+
+.donutLegendRow strong {
+  min-width: 58px;
+  text-align: right;
+  font-weight: 500;
+}
+
+@media (max-width: 1280px) {
+  .dashboardTopRow,
+  .dashboardBottomRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboardMiddleRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboardTopRow,
+  .dashboardBottomRow {
+    grid-template-columns: 1fr;
+  }
+
+  .addStudentContent,
+  .donutLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .donutWrap {
+    width: 184px;
+    height: 184px;
+  }
+
+  .eventRow {
+    grid-template-columns: 56px 1fr;
+    gap: 10px;
+  }
+
+  .eventDateTime {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    padding-left: 70px;
+    margin-top: -4px;
+  }
+
+  .eventDateTimeInner {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .statCard,
+  .addStudentCard,
+  .chartCard,
+  .eventsCard,
+  .dashboardDonutCard {
+    padding: 14px;
+  }
+
+  .chartCard,
+  .eventsCard {
+    height: auto;
+    min-height: 360px;
+  }
+
+  .statValue {
+    font-size: 38px;
+  }
+}

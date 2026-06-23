@@ -2269,11 +2269,11 @@ tr.clickable:hover {
   gap: 16px;
 }
 
-/* .rowFlex {
+.rowFlex {
   display: flex;
   align-items: center;
   gap: 10px;
-} */
+} 
 
 .studentNameCell,
 .sponsorNameCell,
@@ -2715,9 +2715,9 @@ svg {
     width: 100%;
   }
 
-  /* .rowFlex {
+  .rowFlex {
     align-items: flex-start;
-  } */
+  }
 
   .paginationSummary {
     font-size: 12px;
@@ -5691,6 +5691,70 @@ td {
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
 }
 
+.admin-access-page .reminderRecordCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  padding: 18px 18px 16px;
+  min-height: 120px;
+}
+
+.admin-access-page .reminderRecordCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  height: 4px;
+  width: 100%;
+  background: var(--accent, var(--color-primary));
+  border-radius: 14px 14px 0 0;
+}
+
+.admin-access-page .reminderRecordCard::after {
+  content: "";
+  position: absolute;
+  right: -28px;
+  top: -28px;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--accent, var(--color-primary)) 14%,
+    transparent
+  );
+}
+
+.admin-access-page .reminderRecordCard .statLabel {
+  position: relative;
+  z-index: 1;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-access-page .reminderRecordCard .statValue {
+  position: relative;
+  z-index: 1;
+  color: #111827;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.admin-access-page .reminderRecordCard .statNote {
+  position: relative;
+  z-index: 1;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .reminderRecordCard::before {
   content: "";
   position: absolute;
@@ -6265,7 +6329,7 @@ td {
   overflow: hidden;
   transition: all 0.25s ease;
   background: #ffff;
-  border-left: 3px solid #b7c9c0;
+  /* border-left: 3px solid #b7c9c0; */
 }
 
 
@@ -6315,13 +6379,13 @@ td {
   --card-accent: #f59e0b;
 }
 
-.student-stat-card:hover {
+/* .student-stat-card:hover {
   transform: translateY(-2px);
   box-shadow:
     0 20px 42px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   border-left: 3px solid #4d7a63;
-}
+} */
 
 .stat-card-content {
   position: relative;

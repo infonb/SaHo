@@ -111,14 +111,21 @@ export default function AdminsPage() {
         className="statGrid"
         style={{ gridTemplateColumns: "repeat(3,1fr)", marginBottom: 14 }}
       >
-        <StatCard label="Super Admins" value={1} note="Full system access" />
         <StatCard
+          className="reminderRecordCard"
+          label="Super Admins"
+          value={1}
+          note="Full system access"
+        />
+        <StatCard
+          className="reminderRecordCard"
           label="Admins"
           value={admins.length}
           note="Manage records"
           accentColor="var(--blue)"
         />
         <StatCard
+          className="reminderRecordCard"
           label="Volunteers"
           value={volunteers.length}
           note="View & update only"

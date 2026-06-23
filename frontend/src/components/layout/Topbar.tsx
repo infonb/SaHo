@@ -37,7 +37,7 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
   };
 
   const goDashboard = () => {
-    window.location.href = '/view-students';
+    navigate('/dashboard');
   };
 
   return (
