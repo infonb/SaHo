@@ -33,10 +33,11 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
             String cursorName = "reminders_admin_ref";
             try (CallableStatement cs = con.prepareCall(
                     """
-                    CALL public.getreminders_admin_v3(
+                    CALL public.getreminders_admin_v6(
                         CAST(? AS text),
                         CAST(? AS integer),
                         CAST(? AS integer),
+                        CAST(? AS text),
                         CAST(? AS text),
                         CAST(? AS text),
                         CAST(? AS text),
@@ -47,13 +48,14 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
                     """)) {
                 cs.setString(1, safeFilter.getSearch());
                 cs.setInt(2, safeFilter.getPageNumber() != null ? safeFilter.getPageNumber() : 1);
-                cs.setInt(3, safeFilter.getPageSize() != null ? safeFilter.getPageSize() : 10000);
+                cs.setInt(3, safeFilter.getPageSize() != null ? safeFilter.getPageSize() : 10);
                 cs.setString(4, safeFilter.getStateIdsCsv());
                 cs.setString(5, safeFilter.getDistIdsCsv());
                 cs.setString(6, safeFilter.getMndlIdsCsv());
                 cs.setString(7, safeFilter.getVilIdsCsv());
-                cs.setString(8, safeFilter.getStatus());
-                cs.setString(9, cursorName);
+                cs.setString(8, safeFilter.getSchIdsCsv());
+                cs.setString(9, safeFilter.getStatus());
+                cs.setString(10, cursorName);
                 cs.execute();
             }
 
@@ -180,11 +182,11 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
                 .description(rs.getString("description"))
                 .eventDate(rs.getDate("event_date") != null ? rs.getDate("event_date").toLocalDate() : null)
                 .venue(rs.getString("venue"))
-                .stIdCsv(rs.getString("st_id_csv"))
-                .distIdsCsv(rs.getString("dist_ids_csv"))
-                .mndlIdsCsv(rs.getString("mndl_ids_csv"))
-                .vilIdsCsv(rs.getString("vil_ids_csv"))
-                .schIdsCsv(rs.getString("sch_ids_csv"))
+                .stIdCsv(getOptionalColumn(rs, "st_id_csv"))
+                .distIdsCsv(getOptionalColumn(rs, "dist_ids_csv"))
+                .mndlIdsCsv(getOptionalColumn(rs, "mndl_ids_csv"))
+                .vilIdsCsv(getOptionalColumn(rs, "vil_ids_csv"))
+                .schIdsCsv(getOptionalColumn(rs, "sch_ids_csv"))
                 .classIdsCsv(getOptionalColumn(rs, "class_ids_csv"))
                 .status((Boolean) getOptionalObject(rs, "status"))
                 .createdBy((Integer) getOptionalObject(rs, "created_by"))

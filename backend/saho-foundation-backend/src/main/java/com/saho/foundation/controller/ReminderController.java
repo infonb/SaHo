@@ -30,6 +30,7 @@ public class ReminderController {
             @RequestParam(required = false) String distIdsCsv,
             @RequestParam(required = false) String mndlIdsCsv,
             @RequestParam(required = false) String vilIdsCsv,
+            @RequestParam(required = false) String schIdsCsv,
             @RequestParam(required = false) String status) {
         ReminderFilterDto filter = ReminderFilterDto.builder()
                 .search(search)
@@ -39,6 +40,7 @@ public class ReminderController {
                 .distIdsCsv(distIdsCsv)
                 .mndlIdsCsv(mndlIdsCsv)
                 .vilIdsCsv(vilIdsCsv)
+                .schIdsCsv(schIdsCsv)
                 .status(status)
                 .build();
         return reminderService.getRemindersAdmin(filter);

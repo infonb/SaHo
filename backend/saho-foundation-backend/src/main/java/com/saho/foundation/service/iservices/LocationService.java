@@ -19,4 +19,6 @@ public interface LocationService {
     List<VillageMaster> getVillagesByMandalId(Integer mandalId);
 
     List<SchoolMaster> getSchoolsByVillageId(Integer villageId);
+
+    List<SchoolMaster> getAllSchools();
 }

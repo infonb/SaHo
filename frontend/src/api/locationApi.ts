@@ -24,3 +24,8 @@ export const getSchools = async (villageId: number) => {
   const res = await apiClient.get(`/locations/schools/${villageId}`);
   return res.data ?? [];
 };
+
+export const getAllSchools = async () => {
+  const res = await apiClient.get('/locations/schools');
+  return res.data ?? [];
+};
