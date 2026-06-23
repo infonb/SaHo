@@ -202,3 +202,46 @@ export interface DashboardStats {
   recent_students: StudentView[];
   top_sponsors: SponsorView[];
 }
+
+export interface DashboardData {
+  studentSummary: {
+    totalStudents: number;
+    boysCount: number;
+    girlsCount: number;
+  };
+  villageSummary: {
+    totalVillages: number;
+    totalMandals: number;
+    totalDistricts: number;
+  };
+  studentCategory: {
+    orphanCount: number;
+    semiOrphanCount: number;
+  };
+  upcomingEvents: {
+    remId: number;
+    title: string;
+    description?: string | null;
+    eventDate: string;
+    eventTime?: string | null;
+    venue: string;
+  }[];
+  ageDistribution: {
+    age10To11: number;
+    age12To13: number;
+    age14To15: number;
+    age16Plus: number;
+  };
+  studentsByLocation: {
+    mandalName: string;
+    studentCount: number;
+  }[];
+  yearlyStudentData: {
+    year: number;
+    totalStudents: number;
+    boysCount: number;
+    girlsCount: number;
+  }[];
+}
+
+export type DashboardStats = DashboardData;

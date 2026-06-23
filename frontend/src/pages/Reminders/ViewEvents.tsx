@@ -617,7 +617,7 @@ export default function ViewEvents() {
       />
 
       <div className="student-stats-grid" style={{ marginBottom: 24 }}>
-        <div className="student-stat-card total">
+        <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Total Events</div>
             <div className="stat-card-value">{events.length}</div>
@@ -632,7 +632,7 @@ export default function ViewEvents() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card total">
+        <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Upcoming</div>
             <div className="stat-card-value">{upcomingCount}</div>
@@ -645,7 +645,7 @@ export default function ViewEvents() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card total">
+        <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Ongoing</div>
             <div className="stat-card-value">{ongoingCount}</div>
@@ -657,7 +657,7 @@ export default function ViewEvents() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card total">
+        <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Completed</div>
             <div className="stat-card-value">{completedCount}</div>
@@ -669,7 +669,7 @@ export default function ViewEvents() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card total">
+        <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Cancelled</div>
             <div className="stat-card-value">{cancelledCount}</div>
