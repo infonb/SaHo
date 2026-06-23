@@ -4,8 +4,11 @@ import com.saho.foundation.dto.ReminderFilterDto;
 import com.saho.foundation.dto.ReminderRequestDto;
 import com.saho.foundation.dto.ReminderResponseDto;
 import com.saho.foundation.dto.ReminderCancelRequestDto;
+import com.saho.foundation.security.SecurityUtil;
 import com.saho.foundation.service.iservices.ReminderService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReminderController {
 
+    private static final Logger log = LoggerFactory.getLogger(ReminderController.class);
     private final ReminderService reminderService;
 
     @GetMapping
@@ -26,6 +30,7 @@ public class ReminderController {
             @RequestParam(required = false) String distIdsCsv,
             @RequestParam(required = false) String mndlIdsCsv,
             @RequestParam(required = false) String vilIdsCsv,
+            @RequestParam(required = false) String schIdsCsv,
             @RequestParam(required = false) String status) {
         ReminderFilterDto filter = ReminderFilterDto.builder()
                 .search(search)
@@ -35,9 +40,19 @@ public class ReminderController {
                 .distIdsCsv(distIdsCsv)
                 .mndlIdsCsv(mndlIdsCsv)
                 .vilIdsCsv(vilIdsCsv)
+                .schIdsCsv(schIdsCsv)
                 .status(status)
                 .build();
         return reminderService.getRemindersAdmin(filter);
+    }
+
+    @GetMapping("/student/{studentId}")
+    public List<ReminderResponseDto> getStudentReminders(@PathVariable Integer studentId) {
+        String role = SecurityUtil.getCurrentRole();
+        Integer tokenStudentId = SecurityUtil.getCurrentStudentId();
+        log.info("GET /api/reminders/student/{} - role={}, tokenStudentId={}", studentId, role, tokenStudentId);
+        SecurityUtil.checkStudentOwnership(studentId);
+        return reminderService.getStudentReminders(studentId);
     }
 
     @GetMapping("/{remId}")

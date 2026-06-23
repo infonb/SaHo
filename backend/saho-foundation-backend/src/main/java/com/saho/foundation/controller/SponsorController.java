@@ -6,8 +6,11 @@ import com.saho.foundation.dto.response.SponsorListResponseDto;
 import com.saho.foundation.dto.response.SponsorResponseDto;
 import com.saho.foundation.entity.StudentSponsor;
 import com.saho.foundation.repository.StudentSponsorRepository;
+import com.saho.foundation.security.SecurityUtil;
 import com.saho.foundation.service.ISponsorService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SponsorController {
 
+    private static final Logger log = LoggerFactory.getLogger(SponsorController.class);
     private final ISponsorService sponsorService;
     private final StudentSponsorRepository studentSponsorRepository;
 
@@ -41,6 +45,8 @@ public class SponsorController {
     @GetMapping("/{sponsorId}")
 public ResponseEntity<ApiResponseDto<SponsorResponseDto>>
 getSponsorById(@PathVariable Integer sponsorId) {
+    String role = SecurityUtil.getCurrentRole();
+    log.info("GET /api/sponsors/{} - role={}", sponsorId, role);
 
     SponsorResponseDto response =
             sponsorService.getSponsorById(sponsorId);
@@ -138,6 +144,11 @@ getSponsorById(@PathVariable Integer sponsorId) {
     public ResponseEntity<ApiResponseDto<StudentSponsor>> getStudentSponsorAssignment(
             @PathVariable Integer studentId
     ) {
+        String role = SecurityUtil.getCurrentRole();
+        Integer tokenStudentId = SecurityUtil.getCurrentStudentId();
+        log.info("GET /api/sponsors/student/{}/assignment - role={}, tokenStudentId={}", studentId, role, tokenStudentId);
+        SecurityUtil.checkStudentOwnership(studentId);
+
         List<StudentSponsor> assignments = studentSponsorRepository.findByStudentIdAndIsActiveTrue(studentId);
         StudentSponsor assignment = assignments.isEmpty() ? null : assignments.get(0);
 

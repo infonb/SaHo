@@ -45,4 +45,9 @@ public class LocationController {
     public List<SchoolMaster> getSchools(@PathVariable Integer villageId) {
         return locationService.getSchoolsByVillageId(villageId);
     }
+
+    @GetMapping("/schools")
+    public List<SchoolMaster> getAllSchools() {
+        return locationService.getAllSchools();
+    }
 }

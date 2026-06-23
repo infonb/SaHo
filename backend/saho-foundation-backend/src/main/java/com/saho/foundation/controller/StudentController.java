@@ -67,6 +67,11 @@ public class StudentController {
         return studentService.getAllStudents(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, sortColumn, sortDirection);
     }
 
+    @GetMapping("/me")
+    public StudentProfileResponseDto getMyProfile(@RequestParam Integer userId) {
+        return studentService.getStudentProfileByUserId(userId);
+    }
+
     @GetMapping("/{studentId}")
     public StudentProfileResponseDto getStudentById(@PathVariable Integer studentId) {
         return studentService.getStudentById(studentId);

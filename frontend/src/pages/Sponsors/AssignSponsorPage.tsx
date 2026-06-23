@@ -373,13 +373,13 @@ export default function AssignSponsorPage() {
                 loading={loading}
                 columns={[
                   
-                  { key: 'id', label: (<div className="idSelectCell header"><div style={{ width: '13px', height: '13px' }} aria-hidden="true" /><span>ID</span></div>), width: '92px' },
+                  { key: 'id', label: (<div className="idSelectCell header"><div style={{ width: '13px', height: '13px' }} aria-hidden="true" /><span>ID</span></div>)},
                     
 
-                  { key: 's', label: 'Sponsor', width: '420px' },
-                  { key: 't', label: 'Type', width: '140px' },
-                  { key: 'c', label: 'Contribution', width: '180px' },
-                  { key: 'st', label: 'Students Sponsored', width: '180px' }
+                  { key: 's', label: 'Sponsor' },
+                  { key: 't', label: 'Type' },
+                  { key: 'c', label: 'Contribution' },
+                  { key: 'st', label: 'Students Sponsored' }
                 ]}
               rows={sponsorRows}
               onRowClick={(index) => setSelectedSponsor(pageSponsors[index] ?? null)}

@@ -239,7 +239,7 @@ export default function SponsorListPage() {
       </div>
 
       <div className="student-stats-grid">
-        <div className="student-stat-card total">
+        <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Total Sponsors</div>
             <div className="stat-card-value">{totalSponsors}</div>
@@ -254,7 +254,7 @@ export default function SponsorListPage() {
             </svg>
           </div>
         </div>
-        <div className="student-stat-card total" style={{ '--card-accent': '#22c55e' } as React.CSSProperties}>
+        <div className="reminderRecordCard  total" style={{ '--card-accent': '#22c55e' } as React.CSSProperties}>
           <div className="stat-card-content">
             <div className="stat-card-label">Active</div>
             <div className="stat-card-value">{activeSponsors}</div>
@@ -279,7 +279,7 @@ export default function SponsorListPage() {
             </svg>
           </div>
         </div> */}
-        <div className="student-stat-card total" style={{ '--card-accent': '#22c55e' } as React.CSSProperties}>
+        <div className="reminderRecordCard total" style={{ '--card-accent': '#22c55e' } as React.CSSProperties}>
           <div className="stat-card-content">
             <div className="stat-card-label">Students</div>
             <div className="stat-card-value">{totalStudentsSponsored}</div>
@@ -626,7 +626,7 @@ function SponsorModal({
         </div>
       </div>
 
-      <div className="formGrid">
+      <div className="formGrid sponsorDetailsModal">
 
         <Info
           label="Email"

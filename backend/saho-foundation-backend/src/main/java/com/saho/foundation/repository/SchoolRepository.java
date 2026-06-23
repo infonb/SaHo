@@ -10,4 +10,6 @@ import java.util.List;
 public interface SchoolRepository extends JpaRepository<SchoolMaster, Integer> {
 
     List<SchoolMaster> findByVilId(Integer vilId);
+
+    List<SchoolMaster> findByIsDeletedFalse();
 }

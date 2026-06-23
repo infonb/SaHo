@@ -1,12 +1,19 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-// const DashboardIcon = () => (
-//   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-//     <path d="M4 11L12 4l8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-//     <path d="M5 12v7a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-//   </svg>
-// );
+const DashboardIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M4 11L12 4l8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 12v7a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const MyDashboardIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M9 15l3-3 3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 12v6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
 const StudentsIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M4 10l8-5 8 5-8 5-8-5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
@@ -48,7 +55,11 @@ type SidebarGroup = {
 const groups: SidebarGroup[] = [
   // { title: 'Overview', items: [{ icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' }] },
   {
-    items: [
+    items :isStudent
+        ? [
+            { icon: <MyDashboardIcon />, label: 'My Dashboard', to: '/student/dashboard' },
+          ]
+        : [
     // { icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' },
       { icon: <StudentsIcon />, label: 'Students', to: '/view-students' },
       { icon: <SponsorsIcon />, label: 'Sponsors', to: '/sponsors' },
@@ -72,25 +83,19 @@ export default function Sidebar({ open, onMobileNavigate }: { open: boolean; onM
   const sidebarState = open ? 'expanded' : 'collapsed';
 
   return (
-    <aside
-      className={`mobile-sidebar sidebar ${sidebarState}`}
-      data-sidebar-state={sidebarState}
-    >
-      {groups.map((group) => (
+    <aside className={`mobile-sidebar sidebar ${sidebarState}`} data-sidebar-state={sidebarState}>
+      <div className="sidebarHead" />
+      {groups.map(group => (
         <div className="navGroup" key={group.title ?? group.items[0].label}>
-          {group.title && (
-            <div className="navSection" aria-hidden={!open}>
-              {group.title}
-            </div>
-          )}
-          {group.items.map((item) => {
-            const active =
-              item.label === "Students"
-                ? pathname === "/view-students" ||
-                  pathname.startsWith("/students")
-                : pathname === item.to ||
-                  (item.to !== "/dashboard" &&
-                    pathname.startsWith(`${item.to}/`));
+          {group.title && <div className="navSection" aria-hidden={!open}>{group.title}</div>}
+          {group.items.map(item => {
+            const active =item.label === 'My Dashboard'
+              ? pathname.startsWith('/student/dashboard')
+              : item.label === 'Dashboard'
+                ? pathname === '/dashboard'
+             :item.label === 'Students'
+              ? pathname === '/view-students' || pathname.startsWith('/students')
+              : pathname === item.to || (item.to !== '/dashboard' && pathname.startsWith(`${item.to}/`));
             return (
               <div className="nav-item" key={item.label}>
                 <Link

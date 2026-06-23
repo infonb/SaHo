@@ -67,8 +67,8 @@ body {
   background: linear-gradient(180deg, #f7fafc 0%, #f4f7fb 100%);
   color: var(--color-text);
   font-family: var(--font-body) !important ;
-  overflow-x: hidden;
 }
+
 
 button,
 input,
@@ -111,12 +111,12 @@ a {
 @keyframes pageIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    top: -6px;
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    top: 0;
   }
 }
 
@@ -145,6 +145,7 @@ a {
 }
 
 .page-enter {
+  position: relative;
   animation: pageIn .22s ease both;
 }
 

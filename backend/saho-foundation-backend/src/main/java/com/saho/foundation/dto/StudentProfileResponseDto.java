@@ -25,6 +25,7 @@ public class StudentProfileResponseDto {
     private String religion;
     private String bloodGroup;
     private Integer classId;
+    private String className;
     private String siblingId;
     private String orphanStatus;
     private String imageUrl;
