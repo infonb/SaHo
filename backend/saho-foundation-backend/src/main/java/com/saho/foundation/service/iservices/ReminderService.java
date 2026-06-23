@@ -16,4 +16,6 @@ public interface ReminderService {
     void deleteReminder(Integer remId);
 
     void cancelReminder(Integer remId, Integer updatedBy);
+
+    List<ReminderResponseDto> getStudentReminders(Integer studentId);
 }

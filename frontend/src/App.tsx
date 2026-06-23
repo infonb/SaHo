@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppLayout from './components/layout/AppLayout';
+import StudentLayout from './components/layout/StudentLayout';
 import LoginPage from './pages/Login/LoginPage';
 import DashboardPage from './pages/Dashboard/dashboard';
 import StudentListPage from './pages/Students/StudentListPage';
@@ -14,10 +15,39 @@ import AdminsPage from './pages/Admins/AdminsPage';
 import ToastContainer from './components/common/ToastContainer';
 import ViewEvents from './pages/Reminders/ViewEvents';
 import EventFormPage from './pages/Reminders/EventFormPage';
+import StudentDashboard from './pages/StudentDashboard/StudentDashboard';
+
+function isTokenValid(): boolean {
+  const token = localStorage.getItem('saho_token');
+  if (!token) return false;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
 
 function Guard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated || !isTokenValid()) {
+    localStorage.removeItem('saho_token');
+    localStorage.removeItem('saho_user');
+    return <Navigate to="/login" replace />;
+  }
+  if (user?.role === 'student') return <Navigate to="/student/dashboard" replace />;
+  return <>{children}</>;
+}
+
+function StudentGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated || !isTokenValid()) {
+    localStorage.removeItem('saho_token');
+    localStorage.removeItem('saho_user');
+    return <Navigate to="/login" replace />;
+  }
+  if (user?.role !== 'student') return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
 }
 
 export default function App() {
@@ -46,6 +76,9 @@ export default function App() {
             <Route path="volunteers/add" element={<VolunteerFormPage />} />
             <Route path="volunteers/edit/:id" element={<VolunteerFormPage />} />
             <Route path="admins" element={<AdminsPage />} />
+          </Route>
+          <Route path="student/dashboard" element={<StudentGuard><StudentLayout /></StudentGuard>}>
+            <Route index element={<StudentDashboard />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

@@ -526,6 +526,12 @@ h1, h2, h3, h4, h5, h6
   border-color: var(--amber-border);
 }
 
+.badge.warning {
+  background: #fff3cd;
+  color: #856404;
+  border-color: #ffc107;
+}
+
 .avatar {
   border-radius: 50%;
   display: inline-grid;
@@ -2201,41 +2207,6 @@ tr.clickable:hover {
   flex: 0 0 auto;
 }
 
-.loginShell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 30px;
-}
-
-.loginCard {
-  width: min(900px, 100%);
-  display: flex;
-  border-radius: var(--r-xl);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-}
-
-.loginLeft {
-  width: 340px;
-  background: linear-gradient(160deg, #0f172a 0%, #0f766e 100%);
-  color: #ffffff;
-  padding: 36px;
-  display: flex;
-  flex-direction: column;
-}
-
-.loginLeft h2 {
-  font-family: var(--font-display);
-  font-size: 28px;
-}
-
-.loginRight {
-  flex: 1;
-  padding: 48px;
-}
 
 .tabs {
   display: grid;
@@ -2508,14 +2479,10 @@ svg {
   .formGrid {
     grid-template-columns: 1fr;
   }
-
-  .loginCard {
-    flex-direction: column;
-  }
-
+/* 
   .loginLeft {
     width: auto;
-  }
+  }  */
 
   .filterBar {
     grid-template-columns: 1fr;
@@ -2736,11 +2703,11 @@ svg {
     min-width: 28px;
     height: 28px;
   }
-
+/* 
   .loginRight,
   .loginLeft {
     padding: 28px;
-  }
+  } */
 
   .toastStack {
     left: 12px;
@@ -3218,12 +3185,25 @@ svg {
   box-shadow: 0 8px 18px rgba(15, 118, 110, 0.14) !important;
 }
 
-.appShell {
+/* .appShell {
   min-height: 100vh;
   overflow-x: hidden;
+} */
+
+.dashboard-header {
+  width: 100%;
+  transition: all 0.3s ease;
 }
 
-
+.headerSidebarToggle {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0;
+}
 
 .sidebar-overlay {
   display: none;
@@ -3248,7 +3228,7 @@ svg {
 
 
 .sidebar.collapsed {
-  /* padding-top: 14px; */
+  /*padding-top: 14px; */
 }
 
 @media (max-width: 900px) {
@@ -3521,6 +3501,64 @@ svg {
   font-size: 11px;
 }
 
+.dropdown {
+  top: 44px;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+}
+
+.profileDropdown {
+  width: 260px;
+  border-radius: 16px;
+  padding: 10px;
+  padding-top: 14px;
+}
+
+.profileDropdownHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px 10px;
+}
+
+.profileDropdownInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profileDropdownName {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.profileDropdownDivider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 2px 0;
+}
+
+.profileDropdownLoading {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--color-text3);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #182131 0%, #141d2c 52%, #111827 100%);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
+  padding-top: 8px;
+}
+
+.sidebarHead {
+  height: 10px;
+}
+
 .navSection {
   margin: 18px 18px 8px;
   font-size: 10px;
@@ -3702,13 +3740,13 @@ svg {
   margin-top: 4px;
 }
 
-.panel {
+/* .panel {
   padding: 14px;
   border-radius: 12px;
   border-color: #e7ebf1;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.035);
-}
+} */
 
 .panel:hover {
   border-color: #dde4ee;
@@ -3960,11 +3998,7 @@ td {
   gap: 12px;
   grid-template-columns: minmax(0, 1fr) 300px;
 }
-
-.loginCard {
-  border-radius: 18px;
-  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.13);
-}
+/* 
 
 .loginLeft {
   width: 310px;
@@ -3974,7 +4008,7 @@ td {
 
 .loginRight {
   padding: 38px;
-}
+} */
 
 @media (max-width: 900px) {
   :root {
@@ -4046,12 +4080,13 @@ td {
   .filterBar {
     padding: 9px;
   }
-
+}
+/* 
   .loginRight,
   .loginLeft {
     padding: 24px;
   }
-}
+} */
 
 /* Simplified module navigation + compact student row actions */
 .nav-item .navItem {

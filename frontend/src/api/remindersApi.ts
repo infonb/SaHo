@@ -79,6 +79,11 @@ export const getReminders = async (filters?: ReminderFilterParams): Promise<Remi
   return (res.data ?? []).map(normalizeReminder);
 };
 
+export const getStudentReminders = async (studentId: number): Promise<ReminderDto[]> => {
+  const res = await apiClient.get(`/reminders/student/${studentId}`);
+  return res.data ?? [];
+};
+
 export const getReminderById = async (remId: number): Promise<ReminderDto | undefined> => {
   const res = await apiClient.get(`/reminders/${remId}`);
   return res.data ? normalizeReminder(res.data) : undefined;

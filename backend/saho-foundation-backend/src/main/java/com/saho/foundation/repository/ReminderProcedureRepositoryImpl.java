@@ -194,6 +194,24 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
                 .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReminderResponseDto> getStudentReminders(Integer studentId) {
+        String sql = """
+            SELECT r.rem_id, r.title, r.description, r.event_date, r.venue,
+                   r.st_id_csv, r.dist_ids_csv, r.mndl_ids_csv, r.vil_ids_csv,
+                   r.sch_ids_csv, r.class_ids_csv, r.status, r.created_by,
+                   r.created_at, r.updated_at, 0 AS total_count
+            FROM student_reminders sr
+            JOIN reminders r ON sr.rem_id = r.rem_id
+            WHERE sr.std_id = ?
+              AND sr.is_deleted = FALSE
+              AND r.is_deleted = FALSE
+            ORDER BY r.event_date DESC
+            """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapReminder(rs), studentId);
+    }
+
     private String getOptionalColumn(ResultSet rs, String columnName) {
         try {
             rs.findColumn(columnName);

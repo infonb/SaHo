@@ -46,4 +46,10 @@ public class ReminderServiceImpl implements ReminderService {
     public void cancelReminder(Integer remId, Integer updatedBy) {
         reminderProcedureRepository.cancelReminder(remId, updatedBy);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReminderResponseDto> getStudentReminders(Integer studentId) {
+        return reminderProcedureRepository.getStudentReminders(studentId);
+    }
 }
