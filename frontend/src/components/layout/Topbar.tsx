@@ -1,10 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../common/Avatar';
-import Badge from '../common/Badge';
-import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
-import sahoImg from '../../assets/saho_Img.png';
 import logo from '../../assets/logo.png';
 import '../../styles/Topbar.css'
 
@@ -17,19 +13,17 @@ export const LeafLogo = () => (
   </svg>
 );
 
-export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: boolean; onSidebarToggle: () => void }) {
+export default function Topbar({
+  sidebarOpen,
+  onSidebarToggle,
+  onAiOpen,
+}: {
+  sidebarOpen: boolean;
+  onSidebarToggle: () => void;
+  onAiOpen: () => void;
+}) {
   const { user, logout } = useAuth();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   const signOut = () => {
     logout();
@@ -88,28 +82,37 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
         )}
       </div> */}
 
-    <div className="userTooltipWrapper">
-  <button className="userIconButton" aria-label="User menu">
-    <Avatar name={user?.username ?? 'Admin'} size="md" />
-  </button>
+      <div className="topbarActions">
+        <button className="topbarAiButton" type="button" aria-label="Open AI assistant" onClick={onAiOpen}>
+          <svg className="topbarAiSparkle" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M13.8 2.5 5.7 13.1h5.1l-1.3 8.4 8.8-11.8h-5.5l1-7.2Z" />
+          </svg>
+          <span>Ask AI</span>
+        </button>
 
-  <div className="userTooltip">
-    <div className="tooltipName">
-      {user?.username || 'Admin User'}
-    </div>
+        <div className="userTooltipWrapper">
+          <button className="userIconButton" aria-label="User menu">
+            <Avatar name={user?.username ?? 'Admin'} size="md" />
+          </button>
 
-    <div className="tooltipEmail">
-      {user?.email_id}
-    </div>
+          <div className="userTooltip">
+            <div className="tooltipName">
+              {user?.username || 'Admin User'}
+            </div>
 
-    <button
-      className="tooltipLogout"
-      onClick={signOut}
-    >
-      Sign Out
-    </button>
-  </div>
-</div>
+            <div className="tooltipEmail">
+              {user?.email_id}
+            </div>
+
+            <button
+              className="tooltipLogout"
+              onClick={signOut}
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
 
     </header>
   );

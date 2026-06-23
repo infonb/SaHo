@@ -29,14 +29,9 @@
     padding: 0 16px;
   }
 
-  .sidebar-open .dashboard-header {
-    box-shadow: 0 12px 34px rgba(15, 23, 42, 0.12);
-  }
-
   .topbarLeft {
   display: flex;
   align-items: center;
-  gap: 0;
   min-width: 0;
   flex: 0 0 auto;
   padding-left: 10px;
@@ -72,26 +67,20 @@
 
 .headerSidebarToggle {
   flex: 0 0 auto;
-  /* width: 42px;
-  height: 42px; */
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
   padding: 0;
   justify-content: center;
   flex-shrink: 0;
   margin: 0;
-  width:auto;
-  height: auto;
-  min-width:0;
-  min-height:0;
   border:0;
     border-radius: 0;
     background:transparent;
     box-shadow:none;
     position: relative;
   }
-
-.headerSidebarToggle.closeIcon {
-  gap: 0;
-}
 
 .headerSidebarToggle .sidebarCancelIcon {
   width: 20px;
@@ -104,10 +93,10 @@
 
 .headerSidebarToggle,
 .headerSidebarToggle[aria-expanded="true"] {
-  width: auto;
-  height: auto;
-  min-width: 0;
-  min-height: 0;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -119,17 +108,33 @@
    border-color: transparent;
 }
 
+.headerSidebarToggle.menuIcon {
+  gap: 4px;
+}
+
+.headerSidebarToggle.closeIcon {
+  gap: 0;
+}
+
 @media (max-width: 900px) {
   .topbar {
     padding-left: 13px;
   }
 
+  .topbarLeft {
+    gap: 0;
+  }
+
+  .brandLogoButton {
+    padding-right: 2px;
+  }
+
   .headerSidebarToggle,
   .headerSidebarToggle[aria-expanded="true"] {
-  width: auto;
-  height: auto;
-  min-width: 0;
-  min-height: 0;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -148,6 +153,7 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
+  flex: 0 0 auto;
 }
 
 .topbarBrand .brandMark {
@@ -215,6 +221,7 @@
 }
 
 .brandLogoButton {
+  flex: 0 0 auto;
   border: 0;
   background: transparent;
   padding-left: 10px;
@@ -237,11 +244,74 @@
 }
 
 .topbarTitle {
+  flex: 0 0 auto;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 18px;
   color: var(--color-text);
   white-space: nowrap;
+}
+
+.topbarActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+}
+
+.topbarAiButton {
+  position: relative;
+  min-height: 32px;
+  border: 0;
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(105deg, #9c35d7 0%, #c52b90 52%, #e61f38 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: none;
+  cursor: pointer;
+  isolation: isolate;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: filter 0.18s ease;
+}
+
+.topbarAiButton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.2), transparent 44%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.topbarAiSparkle {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  stroke: none;
+}
+
+.topbarAiButton span,
+.topbarAiSparkle {
+  position: relative;
+  z-index: 1;
+}
+
+.topbarAiButton:hover {
+  filter: brightness(1.04);
+}
+
+.topbarAiButton:focus-visible {
+  outline: 3px solid rgba(139, 53, 221, 0.26);
+  outline-offset: 2px;
 }
 
 .userIconButton {
@@ -335,4 +405,32 @@
 
 .tooltipLogout:hover {
   color: #dc2626;
+}
+
+@media (max-width: 520px) {
+  .brandLogoButton {
+    padding-right: 4px;
+  }
+
+  .topbarBrand {
+    flex: 0 0 auto;
+  }
+
+  .topbarTitle {
+    flex: 0 0 auto;
+  }
+
+  .divider {
+    margin: 0 6px;
+  }
+
+  .topbarActions {
+    gap: 10px;
+  }
+
+  .topbarAiSparkle {
+    width: 16px;
+    height: 16px;
+  }
+
 }

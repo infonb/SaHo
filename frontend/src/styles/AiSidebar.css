@@ -1,0 +1,372 @@
+.aiSidebar {
+  position: fixed;
+  top: var(--topbar-h);
+  right: 0;
+  bottom: 0;
+  z-index: 35;
+  width: var(--sidebar-expanded-w);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 18px 22px;
+  background:
+    linear-gradient(180deg, rgba(215, 247, 239, 0.92) 0, rgba(255, 255, 255, 0.96) 92px),
+    var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  box-shadow: none;
+  color: var(--color-text);
+  overflow-y: auto;
+  scrollbar-width: none;
+  transition:
+    transform 0.24s ease,
+    visibility 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.aiSidebar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.aiSidebarHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.aiSidebarHeader h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.aiSidebarHeader p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--color-text3);
+}
+
+.aiSidebarClose,
+.aiPromptBox button {
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aiSidebarClose {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 22px;
+}
+
+.aiSidebarClose:hover {
+  background: rgba(15, 118, 110, 0.1);
+}
+
+.aiGreeting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 14px 36px rgba(15, 118, 110, 0.08);
+}
+
+.aiGreetingIcon,
+.aiActionIcon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.aiGreetingIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 20px;
+}
+
+.aiGreeting strong,
+.aiGreeting span {
+  display: block;
+}
+
+.aiGreeting strong {
+  font-size: 14px;
+  font-weight: 850;
+  color: var(--color-text);
+}
+
+.aiGreeting span {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--color-text3);
+}
+
+.aiSidebarSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aiSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.aiSectionTitle {
+  font-size: 13px;
+  font-weight: 850;
+  color: var(--color-text);
+}
+
+.aiViewAllButton {
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0;
+}
+
+.aiActionList,
+.aiRecentList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aiActionButton,
+.aiRecentButton {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-text);
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
+}
+
+.aiActionButton {
+  min-height: 60px;
+  border-radius: var(--r-md);
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+}
+
+.aiActionButton:hover,
+.aiRecentButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(141, 223, 210, 0.95);
+  box-shadow: 0 12px 28px rgba(15, 118, 110, 0.1);
+  background: #ffffff;
+}
+
+.aiActionIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 18px;
+}
+
+.aiActionText {
+  min-width: 0;
+  display: block;
+}
+
+.aiActionText strong,
+.aiActionText span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aiActionText strong {
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.aiActionText span {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--color-text3);
+}
+
+.aiActionChevron {
+  color: var(--color-text2);
+  justify-self: end;
+}
+
+.aiRecentButton {
+  min-height: 40px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+}
+
+.aiRecentButton span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.aiRecentButton time {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.aiPromptBox {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  background: #ffffff;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.1);
+}
+
+.aiPromptBox input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--color-text);
+  font-size: 13px;
+  background: transparent;
+}
+
+.aiPromptBox input::placeholder {
+  color: var(--color-text3);
+}
+
+.aiPromptBox button {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 18px;
+  box-shadow: none;
+}
+
+.aiDisclaimer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.aiSidebarOverlay {
+  position: fixed;
+  inset: var(--topbar-h) 0 0 0;
+  z-index: 32;
+  display: none;
+  border: 0;
+  background: rgba(15, 23, 42, 0.34);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.22s ease,
+    visibility 0.22s ease;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (min-width: 1101px) {
+  .aiSidebar:not(.isOpen) {
+    transform: translateX(100%);
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .appShell.aiSidebarOpen .layoutMain {
+    margin-right: 0;
+  }
+
+  .aiSidebar {
+    width: min(var(--sidebar-expanded-w), 92vw);
+    z-index: 75;
+    transform: translateX(100%);
+    visibility: hidden;
+    pointer-events: none;
+    box-shadow: none;
+  }
+
+  .aiSidebar.isOpen {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .aiSidebarOverlay {
+    display: block;
+  }
+
+  .aiSidebarOverlay.isVisible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .aiSidebar {
+    width: 100vw;
+    padding: 16px 14px 18px;
+  }
+
+  .aiSidebarHeader h2 {
+    font-size: 18px;
+  }
+
+  .aiActionButton {
+    grid-template-columns: 36px minmax(0, 1fr) 16px;
+  }
+
+}

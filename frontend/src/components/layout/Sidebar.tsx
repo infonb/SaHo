@@ -34,7 +34,18 @@ const AdminIcon = () => (
   </svg>
 );
 
-const groups = [
+type SidebarItem = {
+  icon: JSX.Element;
+  label: string;
+  to: string;
+};
+
+type SidebarGroup = {
+  title?: string;
+  items: SidebarItem[];
+};
+
+const groups: SidebarGroup[] = [
   // { title: 'Overview', items: [{ icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' }] },
   {
     items: [
@@ -47,12 +58,13 @@ const groups = [
   },
 ];
 
-export default function Sidebar({ open }: { open: boolean }) {
+export default function Sidebar({ open, onMobileNavigate }: { open: boolean; onMobileNavigate?: () => void }) {
   const { pathname } = useLocation();
   const { logout } = useAuth();
   const navigate = useNavigate();
 
   const signOut = () => {
+    onMobileNavigate?.();
     logout();
     navigate('/login');
   };
@@ -85,6 +97,7 @@ export default function Sidebar({ open }: { open: boolean }) {
                   className={`nav-link navItem ${active ? "active" : ""}`}
                   to={item.to}
                   title={!open ? item.label : undefined}
+                  onClick={onMobileNavigate}
                 >
                   <span className="navIcon">{item.icon}</span>
                   <span className="navLabel">{item.label}</span>
