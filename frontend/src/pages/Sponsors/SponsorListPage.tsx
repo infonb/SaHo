@@ -626,7 +626,7 @@ function SponsorModal({
         </div>
       </div>
 
-      <div className="formGrid">
+      <div className="formGrid sponsorDetailsModal">
 
         <Info
           label="Email"

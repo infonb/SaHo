@@ -9,6 +9,7 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 import DataTable from '../../components/common/DataTable';
 import Pagination from '../../components/common/Pagination';
 import Avatar from '../../components/common/Avatar';
+import Badge from '../../components/common/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import type { StudentFilters, StudentView, SponsorView } from '../../types';
@@ -1065,18 +1066,56 @@ export default function StudentListPage() {
         </div>
       </div>
       <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
-      <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.sponsorName ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
+      <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title="Sponsor Details" width={760}>
         {sponsorDetails ? (
-          <div>
-          <h3 style={{ marginTop: 0 }}>{sponsorDetails.sponsorName}</h3>
-          <div className="sub">{sponsorDetails.type} - {sponsorDetails.nationality}</div>
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontWeight: 800 }}>{sponsorDetails.email}</div>
-            <div className="sub">{sponsorDetails.ph_no}</div>
-            <div className="sub" style={{ marginTop: 8 }}>{sponsorDetails.loc}</div>
-            <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib}</div></div>
-            <div style={{ marginTop: 12 }}><strong>Students Sponsored:</strong> <span className="strong">{sponsorDetails.students_count}</span></div>
-          </div>
+          <div className="studentSponsorDetailsModal">
+            <div className="rowFlex" style={{ marginBottom: 18 }}>
+              <Avatar name={sponsorDetails.sponsorName} size="lg" />
+              <div>
+                <h2 style={{ margin: 0, fontFamily: 'var(--font-display)' }}>
+                  {sponsorDetails.sponsorName}
+                </h2>
+                <div className="actions" style={{ marginTop: 8 }}>
+                  <span
+                    className={`sponsorTypeBadge ${
+                      sponsorDetails.type === 'Organisation' ? 'organisation' : 'individual'
+                    }`}
+                  >
+                    {sponsorDetails.type}
+                  </span>
+                  <Badge variant="assigned">
+                    {sponsorDetails.students_count} Students
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="formGrid">
+              <div className="field">
+                <span>Email</span>
+                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.email || '-'}</div>
+              </div>
+              <div className="field">
+                <span>Phone</span>
+                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.ph_no || '-'}</div>
+              </div>
+              <div className="field">
+                <span>Nationality</span>
+                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.nationality || '-'}</div>
+              </div>
+              <div className="field">
+                <span>Contribution</span>
+                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.contrib || '-'}</div>
+              </div>
+              <div className="field">
+                <span>Date of Birth</span>
+                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.dob || '-'}</div>
+              </div>
+              <div className="field">
+                <span>Location</span>
+                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.loc || '-'}</div>
+              </div>
+            </div>
           </div>
         ) : (
           <div>No sponsor information available</div>
