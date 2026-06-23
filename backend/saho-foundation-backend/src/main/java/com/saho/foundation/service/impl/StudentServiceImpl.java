@@ -9,6 +9,7 @@ import com.saho.foundation.dto.StudentSiblingSearchResponseDto;
 import com.saho.foundation.entity.Guardian;
 import com.saho.foundation.entity.SchoolMaster;
 import com.saho.foundation.entity.Student;
+import com.saho.foundation.entity.User;
 import com.saho.foundation.enums.Gender;
 import com.saho.foundation.enums.OrphanStatus;
 import com.saho.foundation.enums.Religion;
@@ -17,13 +18,16 @@ import com.saho.foundation.exception.ResourceNotFoundException;
 import com.saho.foundation.repository.GuardianRepository;
 import com.saho.foundation.repository.SchoolRepository;
 import com.saho.foundation.repository.StudentRepository;
+import com.saho.foundation.repository.UserRepository;
 import com.saho.foundation.service.iservices.StudentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
 
 import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 import java.util.ArrayList;
@@ -40,6 +44,8 @@ public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
     private final GuardianRepository guardianRepository;
     private final SchoolRepository schoolRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -96,6 +102,20 @@ public class StudentServiceImpl implements StudentService {
 
         Student savedStudent = studentRepository.findByAadhaarNumber(requestDto.getAadhaarNumber())
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found after procedure call for aadhaarNumber: " + requestDto.getAadhaarNumber()));
+
+        if (userRepository.findByStudentId(savedStudent.getStudentId()).isEmpty()) {
+            User user = User.builder()
+                    .studentId(savedStudent.getStudentId())
+                    // Default password is the student's DOB in DDMMYYYY format (e.g., 10-Oct-2017 → 10102017)
+                    .password(passwordEncoder.encode(savedStudent.getDob().format(DateTimeFormatter.ofPattern("ddMMyyyy"))))
+                    .role("STUDENT")
+                    .isActive(true)
+                    .isDeleted(false)
+                    .createdBy(String.valueOf(requestDto.getCreatedBy()))
+                    .build();
+            userRepository.save(user);
+        }
+
         syncSiblingPair(savedStudent.getStudentId(), requestDto.getSiblingIds(), Boolean.TRUE.equals(requestDto.getHasSibling()));
         return mapToResponseDto(savedStudent);
     }
@@ -218,6 +238,19 @@ public class StudentServiceImpl implements StudentService {
     public StudentProfileResponseDto getStudentById(Integer studentId) {
         return studentRepository.getStudentProfileById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+    }
+
+    @Override
+    public StudentProfileResponseDto getStudentProfileByUserId(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        if (!"STUDENT".equals(user.getRole())) {
+            throw new IllegalArgumentException("User is not a student");
+        }
+        if (user.getStudentId() == null) {
+            throw new ResourceNotFoundException("Student profile not linked to user: " + userId);
+        }
+        return getStudentById(user.getStudentId());
     }
 
     @Override

@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
 /**
  * API Client Configuration for SaHo Foundation Admin
@@ -12,28 +12,20 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 
 // Use Vite's /api proxy in development to avoid browser CORS issues.
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
-const DEBUG_DISABLE_AUTH = true;
-const DEBUG_DISABLE_401_REDIRECT = true;
-console.log(BASE_URL);
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    // Explicitly set headers that trigger CORS preflight
-    // These are needed for CORS to work properly
     'Accept': 'application/json',
   },
   timeout: 12000,
-  // withCredentials is crucial for CORS when using authentication
   withCredentials: true,
 });
 
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('saho_token');
-  if (!DEBUG_DISABLE_AUTH && token) {
+  if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-  } else {
-    console.warn('[apiClient] auth header injection disabled for debugging');
   }
   return config;
 });
@@ -45,7 +37,7 @@ apiClient.interceptors.response.use(
     const url = err.config?.url || 'unknown url';
     const method = err.config?.method?.toUpperCase() || 'UNKNOWN';
     console.error('[apiClient] response error', method, url, err.response?.status, err.message, err);
-    if (!DEBUG_DISABLE_401_REDIRECT && err.response?.status === 401) {
+    if (err.response?.status === 401) {
       localStorage.removeItem('saho_token');
       localStorage.removeItem('saho_user');
       window.location.href = '/login';

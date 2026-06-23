@@ -195,6 +195,63 @@ export const exportStudentsCsv = async ({
   return res.data as Blob;
 };
 
+export const getMyProfile = async (userId: number): Promise<StudentView | undefined> => {
+  try {
+    const res = await apiClient.get('/students/me', { params: { userId } });
+    const s: any = res.data;
+    const mapGender = (g: any) => (g === '1' ? 'Male' : g === '2' ? 'Female' : g === '3' ? 'Other' : g ?? 'Other');
+    const mapReligion = (r: any) => (r === '1' ? 'Hindu' : r === '2' ? 'Muslim' : r === '3' ? 'Christian' : r === '4' ? 'Buddhist' : r === '5' ? 'Jain' : r === '6' ? 'Sikh' : r === '7' ? 'Other' : r ?? null);
+    const mapOrphan = (o: any) => (o === '1' ? 'None' : o === '2' ? 'Single Parent' : o === '3' ? 'Orphan' : o ?? null);
+
+    console.log('Student Profile Response:', s);
+    return {
+      student_id: s.studentId ?? s.student_id,
+      studentName: s.studentName ?? s.fullName ?? s.full_name ?? s.name ?? '',
+      full_name: s.studentName ?? s.fullName ?? s.full_name ?? s.name ?? '',
+      email: s.emailId ?? s.email ?? '',
+      dob: s.dob ?? '',
+      gender: mapGender(s.gender),
+      aadhaar_number: s.aadhaarNumber ?? '',
+      caste: s.casteName ?? '',
+      religion: mapReligion(s.religion),
+      blood_group: s.bloodGroup ?? null,
+      class_id: s.className ?? (s.classId ? String(s.classId) : ''),
+      orphan_status: mapOrphan(s.orphanStatus),
+      image_url: s.imageUrl ?? null,
+      is_active: true,
+      created_at: '',
+      created_by: '',
+      modified_at: null,
+      modified_by: null,
+      sch_id: 0,
+      sch_name: s.schName ?? '',
+      sch_address: s.schAddress ?? '',
+      vil_id: 0,
+      vil_name: s.vilName ?? '',
+      mndl_id: 0,
+      mndl_name: s.mndlName ?? '',
+      dist_id: 0,
+      dist_name: s.distName ?? '',
+      st_id: 0,
+      st_name: s.stName ?? '',
+      guardian_id: 0,
+      guardian_full_name: s.guardianName ?? '',
+      guardian_phone: s.phoneNumber ?? '',
+      guardian_relation_name: s.guardianRelationName ?? '',
+      guardian_occ: s.occ ?? null,
+      sponsor_id: null,
+      sponsorName: null,
+      sponsor_type: null,
+      sibling_id: s.siblingId ?? null,
+      sibling_student_name: null,
+      sibling_student_id: null,
+    } as unknown as StudentView;
+  } catch (err) {
+    console.error('[studentApi] getMyProfile failed', userId, err);
+    return undefined;
+  }
+};
+
 export const getStudentById = async (id: number): Promise<StudentView | undefined> => {
   // Try backend first
   try {
@@ -207,7 +264,8 @@ export const getStudentById = async (id: number): Promise<StudentView | undefine
 
     const view = {
       student_id: s.studentId ?? s.student_id,
-      full_name: s.studentName ?? s.name ?? '',
+      studentName: s.studentName ?? s.fullName ?? s.full_name ?? s.name ?? '',
+      full_name: s.studentName ?? s.fullName ?? s.full_name ?? s.name ?? '',
       email: s.emailId ?? s.email ?? '',
       dob: s.dob ?? '',
       gender: mapGender(s.gender ?? s.gender_code ?? s.gender_label),
