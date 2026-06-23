@@ -5,7 +5,7 @@ import DataTable from '../../components/common/DataTable';
 import Pagination from '../../components/common/Pagination';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import PageHeader from '../../components/common/PageHeader';
-import { getDistricts, getMandals, getSchools, getStates, getVillages } from '../../api/locationApi';
+import { getAllSchools, getDistricts, getMandals, getStates, getVillages } from '../../api/locationApi';
 import { cancelReminder, getReminders, type ReminderDto } from '../../api/remindersApi';
 import { usePagination } from '../../hooks/usePagination';
 import closeIcon from '../../assets/clera cross favicon.png';
@@ -113,6 +113,7 @@ interface EventData {
   district: string;
   mandal: string;
   village: string;
+  school: string;
   status: EventStatus;
 }
 
@@ -356,12 +357,19 @@ export default function ViewEvents() {
   }, [pending.mandalId]);
 
   useEffect(() => {
-    if (!pending.villageId) {
-      setSchools([]);
-      return;
-    }
-    getSchools(Number(csvValues(pending.villageId)[0])).then(s => setSchools(s)).catch(() => setSchools([]));
-  }, [pending.villageId]);
+    let mounted = true;
+    getAllSchools()
+      .then((s) => {
+        if (mounted) setSchools(s);
+      })
+      .catch(() => {
+        if (mounted) setSchools([]);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const load = async (apiFilters?: import('../../api/remindersApi').ReminderFilterParams, statusFilter?: string) => {
     setLoading(true);
@@ -478,9 +486,15 @@ export default function ViewEvents() {
     district: r.distIdsCsv ?? '',
     mandal: r.mndlIdsCsv ?? '',
     village: r.vilIdsCsv ?? '',
+    school: r.schIdsCsv ?? '',
     status: r.status === false ? 'cancelled' : inferStatus(r.eventDate),
   })), [reminders]);
-  const pager = usePagination(events, 5);
+  const filteredEvents = useMemo(() => {
+    if (!pending.schId) return events;
+    const selectedSchoolId = pending.schId;
+    return events.filter((event) => csvValues(event.school).includes(selectedSchoolId));
+  }, [events, pending.schId]);
+  const pager = usePagination(filteredEvents, 5);
 
   const handleFilterChange = (key: keyof EventFilters, value: string) => {
     setPending(f => {
@@ -529,10 +543,10 @@ export default function ViewEvents() {
   };
 
   const hasActiveFilters = pending.search || pending.stateId || pending.districtId || pending.mandalId || pending.villageId || pending.schId || pending.status;
-  const upcomingCount = events.filter(event => event.status === 'upcoming').length;
-  const ongoingCount = events.filter(event => event.status === 'ongoing').length;
-  const completedCount = events.filter(event => event.status === 'completed').length;
-  const cancelledCount = events.filter(event => event.status === 'cancelled').length;
+  const upcomingCount = filteredEvents.filter(event => event.status === 'upcoming').length;
+  const ongoingCount = filteredEvents.filter(event => event.status === 'ongoing').length;
+  const completedCount = filteredEvents.filter(event => event.status === 'completed').length;
+  const cancelledCount = filteredEvents.filter(event => event.status === 'cancelled').length;
   const stateOptions: FilterOption[] = states.map((state: any) => ({
     value: String(state.stId ?? state.st_id),
     label: state.stName ?? state.st_name,
@@ -561,7 +575,7 @@ export default function ViewEvents() {
   ];
   const calendarYear = calendarMonth.getFullYear();
   const calendarMonthIndex = calendarMonth.getMonth();
-  const eventsByDate = events.reduce<Record<string, EventData[]>>((acc, event) => {
+  const eventsByDate = filteredEvents.reduce<Record<string, EventData[]>>((acc, event) => {
     if (event.status === 'cancelled') return acc;
     const eventDate = new Date(event.date);
     if (
@@ -603,7 +617,7 @@ export default function ViewEvents() {
   const goCalendarMonth = (offset: number) => {
     setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
   };
-  const visibleReminders = events
+  const visibleReminders = filteredEvents
     .filter(event => reminderPanelFilter === 'all' || event.status === reminderPanelFilter);
   const reminderPanelCountLabel = reminderPanelFilter === 'all'
     ? 'Total'
@@ -649,7 +663,7 @@ export default function ViewEvents() {
         <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Total Events</div>
-            <div className="stat-card-value">{events.length}</div>
+            <div className="stat-card-value">{filteredEvents.length}</div>
             <div className="stat-card-note">Matching current filters</div>
           </div>
           <div className="stat-card-icon">
@@ -782,6 +796,17 @@ export default function ViewEvents() {
           <div className="row g-2 mt-1">
             <div className="col-2">
               <MultiSelectFilter
+                filterKey="school"
+                label="All Schools"
+                value={pending.schId ?? ''}
+                options={schoolOptions}
+                openFilter={openFilter}
+                setOpenFilter={setOpenFilter}
+                onChange={(value) => handleFilterChange('schId', value)}
+              />
+            </div>
+            <div className="col-2">
+              <MultiSelectFilter
                 filterKey="status"
                 label="All Status"
                 value={pending.status ?? ''}
@@ -791,30 +816,14 @@ export default function ViewEvents() {
                 onChange={(value) => handleFilterChange('status', value)}
               />
             </div>
-            {pending.villageId ? (
-              <div className="col-2">
-                <MultiSelectFilter
-                  filterKey="school"
-                  label="All Schools"
-                  value={pending.schId ?? ''}
-                  options={schoolOptions}
-                  openFilter={openFilter}
-                  setOpenFilter={setOpenFilter}
-                  onChange={(value) => handleFilterChange('schId', value)}
-                />
-              </div>
-            ) : (
-              <div className="col-2" />
-            )}
             <div className="col-2" />
             <div className="col-2" />
-            <div className="col-2" />
-            <div className="col-2 d-flex justify-content-end gap-2">
-              <button className="clearbtn" onClick={handleClearFilters}>
+            <div className="col-4 d-flex justify-content-end gap-2">
+              <button type="button" className="clearbtn" onClick={handleClearFilters}>
                 <img src={closeIcon} alt="Clear" className="filterBtnIcon" />
                 Clear
               </button>
-              <button className="gobtn" onClick={applyFilters}>
+              <button type="button" className="gobtn" onClick={applyFilters}>
                 <img src={arrowIcon} alt="Go" className="filterBtnIcon" />
                 Go
               </button>
@@ -940,7 +949,7 @@ export default function ViewEvents() {
 
       <div className={`panel studentRecordsPanel eventRecordsPanel ${viewMode === 'table' ? 'student-table-section' : ''}`}>
         <div className="sponsorRecordsHeader">
-          <h3 className="panelTitle">Event Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{events.length} results</span></h3>
+          <h3 className="panelTitle">Event Records <span style={{ fontSize: '13px', color: 'var(--color-text3)', fontWeight: 500, marginLeft: '10px' }}>{filteredEvents.length} results</span></h3>
           <div className="viewToggle" aria-label="Event view mode">
             <button type="button" className={viewMode === 'table' ? 'active' : ''} onClick={() => setViewMode('table')}>Table</button>
             <button type="button" className={viewMode === 'cards' ? 'active' : ''} onClick={() => setViewMode('cards')}>Cards</button>
@@ -1033,6 +1042,9 @@ export default function ViewEvents() {
             )}
           </div>
         )}
+        {/* {viewMode === 'cards' ? (
+          <Pagination total={events.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
+        ) : null} */}
         </div>
       </div>
 

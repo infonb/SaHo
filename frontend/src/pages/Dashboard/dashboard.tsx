@@ -5,6 +5,7 @@ import {
   FiClock,
   FiMapPin,
   FiPlus,
+  FiUserPlus,
   FiUser,
   FiUsers,
 } from 'react-icons/fi';
@@ -494,16 +495,17 @@ export default function DashboardPage() {
           </div>
         </article>
 
-        <article className="dashboardCard addStudentCard">
-          <div className="addStudentTop">
-            <div className="statIcon green">
-              <FiPlus />
+        <article className="dashboardCard reminderRecordCard">
+          <div className="statHeader addStudentHeader">
+            <div className="addStudentBadge" aria-hidden="true">
+              <FiUserPlus />
             </div>
             <span>Add Student</span>
           </div>
+          <p className="addStudentDescription">Register a new student quickly and easily.</p>
           <div className="addStudentContent">
-            <p>Register a new student quickly and easily.</p>
             <button type="button" onClick={() => navigate('/students/add')}>
+              <FiPlus />
               Add Student
             </button>
           </div>
