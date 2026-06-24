@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../common/Avatar';
 import { useAuth } from '../../context/AuthContext';
+import { getMyProfile } from '../../api/studentApi';
+import type { StudentView } from '../../types';
+import sahoImg from '../../assets/saho_Img.png';
 import logo from '../../assets/logo.png';
 import '../../styles/Topbar.css'
 
@@ -23,7 +26,25 @@ export default function Topbar({
   onAiOpen: () => void;
 }) {
   const { user, logout } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [studentProfile, setStudentProfile] = useState<StudentView | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  useEffect(() => {
+    if (!user?.student_id || user?.role !== 'student') return;
+    getMyProfile(user.user_id)
+      .then(data => { if (data) setStudentProfile(data); })
+      .catch(() => {});
+  }, [user?.user_id, user?.role, user?.student_id]);
 
   const signOut = () => {
     logout();
@@ -31,25 +52,29 @@ export default function Topbar({
   };
 
   const goDashboard = () => {
-    window.location.href = '/view-students';
+    window.location.href = dashboardPath;
   };
 
+  const displayName = studentProfile?.studentName || studentProfile?.full_name || user?.username || (user?.role === 'student' ? `Student ${user?.student_id}` : 'Admin');
+
   return (
-    <header className="dashboard-header topbar">
+    <header className={`dashboard-header topbar${headerClassName ? ` ${headerClassName}` : ''}`}>
       <div className="topbarLeft">
-        <button className={`sidebarToggle headerSidebarToggle ${sidebarOpen ? 'closeIcon' : 'menuIcon'}`} type="button" aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} aria-expanded={sidebarOpen} title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} onClick={onSidebarToggle}>
-          {sidebarOpen ? (
-            <svg className="sidebarCancelIcon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          ) : (
-            <>
-              <span />
-              <span />
-              <span />
-            </>
-          )}
-        </button>
+        {typeof sidebarOpen === 'boolean' && (
+          <button className={`sidebarToggle headerSidebarToggle ${sidebarOpen ? 'closeIcon' : 'menuIcon'}`} type="button" aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} aria-expanded={sidebarOpen} title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} onClick={onSidebarToggle}>
+            {sidebarOpen ? (
+              <svg className="sidebarCancelIcon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            ) : (
+              <>
+                <span />
+                <span />
+                <span />
+              </>
+            )}
+          </button>
+        )}
         <div className="topbarBrand">
           <button type="button" className="brandLogoButton" aria-label="Go to dashboard" onClick={goDashboard}>
             <img className="brandLogo" src={logo} alt="SaHo" />
@@ -57,19 +82,19 @@ export default function Topbar({
         </div>
         <div className="divider">
         </div>
-        <div className="topbarTitle">Admin Dashboard</div>
+        <div className="topbarTitle">{title}</div>
       </div>
 
       {/* <div ref={ref} style={{ position: 'relative' }}>
         <button className="userIconButton" aria-label="User menu" onClick={() => setOpen(value => !value)}>
-          <Avatar name={user?.username ?? 'Admin'} size="md" />
+          <Avatar name={displayName} size="md" />
         </button>
         {open && (
           <div className="dropdown">
             <div className="rowFlex">
-              <Avatar name={user?.username ?? 'Admin'} />
+              <Avatar name={displayName} />
               <div>
-                <div className="strong">{user?.username}</div>
+                <div className="strong">{displayName}</div>
                 <div className="sub">{user?.email_id}</div>
               </div>
             </div>
@@ -94,11 +119,15 @@ export default function Topbar({
           <button className="userIconButton" aria-label="User menu">
             <Avatar name={user?.username ?? 'Admin'} size="md" />
           </button>
+    <div className="userTooltipWrapper">
+  <button className="userIconButton" aria-label="User menu">
+    <Avatar name={displayName} size="md" />
+  </button>
 
-          <div className="userTooltip">
-            <div className="tooltipName">
-              {user?.username || 'Admin User'}
-            </div>
+  <div className="userTooltip">
+    <div className="tooltipName">
+      {displayName}
+    </div>
 
             <div className="tooltipEmail">
               {user?.email_id}

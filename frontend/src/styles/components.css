@@ -285,7 +285,7 @@ h1, h2, h3, h4, h5, h6
 
 .btnGreen
 {
-  background: #4d7a63 !important;
+  background: #1f6b35 !important;
   color: #ffffff !important;
   min-width: 85px;
   border-radius: 12px !important;
@@ -294,7 +294,7 @@ h1, h2, h3, h4, h5, h6
   justify-content: center;
   gap: 6px;
   padding: 6px 12px;
-  border: 1px solid #4d7a63 !important;
+  border: 1px solid #1f6b35 !important;
   font-size: 13px !important; 
   line-height: 1.5 !important;
   font-weight: 600 !important;
@@ -304,8 +304,8 @@ h1, h2, h3, h4, h5, h6
 .btnGreen:hover
 {
   background:#fff !important;
-  color:#4d7a63 !important;
-  border-color:#4d7a63 !important;
+  color:#1f6b35 !important;
+  border-color:#1f6b35 !important;
   transform: none !important;
 }
 
@@ -321,7 +321,7 @@ h1, h2, h3, h4, h5, h6
   gap: 6px;
   padding: 6px 12px  !important;
   border: 1px solid #b91c1c !important;
-  font-size: 13px !important; 
+  font-size: 13px !important;
   line-height: 1.5 !important;
   font-weight: 600 !important;
   transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
@@ -337,7 +337,7 @@ h1, h2, h3, h4, h5, h6
 
 /* GO Button */
 .gobtn {
-  background: #4d7a63 !important;
+  background: #1f6b35 !important;
   color: #ffffff !important;
    min-width: 65px;
   border-radius: 13px !important;
@@ -346,7 +346,7 @@ h1, h2, h3, h4, h5, h6
   justify-content: center;
    gap: 5px;
   padding: 7.5px 10px;
-  border: 1px solid #4d7a63 !important;
+  border: 1px solid #1f6b35 !important;
   font-size: 10px !important; 
   line-height: 1.5 !important;
   font-weight: bold !important; 
@@ -355,8 +355,8 @@ h1, h2, h3, h4, h5, h6
 
 .gobtn:hover {
   background: #ffffff !important;
-  color: #4d7a63 !important;
-  border-color: #4d7a63 !important;
+  color: #1f6b35 !important;
+  border-color: #1f6b35 !important;
 }
 
 /* CLEAR Button */
@@ -531,6 +531,12 @@ h1, h2, h3, h4, h5, h6
   background: var(--amber-bg);
   color: var(--amber);
   border-color: var(--amber-border);
+}
+
+.badge.warning {
+  background: #fff3cd;
+  color: #856404;
+  border-color: #ffc107;
 }
 
 .avatar {
@@ -1954,6 +1960,51 @@ tr.clickable:hover {
   margin-bottom: 10px;
 }
 
+.studentSponsorDetailsModal .formGrid,
+.formGrid.sponsorDetailsModal {
+  align-items: stretch;
+}
+
+.studentSponsorDetailsModal .field,
+.formGrid.sponsorDetailsModal .field {
+  min-width: 0;
+}
+
+.studentSponsorDetailsModal .field > span,
+.formGrid.sponsorDetailsModal .field > span {
+  min-width: 0;
+}
+
+.studentSponsorDetailsModal .input,
+.formGrid.sponsorDetailsModal .input {
+  min-height: 45px;
+  height: auto !important;
+  max-height: none !important;
+  display: block;
+  white-space: normal;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .studentSponsorDetailsModal .formGrid,
+  .formGrid.sponsorDetailsModal {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .studentSponsorDetailsModal .formGrid,
+  .formGrid.sponsorDetailsModal {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
 .studentProfileHero {
   border: 1px solid var(--green-border);
   border-radius: 26px;
@@ -2208,41 +2259,6 @@ tr.clickable:hover {
   flex: 0 0 auto;
 }
 
-.loginShell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 30px;
-}
-
-.loginCard {
-  width: min(900px, 100%);
-  display: flex;
-  border-radius: var(--r-xl);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-}
-
-.loginLeft {
-  width: 340px;
-  background: linear-gradient(160deg, #0f172a 0%, #0f766e 100%);
-  color: #ffffff;
-  padding: 36px;
-  display: flex;
-  flex-direction: column;
-}
-
-.loginLeft h2 {
-  font-family: var(--font-display);
-  font-size: 28px;
-}
-
-.loginRight {
-  flex: 1;
-  padding: 48px;
-}
 
 .tabs {
   display: grid;
@@ -2276,12 +2292,12 @@ tr.clickable:hover {
   gap: 16px;
 }
 
-/* .rowFlex {
+
+.rowFlex {
   display: flex;
   align-items: center;
   gap: 10px;
-} */
-
+}
 .studentNameCell,
 .sponsorNameCell,
 .linkButton {
@@ -2515,14 +2531,10 @@ svg {
   .formGrid {
     grid-template-columns: 1fr;
   }
-
-  .loginCard {
-    flex-direction: column;
-  }
-
+/* 
   .loginLeft {
     width: auto;
-  }
+  }  */
 
   .filterBar {
     grid-template-columns: 1fr;
@@ -2722,9 +2734,9 @@ svg {
     width: 100%;
   }
 
-  /* .rowFlex {
+  .rowFlex {
     align-items: flex-start;
-  } */
+  }
 
   .paginationSummary {
     font-size: 12px;
@@ -2743,11 +2755,11 @@ svg {
     min-width: 28px;
     height: 28px;
   }
-
+/* 
   .loginRight,
   .loginLeft {
     padding: 28px;
-  }
+  } */
 
   .toastStack {
     left: 12px;
@@ -3225,12 +3237,25 @@ svg {
   box-shadow: 0 8px 18px rgba(15, 118, 110, 0.14) !important;
 }
 
-.appShell {
+/* .appShell {
   min-height: 100vh;
   overflow-x: hidden;
+} */
+
+.dashboard-header {
+  width: 100%;
+  transition: all 0.3s ease;
 }
 
-
+.headerSidebarToggle {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0;
+}
 
 .sidebar-overlay {
   display: none;
@@ -3255,7 +3280,7 @@ svg {
 
 
 .sidebar.collapsed {
-  /* padding-top: 14px; */
+  /*padding-top: 14px; */
 }
 
 @media (max-width: 900px) {
@@ -3528,6 +3553,64 @@ svg {
   font-size: 11px;
 }
 
+.dropdown {
+  top: 44px;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+}
+
+.profileDropdown {
+  width: 260px;
+  border-radius: 16px;
+  padding: 10px;
+  padding-top: 14px;
+}
+
+.profileDropdownHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px 10px;
+}
+
+.profileDropdownInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profileDropdownName {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.profileDropdownDivider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 2px 0;
+}
+
+.profileDropdownLoading {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--color-text3);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #182131 0%, #141d2c 52%, #111827 100%);
+  border-right-color: rgba(255, 255, 255, 0.07);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
+  padding-top: 8px;
+}
+
+.sidebarHead {
+  height: 10px;
+}
+
 .navSection {
   margin: 18px 18px 8px;
   font-size: 10px;
@@ -3709,13 +3792,13 @@ svg {
   margin-top: 4px;
 }
 
-.panel {
+/* .panel {
   padding: 14px;
   border-radius: 12px;
   border-color: #e7ebf1;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.035);
-}
+} */
 
 .panel:hover {
   border-color: #dde4ee;
@@ -3967,11 +4050,7 @@ td {
   gap: 12px;
   grid-template-columns: minmax(0, 1fr) 300px;
 }
-
-.loginCard {
-  border-radius: 18px;
-  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.13);
-}
+/* 
 
 .loginLeft {
   width: 310px;
@@ -3981,7 +4060,7 @@ td {
 
 .loginRight {
   padding: 38px;
-}
+} */
 
 @media (max-width: 900px) {
   :root {
@@ -4053,12 +4132,13 @@ td {
   .filterBar {
     padding: 9px;
   }
-
+}
+/* 
   .loginRight,
   .loginLeft {
     padding: 24px;
   }
-}
+} */
 
 /* Simplified module navigation + compact student row actions */
 .nav-item .navItem {
@@ -4898,7 +4978,7 @@ td {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .table-header {
@@ -4969,6 +5049,11 @@ td {
 }
 
 .eventsWorkspace {
+  --calendar-panel-chrome-height: 142px;
+  --calendar-day-row-height: 78px;
+  --calendar-week-count: 6;
+  --events-panel-header-height: 64px;
+  --events-panel-height: calc(var(--calendar-panel-chrome-height) + (var(--calendar-week-count) * var(--calendar-day-row-height)));
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
   gap: 20px;
@@ -4976,8 +5061,24 @@ td {
   align-items: start;
 }
 
+.eventsWorkspace:has(.calendarWeeks-4) {
+  --calendar-week-count: 4;
+}
+
+.eventsWorkspace:has(.calendarWeeks-5) {
+  --calendar-week-count: 5;
+}
+
+.eventsWorkspace:has(.calendarWeeks-6) {
+  --calendar-week-count: 6;
+}
+
 .eventCalendarPanel {
   padding: 0 26px 28px;
+  box-sizing: border-box;
+  height: var(--events-panel-height);
+  max-height: var(--events-panel-height);
+  overflow: hidden;
 }
 
 .calendarHeader {
@@ -4985,8 +5086,10 @@ td {
   grid-template-columns: 34px auto 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 20px;
+  box-sizing: border-box;
+  height: 50px;
   margin: 0 -26px 26px;
-  padding: 18px 24px 16px;
+  padding: 10px;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -5009,7 +5112,7 @@ td {
 
 .calendarTitle {
   margin: 0;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
   min-width:120px;
   text-align:center;
@@ -5089,11 +5192,13 @@ td {
 .eventCalendarGrid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: var(--calendar-day-row-height);
   gap: 0;
+  align-content: start;
 }
 
 .eventCalendarDay {
-  min-height: 78px;
+  min-height: 0;
   border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
@@ -5112,10 +5217,6 @@ td {
   color: #4B5570;
   font-size: 12px;
   line-height: 1;
-}
-
-.eventCalendarDay.isMuted span {
-  color: #b8c2d3;
 }
 
 .eventCalendarDay small {
@@ -5161,11 +5262,15 @@ td {
   background: transparent;
 }
 
+.eventCalendarDay.isBlank {
+  pointer-events: none;
+}
+
 .eventCalendarDay.isSelected {
   background: #f1f4f8;
 }
 
-.eventCalendarDay:hover {
+.eventCalendarDay:not(.isBlank):hover {
   transform: none;
   background: #f8fafc;
 }
@@ -5174,9 +5279,9 @@ td {
   align-self: start;
   display: flex;
   flex-direction: column;
-  padding: 22px 22px 26px;
-  height: 610px;
-  max-height: 610px;
+  padding: 0 22px 26px;
+  height: var(--events-panel-height);
+  max-height: var(--events-panel-height);
   min-height: 0;
   overflow: hidden;
 }
@@ -5186,7 +5291,11 @@ td {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 22px;
+  box-sizing: border-box;
+  height: 50px;
+  margin: 0 -22px 26px;
+  padding: 18px 24px 16px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .reminderPanel .panelTitle {
@@ -5236,7 +5345,7 @@ td {
   flex: 0 0 auto;
   position: relative;
   width: calc(100% + var(--reminder-status-dot-inset));
-  margin: -12px 0 12px calc(var(--reminder-status-dot-inset) * -1);
+  margin: -13px 0 25px calc(var(--reminder-status-dot-inset) * -1);
 }
 
 .reminderPanelFilter summary {
@@ -5344,19 +5453,6 @@ td {
 
 .reminderPanelFilterOption.active {
   font-weight: 850;
-}
-
-.reminderPanelFilterCheck {
-  margin-left: auto;
-  color: #0f766e;
-  font-size: 12px;
-  font-weight: 900;
-  opacity: 0;
-  text-align: right;
-}
-
-.reminderPanelFilterOption.active .reminderPanelFilterCheck {
-  opacity: 1;
 }
 
 .reminderPanelFilterDot.status-upcoming {
@@ -5671,14 +5767,15 @@ td {
   width: 100%;
 }
 
-.eventRecordsPanel .eventTableOuter {
+.eventRecordsPanel .eventTableOuter,
+.eventRecordsPanel .eventCardsOuter {
   padding: 14px;
 }
 
 .eventRecordsPanel .sponsorCardGrid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 18px;
-  margin-top: 12px;
+  margin-top: 0;
   max-width: 100%;
   overflow: visible;
 }
@@ -5696,6 +5793,70 @@ td {
   border-left: 1px solid #d2e0d9;
   border-radius: 14px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+}
+
+.admin-access-page .reminderRecordCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  padding: 18px 18px 16px;
+  min-height: 120px;
+}
+
+.admin-access-page .reminderRecordCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  height: 4px;
+  width: 100%;
+  background: var(--accent, var(--color-primary));
+  border-radius: 14px 14px 0 0;
+}
+
+.admin-access-page .reminderRecordCard::after {
+  content: "";
+  position: absolute;
+  right: -28px;
+  top: -28px;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--accent, var(--color-primary)) 14%,
+    transparent
+  );
+}
+
+.admin-access-page .reminderRecordCard .statLabel {
+  position: relative;
+  z-index: 1;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-access-page .reminderRecordCard .statValue {
+  position: relative;
+  z-index: 1;
+  color: #111827;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.admin-access-page .reminderRecordCard .statNote {
+  position: relative;
+  z-index: 1;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .reminderRecordCard::before {
@@ -6164,8 +6325,15 @@ td {
     grid-template-columns: 1fr;
   }
 
+  .eventRecordsPanel .sponsorCardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .calendarHeader {
     grid-template-columns: 34px auto 34px;
+    height: auto;
+    min-height: var(--events-panel-header-height);
+    gap: 12px;
   }
 
   .calendarStatusLegend {
@@ -6175,14 +6343,83 @@ td {
     row-gap: 8px;
   }
 
-  .eventCalendarGrid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 640px) {
-  .eventCalendarGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .eventsWorkspace {
+    --calendar-panel-chrome-height: 136px;
+    --calendar-day-row-height: 58px;
+  }
+
+  .eventCalendarPanel {
+    padding: 0 14px 20px;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .calendarHeader {
+    margin: 0 -14px 18px;
+    padding: 12px 14px;
+  }
+
+  .calendarTitle {
+    min-width: 0;
+    font-size: 13.5px;
+  }
+
+  .calendarStatusLegend {
+    gap: 10px;
+    font-size: 10.5px;
+  }
+
+  .eventCalendarWeekdays {
+    margin-bottom: 8px;
+  }
+
+  .reminderPanel {
+    padding: 0 14px 20px;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .reminderList {
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .eventRecordsPanel .sponsorCardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .reminderPanel .table-header {
+    margin: 0 -14px 22px;
+    padding: 18px 18px 16px;
+  }
+
+  .reminderPanelFilter {
+    margin-top: -11px;
+    margin-bottom: 23px;
+  }
+
+  .eventCalendarWeekdays span {
+    font-size: 9px;
+    letter-spacing: 0.4px;
+  }
+
+  .eventCalendarDay {
+    padding: 5px 3px;
+    gap: 4px;
+  }
+
+  .eventCalendarDay small {
+    padding: 3px 4px;
+    font-size: 9px;
+  }
+
+  .eventCalendarDay span {
+    font-size: 11px;
   }
 
   .sponsorCardTop {
@@ -6204,7 +6441,57 @@ td {
   }
 }
 
-/* ─── STUDENT LIST PAGE MODERN UI ─────────────────────────────── */
+@media (max-width: 480px) {
+  .eventsWorkspace {
+    --calendar-day-row-height: 50px;
+  }
+
+  .calendarHeader {
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .calendarNavButton {
+    width: 26px;
+    height: 26px;
+  }
+
+  .calendarTitle {
+    font-size: 12.5px;
+  }
+
+  .calendarStatusLegend {
+    gap: 8px;
+    font-size: 9.5px;
+  }
+
+  .eventCalendarWeekdays span {
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+
+  .eventCalendarDay {
+    border-radius: 7px;
+    padding: 4px 2px;
+    gap: 3px;
+  }
+
+  .eventCalendarDay span {
+    font-size: 10px;
+  }
+
+  .eventCalendarDay small {
+    min-height: 4px;
+    padding: 0;
+    border-left-width: 0;
+    border-radius: 999px;
+    color: transparent;
+    font-size: 0;
+    line-height: 0;
+  }
+}
+
 .student-list-page {
   padding-bottom: 32px;
 }
@@ -6272,7 +6559,7 @@ td {
   overflow: hidden;
   transition: all 0.25s ease;
   background: #ffff;
-  border-left: 3px solid #b7c9c0;
+  /* border-left: 3px solid #b7c9c0; */
 }
 
 
@@ -6322,13 +6609,13 @@ td {
   --card-accent: #f59e0b;
 }
 
-.student-stat-card:hover {
+/* .student-stat-card:hover {
   transform: translateY(-2px);
   box-shadow:
     0 20px 42px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   border-left: 3px solid #4d7a63;
-}
+} */
 
 .stat-card-content {
   position: relative;
@@ -8307,6 +8594,68 @@ td {
 
   .student-table-section {
     padding: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-list-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .student-list-actions .btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    justify-content: center;
+    padding: 8px 10px !important;
+  }
+
+  .student-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 14px;
+    width: 100%;
+    margin-bottom: 18px;
+  }
+
+  .student-stats-grid > .reminderRecordCard {
+    min-height: 138px;
+    height: 138px;
+    padding: 18px 56px 14px 14px;
+    box-sizing: border-box;
+  }
+
+  .student-stats-grid .stat-card-label {
+    font-size: 10px;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+  }
+
+  .student-stats-grid .stat-card-value {
+    margin-top: 14px;
+    font-size: 30px;
+    line-height: 0.95;
+  }
+
+  .student-stats-grid .stat-card-note {
+    margin-top: 13px;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .student-stats-grid .stat-card-icon {
+    top: 18px;
+    right: 12px;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .student-stats-grid .stat-card-icon svg {
+    width: 20px;
+    height: 20px;
   }
 }
 

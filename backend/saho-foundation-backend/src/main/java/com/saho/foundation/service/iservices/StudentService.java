@@ -44,6 +44,8 @@ public interface StudentService {
 
     StudentProfileResponseDto getStudentById(Integer studentId);
 
+    StudentProfileResponseDto getStudentProfileByUserId(Integer userId);
+
     StudentSiblingSearchResponseDto getStudentByAadhaarNumber(String aadhaarNumber);
 
     StudentResponseDto updateStudent(Integer studentId, StudentRequestDto requestDto);
