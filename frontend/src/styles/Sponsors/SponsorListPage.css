@@ -20,36 +20,19 @@
   justify-content: flex-start;
 }
 
-.sponsor-list-page th .sortArrow {
-  width: 14px;
-  height: 14px;
-  position: relative;
+.sponsor-list-page th .sortIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
   color: #94a3b8;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1;
-  font-weight: 900;
+  transition: color 0.15s ease;
 }
 
-.sponsor-list-page th .sortArrow.inactive::before {
-  content: "\2195";
-}
-
-.sponsor-list-page th .sortArrow.asc::before {
-  content: "\2191";
-  color: #0f766e;
-}
-
-.sponsor-list-page th .sortArrow.desc::before {
-  content: "\2193";
-  color: #0f766e;
-}
-
-.sponsor-list-page th .sortArrow::after {
-  content: none;
+.sponsor-list-page th .sortableHeader:hover .sortIcon {
+  color: #64748b;
 }
 
 .sponsorTypeBadge {

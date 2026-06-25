@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import { deactivateStudents, exportStudentsCsv, getStudents } from '../../api/studentApi';
 import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
@@ -319,6 +320,13 @@ export default function StudentListPage() {
     window.URL.revokeObjectURL(url);
   };
 
+  const renderSortIcon = (field: string) => {
+    if (sortColumn === field && sortDirection !== null) {
+      return sortDirection === 'ASC' ? <FaSortUp /> : <FaSortDown />;
+    }
+    return <FaSort />;
+  };
+
   const sortHeader = (label: string, column: string) => (
     <button
       type="button"
@@ -328,16 +336,9 @@ export default function StudentListPage() {
       aria-label={`Sort by ${label}`}
     >
       <span>{label}</span>
-      <span
-        className={`sortArrow${
-          sortColumn === column && sortDirection !== null
-            ? sortDirection === 'ASC'
-              ? ' asc'
-              : ' desc'
-            : ' inactive'
-        }`}
-        aria-hidden
-      />
+      <span className="sortIcon" aria-hidden>
+        {renderSortIcon(column)}
+      </span>
     </button>
   );
 

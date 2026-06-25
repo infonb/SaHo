@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import { deactivateSponsors, getSponsors } from '../../api/sponsorApi';
 import Avatar from '../../components/common/Avatar';
 import Badge from '../../components/common/Badge';
@@ -115,6 +116,13 @@ export default function SponsorListPage() {
     }
   };
 
+  const renderSortIcon = (field: string) => {
+    if (sortColumn === field && sortDirection !== null) {
+      return sortDirection === 'ASC' ? <FaSortUp /> : <FaSortDown />;
+    }
+    return <FaSort />;
+  };
+
   const sortHeader = (label: string, column: string) => (
     <button
       type="button"
@@ -124,16 +132,9 @@ export default function SponsorListPage() {
       aria-label={`Sort by ${label}`}
     >
       <span>{label}</span>
-      <span
-        className={`sortArrow${
-          sortColumn === column && sortDirection !== null
-            ? sortDirection === 'ASC'
-              ? ' asc'
-              : ' desc'
-            : ' inactive'
-        }`}
-        aria-hidden
-      />
+      <span className="sortIcon" aria-hidden>
+        {renderSortIcon(column)}
+      </span>
     </button>
   );
 
