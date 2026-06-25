@@ -1,10 +1,10 @@
-package com.saho.foundation.serviceimpl;
+package com.saho.foundation.service.impl;
 
 import com.saho.foundation.dto.request.SponsorRequestDto;
 import com.saho.foundation.dto.response.SponsorListResponseDto;
 import com.saho.foundation.dto.response.SponsorResponseDto;
 import com.saho.foundation.repository.SponsorRepository;
-import com.saho.foundation.service.ISponsorService;
+import com.saho.foundation.service.iservices.ISponsorService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -176,7 +176,7 @@ public class SponsorServiceImpl
 
         response.setPhNo(resultSet.getString("ph_no"));
         response.setLoc(resultSet.getString("loc"));
-      
+       
         response.setContrib(resultSet.getString("contrib"));
         response.setStudentsCount(resultSet.getInt("students_count")
 );

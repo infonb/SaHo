@@ -8357,41 +8357,24 @@ td {
   text-align:center;
 }
 
-.student-table-section th:nth-child(3) .sortArrow,
-.student-table-section th:nth-child(4) .sortArrow{
+.student-table-section th:nth-child(3) .sortIcon,
+.student-table-section th:nth-child(4) .sortIcon{
   margin-left:2px;
 }
 
-.student-table-section th .sortArrow{
-  width:14px;
-  height:14px;
-  position:relative;
+.student-table-section th .sortIcon{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   flex:0 0 auto;
   color:#94a3b8;
-  font-size:14px;
+  font-size:12px;
   line-height:1;
-  font-weight:900;
+  transition:color 0.15s ease;
 }
 
-.student-table-section th .sortArrow.inactive::before{
-  content:"↕";
-}
-
-.student-table-section th .sortArrow.asc::before{
-  content:"↑";
-  color:#0f766e;
-}
-
-.student-table-section th .sortArrow.desc::before{
-  content:"↓";
-  color:#0f766e;
-}
-
-.student-table-section th .sortArrow::after{
-  content:none;
+.student-table-section th .sortableHeader:hover .sortIcon{
+  color:#64748b;
 }
 
 .orphanStatusBadge {

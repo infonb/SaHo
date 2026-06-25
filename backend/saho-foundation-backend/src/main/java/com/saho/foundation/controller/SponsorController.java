@@ -7,7 +7,7 @@ import com.saho.foundation.dto.response.SponsorResponseDto;
 import com.saho.foundation.entity.StudentSponsor;
 import com.saho.foundation.repository.StudentSponsorRepository;
 import com.saho.foundation.security.SecurityUtil;
-import com.saho.foundation.service.ISponsorService;
+import com.saho.foundation.service.iservices.ISponsorService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

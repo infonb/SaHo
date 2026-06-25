@@ -2,7 +2,7 @@ package com.saho.foundation.controller;
 
 import com.saho.foundation.dto.LoginRequestDto;
 import com.saho.foundation.dto.LoginResponseDto;
-import com.saho.foundation.service.AuthService;
+import com.saho.foundation.service.iservices.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

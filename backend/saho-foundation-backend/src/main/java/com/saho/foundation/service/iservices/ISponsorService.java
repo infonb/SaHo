@@ -1,4 +1,4 @@
-package com.saho.foundation.service;
+package com.saho.foundation.service.iservices;
 
 import com.saho.foundation.dto.request.SponsorRequestDto;
 import com.saho.foundation.dto.response.SponsorListResponseDto;
