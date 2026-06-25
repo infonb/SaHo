@@ -996,7 +996,7 @@ function SponsorField({
   );
 }
 
-function SponsorSelect({
+export function SponsorSelect({
   fieldKey,
   label,
   placeholder,

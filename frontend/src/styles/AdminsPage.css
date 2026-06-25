@@ -1,58 +1,48 @@
-.rowFlex {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.adminFormError {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-@media (max-width: 520px) {
-  .rowFlex {
-    align-items: flex-start;
-  }
+/* Password toggle — matches LoginPage pattern */
+.passwordField {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.studentWizardForm .passwordInput {
+  padding-right: 40px !important;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9CA3AF;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  line-height: 0;
+}
+
+.passwordToggle:hover {
+  color: #374151;
 }
 
 @media (max-width: 900px) {
-  .actions {
-    width: 100%;
-  }
-
-  .actions .btn {
-    flex: 1;
-  }
-
-  .pageHeader .actions {
-    justify-content: flex-start;
-  }
-
-  .statGrid {
-    gap: 10px;
-  }
-
-  .formGrid {
+  .adminFormGrid {
     grid-template-columns: 1fr;
   }
-
 }
-
-.actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.statGrid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
-}
-
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.studentProfileModal .formGrid {
-  gap: 10px;
-}
-

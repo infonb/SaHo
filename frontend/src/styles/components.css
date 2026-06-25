@@ -5818,11 +5818,11 @@ td {
   width: 86px;
   height: 86px;
   border-radius: 50%;
-  background: color-mix(
+  /* background: color-mix(
     in srgb,
     var(--accent, var(--color-primary)) 14%,
     transparent
-  );
+  ); */
 }
 
 .admin-access-page .reminderRecordCard .statLabel {
