@@ -1,38 +1,64 @@
 export interface StateMaster {
   stId: number;
+  st_id?: number;
   stName: string;
+  st_name?: string;
   createdAt: string;
+  created_at?: string;
   updatedAt: string | null;
+  updated_at?: string | null;
 }
 export interface DistrictMaster {
   distId: number;
+  dist_id?: number;
   distName: string;
+  dist_name?: string;
   stId: number;
+  st_id?: number;
   createdAt: string;
+  created_at?: string;
   updatedAt: string | null;
+  updated_at?: string | null;
 }
 export interface MandalMaster {
   mndlId: number;
+  mndl_id?: number;
   mndlName: string;
+  mndl_name?: string;
   distId: number;
+  dist_id?: number;
   createdAt: string;
+  created_at?: string;
   updatedAt: string | null;
+  updated_at?: string | null;
 }
 export interface VillageMaster {
   vilId: number;
+  vil_id?: number;
   vilName: string;
+  vil_name?: string;
   vilPincode: number;
+  vil_pincode?: number;
   mndlId: number;
+  mndl_id?: number;
   createdAt: string;
+  created_at?: string;
   updatedAt: string | null;
+  updated_at?: string | null;
 }
 export interface SchoolMaster {
   schId: number;
+  sch_id?: number;
   schName: string;
+  sch_name?: string;
   schAddress: string;
+  sch_address?: string;
   vilId: number;
+  vil_id?: number;
   createdAt: string;
+  created_at?: string;
   updatedAt: string | null;
+  updated_at?: string | null;
 }
 export interface RelationshipMaster {
   relationship_id: number;
@@ -116,11 +142,11 @@ export interface Sponsor {
 
   created_at?: string;
 
-  created_by?: number;
+  created_by?: number | string;
 
   modified_at?: string | null;
 
-  modified_by?: number | null;
+  modified_by?: number | string | null;
 }
 export interface StudentSponsor { id: number; std_id: number; spn_id: number; assigned_date: string; is_active: boolean; created_at: string; created_by: string; modified_at: string | null; modified_by: string | null; }
 export interface Reminder { rem_id: number; title: string; description: string | null; event_date: string; venue: string; st_id_csv: number | null; dist_ids_csv: string | null; mndl_ids_csv: string | null; vil_ids_csv: string | null; sch_ids_csv: string | null; status: boolean; created_by: number; created_at: string; updated_at: string | null; }
@@ -183,7 +209,7 @@ export interface VolunteerFilters {
   search: string;
   is_active: string;
 }
-export interface DashboardStats {
+export interface DashboardStatsLegacy {
   total_students: number;
   active_students: number;
   pending_students: number;

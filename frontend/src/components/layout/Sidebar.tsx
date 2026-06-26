@@ -52,27 +52,25 @@ type SidebarGroup = {
   items: SidebarItem[];
 };
 
-const groups: SidebarGroup[] = [
-  // { title: 'Overview', items: [{ icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' }] },
-  {
-    items :isStudent
-        ? [
-            { icon: <MyDashboardIcon />, label: 'My Dashboard', to: '/student/dashboard' },
-          ]
-        : [
-    // { icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' },
-      { icon: <StudentsIcon />, label: 'Students', to: '/view-students' },
-      { icon: <SponsorsIcon />, label: 'Sponsors', to: '/sponsors' },
-      { icon: <RemindersIcon />, label: 'Reminders', to: '/reminders' },
-      { icon: <AdminIcon />, label: 'Admin Access', to: '/admins' },
-    ],
-  },
-];
-
 export default function Sidebar({ open, onMobileNavigate }: { open: boolean; onMobileNavigate?: () => void }) {
   const { pathname } = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const isStudent = user?.role === 'student' || user?.role === 'Student';
+
+  const groups: SidebarGroup[] = [
+    {
+      items: isStudent
+        ? [{ icon: <MyDashboardIcon />, label: 'My Dashboard', to: '/student/dashboard' }]
+        : [
+            { icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' },
+            { icon: <StudentsIcon />, label: 'Students', to: '/view-students' },
+            { icon: <SponsorsIcon />, label: 'Sponsors', to: '/sponsors' },
+            { icon: <RemindersIcon />, label: 'Reminders', to: '/reminders' },
+            { icon: <AdminIcon />, label: 'Admin Access', to: '/admins' },
+          ],
+    },
+  ];
 
   const signOut = () => {
     onMobileNavigate?.();
@@ -89,17 +87,17 @@ export default function Sidebar({ open, onMobileNavigate }: { open: boolean; onM
         <div className="navGroup" key={group.title ?? group.items[0].label}>
           {group.title && <div className="navSection" aria-hidden={!open}>{group.title}</div>}
           {group.items.map(item => {
-            const active =item.label === 'My Dashboard'
+            const active = item.label === 'My Dashboard'
               ? pathname.startsWith('/student/dashboard')
               : item.label === 'Dashboard'
                 ? pathname === '/dashboard'
-             :item.label === 'Students'
-              ? pathname === '/view-students' || pathname.startsWith('/students')
+              : item.label === 'Students'
+                ? pathname === '/view-students' || pathname.startsWith('/students')
               : pathname === item.to || (item.to !== '/dashboard' && pathname.startsWith(`${item.to}/`));
             return (
               <div className="nav-item" key={item.label}>
                 <Link
-                  className={`nav-link navItem ${active ? "active" : ""}`}
+                  className={`nav-link navItem ${active ? 'active' : ''}`}
                   to={item.to}
                   title={!open ? item.label : undefined}
                   onClick={onMobileNavigate}
@@ -115,7 +113,7 @@ export default function Sidebar({ open, onMobileNavigate }: { open: boolean; onM
       <button
         className="sidebarSignOut"
         onClick={signOut}
-        title={!open ? "Sign Out" : undefined}
+        title={!open ? 'Sign Out' : undefined}
       >
         <span className="navIcon">S</span>
         <span className="navLabel">Sign Out</span>
