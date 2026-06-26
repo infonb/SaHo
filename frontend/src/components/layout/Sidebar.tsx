@@ -41,15 +41,18 @@ const AdminIcon = () => (
   </svg>
 );
 
-export default function Sidebar({ open }: { open: boolean }) {
-  const { pathname } = useLocation();
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+type SidebarItem = {
+  icon: JSX.Element;
+  label: string;
+  to: string;
+};
 
-  const isStudent = user?.role === 'student';
+type SidebarGroup = {
+  title?: string;
+  items: SidebarItem[];
+};
 
-const groups = [
-  { title: 'Overview', items: [{ icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' }] },
+const groups: SidebarGroup[] = [
   // { title: 'Overview', items: [{ icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' }] },
   {
     items :isStudent
@@ -66,12 +69,13 @@ const groups = [
   },
 ];
 
-// export default function Sidebar({ open }: { open: boolean }) {
-//   const { pathname } = useLocation();
-//   const { logout } = useAuth();
-//   const navigate = useNavigate();
+export default function Sidebar({ open, onMobileNavigate }: { open: boolean; onMobileNavigate?: () => void }) {
+  const { pathname } = useLocation();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const signOut = () => {
+    onMobileNavigate?.();
     logout();
     navigate('/login');
   };
@@ -98,6 +102,7 @@ const groups = [
                   className={`nav-link navItem ${active ? "active" : ""}`}
                   to={item.to}
                   title={!open ? item.label : undefined}
+                  onClick={onMobileNavigate}
                 >
                   <span className="navIcon">{item.icon}</span>
                   <span className="navLabel">{item.label}</span>

@@ -1,8 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../common/Avatar';
-import Badge from '../common/Badge';
-import Button from '../common/Button';
 import { useAuth } from '../../context/AuthContext';
 import { getMyProfile } from '../../api/studentApi';
 import type { StudentView } from '../../types';
@@ -19,7 +16,15 @@ export const LeafLogo = () => (
   </svg>
 );
 
-export default function Topbar({ sidebarOpen, onSidebarToggle, title = 'Admin Dashboard', dashboardPath = '/dashboard', headerClassName = '' }: { sidebarOpen?: boolean; onSidebarToggle?: () => void; title?: string; dashboardPath?: string; headerClassName?: string }) {
+export default function Topbar({
+  sidebarOpen,
+  onSidebarToggle,
+  onAiOpen,
+}: {
+  sidebarOpen: boolean;
+  onSidebarToggle: () => void;
+  onAiOpen: () => void;
+}) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [studentProfile, setStudentProfile] = useState<StudentView | null>(null);
@@ -102,6 +107,18 @@ export default function Topbar({ sidebarOpen, onSidebarToggle, title = 'Admin Da
         )}
       </div> */}
 
+      <div className="topbarActions">
+        <button className="topbarAiButton" type="button" aria-label="Open AI assistant" onClick={onAiOpen}>
+          <svg className="topbarAiSparkle" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M13.8 2.5 5.7 13.1h5.1l-1.3 8.4 8.8-11.8h-5.5l1-7.2Z" />
+          </svg>
+          <span>Ask AI</span>
+        </button>
+
+        <div className="userTooltipWrapper">
+          <button className="userIconButton" aria-label="User menu">
+            <Avatar name={user?.username ?? 'Admin'} size="md" />
+          </button>
     <div className="userTooltipWrapper">
   <button className="userIconButton" aria-label="User menu">
     <Avatar name={displayName} size="md" />
@@ -112,18 +129,19 @@ export default function Topbar({ sidebarOpen, onSidebarToggle, title = 'Admin Da
       {displayName}
     </div>
 
-    <div className="tooltipEmail">
-      {user?.email_id}
-    </div>
+            <div className="tooltipEmail">
+              {user?.email_id}
+            </div>
 
-    <button
-      className="tooltipLogout"
-      onClick={signOut}
-    >
-      Sign Out
-    </button>
-  </div>
-</div>
+            <button
+              className="tooltipLogout"
+              onClick={signOut}
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
 
     </header>
   );

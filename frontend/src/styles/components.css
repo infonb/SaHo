@@ -172,9 +172,16 @@ h1, h2, h3, h4, h5, h6
 
 .layoutMain {
   margin-left: var(--sidebar-w);
+  margin-right: 0;
   padding: calc(var(--topbar-h) + 28px) clamp(18px, 3vw, 36px) 36px;
   min-height: 100vh;
-  transition: margin-left 0.22s ease;
+  transition:
+    margin-left 0.22s ease,
+    margin-right 0.22s ease;
+}
+
+.appShell.aiSidebarOpen .layoutMain {
+  margin-right: var(--sidebar-expanded-w);
 }
 
 .sidebarExpanded {
@@ -3278,13 +3285,13 @@ svg {
 
 @media (max-width: 900px) {
   .appShell {
-    --sidebar-w: var(--sidebar-collapsed-w);
+    --sidebar-w: 0px;
     min-height: 100vh;
   }
 
   .appShell.sidebarExpanded,
   .appShell.sidebarCollapsed {
-    --sidebar-w: var(--sidebar-collapsed-w);
+    --sidebar-w: 0px;
   }
 
 
@@ -3314,10 +3321,10 @@ svg {
   }
 
   .mobile-sidebar.collapsed {
-    transform: translateX(0);
+    transform: translateX(-100%);
     width: var(--sidebar-collapsed-w);
-    visibility: visible;
-    pointer-events: auto;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .mobile-sidebar .navSection {
@@ -3363,7 +3370,7 @@ svg {
   }
 
   .layoutMain {
-    margin-left: var(--sidebar-collapsed-w);
+    margin-left: 0;
     padding: calc(var(--topbar-h) + 18px) 16px 24px;
     transition: all 0.3s ease;
   }
@@ -4208,9 +4215,9 @@ td {
 @media (max-width: 900px) {
   .mobile-sidebar[data-sidebar-state="collapsed"] {
     width: var(--sidebar-collapsed-w);
-    transform: translateX(0);
-    visibility: visible;
-    pointer-events: auto;
+    transform: translateX(-100%);
+    visibility: hidden;
+    pointer-events: none;
     box-shadow: none;
   }
 
