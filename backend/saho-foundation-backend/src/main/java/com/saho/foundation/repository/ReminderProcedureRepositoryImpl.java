@@ -48,7 +48,7 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
                     """)) {
                 cs.setString(1, safeFilter.getSearch());
                 cs.setInt(2, safeFilter.getPageNumber() != null ? safeFilter.getPageNumber() : 1);
-                cs.setInt(3, safeFilter.getPageSize() != null ? safeFilter.getPageSize() : 10);
+                cs.setInt(3, safeFilter.getPageSize() != null ? safeFilter.getPageSize() : 100);
                 cs.setString(4, safeFilter.getStateIdsCsv());
                 cs.setString(5, safeFilter.getDistIdsCsv());
                 cs.setString(6, safeFilter.getMndlIdsCsv());

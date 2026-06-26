@@ -5,7 +5,7 @@ import DataTable from '../../components/common/DataTable';
 import Pagination from '../../components/common/Pagination';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import PageHeader from '../../components/common/PageHeader';
-import { getAllSchools, getDistricts, getMandals, getStates, getVillages } from '../../api/locationApi';
+import { getDistricts, getMandals, getSchools, getStates, getVillages } from '../../api/locationApi';
 import { cancelReminder, getReminders, type ReminderDto } from '../../api/remindersApi';
 import { usePagination } from '../../hooks/usePagination';
 import closeIcon from '../../assets/clera cross favicon.png';
@@ -337,7 +337,18 @@ export default function ViewEvents() {
       setDistricts([]);
       return;
     }
-    getDistricts(Number(csvValues(pending.stateId)[0])).then(d => setDistricts(d)).catch(() => setDistricts([]));
+    const ids = csvValues(pending.stateId).map(Number).filter(Boolean);
+    Promise.all(ids.map((id) => getDistricts(id)))
+      .then((results) =>
+        setDistricts(
+          Array.from(
+            new Map(
+              results.flat().map((d) => [d.distId ?? d.dist_id, d]),
+            ).values(),
+          ),
+        ),
+      )
+      .catch(() => setDistricts([]));
   }, [pending.stateId]);
 
   useEffect(() => {
@@ -345,7 +356,18 @@ export default function ViewEvents() {
       setMandals([]);
       return;
     }
-    getMandals(Number(csvValues(pending.districtId)[0])).then(m => setMandals(m)).catch(() => setMandals([]));
+    const ids = csvValues(pending.districtId).map(Number).filter(Boolean);
+    Promise.all(ids.map((id) => getMandals(id)))
+      .then((results) =>
+        setMandals(
+          Array.from(
+            new Map(
+              results.flat().map((m) => [m.mndlId ?? m.mndl_id, m]),
+            ).values(),
+          ),
+        ),
+      )
+      .catch(() => setMandals([]));
   }, [pending.districtId]);
 
   useEffect(() => {
@@ -353,23 +375,47 @@ export default function ViewEvents() {
       setVillages([]);
       return;
     }
-    getVillages(Number(csvValues(pending.mandalId)[0])).then(v => setVillages(v)).catch(() => setVillages([]));
+    const ids = csvValues(pending.mandalId).map(Number).filter(Boolean);
+    Promise.all(ids.map((id) => getVillages(id)))
+      .then((results) =>
+        setVillages(
+          Array.from(
+            new Map(
+              results.flat().map((v) => [v.vilId ?? v.vil_id, v]),
+            ).values(),
+          ),
+        ),
+      )
+      .catch(() => setVillages([]));
   }, [pending.mandalId]);
 
   useEffect(() => {
-    let mounted = true;
-    getAllSchools()
-      .then((s) => {
-        if (mounted) setSchools(s);
+    if (!pending.villageId) {
+      setSchools([]);
+      return;
+    }
+    const ids = csvValues(pending.villageId).map(Number).filter(Boolean);
+    if (!ids.length) {
+      setSchools([]);
+      return;
+    }
+    let cancelled = false;
+    Promise.all(ids.map((id) => getSchools(id)))
+      .then((results) => {
+        if (cancelled) return;
+        setSchools(
+          Array.from(
+            new Map(
+              results.flat().map((s) => [s.schId ?? s.sch_id, s]),
+            ).values(),
+          ),
+        );
       })
       .catch(() => {
-        if (mounted) setSchools([]);
+        if (!cancelled) setSchools([]);
       });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    return () => { cancelled = true; };
+  }, [pending.villageId]);
 
   const load = async (apiFilters?: import('../../api/remindersApi').ReminderFilterParams, statusFilter?: string) => {
     setLoading(true);
@@ -489,11 +535,7 @@ export default function ViewEvents() {
     school: r.schIdsCsv ?? '',
     status: r.status === false ? 'cancelled' : inferStatus(r.eventDate),
   })), [reminders]);
-  const filteredEvents = useMemo(() => {
-    if (!pending.schId) return events;
-    const selectedSchoolId = pending.schId;
-    return events.filter((event) => csvValues(event.school).includes(selectedSchoolId));
-  }, [events, pending.schId]);
+  const filteredEvents = useMemo(() => events, [events]);
   const pager = usePagination(filteredEvents, 5);
 
   const handleFilterChange = (key: keyof EventFilters, value: string) => {
