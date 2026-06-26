@@ -137,6 +137,9 @@
   color: #f04a7d;
 }
 
+.tone-black{
+  color:#0f172a;
+}
 .statSplit {
   display: flex;
   align-items: center;

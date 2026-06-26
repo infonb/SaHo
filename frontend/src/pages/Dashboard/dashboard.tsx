@@ -419,92 +419,92 @@ export default function DashboardPage() {
 
       {error ? <div className="toast error">{error}</div> : null}
 
-      <section className="dashboardTopRow">
-        <article className="dashboardCard reminderRecordCard ">
+      <section className="student-stats-grid">
+        <article className="reminderRecordCard ">
           <div className="statHeader">
-            <div className="statIcon">
+            <div className="stat-card-icon">
               <FiUsers />
             </div>
-            <span>Total Students</span>
+            <div className="stat-card-label">Total Students</div>
           </div>
           <strong className="statValue">
             {loading ? '...' : formatNumber(totalStudents)}
           </strong>
           <div className="statSplit">
-            <span>
+            <div className="stat-card-note">
               Boys{' '}
               <strong className="tone-blue">
                 {loading ? '...' : formatNumber(dashboard.studentSummary.boysCount)}
               </strong>
-            </span>
+            </div>
             <span className="dividerLine" />
-            <span>
+            <div className="stat-card-note">
               Girls{' '}
               <strong className="tone-pink">
                 {loading ? '...' : formatNumber(dashboard.studentSummary.girlsCount)}
               </strong>
-            </span>
+            </div>
           </div>
         </article>
 
-        <article className="dashboardCard reminderRecordCard ">
+        <article className="reminderRecordCard ">
           <div className="statHeader">
-            <div className="statIcon">
+            <div className="stat-card-icon">
               <FiMapPin />
             </div>
-            <span>Total Villages Reached</span>
+            <div className="stat-card-label">Total Villages </div>
           </div>
           <strong className="statValue tone-green">
             {loading ? '...' : formatNumber(totalVillages)}
           </strong>
           <div className="statSplit">
-            <span>
+            <div className="stat-card-note">
               Mandals
               {' '}
               <strong className="tone-green">
                 {loading ? '...' : formatNumber(totalMandals)}
               </strong>
-            </span>
+            </div>
             <span className="dividerLine" />
-            <span>
+            <div className="stat-card-note">
               Districts
               {' '}
               <strong className="tone-green">
                 {loading ? '...' : formatNumber(totalDistricts)}
               </strong>
-            </span>
+            </div>
           </div>
         </article>
 
-        <article className="dashboardCard reminderRecordCard ">
+        <article className="reminderRecordCard ">
           <div className="statHeader">
-            <div className="statIcon purple">
+            <div className="stat-card-icon purple">
               <FiUser />
             </div>
-            <span>Student Category</span>
+            <div className="stat-card-label">Student Category</div>
           </div>
           <div className="categoryRows">
             <div>
-              <span>Orphans</span>
-              <strong>{loading ? '...' : formatNumber(orphanCount)}</strong>
+              <div className="stat-card-note">Orphans</div>
+              <strong className="tone-black">{loading ? '...' : formatNumber(orphanCount)}</strong>
             </div>
             <div>
-              <span>Semi-Orphans</span>
-              <strong>{loading ? '...' : formatNumber(semiOrphanCount)}</strong>
+              <div className="stat-card-note">Semi-Orphans</div>
+              <strong className="tone-black">{loading ? '...' : formatNumber(semiOrphanCount)}</strong>
             </div>
           </div>
         </article>
 
-        <article className="dashboardCard reminderRecordCard">
-          <div className="statHeader addStudentHeader">
-            <div className="addStudentBadge" aria-hidden="true">
+        <article className="reminderRecordCard">
+          <div className="statHeader">
+            <div className="stat-card-icon">
               <FiUserPlus />
             </div>
-            <span>Add Student</span>
+            <div className="stat-card-label">Add Student</div>
           </div>
-          <p className="addStudentDescription">Register a new student quickly and easily.</p>
-          <div className="addStudentContent">
-            <button type="button" onClick={() => navigate('/students/add')}>
+          <p className="addStudentDescription"></p>
+          <div className="add-student-action">
+            <button type="button" className="btn btnGreen" onClick={() => navigate('/students/add')}>
               <FiPlus />
               Add Student
             </button>
