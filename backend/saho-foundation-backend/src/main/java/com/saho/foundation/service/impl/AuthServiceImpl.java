@@ -2,26 +2,26 @@ package com.saho.foundation.service.impl;
 
 import com.saho.foundation.dto.LoginRequestDto;
 import com.saho.foundation.dto.LoginResponseDto;
-import com.saho.foundation.entity.Student;
 import com.saho.foundation.entity.User;
-import com.saho.foundation.repository.StudentRepository;
 import com.saho.foundation.repository.UserRepository;
 import com.saho.foundation.security.JwtUtil;
 import com.saho.foundation.service.iservices.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-    private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
 
     @Override
     public LoginResponseDto adminLogin(LoginRequestDto request) {
@@ -40,15 +40,17 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Account not found.");
         }
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            if (user.getPassword().startsWith("$2")) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+        } catch (BadCredentialsException e) {
+            if (!user.getPassword().startsWith("$2") && user.getPassword().equals(request.getPassword())) {
+                user.setPassword(passwordEncoder.encode(request.getPassword()));
+                userRepository.save(user);
+            } else {
                 throw new IllegalArgumentException("Invalid email or password.");
             }
-            if (!user.getPassword().equals(request.getPassword())) {
-                throw new IllegalArgumentException("Invalid email or password.");
-            }
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-            userRepository.save(user);
         }
 
         String token = jwtUtil.generateToken(user.getUserId(), user.getRole().toUpperCase(), null);
@@ -84,21 +86,13 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Account does not exist.");
         }
 
-        Student student = studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new IllegalArgumentException("Student record not found."));
-
-        String expectedDobPassword = student.getDob().format(DateTimeFormatter.ofPattern("ddMMyyyy"));
-
-        boolean isDobPassword = expectedDobPassword.equals(request.getPassword());
-        boolean matchesStoredHash = passwordEncoder.matches(request.getPassword(), user.getPassword());
-
-        if (!isDobPassword && !matchesStoredHash) {
-            throw new IllegalArgumentException("Invalid Student ID or Password. Password is your date of birth in DDMMYYYY format (e.g., 10102017 for 10-Oct-2017).");
-        }
-
-        if (isDobPassword && !matchesStoredHash) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-            userRepository.save(user);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getStudentId().toString(), request.getPassword())
+            );
+        } catch (BadCredentialsException e) {
+            throw new IllegalArgumentException("Invalid Student ID or Password.");
         }
 
         String token = jwtUtil.generateToken(user.getUserId(), user.getRole().toUpperCase(), user.getStudentId());

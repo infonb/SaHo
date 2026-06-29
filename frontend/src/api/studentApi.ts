@@ -7,6 +7,10 @@ export interface StudentsResponse {
   pageSize: number;
   students: StudentView[];
   total: number;
+  boysCount: number;
+  girlsCount: number;
+  sponsoredCount: number;
+  orphansCount: number;
   hasMore: boolean;
 }
 
@@ -54,6 +58,10 @@ export const getStudents = async ({
       pageSize,
       students: pageStudents,
       total: students.length,
+      boysCount: students.filter(s => s.gender === 'Male').length,
+      girlsCount: students.filter(s => s.gender === 'Female').length,
+      sponsoredCount: students.filter(s => s.sponsor_id).length,
+      orphansCount: students.filter(s => s.orphan_status === '3').length,
       hasMore: start + pageSize < students.length,
     };
   }
@@ -78,6 +86,10 @@ export const getStudents = async ({
       pageSize,
       students: pageStudents,
       total: students.length,
+      boysCount: students.filter(s => s.gender === 'Male').length,
+      girlsCount: students.filter(s => s.gender === 'Female').length,
+      sponsoredCount: students.filter(s => s.sponsor_id).length,
+      orphansCount: students.filter(s => s.orphan_status === '3').length,
       hasMore: start + pageSize < students.length,
     };
   }
@@ -146,6 +158,10 @@ export const getStudents = async ({
       pageSize: res.data?.pageSize ?? pageSize,
       students,
       total: Number.isFinite(inferredTotal) ? inferredTotal : ((pageNumber - 1) * pageSize) + students.length + (hasMore ? 1 : 0),
+      boysCount: res.data?.boysCount ?? 0,
+      girlsCount: res.data?.girlsCount ?? 0,
+      sponsoredCount: res.data?.sponsoredCount ?? 0,
+      orphansCount: res.data?.orphansCount ?? 0,
       hasMore,
     };
   } catch (err) {
