@@ -9,8 +9,11 @@ import {
   FiUser,
   FiUsers,
 } from 'react-icons/fi';
+import { getSponsors } from '../../api/sponsorApi';
+import { getStudents } from '../../api/studentApi';
 import { getDashboardStats } from '../../api/dashboardApi';
-import type { DashboardData } from '../../types';
+import DataTable from '../../components/common/DataTable';
+import type { DashboardData, SponsorView, StudentView } from '../../types';
 import '../../styles/dashboard.css';
 
 const EMPTY_DASHBOARD: DashboardData = {
@@ -324,6 +327,9 @@ export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardData>(EMPTY_DASHBOARD);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [recentStudents, setRecentStudents] = useState<StudentView[]>([]);
+  const [recentSponsors, setRecentSponsors] = useState<SponsorView[]>([]);
+  const [recentLoading, setRecentLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -350,6 +356,51 @@ export default function DashboardPage() {
     };
 
     void loadDashboard();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadRecentRecords = async () => {
+      setRecentLoading(true);
+      try {
+        const [studentsResult, sponsorsResult] = await Promise.allSettled([
+          getStudents({
+            pageNumber: 1,
+            pageSize: 5,
+            sortColumn: 'student_id',
+            sortDirection: 'DESC',
+          }),
+          getSponsors(undefined, {
+            pageNumber: 1,
+            pageSize: 5,
+            sortColumn: 'sponsor_id',
+            sortDirection: 'DESC',
+          }),
+        ]);
+
+        if (!active) {
+          return;
+        }
+
+        setRecentStudents(
+          studentsResult.status === 'fulfilled' ? studentsResult.value.students.slice(0, 5) : [],
+        );
+        setRecentSponsors(
+          sponsorsResult.status === 'fulfilled' ? sponsorsResult.value.slice(0, 5) : [],
+        );
+      } finally {
+        if (active) {
+          setRecentLoading(false);
+        }
+      }
+    };
+
+    void loadRecentRecords();
 
     return () => {
       active = false;
@@ -405,6 +456,44 @@ export default function DashboardPage() {
     };
   });
 
+  const recentStudentRows = recentStudents.map((student) => [
+    student.student_id,
+    <span
+      key={`student-${student.student_id}-name`}
+      className="dashboardRecentCell"
+      title={student.studentName ?? student.full_name}
+    >
+      {student.studentName ?? student.full_name}
+    </span>,
+    <span
+      key={`student-${student.student_id}-school`}
+      className="dashboardRecentCell"
+      title={student.sch_name}
+    >
+      {student.sch_name}
+    </span>,
+  ]);
+
+  const recentSponsorRows = recentSponsors.map((sponsor) => [
+    sponsor.sponsor_id,
+    <span
+      key={`sponsor-${sponsor.sponsor_id}-name`}
+      className="dashboardRecentCell"
+      title={sponsor.sponsorName}
+    >
+      {sponsor.sponsorName}
+    </span>,
+    <span
+      key={`sponsor-${sponsor.sponsor_id}-nationality`}
+      className="dashboardRecentCell"
+      title={sponsor.nationality}
+    >
+      {sponsor.nationality}
+    </span>,
+  ]);
+
+  const isRecentLoading = loading || recentLoading;
+
   return (
     <div className="dashboardScreen">
       <section className="dashboardHero">
@@ -419,7 +508,7 @@ export default function DashboardPage() {
 
       {error ? <div className="toast error">{error}</div> : null}
 
-      <section className="student-stats-grid">
+      <section className="student-stats-grid grid-cols-4 ">
         <article className="reminderRecordCard ">
           <div className="statHeader">
             <div className="stat-card-icon">
@@ -601,6 +690,54 @@ export default function DashboardPage() {
           }))}
           legend={locationLegend}
         />
+      </section>
+
+      <section className="dashboardBottomRow dashboardRecentRow">
+        <article className="dashboardCard dashboardRecentCard">
+          <div className="cardHeader">
+            <h2>Recent Students</h2>
+            <button
+              type="button"
+              className="linkButton"
+              onClick={() => navigate('/students')}
+            >
+              View All
+            </button>
+          </div>
+          <DataTable
+            loading={isRecentLoading}
+            loadingRowCount={5}
+            columns={[
+              { key: 'id', label: 'ID', width: '72px' },
+              { key: 'student', label: 'Student', width: '52%' },
+              { key: 'school', label: 'School', width: '48%' },
+            ]}
+            rows={recentStudentRows}
+          />
+        </article>
+
+        <article className="dashboardCard dashboardRecentCard">
+          <div className="cardHeader">
+            <h2>Recent Sponsors</h2>
+            <button
+              type="button"
+              className="linkButton"
+              onClick={() => navigate('/sponsors')}
+            >
+              View All
+            </button>
+          </div>
+          <DataTable
+            loading={isRecentLoading}
+            loadingRowCount={5}
+            columns={[
+              { key: 'id', label: 'ID', width: '72px' },
+              { key: 'sponsor', label: 'Sponsor', width: '52%' },
+              { key: 'nationality', label: 'Nationality', width: '48%' },
+            ]}
+            rows={recentSponsorRows}
+          />
+        </article>
       </section>
     </div>
   );

@@ -555,7 +555,7 @@ export default function StudentListPage() {
         </div>
       </div>
 
-      <div className="student-stats-grid">
+      <div className="student-stats-grid grid-cols-5">
         <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Total Students</div>

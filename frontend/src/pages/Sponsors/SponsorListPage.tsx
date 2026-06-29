@@ -239,7 +239,7 @@ export default function SponsorListPage() {
         </div>
       </div>
 
-      <div className="student-stats-grid">
+      <div className="student-stats-grid grid-cols-3">
         <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Total Sponsors</div>
