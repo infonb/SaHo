@@ -584,7 +584,6 @@ export default function ViewEvents() {
     load();
   };
 
-  const hasActiveFilters = pending.search || pending.stateId || pending.districtId || pending.mandalId || pending.villageId || pending.schId || pending.status;
   const upcomingCount = filteredEvents.filter(event => event.status === 'upcoming').length;
   const ongoingCount = filteredEvents.filter(event => event.status === 'ongoing').length;
   const completedCount = filteredEvents.filter(event => event.status === 'completed').length;
@@ -1008,10 +1007,12 @@ export default function ViewEvents() {
                 {[0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>)}
               </div>
             ) : events.length === 0 ? (
-              <div className="empty-state">
-                <p>No events found matching your filters.</p>
-                {hasActiveFilters && <Button variant="outline" size="sm" onClick={handleClearFilters}>Clear Filters</Button>}
-              </div>
+              <>
+                <div className="empty">
+                  <p>No records found.</p>
+                </div>
+                <Pagination total={events.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
+              </>
             ) : (
               <>
                 <div className="sponsorCardGrid">
@@ -1050,38 +1051,31 @@ export default function ViewEvents() {
           </div>
         ) : (
           <div className="eventTableOuter">
-            {!loading && events.length === 0 ? (
-              <div className="empty-state">
-                <p>No events found matching your filters.</p>
-                {hasActiveFilters && <Button variant="outline" size="sm" onClick={handleClearFilters}>Clear Filters</Button>}
-              </div>
-            ) : (
-              <DataTable
-                loading={loading}
-                columns={[
-                  { key: 'date', label: 'Date', width: '140px' },
-                  { key: 'event', label: 'Event Name', width: '280px' },
-                  { key: 'status', label: 'Status', width: '140px' },
-                  { key: 'venue', label: 'Venue', width: '220px' },
-                  { key: 'actions', label: '', width: '92px' },
-                ]}
-                rows={eventRows}
-                rowClassName="studentTableRow"
-                onRowClick={(index) => {
-                  const event = pager.current[index];
-                  if (event) handleView(event.id);
-                }}
-                footer={
-                  <Pagination
-                    total={events.length}
-                    page={pager.page}
-                    pageSize={pager.pageSize}
-                    onChange={pager.setPage}
-                    onPageSizeChange={pager.setPageSize}
-                  />
-                }
-              />
-            )}
+            <DataTable
+              loading={loading}
+              columns={[
+                { key: 'date', label: 'Date', width: '140px' },
+                { key: 'event', label: 'Event Name', width: '280px' },
+                { key: 'status', label: 'Status', width: '140px' },
+                { key: 'venue', label: 'Venue', width: '220px' },
+                { key: 'actions', label: '', width: '92px' },
+              ]}
+              rows={eventRows}
+              rowClassName="studentTableRow"
+              onRowClick={(index) => {
+                const event = pager.current[index];
+                if (event) handleView(event.id);
+              }}
+              footer={
+                <Pagination
+                  total={events.length}
+                  page={pager.page}
+                  pageSize={pager.pageSize}
+                  onChange={pager.setPage}
+                  onPageSizeChange={pager.setPageSize}
+                />
+              }
+            />
           </div>
         )}
         {/* {viewMode === 'cards' ? (

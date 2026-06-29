@@ -45,6 +45,10 @@ export default function StudentListPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [boysCount, setBoysCount] = useState(0);
+  const [girlsCount, setGirlsCount] = useState(0);
+  const [sponsoredCount, setSponsoredCount] = useState(0);
+  const [orphansCount, setOrphansCount] = useState(0);
   const [pending, setPending] = useState(defaults);
   const [applied, setApplied] = useState(defaults);
   const [states, setStates] = useState<any[]>([]);
@@ -69,10 +73,10 @@ export default function StudentListPage() {
   const { toast } = useToast();
 
   const totalStudents = total;
-  const totalBoys = students.filter((s) => s.gender === "Male").length;
-  const totalGirls = students.filter((s) => s.gender === "Female").length;
-  const totalSponsored = students.filter((s) => s.sponsor_id).length;
-  const totalOrphans = students.filter((s) => s.orphan_status === "3").length;
+  const totalBoys = boysCount;
+  const totalGirls = girlsCount;
+  const totalSponsored = sponsoredCount;
+  const totalOrphans = orphansCount;
 
   const load = async (nextPage = page, nextPageSize = pageSize) => {
     const scrollY = window.scrollY;
@@ -90,9 +94,17 @@ export default function StudentListPage() {
       });
       setStudents(data.students);
       setTotal(data.total);
+      setBoysCount(data.boysCount);
+      setGirlsCount(data.girlsCount);
+      setSponsoredCount(data.sponsoredCount);
+      setOrphansCount(data.orphansCount);
     } catch {
       setStudents([]);
       setTotal(0);
+      setBoysCount(0);
+      setGirlsCount(0);
+      setSponsoredCount(0);
+      setOrphansCount(0);
       setChecked([]);
       setError("Unable to load students from the database.");
     } finally {
