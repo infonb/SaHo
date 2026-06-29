@@ -7,7 +7,7 @@ import Topbar from './Topbar';
 export default function AppLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(() => localStorage.getItem('saho-sidebar-open') === 'true');
-  const [aiSidebarOpen, setAiSidebarOpen] = useState(() => !window.matchMedia('(max-width: 1100px)').matches);
+  const [aiSidebarOpen, setAiSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -31,12 +31,13 @@ export default function AppLayout() {
   const closeMobileSidebar = () => {
     if (isMobile) setSidebarOpen(false);
   };
-  const openAiSidebar = () => setAiSidebarOpen(true);
+
+  const toggleAiSidebar = () => setAiSidebarOpen((value) => !value);
   const closeAiSidebar = () => setAiSidebarOpen(false);
 
   return (
     <div className={`appShell ${sidebarOpen ? 'sidebarExpanded sidebar-open' : 'sidebarCollapsed'} ${aiSidebarOpen ? 'aiSidebarOpen' : ''}`}>
-      <Topbar sidebarOpen={sidebarOpen} onSidebarToggle={toggleSidebar} onAiOpen={openAiSidebar} />
+      <Topbar sidebarOpen={sidebarOpen} onSidebarToggle={toggleSidebar} onAiOpen={toggleAiSidebar} />
       <button className="sidebar-overlay" type="button" aria-label="Close sidebar" onClick={closeSidebar} />
       <Sidebar open={sidebarOpen} onMobileNavigate={closeMobileSidebar} />
       <AiSidebar open={aiSidebarOpen} onClose={closeAiSidebar} />

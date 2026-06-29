@@ -42,6 +42,10 @@
   align-items: start;
 }
 
+.dashboardRecentRow {
+  align-items: stretch;
+}
+
 .dashboardCard {
   background: #fff;
   border: 1px solid #e9edf2;
@@ -53,7 +57,8 @@
 .addStudentCard,
 .chartCard,
 .eventsCard,
-.dashboardDonutCard {
+.dashboardDonutCard,
+.dashboardRecentCard {
   padding: 13px;
 }
 
@@ -78,6 +83,49 @@
 
 .dashboardDonutCard {
   min-height: 272px;
+}
+
+.dashboardRecentCard {
+  min-height: 272px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboardRecentCard .tableWrap {
+  flex: 1;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  overflow: hidden;
+}
+
+.dashboardRecentCard .tableScroll {
+  height: 100%;
+}
+
+.dashboardRecentCard table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.dashboardRecentCard th,
+.dashboardRecentCard td {
+  text-align: left;
+}
+
+.dashboardRecentCard th:first-child,
+.dashboardRecentCard td:first-child {
+  width: 72px;
+}
+
+.dashboardRecentCard .dashboardRecentCell {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .statHeader,
@@ -673,7 +721,8 @@
   .addStudentCard,
   .chartCard,
   .eventsCard,
-  .dashboardDonutCard {
+  .dashboardDonutCard,
+  .dashboardRecentCard {
     padding: 14px;
   }
 

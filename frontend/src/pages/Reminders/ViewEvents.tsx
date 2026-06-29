@@ -701,7 +701,7 @@ export default function ViewEvents() {
         }
       />
 
-      <div className="student-stats-grid" style={{ marginBottom: 24 }}>
+      <div className="student-stats-grid grid-cols-5" style={{ marginBottom: 24 }}>
         <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Total Events</div>

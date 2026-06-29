@@ -4,7 +4,8 @@
   right: 0;
   bottom: 0;
   z-index: 35;
-  width: var(--sidebar-expanded-w);
+  /* width: var(--sidebar-expanded-w); */
+  width:min-content;
   display: flex;
   flex-direction: column;
   gap: 18px;
