@@ -1101,51 +1101,79 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
-          ))}
-        </div>
-      </div>
-      <StudentProfileSections
-        key={activeStep}
-        mode={isView ? 'view' : isEdit ? 'edit' : 'create'}
-        form={form}
-        set={setField}
-        touch={touchField}
-        chooseImage={chooseImage}
-        clearImage={() => setSelectedImageFile(null)}
-        sibling={sibling}
-        siblingChecked={siblingChecked}
-        searchSibling={searchSibling}
-        schools={schools}
-        states={currentStates}
-        districts={districts}
-        mandals={mandals}
-        villages={villages}
-        relationships={currentRelationships}
-        castes={currentCastes}
-        classes={currentClasses}
-        aadhaarStatus={aadhaarMessage}
-        errors={errors}
-        validatedFields={validatedFields}
-        touchedFields={touchedFields}
-        submitAttempted={submitAttempted}
-        guardianSubmitAttempted={guardianSubmitAttempted}
-        loading={metaLoading || editLoading}
-        activeStep={activeStep}
-      />
-      {!isView ? (
-        <div className="studentWizardActions" aria-label="Form actions">
-          {activeStep === 'guardian' ? (
-            <PrimaryButton type="button" onClick={submitFinalStep} loading={loading || metaLoading || editLoading} className="btn btnGreen">{isEdit ? 'Save Changes' : 'Register Student'}</PrimaryButton>
-          ) : (
-            <PrimaryButton type="button" className="btnGreen" onClick={goNext} disabled={metaLoading || editLoading}>Next</PrimaryButton>
-          )}
-          {activeStep === 'personal' ? (
-            <SecondaryButton type="button" className="btnRed" onClick={cancel}>Cancel</SecondaryButton>
-          ) : (
-            <SecondaryButton type="button" className="btnRed" onClick={goBack}>Back</SecondaryButton>
-          )}
-        </div>
-      ) : null}
+          </div>
+          <div className="studentProfileViewBanner">
+            <div className="studentProfileViewAvatar" aria-hidden="true">
+              {showProfileImage ? <img src={profileImageUrl} alt="" onError={() => setProfileImageFailed(true)} /> : profileInitials}
+            </div>
+            <div className="studentProfileViewBannerText">
+              <div className="studentProfileViewBannerName">{fullName}</div>
+              <div className="studentProfileViewBannerMeta">Student ID: {profileStudentId} | {schoolName}</div>
+            </div>
+          </div>
+          <div className="studentProfileViewGrid">
+            <ProfileViewItem label="Full Name" value={fullName} />
+            <ProfileViewItem label="Date of Birth" value={formatProfileDate(form.dob)} />
+            <ProfileViewItem label="Gender" value={optionLabel(form.gender, GENDER_OPTIONS)} badge />
+            <ProfileViewItem label="Aadhaar Number" value={formatProfileAadhaar(form.aadhaar_number)} />
+            <ProfileViewItem label="Class" value={optionLabel(form.class_id, currentClasses)} />
+            <ProfileViewItem label="Religion" value={optionLabel(form.religion, RELIGION_OPTIONS)} />
+            <ProfileViewItem label="Caste" value={optionLabel(form.caste, currentCastes)} />
+            <ProfileViewItem label="Blood Group" value={form.blood_group || '-'} />
+            <ProfileViewItem label="Orphan / Single Parent" value={optionLabel(form.orphan_status, ORPHAN_STATUS_OPTIONS)} />
+            <ProfileViewItem label="School" value={schoolName} />
+            <ProfileViewItem label="Address" value={address} wide />
+            <ProfileViewItem label="Guardian" value={guardianName} />
+            <ProfileViewItem label="Relation" value={optionLabel(form.relation, currentRelationships)} />
+            <ProfileViewItem label="Phone" value={form.phone || '-'} />
+            <ProfileViewItem label="Occupation" value={form.occ || '-'} />
+            <ProfileViewItem label="Sibling" value={form.has_sibling || '-'} />
+          </div>
+        </section>
+      ) : (
+        <>
+          <StudentProfileSections
+            key={activeStep}
+            mode={isEdit ? 'edit' : 'create'}
+            form={form}
+            set={setField}
+            touch={touchField}
+            chooseImage={chooseImage}
+            clearImage={() => setSelectedImageFile(null)}
+            sibling={sibling}
+            siblingChecked={siblingChecked}
+            searchSibling={searchSibling}
+            schools={schools}
+            states={currentStates}
+            districts={districts}
+            mandals={mandals}
+            villages={villages}
+            relationships={currentRelationships}
+            castes={currentCastes}
+            classes={currentClasses}
+            aadhaarStatus={aadhaarMessage}
+            errors={errors}
+            validatedFields={validatedFields}
+            touchedFields={touchedFields}
+            submitAttempted={submitAttempted}
+            guardianSubmitAttempted={guardianSubmitAttempted}
+            loading={metaLoading || editLoading}
+            activeStep={activeStep}
+          />
+          <div className="studentWizardActions" aria-label="Form actions">
+            {activeStep === 'guardian' ? (
+              <PrimaryButton type="button" onClick={submitFinalStep} loading={loading || metaLoading || editLoading} className="btn btnGreen">{isEdit ? 'Save Changes' : 'Register Student'}</PrimaryButton>
+            ) : (
+              <PrimaryButton type="button" className="btnGreen" onClick={goNext} disabled={metaLoading || editLoading}>Next</PrimaryButton>
+            )}
+            {activeStep === 'personal' ? (
+              <SecondaryButton type="button" className="btnRed" onClick={cancel}>Cancel</SecondaryButton>
+            ) : (
+              <SecondaryButton type="button" className="btnRed" onClick={goBack}>Back</SecondaryButton>
+            )}
+          </div>
+        </>
+      )}
     </form>
   );
 }
