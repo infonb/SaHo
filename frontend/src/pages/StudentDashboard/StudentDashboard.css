@@ -106,6 +106,28 @@
   font-weight: 700;
   color: #fff;
   flex-shrink: 0;
+  object-fit: cover;
+}
+
+.sdWelcomeInner .studentPhoto.lg,
+.sdWelcomeInner .avatar.lg {
+  width: 52px;
+  height: 52px;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  box-shadow: none;
+}
+
+.sdProfileIdentity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.sdProfileIdentityText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .sdWelcomeInfo h2 {

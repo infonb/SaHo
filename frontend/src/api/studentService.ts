@@ -228,12 +228,11 @@ const sendStudentForm = async (payload: StudentRequestPayload, url: string, meth
   if (file) {
     const formData = new FormData();
     formData.append('request', JSON.stringify(payload));
-    formData.append('image', file, 'student-image.jpg');
+    formData.append('image', file);
     const response = await apiClient.request({
       url,
       method,
       data: formData,
-      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   }

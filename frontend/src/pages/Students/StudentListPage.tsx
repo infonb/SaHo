@@ -10,6 +10,7 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 import DataTable from '../../components/common/DataTable';
 import Pagination from '../../components/common/Pagination';
 import Avatar from '../../components/common/Avatar';
+import StudentPhoto from '../../components/common/StudentPhoto';
 import Badge from '../../components/common/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
@@ -374,7 +375,7 @@ export default function StudentListPage() {
         <span className="studentIdCell">{s.student_id}</span>
       </div>,
       <div className="rowFlex studentCell">
-        <Avatar name={s.full_name} size="md" />
+        <StudentPhoto name={s.full_name} src={s.image_url} size="md" />
         <div className="tableCellStack studentCellStack">
           <button
             type="button"
