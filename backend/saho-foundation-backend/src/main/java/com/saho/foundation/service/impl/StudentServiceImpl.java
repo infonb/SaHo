@@ -316,6 +316,10 @@ public class StudentServiceImpl implements StudentService {
             );
         }
 
+        String imageUrl = requestDto.getImageUrl() != null && !requestDto.getImageUrl().isBlank()
+                ? requestDto.getImageUrl()
+                : existingStudent.getImageUrl();
+
         studentRepository.createOrUpdateStudent(
                 existingStudent.getStudentId(),
                 requestDto.getFirstName(),
@@ -333,7 +337,7 @@ public class StudentServiceImpl implements StudentService {
                 guardianId,
                 Boolean.TRUE.equals(requestDto.getHasSibling()) ? requestDto.getSiblingIds() : null,
                 requestDto.getOrphanStatus(),
-                requestDto.getImageUrl(),
+                imageUrl,
                 requestDto.getCreatedBy()
         );
 

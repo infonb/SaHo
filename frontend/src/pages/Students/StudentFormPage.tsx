@@ -159,6 +159,42 @@ const firstString = (source: Record<string, any> | null | undefined, keys: strin
   return '';
 };
 
+const getStudentImageValue = (...sources: (Record<string, any> | null | undefined)[]) => {
+  const keys = [
+    'imageUrl',
+    'imageURL',
+    'image_url',
+    'studentImageUrl',
+    'student_image_url',
+    'studentPhotoUrl',
+    'student_photo_url',
+    'photoUrl',
+    'photoURL',
+    'photo_url',
+    'profileImageUrl',
+    'profile_image_url',
+    'profilePhotoUrl',
+    'profile_photo_url',
+    'fileUrl',
+    'file_url',
+    'filePath',
+    'file_path',
+    'image.url',
+    'image.path',
+    'photo.url',
+    'photo.path',
+    'profilePhoto.url',
+    'profilePhoto.path',
+  ];
+
+  for (const source of sources) {
+    const value = firstString(source, keys);
+    if (value) return value;
+  }
+
+  return '';
+};
+
 const firstBoolean = (source: Record<string, any> | null | undefined, keys: string[]) => {
   for (const key of keys) {
     const value = key.split('.').reduce<any>((current, part) => current?.[part], source);
@@ -622,7 +658,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         blood_group: student.bloodGroup ?? snapshot?.blood_group ?? '',
         class_id: student.classId ? String(student.classId) : mapLabelToOptionValue(snapshot?.class_id, viewFallback?.classes ?? []),
         orphan_status: mapLabelToOptionValue(student.orphanStatus || snapshot?.orphan_status, ORPHAN_STATUS_OPTIONS),
-        image_url: student.imageUrl ?? snapshot?.image_url ?? '',
+        image_url: getStudentImageValue(student, snapshot),
         father_first: father.first,
         father_middle: father.middle,
         father_last: father.last,
@@ -720,18 +756,6 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     }
   };
 
-  const blobToDataUrl = async (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') resolve(reader.result);
-        else reject(new Error('Unable to encode image.'));
-      };
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(blob);
-    });
-  };
-
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (isView) return;
@@ -760,8 +784,6 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     try {
       const imageUrl = selectedImageFile
         ? undefined
-        : form.image_url?.startsWith('blob:')
-        ? await blobToDataUrl(await fetch(form.image_url).then((res) => res.blob()))
         : form.image_url;
 
       const payload = {
@@ -1061,6 +1083,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         set={setField}
         touch={touchField}
         chooseImage={chooseImage}
+        clearImage={() => setSelectedImageFile(null)}
         sibling={sibling}
         siblingChecked={siblingChecked}
         searchSibling={searchSibling}

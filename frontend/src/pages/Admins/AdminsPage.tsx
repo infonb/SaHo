@@ -115,6 +115,7 @@ export default function AdminsPage() {
         variant="outline"
         className="iconBtn editActionButton"
         onClick={() => startEdit(a)}
+        title="Edit Admin"
         aria-label={`Edit ${a.email_id}`}
       >
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -127,6 +128,7 @@ export default function AdminsPage() {
         variant="outline"
         className="iconBtn deleteActionButton"
         onClick={() => setRevoke(a)}
+        title="Delete Admin"
         aria-label={`Delete ${a.email_id}`}
       >
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>

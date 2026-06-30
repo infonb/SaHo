@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'r
 import Avatar from '../../components/common/Avatar';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
+import StudentPhoto from '../../components/common/StudentPhoto';
 import Modal from '../../components/common/Modal';
 
 export interface StudentFormState {
@@ -56,6 +57,7 @@ interface StudentProfileSectionsProps {
   set?: (key: keyof StudentFormState, value: string) => void;
   touch?: (key: keyof StudentFormState) => void;
   chooseImage?: (file: File | Blob) => void;
+  clearImage?: () => void;
   sibling?: StudentSiblingResult | null;
   siblingChecked?: boolean;
   searchSibling?: () => void;
@@ -120,7 +122,7 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
 }
 
 export default function StudentProfileSections(props: StudentProfileSectionsProps) {
-  const { mode, form, set, touch, chooseImage, sibling, siblingChecked, searchSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
+  const { mode, form, set, touch, chooseImage, clearImage, sibling, siblingChecked, searchSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -130,7 +132,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
 
   if (!form || !set) return null;
   const readOnly = isViewMode(mode);
-  const isEdit = mode === 'edit';
+  const studentDisplayName = [form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ') || 'Student';
 
   const religionOptions = RELIGION_OPTIONS;
   const casteOptions = props.castes ?? ['SC', 'ST', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'OC', 'Other'];
@@ -346,6 +348,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
     if (form.image_url?.startsWith('blob:')) {
       try { URL.revokeObjectURL(form.image_url); } catch { /* ignore */ }
     }
+    clearImage?.();
     set('image_url', '');
   };
 
@@ -399,8 +402,12 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
                         </svg>
                       </Button>
                     ) : null}
-                    {form.image_url ? <img src={form.image_url} alt="Student" /> : null}
-                    <span className={uploadError ? 'studentModalUploadError' : undefined}>{uploadError || (readOnly ? 'No photo available' : 'Take photo or upload')}</span>
+                    {readOnly ? (
+                      <StudentPhoto name={studentDisplayName} src={form.image_url} size="lg" />
+                    ) : form.image_url ? (
+                      <StudentPhoto name={studentDisplayName} src={form.image_url} size="lg" />
+                    ) : null}
+                    <span className={uploadError ? 'studentModalUploadError' : undefined}>{uploadError || (readOnly ? '' : 'Take photo or upload')}</span>
                   </div>
                   {!readOnly ? (
                     <div className="rowFlex studentModalUploadActions">

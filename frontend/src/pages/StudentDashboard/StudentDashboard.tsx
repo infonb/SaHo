@@ -5,6 +5,7 @@ import { getStudentSponsorAssignment } from '../../api/studentSponsorApi';
 import { getSponsorById } from '../../api/sponsorApi';
 import { getStudentReminders } from '../../api/remindersApi';
 import Badge from '../../components/common/Badge';
+import StudentPhoto from '../../components/common/StudentPhoto';
 import type { StudentView, SponsorView, StudentSponsor } from '../../types';
 import type { ReminderDto } from '../../api/remindersApi';
 import './StudentDashboard.css';
@@ -90,13 +91,6 @@ export default function StudentDashboard() {
     );
   }
 
-  const initials = profile.full_name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
   const isAssigned = !!(sponsorAssign && sponsorDetail);
   const profileDob = profile.dob ? formatDate(profile.dob) : null;
 
@@ -106,7 +100,7 @@ export default function StudentDashboard() {
       {/* ─── A. Welcome Banner ─── */}
       <div className="sdWelcomeCard">
         <div className="sdWelcomeInner">
-          <div className="sdWelcomeAvatar">{initials}</div>
+          <StudentPhoto name={profile.full_name} src={profile.image_url} size="lg" />
           <div className="sdWelcomeInfo">
             <h2>Welcome, {profile.full_name}!</h2>
             <p className="sdWelcomeSub">
@@ -294,6 +288,13 @@ export default function StudentDashboard() {
               My Profile
             </div>
             <div className="sdCardBody">
+              <div className="sdProfileIdentity">
+                <StudentPhoto name={profile.full_name} src={profile.image_url} size="lg" />
+                <div className="sdProfileIdentityText">
+                  <span className="sdFieldLabel">Student Profile</span>
+                  <span className="sdFieldValue">{profile.full_name}</span>
+                </div>
+              </div>
               <div className="sdProfileGrid">
                 <div className="sdProfileField">
                   <span className="sdFieldLabel">Full Name</span>
