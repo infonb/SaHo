@@ -15,6 +15,7 @@ import type { SponsorFilters, SponsorView } from '../../types';
 import "../../styles/Sponsors/SponsorListPage.css";
 import closeIcon from "../../assets/clera cross favicon.png"
 import arrowIcon from "../../assets/Go arrow favicon.png"
+import assignSponsorIcon from "../../assets/assignsponsor.png"
 
 const defaults: SponsorFilters = { search: '', type: '', nationality: '', is_active: '' };
 type SponsorFilterOption = { value: string; label: string };
@@ -228,7 +229,10 @@ export default function SponsorListPage() {
           <p>Individuals and organisations supporting students</p>
         </div>
         <div className="student-list-actions sponsor-list-actions">
-          <Button className="btnGreen" onClick={() => nav('/sponsors/assign')}>Assign Sponsor</Button>
+          <Button className="btnGreen" onClick={() => nav('/sponsors/assign')}>
+            <img src={assignSponsorIcon} alt="" aria-hidden className="assignSponsorButtonIcon" />
+            Assign Sponsor
+          </Button>
           <Button className="btnGreen" onClick={() => nav('/sponsors/add')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>

@@ -7153,8 +7153,12 @@ td {
 .modalCard:has(.studentWizardForm.isViewMode) .modalHead {
   display: none;
 }
-.modalCard:has(.studentWizardForm.isViewMode) .modalBody {
+/* .modalCard:has(.studentWizardForm.isViewMode) */
+.modalBody {
   padding: 18px 22px 22px;
+}
+.modalCard:has(.studentProfileViewCard) .modalBody {
+  padding: 0;
 }
 .studentWizardForm {
   --student-control-radius: 12px;
@@ -7791,6 +7795,156 @@ td {
 .studentWizardForm:not(.isEmbedded) {
   padding: 0 8px 24px;
 }
+.studentWizardForm.isViewMode:has(.studentProfileViewCard) {
+  display: block;
+}
+.studentProfileViewCard {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+.studentProfileViewHeader {
+  padding: 9px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.studentProfileViewHeader h2 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+.studentProfileViewHeader h2 svg {
+  width: 18px;
+  height: 18px;
+  color: #0f766e;
+  flex: 0 0 auto;
+}
+.studentProfileViewClose {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 10px;
+}
+.studentProfileViewBanner {
+  margin: 18px 20px 16px;
+  min-height: 94px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.16), transparent 28%),
+    linear-gradient(135deg, #14532d 0%, #15803d 48%, #22c55e 100%);
+  color: #ffffff;
+  overflow: hidden;
+}
+.studentProfileViewAvatar {
+  width: 62px;
+  height: 62px;
+  flex: 0 0 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+}
+.studentProfileViewAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.studentProfileViewBannerText {
+  min-width: 0;
+}
+.studentProfileViewBannerName {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.studentProfileViewBannerMeta {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.studentProfileViewGrid {
+  padding: 14px 20px 22px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 0;
+  row-gap: 0;
+}
+.studentProfileViewItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  min-height: 50px;
+  padding: 8px 14px 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+.studentProfileViewItem.isWide {
+  grid-column: span 1;
+}
+.studentProfileViewLabel {
+  margin-bottom: 0;
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.studentProfileViewValue {
+  color: #1a1a1a;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.studentProfileViewBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  min-height: 20px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid #c7f3f4;
+  background: #e7fbfc;
+  color: #047481;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.studentWizardForm.isViewMode .sdGenderBadge {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--sd-primary-light, #f0fdfa);
+  color: var(--sd-primary, #0f766e);
+}
 .studentWizardForm.isViewMode .field > span {
   color: #475569;
 }
@@ -7833,11 +7987,18 @@ td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
+  .studentProfileViewGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 0;
+  }
 }
 
 @media (max-width: 760px) {
   .modalCard:has(.studentWizardForm.isViewMode) .modalBody {
     padding: 14px;
+  }
+  .modalCard:has(.studentProfileViewCard) .modalBody {
+    padding: 0;
   }
   .studentWizardForm {
     gap: 18px;
@@ -7857,6 +8018,28 @@ td {
   }
   .studentStepGrid {
     grid-template-columns: 1fr;
+  }
+  .studentProfileViewHeader {
+    padding: 12px 16px;
+  }
+  .studentProfileViewBanner {
+    margin: 16px;
+    padding: 16px;
+    gap: 14px;
+  }
+  .studentProfileViewAvatar {
+    width: 54px;
+    height: 54px;
+    flex-basis: 54px;
+    font-size: 19px;
+  }
+  .studentProfileViewGrid {
+    grid-template-columns: 1fr;
+    padding: 14px 16px 22px;
+    column-gap: 0;
+  }
+  .studentProfileViewItem {
+    min-height: 50px;
   }
   .studentWizardForm .studentSearchRow {
     grid-column: 1 / -1;
