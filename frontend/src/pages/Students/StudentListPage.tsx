@@ -10,6 +10,7 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 import DataTable from '../../components/common/DataTable';
 import Pagination from '../../components/common/Pagination';
 import Avatar from '../../components/common/Avatar';
+import StudentPhoto from '../../components/common/StudentPhoto';
 import Badge from '../../components/common/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
@@ -45,6 +46,10 @@ export default function StudentListPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [boysCount, setBoysCount] = useState(0);
+  const [girlsCount, setGirlsCount] = useState(0);
+  const [sponsoredCount, setSponsoredCount] = useState(0);
+  const [orphansCount, setOrphansCount] = useState(0);
   const [pending, setPending] = useState(defaults);
   const [applied, setApplied] = useState(defaults);
   const [states, setStates] = useState<any[]>([]);
@@ -69,10 +74,10 @@ export default function StudentListPage() {
   const { toast } = useToast();
 
   const totalStudents = total;
-  const totalBoys = students.filter((s) => s.gender === "Male").length;
-  const totalGirls = students.filter((s) => s.gender === "Female").length;
-  const totalSponsored = students.filter((s) => s.sponsor_id).length;
-  const totalOrphans = students.filter((s) => s.orphan_status === "3").length;
+  const totalBoys = boysCount;
+  const totalGirls = girlsCount;
+  const totalSponsored = sponsoredCount;
+  const totalOrphans = orphansCount;
 
   const load = async (nextPage = page, nextPageSize = pageSize) => {
     const scrollY = window.scrollY;
@@ -90,9 +95,17 @@ export default function StudentListPage() {
       });
       setStudents(data.students);
       setTotal(data.total);
+      setBoysCount(data.boysCount);
+      setGirlsCount(data.girlsCount);
+      setSponsoredCount(data.sponsoredCount);
+      setOrphansCount(data.orphansCount);
     } catch {
       setStudents([]);
       setTotal(0);
+      setBoysCount(0);
+      setGirlsCount(0);
+      setSponsoredCount(0);
+      setOrphansCount(0);
       setChecked([]);
       setError("Unable to load students from the database.");
     } finally {
@@ -362,7 +375,7 @@ export default function StudentListPage() {
         <span className="studentIdCell">{s.student_id}</span>
       </div>,
       <div className="rowFlex studentCell">
-        <Avatar name={s.full_name} size="md" />
+        <StudentPhoto name={s.full_name} src={s.image_url} size="md" />
         <div className="tableCellStack studentCellStack">
           <button
             type="button"

@@ -323,7 +323,8 @@
   cursor: pointer;
 }
 
-.topbar .userIconButton .avatar {
+.topbar .userIconButton .avatar,
+.topbar .userIconButton .studentPhoto {
   width: 38px;
   height: 38px;
   font-size: 12px;
@@ -334,7 +335,8 @@
   border: 2px solid #c0dd97;
 }
 
-.topbar .userIconButton:hover .avatar {
+.topbar .userIconButton:hover .avatar,
+.topbar .userIconButton:hover .studentPhoto {
   background: #27500a;
 }
 

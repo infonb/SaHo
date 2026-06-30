@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Avatar from '../common/Avatar';
+import StudentPhoto from '../common/StudentPhoto';
 import { useAuth } from '../../context/AuthContext';
 import { getMyProfile } from '../../api/studentApi';
 import type { StudentView } from '../../types';
@@ -38,6 +38,7 @@ export default function Topbar({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const userRole = user?.role?.toLowerCase();
 
   useEffect(() => {
     const handler = (event: MouseEvent) => {
@@ -51,7 +52,8 @@ export default function Topbar({
   }, []);
 
   useEffect(() => {
-    if (!user?.student_id || user?.role !== 'student') {
+    if (!user?.student_id || userRole !== 'student') {
+      setStudentProfile(null);
       return;
     }
 
@@ -62,7 +64,7 @@ export default function Topbar({
         }
       })
       .catch(() => {});
-  }, [user?.user_id, user?.role, user?.student_id]);
+  }, [user?.user_id, userRole, user?.student_id]);
 
   const signOut = () => {
     logout();
@@ -77,7 +79,7 @@ export default function Topbar({
     studentProfile?.studentName ||
     studentProfile?.full_name ||
     user?.username ||
-    (user?.role === 'student' ? `Student ${user?.student_id}` : 'Admin');
+    (userRole === 'student' ? `Student ${user?.student_id}` : 'Admin');
 
   return (
     <header className={`dashboard-header topbar${headerClassName ? ` ${headerClassName}` : ''}`}>
@@ -132,7 +134,7 @@ export default function Topbar({
             type="button"
             onClick={() => setOpen((value) => !value)}
           >
-            <Avatar name={displayName} size="md" />
+            <StudentPhoto name={displayName} src={studentProfile?.image_url} size="md" />
           </button>
 
           <div

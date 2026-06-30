@@ -157,15 +157,27 @@ public class StudentServiceImpl implements StudentService {
             .toList();
 
         int resolvedTotalCount = 0;
+        int resolvedBoysCount = 0;
+        int resolvedGirlsCount = 0;
+        int resolvedSponsoredCount = 0;
+        int resolvedOrphansCount = 0;
         if (!students.isEmpty()) {
-            Integer firstRowTotalCount = students.get(0).getTotalCount();
-            resolvedTotalCount = firstRowTotalCount != null ? firstRowTotalCount : students.size();
+            StudentListResponseDto first = students.get(0);
+            resolvedTotalCount = first.getTotalCount() != null ? first.getTotalCount() : students.size();
+            resolvedBoysCount = first.getBoysCount() != null ? first.getBoysCount() : 0;
+            resolvedGirlsCount = first.getGirlsCount() != null ? first.getGirlsCount() : 0;
+            resolvedSponsoredCount = first.getSponsoredCount() != null ? first.getSponsoredCount() : 0;
+            resolvedOrphansCount = first.getOrphansCount() != null ? first.getOrphansCount() : 0;
         }
 
         return StudentPaginationResponseDto.builder()
             .pageNumber(pageNumber)
             .pageSize(pageSize)
             .totalCount(resolvedTotalCount)
+            .boysCount(resolvedBoysCount)
+            .girlsCount(resolvedGirlsCount)
+            .sponsoredCount(resolvedSponsoredCount)
+            .orphansCount(resolvedOrphansCount)
             .students(students)
             .build();
         }
@@ -304,6 +316,10 @@ public class StudentServiceImpl implements StudentService {
             );
         }
 
+        String imageUrl = requestDto.getImageUrl() != null && !requestDto.getImageUrl().isBlank()
+                ? requestDto.getImageUrl()
+                : existingStudent.getImageUrl();
+
         studentRepository.createOrUpdateStudent(
                 existingStudent.getStudentId(),
                 requestDto.getFirstName(),
@@ -321,7 +337,7 @@ public class StudentServiceImpl implements StudentService {
                 guardianId,
                 Boolean.TRUE.equals(requestDto.getHasSibling()) ? requestDto.getSiblingIds() : null,
                 requestDto.getOrphanStatus(),
-                requestDto.getImageUrl(),
+                imageUrl,
                 requestDto.getCreatedBy()
         );
 
@@ -432,6 +448,10 @@ public class StudentServiceImpl implements StudentService {
                 .sponsorId(student.getSponsorId())
                 .sponsorName(student.getSponsorName())
                 .totalCount(student.getTotalCount())
+                .boysCount(student.getBoysCount())
+                .girlsCount(student.getGirlsCount())
+                .sponsoredCount(student.getSponsoredCount())
+                .orphansCount(student.getOrphansCount())
                 .imageUrl(student.getImageUrl())
                 .createdAt(student.getCreatedAt())
                 .createdBy(student.getCreatedBy())

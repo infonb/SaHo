@@ -40,6 +40,10 @@ public class StudentListResponseDto {
     private Integer sponsorId;
     private String sponsorName;
     private Integer totalCount;
+    private Integer boysCount;
+    private Integer girlsCount;
+    private Integer sponsoredCount;
+    private Integer orphansCount;
     private String imageUrl;
     private LocalDateTime createdAt;
     private Integer createdBy;

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'r
 import Avatar from '../../components/common/Avatar';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
+import StudentPhoto from '../../components/common/StudentPhoto';
 import Modal from '../../components/common/Modal';
 
 export interface StudentFormState {
@@ -56,6 +57,7 @@ interface StudentProfileSectionsProps {
   set?: (key: keyof StudentFormState, value: string) => void;
   touch?: (key: keyof StudentFormState) => void;
   chooseImage?: (file: File | Blob) => void;
+  clearImage?: () => void;
   sibling?: StudentSiblingResult | null;
   siblingChecked?: boolean;
   searchSibling?: () => void;
@@ -120,7 +122,7 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
 }
 
 export default function StudentProfileSections(props: StudentProfileSectionsProps) {
-  const { mode, form, set, touch, chooseImage, sibling, siblingChecked, searchSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
+  const { mode, form, set, touch, chooseImage, clearImage, sibling, siblingChecked, searchSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -130,6 +132,8 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
 
   if (!form || !set) return null;
   const readOnly = isViewMode(mode);
+  const isEdit = mode === 'edit';
+  const studentDisplayName = [form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ') || 'Student';
 
   const religionOptions = RELIGION_OPTIONS;
   const casteOptions = props.castes ?? ['SC', 'ST', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'OC', 'Other'];
@@ -345,6 +349,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
     if (form.image_url?.startsWith('blob:')) {
       try { URL.revokeObjectURL(form.image_url); } catch { /* ignore */ }
     }
+    clearImage?.();
     set('image_url', '');
   };
 
@@ -368,12 +373,12 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
               <Field fieldKey="last_name" label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} onBlur={() => touch?.('last_name')} readOnly={readOnly} alphabeticOnly error={showMessage('last_name') ? errors.last_name : undefined} state={getFieldState('last_name')} />
               <Field fieldKey="email" label="Email ID*" type="email" value={form.email} onChange={v => set('email', v)} onBlur={() => touch?.('email')} readOnly={readOnly} error={showMessage('email') ? errors.email : undefined} state={getFieldState('email')} />
               <Field fieldKey="dob" label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} onBlur={() => touch?.('dob')} readOnly={readOnly} error={showMessage('dob') ? errors.dob : undefined} state={getFieldState('dob')} />
-              <Select fieldKey="gender" label="Gender*" value={form.gender} onChange={v => set('gender', v)} onBlur={() => touch?.('gender')} options={GENDER_OPTIONS} readOnly={readOnly} error={showMessage('gender') ? errors.gender : undefined} state={getFieldState('gender')} />
+              <Select fieldKey="gender" label="Gender*" value={form.gender} onChange={v => set('gender', v)} onBlur={() => touch?.('gender')} options={GENDER_OPTIONS} readOnly={readOnly || isEdit} subText={isEdit ? 'Gender cannot be modified after registration.' : undefined} error={showMessage('gender') ? errors.gender : undefined} state={getFieldState('gender')} />
               <Select fieldKey="blood_group" label="Blood Group" value={form.blood_group} onChange={v => set('blood_group', v)} options={['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']} readOnly={readOnly} state={getFieldState('blood_group')} />
               <Select fieldKey="religion" label="Religion*" value={form.religion} onChange={v => set('religion', v)} onBlur={() => touch?.('religion')} options={religionOptions} readOnly={readOnly} error={showMessage('religion') ? errors.religion : undefined} state={getFieldState('religion')} />
               <Select fieldKey="caste" label="Caste*" value={form.caste} onChange={v => set('caste', v)} onBlur={() => touch?.('caste')} options={casteOptions} readOnly={readOnly} error={showMessage('caste') ? errors.caste : undefined} state={getFieldState('caste')} />
               <Select fieldKey="class_id" label="Class*" value={form.class_id} onChange={v => set('class_id', v)} onBlur={() => touch?.('class_id')} options={classOptions} readOnly={readOnly} error={showMessage('class_id') ? errors.class_id : undefined} state={getFieldState('class_id')} />
-              <Field fieldKey="aadhaar_number" label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} onBlur={() => touch?.('aadhaar_number')} maxLength={12} subText={readOnly || errors.aadhaar_number ? undefined : props.aadhaarStatus} readOnly={readOnly} numericOnly aadhaarFormat error={showMessage('aadhaar_number') ? errors.aadhaar_number : undefined} state={getFieldState('aadhaar_number')} />
+              <Field fieldKey="aadhaar_number" label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} onBlur={() => touch?.('aadhaar_number')} maxLength={12} subText={isEdit ? 'Aadhaar number cannot be modified after registration.' : (readOnly || errors.aadhaar_number ? undefined : props.aadhaarStatus)} readOnly={readOnly || isEdit} numericOnly aadhaarFormat error={showMessage('aadhaar_number') ? errors.aadhaar_number : undefined} state={getFieldState('aadhaar_number')} />
               <Select fieldKey="orphan_status" label="Orphan / Single Parent*" value={form.orphan_status} onChange={v => set('orphan_status', v)} onBlur={() => touch?.('orphan_status')} options={orphanStatusOptions} readOnly={readOnly} error={showMessage('orphan_status') ? errors.orphan_status : undefined} state={getFieldState('orphan_status')} />
               <div className="field studentPhotoField">
                 <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><PhotoImageIcon /></span>Student Photo</h3>
@@ -398,8 +403,12 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
                         </svg>
                       </Button>
                     ) : null}
-                    {form.image_url ? <img src={form.image_url} alt="Student" /> : null}
-                    <span className={uploadError ? 'studentModalUploadError' : undefined}>{uploadError || (readOnly ? 'No photo available' : 'Take photo or upload')}</span>
+                    {readOnly ? (
+                      <StudentPhoto name={studentDisplayName} src={form.image_url} size="lg" />
+                    ) : form.image_url ? (
+                      <StudentPhoto name={studentDisplayName} src={form.image_url} size="lg" />
+                    ) : null}
+                    <span className={uploadError ? 'studentModalUploadError' : undefined}>{uploadError || (readOnly ? '' : 'Take photo or upload')}</span>
                   </div>
                   {!readOnly ? (
                     <div className="rowFlex studentModalUploadActions">

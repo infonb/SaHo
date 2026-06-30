@@ -161,6 +161,42 @@ const firstString = (source: Record<string, any> | null | undefined, keys: strin
   return '';
 };
 
+const getStudentImageValue = (...sources: (Record<string, any> | null | undefined)[]) => {
+  const keys = [
+    'imageUrl',
+    'imageURL',
+    'image_url',
+    'studentImageUrl',
+    'student_image_url',
+    'studentPhotoUrl',
+    'student_photo_url',
+    'photoUrl',
+    'photoURL',
+    'photo_url',
+    'profileImageUrl',
+    'profile_image_url',
+    'profilePhotoUrl',
+    'profile_photo_url',
+    'fileUrl',
+    'file_url',
+    'filePath',
+    'file_path',
+    'image.url',
+    'image.path',
+    'photo.url',
+    'photo.path',
+    'profilePhoto.url',
+    'profilePhoto.path',
+  ];
+
+  for (const source of sources) {
+    const value = firstString(source, keys);
+    if (value) return value;
+  }
+
+  return '';
+};
+
 const firstBoolean = (source: Record<string, any> | null | undefined, keys: string[]) => {
   for (const key of keys) {
     const value = key.split('.').reduce<any>((current, part) => current?.[part], source);
@@ -630,7 +666,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         blood_group: student.bloodGroup ?? snapshot?.blood_group ?? '',
         class_id: student.classId ? String(student.classId) : mapLabelToOptionValue(snapshot?.class_id, viewFallback?.classes ?? []),
         orphan_status: mapLabelToOptionValue(student.orphanStatus || snapshot?.orphan_status, ORPHAN_STATUS_OPTIONS),
-        image_url: student.imageUrl ?? snapshot?.image_url ?? '',
+        image_url: getStudentImageValue(student, snapshot),
         father_first: father.first,
         father_middle: father.middle,
         father_last: father.last,
@@ -729,18 +765,6 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     }
   };
 
-  const blobToDataUrl = async (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') resolve(reader.result);
-        else reject(new Error('Unable to encode image.'));
-      };
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(blob);
-    });
-  };
-
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (isView) return;
@@ -769,8 +793,6 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     try {
       const imageUrl = selectedImageFile
         ? undefined
-        : form.image_url?.startsWith('blob:')
-        ? await blobToDataUrl(await fetch(form.image_url).then((res) => res.blob()))
         : form.image_url;
 
       const payload = {
@@ -814,7 +836,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         toast(successMessage, 'success');
         onSuccess();
       } else {
-        nav('/students');
+        nav('/view-students');
         window.setTimeout(() => toast(successMessage, 'success'), 0);
       }
     } catch (error) {
@@ -1028,7 +1050,6 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   };
   const cancel = () => {
     if (onCancel) onCancel();
-    else if (isEdit) nav(-1);
     else nav('/view-students');
   };
   const title = isView ? 'View' : isEdit ? 'Edit ' : 'Add ';
@@ -1080,95 +1101,37 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
-          </div>
-          <div className="studentProfileViewBanner">
-            <div className="studentProfileViewAvatar" aria-hidden>
-              {showProfileImage ? (
-                <img src={profileImageUrl} alt="" onError={() => setProfileImageFailed(true)} />
-              ) : (
-                <span>{profileInitials}</span>
-              )}
-            </div>
-            <div className="studentProfileViewBannerText">
-              <div className="studentProfileViewBannerName">{fullName}</div>
-              <div className="studentProfileViewBannerMeta">Student ID: {profileStudentId}</div>
-            </div>
-          </div>
-          <div className="studentProfileViewGrid">
-            <ProfileViewItem label="Student ID" value={profileStudentId} />
-            <ProfileViewItem label="Full Name" value={fullName} />
-            <ProfileViewItem label="Date of Birth" value={formatProfileDate(form.dob)} />
-            <ProfileViewItem label="Email" value={form.email || '-'} />
-            <ProfileViewItem label="Gender" value={optionLabel(form.gender, GENDER_OPTIONS)} badge />
-            <ProfileViewItem label="Aadhaar" value={formatProfileAadhaar(form.aadhaar_number || studentSnapshot?.aadhaar_number || '')} />
-            <ProfileViewItem label="Religion" value={optionLabel(form.religion, RELIGION_OPTIONS)} />
-            <ProfileViewItem label="Caste" value={optionLabel(form.caste, currentCastes)} />
-            <ProfileViewItem label="Class" value={optionLabel(form.class_id, currentClasses)} />
-            <ProfileViewItem label="School" value={schoolName} />
-            <ProfileViewItem label="Guardian" value={guardianName} />
-            <ProfileViewItem label="Guardian Phone" value={form.phone || '-'} />
-            <ProfileViewItem label="Address" value={address || '-'} wide />
-            <ProfileViewItem label="Orphan Status" value={optionLabel(form.orphan_status, ORPHAN_STATUS_OPTIONS)} badge />
-          </div>
-        </section>
-      ) : (
-        <>
-          <div className="studentWizardHeader">
-            <div className="studentWizardHeaderTop">
-              <div className="studentWizardHeaderLeft">
-                <div className="studentWizardEyebrow">{eyebrow}</div>
-                <h2>{title} Student</h2>
-              </div>
-              <button type="button" className="studentWizardClose" onClick={cancel} aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-            <div className="studentStepIndicator" aria-label="Student form steps">
-              {steps.map((step, index) => (
-                <button
-                  type="button"
-                  key={step.key}
-                  className={`studentStepPill${activeStep === step.key ? ' isActive' : ''}${index < activeStepIndex ? ' isComplete' : ''}`}
-                  onClick={() => goToStep(index)}
-                  disabled={index > activeStepIndex + 1}
-                >
-                  <span>{index + 1}</span>{step.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <StudentProfileSections
-            key={activeStep}
-            mode={isEdit ? 'edit' : 'create'}
-            form={form}
-            set={setField}
-            touch={touchField}
-            chooseImage={chooseImage}
-            sibling={sibling}
-            siblingChecked={siblingChecked}
-            searchSibling={searchSibling}
-            schools={schools}
-            states={currentStates}
-            districts={districts}
-            mandals={mandals}
-            villages={villages}
-            relationships={currentRelationships}
-            castes={currentCastes}
-            classes={currentClasses}
-            aadhaarStatus={aadhaarMessage}
-            errors={errors}
-            validatedFields={validatedFields}
-            touchedFields={touchedFields}
-            submitAttempted={submitAttempted}
-            guardianSubmitAttempted={guardianSubmitAttempted}
-            loading={metaLoading || editLoading}
-            activeStep={activeStep}
-          />
-        </>
-      )}
+          ))}
+        </div>
+      </div>
+      <StudentProfileSections
+        key={activeStep}
+        mode={isView ? 'view' : isEdit ? 'edit' : 'create'}
+        form={form}
+        set={setField}
+        touch={touchField}
+        chooseImage={chooseImage}
+        clearImage={() => setSelectedImageFile(null)}
+        sibling={sibling}
+        siblingChecked={siblingChecked}
+        searchSibling={searchSibling}
+        schools={schools}
+        states={currentStates}
+        districts={districts}
+        mandals={mandals}
+        villages={villages}
+        relationships={currentRelationships}
+        castes={currentCastes}
+        classes={currentClasses}
+        aadhaarStatus={aadhaarMessage}
+        errors={errors}
+        validatedFields={validatedFields}
+        touchedFields={touchedFields}
+        submitAttempted={submitAttempted}
+        guardianSubmitAttempted={guardianSubmitAttempted}
+        loading={metaLoading || editLoading}
+        activeStep={activeStep}
+      />
       {!isView ? (
         <div className="studentWizardActions" aria-label="Form actions">
           {activeStep === 'guardian' ? (

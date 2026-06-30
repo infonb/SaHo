@@ -15,7 +15,6 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
   timeout: 12000,
@@ -23,6 +22,10 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
+
   const token = localStorage.getItem('saho_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

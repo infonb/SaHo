@@ -2,11 +2,46 @@ import { apiClient } from './client';
 import { buildStudentView, delay, MOCK_GUARDIANS, MOCK_STUDENTS } from './mockData';
 import type { Guardian, Student, StudentFilters, StudentView } from '../types';
 
+const getStudentImageUrl = (student: any): string | null => {
+  const value =
+    student?.imageUrl ??
+    student?.imageURL ??
+    student?.image_url ??
+    student?.studentImageUrl ??
+    student?.student_image_url ??
+    student?.studentPhotoUrl ??
+    student?.student_photo_url ??
+    student?.photoUrl ??
+    student?.photoURL ??
+    student?.photo_url ??
+    student?.profileImageUrl ??
+    student?.profile_image_url ??
+    student?.profilePhotoUrl ??
+    student?.profile_photo_url ??
+    student?.fileUrl ??
+    student?.file_url ??
+    student?.filePath ??
+    student?.file_path ??
+    student?.image?.url ??
+    student?.image?.path ??
+    student?.photo?.url ??
+    student?.photo?.path ??
+    student?.profilePhoto?.url ??
+    student?.profilePhoto?.path ??
+    null;
+
+  return typeof value === 'string' && value.trim() ? value : null;
+};
+
 export interface StudentsResponse {
   pageNumber: number;
   pageSize: number;
   students: StudentView[];
   total: number;
+  boysCount: number;
+  girlsCount: number;
+  sponsoredCount: number;
+  orphansCount: number;
   hasMore: boolean;
 }
 
@@ -54,6 +89,10 @@ export const getStudents = async ({
       pageSize,
       students: pageStudents,
       total: students.length,
+      boysCount: students.filter(s => s.gender === 'Male').length,
+      girlsCount: students.filter(s => s.gender === 'Female').length,
+      sponsoredCount: students.filter(s => s.sponsor_id).length,
+      orphansCount: students.filter(s => s.orphan_status === '3').length,
       hasMore: start + pageSize < students.length,
     };
   }
@@ -78,6 +117,10 @@ export const getStudents = async ({
       pageSize,
       students: pageStudents,
       total: students.length,
+      boysCount: students.filter(s => s.gender === 'Male').length,
+      girlsCount: students.filter(s => s.gender === 'Female').length,
+      sponsoredCount: students.filter(s => s.sponsor_id).length,
+      orphansCount: students.filter(s => s.orphan_status === '3').length,
       hasMore: start + pageSize < students.length,
     };
   }
@@ -108,7 +151,7 @@ export const getStudents = async ({
       blood_group: s.bloodGroup ?? null,
       class_id: s.className ? String(s.className) : (s.classId ? String(s.classId) : ''),
       orphan_status: s.orphanStatus ?? null,
-      image_url: s.imageUrl ?? null,
+      image_url: getStudentImageUrl(s),
       is_active: true,
       created_at: s.createdAt ?? new Date().toISOString(),
       created_by: s.createdBy ?? 'system',
@@ -146,6 +189,10 @@ export const getStudents = async ({
       pageSize: res.data?.pageSize ?? pageSize,
       students,
       total: Number.isFinite(inferredTotal) ? inferredTotal : ((pageNumber - 1) * pageSize) + students.length + (hasMore ? 1 : 0),
+      boysCount: res.data?.boysCount ?? 0,
+      girlsCount: res.data?.girlsCount ?? 0,
+      sponsoredCount: res.data?.sponsoredCount ?? 0,
+      orphansCount: res.data?.orphansCount ?? 0,
       hasMore,
     };
   } catch (err) {
@@ -217,7 +264,7 @@ export const getMyProfile = async (userId: number): Promise<StudentView | undefi
       blood_group: s.bloodGroup ?? null,
       class_id: s.className ?? (s.classId ? String(s.classId) : ''),
       orphan_status: mapOrphan(s.orphanStatus),
-      image_url: s.imageUrl ?? null,
+      image_url: getStudentImageUrl(s),
       is_active: true,
       created_at: '',
       created_by: '',
@@ -275,7 +322,7 @@ export const getStudentById = async (id: number): Promise<StudentView | undefine
       blood_group: s.bloodGroup ?? s.blood_group ?? null,
       class_id: s.className ?? s.class_id ?? (s.classId ? String(s.classId) : ''),
       orphan_status: mapOrphan(s.orphanStatus ?? s.orphan_status ?? s.orphan_status_code),
-      image_url: s.imageUrl ?? s.image_url ?? null,
+      image_url: getStudentImageUrl(s),
       is_active: true,
       created_at: s.createdAt ?? s.created_at ?? new Date().toISOString(),
       created_by: s.createdBy ?? s.created_by ?? 'system',

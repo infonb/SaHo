@@ -6,7 +6,7 @@ import type { DistrictMaster, MandalMaster, SchoolMaster, StateMaster, VillageMa
 export const MOCK_EVENT_STATES: StateMaster[] = [
   { st_id: 1, st_name: 'Andhra Pradesh', created_at: '2024-01-01', updated_at: null },
   { st_id: 2, st_name: 'Telangana', created_at: '2024-01-01', updated_at: null },
-];
+] as unknown as StateMaster[];
 
 // Districts (linked to states)
 export const MOCK_EVENT_DISTRICTS: DistrictMaster[] = [
@@ -16,7 +16,7 @@ export const MOCK_EVENT_DISTRICTS: DistrictMaster[] = [
   // Telangana districts
   { dist_id: 3, dist_name: 'Warangal', st_id: 2, created_at: '2024-01-01', updated_at: null },
   { dist_id: 4, dist_name: 'Karimnagar', st_id: 2, created_at: '2024-01-01', updated_at: null },
-];
+] as unknown as DistrictMaster[];
 
 // Mandals (linked to districts)
 export const MOCK_EVENT_MANDALS: MandalMaster[] = [
@@ -29,7 +29,7 @@ export const MOCK_EVENT_MANDALS: MandalMaster[] = [
   { mndl_id: 4, mndl_name: 'Hanamkonda', dist_id: 3, created_at: '2024-01-01', updated_at: null },
   // Karimnagar mandals
   { mndl_id: 5, mndl_name: 'Jammikunta', dist_id: 4, created_at: '2024-01-01', updated_at: null },
-];
+] as unknown as MandalMaster[];
 
 // Villages (linked to mandals)
 export const MOCK_EVENT_VILLAGES: VillageMaster[] = [
@@ -44,7 +44,7 @@ export const MOCK_EVENT_VILLAGES: VillageMaster[] = [
   { vil_id: 5, vil_name: 'Dharmasagar', vil_pincode: 506001, mndl_id: 4, created_at: '2024-01-01', updated_at: null },
   // Jammikunta villages
   { vil_id: 6, vil_name: 'Gangadhara', vil_pincode: 505122, mndl_id: 5, created_at: '2024-01-01', updated_at: null },
-];
+] as unknown as VillageMaster[];
 
 // Schools (linked to villages)
 export const MOCK_EVENT_SCHOOLS: SchoolMaster[] = [
@@ -61,7 +61,7 @@ export const MOCK_EVENT_SCHOOLS: SchoolMaster[] = [
   { sch_id: 6, sch_name: 'ZP High School Warangal', sch_address: 'Dharmasagar, Hanamkonda, Warangal', vil_id: 5, created_at: '2024-01-01', updated_at: null },
   // Gangadhara schools
   { sch_id: 7, sch_name: "St. Joseph's High School", sch_address: 'Gangadhara, Jammikunta, Karimnagar', vil_id: 6, created_at: '2024-01-01', updated_at: null },
-];
+] as unknown as SchoolMaster[];
 
 // Helper functions to filter data by parent
 export const getDistrictsByState = (stateId: number): DistrictMaster[] => {
