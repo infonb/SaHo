@@ -132,6 +132,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
 
   if (!form || !set) return null;
   const readOnly = isViewMode(mode);
+  const isEdit = mode === 'edit';
   const studentDisplayName = [form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ') || 'Student';
 
   const religionOptions = RELIGION_OPTIONS;
