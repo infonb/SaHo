@@ -379,3 +379,15 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+.assignSponsorButtonIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  filter: brightness(0) invert(1);
+}
+
+.btnGreen:hover .assignSponsorButtonIcon {
+  filter: invert(28%) sepia(17%) saturate(1628%) hue-rotate(88deg) brightness(91%) contrast(88%);
+}

@@ -126,6 +126,8 @@ const fieldStepMap = steps.reduce((map, step) => {
 fieldStepMap.sibling_aadhaar = 'guardian';
 
 const emailPattern = /^[^\s@]+@(gmail\.com|nichebit\.com)$/i;
+const indianMobilePattern = /^[6-9]\d{9}$/;
+const indianMobileErrorMessage = 'Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.';
 
 function normalizeDateValue(value: string) {
   return value.replace(/^(\d{4})\d+-(\d{2})-(\d{2})$/, '$1-$2-$3');
@@ -212,6 +214,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const [metaLoading, setMetaLoading] = useState(true);
   const [studentStateList, setStudentStateList] = useState<{ stId: number; stName: string }[]>([]);
   const [editLoading, setEditLoading] = useState(false);
+  const [profileSchoolName, setProfileSchoolName] = useState('');
+  const [profileImageFailed, setProfileImageFailed] = useState(false);
   const [errors, setErrors] = useState<StudentFormErrors>({});
   const [validatedFields, setValidatedFields] = useState<Set<keyof StudentFormState>>(() => new Set());
   const [touchedFields, setTouchedFields] = useState<Set<keyof StudentFormState>>(() => new Set());
@@ -609,6 +613,10 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       const explicitMotherGuardian = firstBoolean(student, ['motherIsGuardian', 'mother_is_guardian', 'isMotherGuardian', 'mother.isGuardian', 'mother.is_guardian']);
       const fatherIsGuardian = explicitFatherGuardian ?? (guardianRelationLabel === 'father' && sameName(father, guardianName));
       const motherIsGuardian = explicitMotherGuardian ?? (guardianRelationLabel === 'mother' && sameName(mother, guardianName));
+      const aadhaarNumber = firstString(student, ['aadhaarNumber', 'aadhaar_number', 'aadharNumber', 'aadhar_number']) || snapshot?.aadhaar_number || '';
+      const religionValue = firstString(student, ['religion', 'religionName', 'religion_name', 'religionLabel', 'religion_label']) || snapshot?.religion || '';
+      const casteValue = firstString(student, ['casteName', 'caste_name', 'caste', 'casteLabel', 'caste_label']) || snapshot?.caste || '';
+      const casteId = firstString(student, ['casteId', 'caste_id']);
       const newForm: StudentFormState = {
         ...init,
         first_name: firstName,
@@ -617,8 +625,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         email: student.emailId ?? snapshot?.email ?? '',
         dob: student.dob ?? snapshot?.dob ?? '',
         gender: mapLabelToOptionValue(student.gender || snapshot?.gender, GENDER_OPTIONS),
-        aadhaar_number: (student.aadhaarNumber ?? snapshot?.aadhaar_number ?? '').replace(/\D/g, '').slice(0, 12),
-        religion: mapLabelToOptionValue(student.religion || snapshot?.religion, RELIGION_OPTIONS),
+        aadhaar_number: aadhaarNumber.replace(/\D/g, '').slice(0, 12),
+        religion: mapLabelToOptionValue(religionValue, RELIGION_OPTIONS),
         blood_group: student.bloodGroup ?? snapshot?.blood_group ?? '',
         class_id: student.classId ? String(student.classId) : mapLabelToOptionValue(snapshot?.class_id, viewFallback?.classes ?? []),
         orphan_status: mapLabelToOptionValue(student.orphanStatus || snapshot?.orphan_status, ORPHAN_STATUS_OPTIONS),
@@ -640,7 +648,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         has_sibling: student.siblingId || snapshot?.sibling_id || snapshot?.sibling_student_id ? 'Yes' : 'No',
         sibling_aadhaar: '',
         relation: mapLabelToOptionValue(student.guardianRelationName || snapshot?.guardian_relation_name, viewFallback?.relationships ?? []),
-        caste: student.casteId ? String(student.casteId) : mapLabelToOptionValue(student.casteName || snapshot?.caste, viewFallback?.castes ?? []),
+        caste: casteId ? casteId : mapLabelToOptionValue(casteValue, viewFallback?.castes ?? []),
         st_id: '',
         dist_id: '',
         mndl_id: '',
@@ -665,7 +673,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       const districtName = student.distName || snapshot?.dist_name;
       const mandalName = student.mndlName || snapshot?.mndl_name;
       const villageName = student.vilName || snapshot?.vil_name;
-      const schoolName = student.schName || snapshot?.sch_name;
+      const schoolName = firstString(student, ['schName', 'sch_name', 'schoolName', 'school_name']) || snapshot?.sch_name;
+      setProfileSchoolName(schoolName || '');
 
       if (stateName) {
         const state = loadedStates.find((item) => item.stName === stateName);
@@ -905,8 +914,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     }
 
     if (stepKeys.includes('guardian')) {
-      if (formState.phone.trim() && !/^\d{10}$/.test(formState.phone.trim())) {
-        nextErrors.phone = 'Phone Number must contain exactly 10 digits.';
+      if (formState.phone.trim() && !indianMobilePattern.test(formState.phone.trim())) {
+        nextErrors.phone = indianMobileErrorMessage;
       }
       if (formState.has_sibling === 'Yes') {
         if (!formState.sibling_aadhaar.trim()) {
@@ -1024,63 +1033,142 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   };
   const title = isView ? 'View' : isEdit ? 'Edit ' : 'Add ';
   const eyebrow = isView ? '' : isEdit ? '' : '';
+  const optionLabel = (value: string, options: [string, string][]) => {
+    return options.find(([optionValue]) => optionValue === value)?.[1] || value || '-';
+  };
+  const fullName = [form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ') || studentSnapshot?.full_name || '-';
+  const guardianName = [form.guardian_first, form.guardian_middle, form.guardian_last].filter(Boolean).join(' ') || studentSnapshot?.guardian_full_name || '-';
+  const profileStudentId = String(effectiveStudentId ?? studentSnapshot?.student_id ?? '-');
+  const profileInitials = fullName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part.charAt(0).toUpperCase())
+    .join('') || 'ST';
+  const profileImageUrl = form.image_url || studentSnapshot?.image_url || '';
+  const showProfileImage = Boolean(profileImageUrl && !profileImageFailed);
+  useEffect(() => {
+    setProfileImageFailed(false);
+  }, [profileImageUrl]);
+  const address = form.addr || [
+    optionLabel(form.vil_id, villages),
+    optionLabel(form.mndl_id, mandals),
+    optionLabel(form.dist_id, districts),
+    optionLabel(form.st_id, states),
+  ].filter(value => value && value !== '-').join(', ');
+  const schoolName = schools.find(([value]) => value === form.sch_id)?.[1] || profileSchoolName || studentSnapshot?.sch_name || form.sch_id || '-';
+  const formatProfileDate = (value: string) => {
+    if (!value) return '-';
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+  const formatProfileAadhaar = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 12);
+    return digits ? digits.replace(/(\d{4})(?=\d)/g, '$1 ') : '-';
+  };
 
   return (
     <form ref={formRef} className={`studentWizardForm${embedded ? ' isEmbedded' : ''}${isView ? ' isViewMode' : ''}`} onSubmit={submit} noValidate>
-      <div className="studentWizardHeader">
-        <div className="studentWizardHeaderTop">
-          <div className="studentWizardHeaderLeft">
-            <div className="studentWizardEyebrow">{eyebrow}</div>
-            <h2>{title} Student</h2>
-          </div>
-          <button type="button" className="studentWizardClose" onClick={cancel} aria-label="Close">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-        <div className="studentStepIndicator" aria-label="Student form steps">
-          {steps.map((step, index) => (
-            <button
-              type="button"
-              key={step.key}
-              className={`studentStepPill${activeStep === step.key ? ' isActive' : ''}${index < activeStepIndex ? ' isComplete' : ''}`}
-              onClick={() => goToStep(index)}
-              disabled={!isView && index > activeStepIndex + 1}
-            >
-              <span>{index + 1}</span>{step.label}
+      {isView ? (
+        <section className="studentProfileViewCard" aria-label="Student profile">
+          <div className="studentProfileViewHeader">
+            <h2><ProfileViewIcon /> View Student</h2>
+            <button type="button" className="studentWizardClose studentProfileViewClose" onClick={cancel} aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
-          ))}
-        </div>
-      </div>
-      <StudentProfileSections
-        key={activeStep}
-        mode={isView ? 'view' : isEdit ? 'edit' : 'create'}
-        form={form}
-        set={setField}
-        touch={touchField}
-        chooseImage={chooseImage}
-        sibling={sibling}
-        siblingChecked={siblingChecked}
-        searchSibling={searchSibling}
-        schools={schools}
-        states={currentStates}
-        districts={districts}
-        mandals={mandals}
-        villages={villages}
-        relationships={currentRelationships}
-        castes={currentCastes}
-        classes={currentClasses}
-        aadhaarStatus={aadhaarMessage}
-        errors={errors}
-        validatedFields={validatedFields}
-        touchedFields={touchedFields}
-        submitAttempted={submitAttempted}
-        guardianSubmitAttempted={guardianSubmitAttempted}
-        loading={metaLoading || editLoading}
-        activeStep={activeStep}
-      />
+          </div>
+          <div className="studentProfileViewBanner">
+            <div className="studentProfileViewAvatar" aria-hidden>
+              {showProfileImage ? (
+                <img src={profileImageUrl} alt="" onError={() => setProfileImageFailed(true)} />
+              ) : (
+                <span>{profileInitials}</span>
+              )}
+            </div>
+            <div className="studentProfileViewBannerText">
+              <div className="studentProfileViewBannerName">{fullName}</div>
+              <div className="studentProfileViewBannerMeta">Student ID: {profileStudentId}</div>
+            </div>
+          </div>
+          <div className="studentProfileViewGrid">
+            <ProfileViewItem label="Student ID" value={profileStudentId} />
+            <ProfileViewItem label="Full Name" value={fullName} />
+            <ProfileViewItem label="Date of Birth" value={formatProfileDate(form.dob)} />
+            <ProfileViewItem label="Email" value={form.email || '-'} />
+            <ProfileViewItem label="Gender" value={optionLabel(form.gender, GENDER_OPTIONS)} badge />
+            <ProfileViewItem label="Aadhaar" value={formatProfileAadhaar(form.aadhaar_number || studentSnapshot?.aadhaar_number || '')} />
+            <ProfileViewItem label="Religion" value={optionLabel(form.religion, RELIGION_OPTIONS)} />
+            <ProfileViewItem label="Caste" value={optionLabel(form.caste, currentCastes)} />
+            <ProfileViewItem label="Class" value={optionLabel(form.class_id, currentClasses)} />
+            <ProfileViewItem label="School" value={schoolName} />
+            <ProfileViewItem label="Guardian" value={guardianName} />
+            <ProfileViewItem label="Guardian Phone" value={form.phone || '-'} />
+            <ProfileViewItem label="Address" value={address || '-'} wide />
+            <ProfileViewItem label="Orphan Status" value={optionLabel(form.orphan_status, ORPHAN_STATUS_OPTIONS)} badge />
+          </div>
+        </section>
+      ) : (
+        <>
+          <div className="studentWizardHeader">
+            <div className="studentWizardHeaderTop">
+              <div className="studentWizardHeaderLeft">
+                <div className="studentWizardEyebrow">{eyebrow}</div>
+                <h2>{title} Student</h2>
+              </div>
+              <button type="button" className="studentWizardClose" onClick={cancel} aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="studentStepIndicator" aria-label="Student form steps">
+              {steps.map((step, index) => (
+                <button
+                  type="button"
+                  key={step.key}
+                  className={`studentStepPill${activeStep === step.key ? ' isActive' : ''}${index < activeStepIndex ? ' isComplete' : ''}`}
+                  onClick={() => goToStep(index)}
+                  disabled={index > activeStepIndex + 1}
+                >
+                  <span>{index + 1}</span>{step.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <StudentProfileSections
+            key={activeStep}
+            mode={isEdit ? 'edit' : 'create'}
+            form={form}
+            set={setField}
+            touch={touchField}
+            chooseImage={chooseImage}
+            sibling={sibling}
+            siblingChecked={siblingChecked}
+            searchSibling={searchSibling}
+            schools={schools}
+            states={currentStates}
+            districts={districts}
+            mandals={mandals}
+            villages={villages}
+            relationships={currentRelationships}
+            castes={currentCastes}
+            classes={currentClasses}
+            aadhaarStatus={aadhaarMessage}
+            errors={errors}
+            validatedFields={validatedFields}
+            touchedFields={touchedFields}
+            submitAttempted={submitAttempted}
+            guardianSubmitAttempted={guardianSubmitAttempted}
+            loading={metaLoading || editLoading}
+            activeStep={activeStep}
+          />
+        </>
+      )}
       {!isView ? (
         <div className="studentWizardActions" aria-label="Form actions">
           {activeStep === 'guardian' ? (
@@ -1096,5 +1184,30 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         </div>
       ) : null}
     </form>
+  );
+}
+
+function ProfileViewItem({ label, value, badge = false, wide = false }: { label: string; value: string; badge?: boolean; wide?: boolean }) {
+  const displayValue = value || '-';
+  return (
+    <div className={`studentProfileViewItem${wide ? ' isWide' : ''}`}>
+      <div className="studentProfileViewLabel">{label}</div>
+      {badge && displayValue !== '-' ? (
+        <div className="studentProfileViewValue">
+          <span className="sdGenderBadge">{displayValue}</span>
+        </div>
+      ) : (
+        <div className="studentProfileViewValue">{displayValue}</div>
+      )}
+    </div>
+  );
+}
+
+function ProfileViewIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M12 12a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M5.5 19.2a6.5 6.5 0 0 1 13 0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   );
 }
