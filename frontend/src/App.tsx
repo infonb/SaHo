@@ -30,23 +30,25 @@ function isTokenValid(): boolean {
 
 function Guard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuth();
+  const role = user?.role?.toLowerCase();
   if (!isAuthenticated || !isTokenValid()) {
     localStorage.removeItem('saho_token');
     localStorage.removeItem('saho_user');
     return <Navigate to="/login" replace />;
   }
-  if (user?.role === 'student') return <Navigate to="/student/dashboard" replace />;
+  if (role === 'student') return <Navigate to="/student/dashboard" replace />;
   return <>{children}</>;
 }
 
 function StudentGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuth();
+  const role = user?.role?.toLowerCase();
   if (!isAuthenticated || !isTokenValid()) {
     localStorage.removeItem('saho_token');
     localStorage.removeItem('saho_user');
     return <Navigate to="/login" replace />;
   }
-  if (user?.role !== 'student') return <Navigate to="/dashboard" replace />;
+  if (role !== 'student') return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
 

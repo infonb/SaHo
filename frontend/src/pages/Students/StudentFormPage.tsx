@@ -827,7 +827,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         toast(successMessage, 'success');
         onSuccess();
       } else {
-        nav('/students');
+        nav('/view-students');
         window.setTimeout(() => toast(successMessage, 'success'), 0);
       }
     } catch (error) {
@@ -1041,7 +1041,6 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   };
   const cancel = () => {
     if (onCancel) onCancel();
-    else if (isEdit) nav(-1);
     else nav('/view-students');
   };
   const title = isView ? 'View' : isEdit ? 'Edit ' : 'Add ';
