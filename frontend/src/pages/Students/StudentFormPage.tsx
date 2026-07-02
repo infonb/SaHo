@@ -1052,7 +1052,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     if (onCancel) onCancel();
     else nav('/view-students');
   };
-  const title = isView ? 'View' : isEdit ? 'Edit ' : 'Add ';
+  const title = isView ? 'View' : isEdit ? 'Edit' : 'Add';
   const eyebrow = isView ? '' : isEdit ? '' : '';
   const optionLabel = (value: string, options: [string, string][]) => {
     return options.find(([optionValue]) => optionValue === value)?.[1] || value || '-';
@@ -1132,6 +1132,33 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         </section>
       ) : (
         <>
+          <div className="studentWizardHeader">
+            <div className="studentWizardHeaderTop">
+              <div className="studentWizardHeaderLeft">
+                <div className="studentWizardEyebrow">{eyebrow}</div>
+                <h2>{title} Student</h2>
+              </div>
+              <button type="button" className="studentWizardClose" onClick={cancel} aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="studentStepIndicator" aria-label="Student form steps">
+              {steps.map((step, index) => (
+                <button
+                  type="button"
+                  key={step.key}
+                  className={`studentStepPill${activeStep === step.key ? ' isActive' : ''}${index < activeStepIndex ? ' isComplete' : ''}`}
+                  onClick={() => goToStep(index)}
+                  disabled={!isView && index > activeStepIndex + 1}
+                >
+                  <span>{index + 1}</span>{step.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <StudentProfileSections
             key={activeStep}
             mode={isEdit ? 'edit' : 'create'}
