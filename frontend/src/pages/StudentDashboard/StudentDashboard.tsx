@@ -183,10 +183,11 @@ export default function StudentDashboard() {
             <span className="sdEventCount">{events.length} scheduled</span>
           </div>
           <div className="sdCarouselBody">
-            <div
-              className="sdCarouselTrack"
-              style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-            >
+            <div className="sdCarouselViewport">
+              <div
+                className="sdCarouselTrack"
+                style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+              >
               {events.map(ev => {
                 const { day, month, year } = formatDate(ev.eventDate);
                 return (
@@ -224,6 +225,7 @@ export default function StudentDashboard() {
                   </div>
                 );
               })}
+            </div>
             </div>
             {events.length > 1 && (
               <>
@@ -314,7 +316,7 @@ export default function StudentDashboard() {
                 </div>
                 <div className="sdProfileField">
                   <span className="sdFieldLabel">Gender</span>
-                  <span className="sdFieldValue"><span className="sdGenderBadge">{profile.gender || '-'}</span></span>
+                  <span className="sdFieldValue"><span className="badge active">{profile.gender || '-'}</span></span>
                 </div>
                 <div className="sdProfileField">
                   <span className="sdFieldLabel">Class</span>
