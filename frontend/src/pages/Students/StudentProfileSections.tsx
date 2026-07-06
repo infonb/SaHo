@@ -4,6 +4,7 @@ import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import StudentPhoto from '../../components/common/StudentPhoto';
 import Modal from '../../components/common/Modal';
+import { LuCamera, LuImage, LuUpload, LuUser } from 'react-icons/lu';
 
 export interface StudentFormState {
   first_name: string;
@@ -608,31 +609,15 @@ function CheckboxField({ fieldKey, label, checked, onChange, readOnly = false }:
 }
 
 function PhotoCameraIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l1.4-1.8h5.8L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="M12 15.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  );
+  return <LuCamera size={20} />;
 }
 
 function ProfileInfoIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="currentColor" />
-      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="currentColor" />
-    </svg>
-  );
+  return <LuUser size={20} />;
 }
 
 function PhotoImageIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M5 5.5h14A1.5 1.5 0 0 1 20.5 7v10A1.5 1.5 0 0 1 19 18.5H5A1.5 1.5 0 0 1 3.5 17V7A1.5 1.5 0 0 1 5 5.5Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="m5.5 16 4-4 3 3 2-2 4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15.5 10a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" fill="currentColor" />
-    </svg>
-  );
+  return <LuImage size={20} />;
 }
 
 function ParentInfoIcon() {
@@ -667,13 +652,7 @@ function SiblingInfoIcon() {
 }
 
 function PhotoUploadIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M12 16V5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="m7.5 9.5 4.5-4.5 4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M5 16v1.5A2.5 2.5 0 0 0 7.5 20h9A2.5 2.5 0 0 0 19 17.5V16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
+  return <LuUpload size={20} />;
 }
 function Select({ fieldKey, label, value, onChange, onBlur, options, subText, error, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; options: (string | [string, string])[]; subText?: string; error?: string; readOnly?: boolean; state?: FieldState }) {
   const inputId = `student-field-${fieldKey}`;

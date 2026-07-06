@@ -16,6 +16,7 @@ import { useToast } from "../../hooks/useToast";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import type { User } from "../../types";
 import { SponsorSelect } from "../Sponsors/SponsorFormPage";
+import { FiEdit2, FiPlus, FiTrash2, FiUsers } from "react-icons/fi";
 
 export default function AdminsPage() {
   const [admins, setAdmins] = useState<User[]>([]);
@@ -118,10 +119,7 @@ export default function AdminsPage() {
         title="Edit Admin"
         aria-label={`Edit ${a.email_id}`}
       >
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-          <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <FiEdit2 size={18} />
       </Button>
       <Button
         size="sm"
@@ -131,13 +129,7 @@ export default function AdminsPage() {
         title="Delete Admin"
         aria-label={`Delete ${a.email_id}`}
       >
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-          <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <FiTrash2 size={18} />
       </Button>
     </div>,
   ]);
@@ -147,19 +139,9 @@ export default function AdminsPage() {
       <PageHeader
         title="Admin Access"
         subtitle="Manage system users and permissions"
-        actions={<Button className="btnGreen" onClick={startAdd}><svg
-              width="16"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>Add Admin</Button>}
+        actions={<Button className="btnGreen" onClick={startAdd}>
+            <FiPlus size={18} />
+            Add Admin</Button>}
       />
       <div className="student-stats-grid sponsor-stats-grid">
         <div className="reminderRecordCard total">
@@ -169,12 +151,7 @@ export default function AdminsPage() {
             <div className="stat-card-note">Users with admin privileges</div>
           </div>
           <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
+            <FiUsers />
           </div>
         </div>
       </div>

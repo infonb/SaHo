@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { FaSort, FaSortUp, FaSortDown, FaUserCheck } from 'react-icons/fa';
 import { deactivateSponsors, getSponsors } from '../../api/sponsorApi';
 import Avatar from '../../components/common/Avatar';
 import Badge from '../../components/common/Badge';
@@ -16,6 +16,13 @@ import "../../styles/Sponsors/SponsorListPage.css";
 import closeIcon from "../../assets/clera cross favicon.png"
 import arrowIcon from "../../assets/Go arrow favicon.png"
 import assignSponsorIcon from "../../assets/assignsponsor.png"
+import { FiArrowRight, FiPlus, FiUsers } from "react-icons/fi";
+import { FiUserPlus } from "react-icons/fi";
+import { HiOutlineXMark } from "react-icons/hi2";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
+
+import { LuLink, LuSearch } from "react-icons/lu";
+import { MdVerifiedUser, MdVolunteerActivism } from 'react-icons/md';
 
 const defaults: SponsorFilters = { search: '', type: '', nationality: '', is_active: '' };
 type SponsorFilterOption = { value: string; label: string };
@@ -204,19 +211,10 @@ export default function SponsorListPage() {
     <span>{s.students_count}</span>,
     <div className="actions student-actions" onClick={e => e.stopPropagation()}>
       <Button size="sm" variant="outline" className="iconBtn editActionButton" onClick={(e) => { e.stopPropagation(); nav(`/sponsors/edit/${s.sponsor_id}`); }} title="Edit Sponsor" aria-label="Edit sponsor">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-          <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <FiEdit2 size={18} />
       </Button>
       <Button size="sm" variant="outline" className="iconBtn deleteActionButton" onClick={(e) => { e.stopPropagation(); setSingleDelete(s.sponsor_id); }} title="Delete Sponsor" aria-label={`Delete ${s.sponsorName}`}>
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-          <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <FiTrash2 size={18} />
       </Button>
     </div>
   ]);
@@ -230,14 +228,11 @@ export default function SponsorListPage() {
         </div>
         <div className="student-list-actions sponsor-list-actions">
           <Button className="btnGreen" onClick={() => nav('/sponsors/assign')}>
-            <img src={assignSponsorIcon} alt="" aria-hidden className="assignSponsorButtonIcon" />
+            <FiUserPlus size={18}/>
             Assign Sponsor
           </Button>
           <Button className="btnGreen" onClick={() => nav('/sponsors/add')}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
+            <FiPlus size={18} />
           Add Sponsor
           </Button>
         </div>
@@ -251,12 +246,7 @@ export default function SponsorListPage() {
             <div className="stat-card-note">All sponsors</div>
           </div>
           <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
+            <FiUsers />
           </div>
         </div>
         <div className="reminderRecordCard  total" style={{ '--card-accent': '#22c55e' } as React.CSSProperties}>
@@ -266,24 +256,11 @@ export default function SponsorListPage() {
             <div className="stat-card-note">Currently active</div>
           </div>
           <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 6L9 17l-5-5"></path>
-            </svg>
+            
+              <FaUserCheck size={28} />
           </div>
         </div>
-         {/* <div className="student-stat-card total" style={{ '--card-accent': '#f59e0b' } as React.CSSProperties}>
-          <div className="stat-card-content">
-            <div className="stat-card-label">Pending</div>
-            <div className="stat-card-value">{pendingSponsors}</div>
-            <div className="stat-card-note">Needs attention</div>
-          </div> 
-          <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9"></circle>
-              <path d="M12 7v5l3 3"></path>
-            </svg>
-          </div>
-        </div> */}
+       
         <div className="reminderRecordCard total" style={{ '--card-accent': '#22c55e' } as React.CSSProperties}>
           <div className="stat-card-content">
             <div className="stat-card-label">Students</div>
@@ -291,9 +268,7 @@ export default function SponsorListPage() {
             <div className="stat-card-note">Sponsored</div>
           </div>
           <div className="stat-card-icon sponsoredIcon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M12 20.4C8.4 18.6 4.7 15.1 4.7 10.8c0-2.8 2-4.9 4.7-4.9 1.5 0 2.9.7 3.7 1.9.8-1.2 2.2-1.9 3.7-1.9 2.7 0 4.7 2.1 4.7 4.9 0 4.3-3.7 7.8-8.7 9.6Z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <MdVolunteerActivism size={30} />
           </div>
         </div>
       </div>
@@ -302,10 +277,7 @@ export default function SponsorListPage() {
         <p className="filters-name-tag">Filters</p>
         <div className="filters-container sponsor-filters-container row g-2 align-items-center">
           <div className="filter-search-wrapper sponsor-search-wrapper col-4">
-            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="M21 21l-4.35-4.35"></path>
-            </svg>
+            <LuSearch className="search-icon" size={18} />
             <input className="filter-search-input" placeholder="Search sponsors" value={pending.search} onChange={e => setPending({ ...pending, search: e.target.value })} />
           </div>
           <div className="filter-group col-3">
@@ -335,18 +307,12 @@ export default function SponsorListPage() {
           </div>
           <div className="filter-actions-group col-2 d-flex  justify-content-end   gap-2">
             <button className="clearbtn" onClick={() => { setPending(defaults); setApplied(defaults); pager.setPage(1); setOpenFilter(null); }}>
-            <img
-                  src={closeIcon}
-                  alt="Clear"
-                  className="filterBtnIcon"
-                /> Clear
+                <HiOutlineXMark className="filterBtnIcon" />
+            Clear
             </button>
-            <button className="gobtn" onClick={() => { setApplied({ ...pending }); pager.setPage(1); setOpenFilter(null); }}>  <img
-          src={arrowIcon}
-         alt="Clear"
-         className="filterBtnIcon"
-           />        
-             Go
+            <button className="gobtn" onClick={() => { setApplied({ ...pending }); pager.setPage(1); setOpenFilter(null); }}>      
+                <FiArrowRight className="filterBtnIcon" />
+            Go
             </button>
           </div>
         </div>
@@ -366,12 +332,11 @@ export default function SponsorListPage() {
           <div className="selectHeaderRow studentBulkToolbar">
             <div className="bulkToolbarInfo">
               <label className="bulkSelectAll">
-                {/* <input type="checkbox" checked={allPageChecked} onChange={togglePage} tabIndex={hasSelection ? 0 : -1} /> */}
                 <span   >Select all on this page</span>
               </label>
               <div className="selectedCount">
                 Selected
-                 <span>{checked.length}</span>
+                <span>{checked.length}</span>
                 <span>of {items.length}</span>
               </div>
             </div>
@@ -454,10 +419,7 @@ export default function SponsorListPage() {
                           nav(`/sponsors/edit/${s.sponsor_id}`);
                         }}
                       >
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                          <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                        <FiEdit2 size={18} />
                       </Button>
                       <Button
                         size="sm"
@@ -470,13 +432,7 @@ export default function SponsorListPage() {
                           setSingleDelete(s.sponsor_id);
                         }}
                       >
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                          <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                        <FiTrash2 size={18} />
                       </Button>
                     </div>
                   </article>
