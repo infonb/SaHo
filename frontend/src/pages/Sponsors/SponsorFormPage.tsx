@@ -8,6 +8,8 @@ import PageHeader from '../../components/common/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import type { SponsorView } from '../../types';
+import { HiOutlineXMark } from 'react-icons/hi2';
+import { LuCamera, LuImage, LuUpload, LuUser } from 'react-icons/lu';
 
 type SponsorFormMode = 'create' | 'edit' | 'view';
 
@@ -591,10 +593,7 @@ export default function SponsorFormPage() {
         subtitle={pageSubtitle}
         actions={
           <button type="button" className="studentWizardClose" onClick={() => nav('/sponsors')} aria-label="Close">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <HiOutlineXMark/>
           </button>
         }
       />
@@ -739,10 +738,10 @@ export default function SponsorFormPage() {
                   <>
                     <div className="rowFlex studentModalUploadActions">
                       <Button type="button" variant="outline" onClick={openCamera}>
-                        Take Photo
+                        <PhotoCameraIcon /> Take Photo
                       </Button>
                       <label className="btn outline md" style={{ cursor: 'pointer' }}>
-                        Upload Photo
+                        <PhotoUploadIcon /> Upload Photo
                         <input
                           ref={fileInputRef}
                           accept="image/*"
@@ -911,22 +910,19 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
 }
 
 function ProfileInfoIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="currentColor" />
-      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="currentColor" />
-    </svg>
-  );
+  return <LuUser size={20} />;
 }
 
+function PhotoCameraIcon() {
+  return <LuCamera size={20} />;
+}
 function PhotoImageIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M5 5.5h14A1.5 1.5 0 0 1 20.5 7v10A1.5 1.5 0 0 1 19 18.5H5A1.5 1.5 0 0 1 3.5 17V7A1.5 1.5 0 0 1 5 5.5Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="m5.5 16 4-4 3 3 2-2 4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15.5 10a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" fill="currentColor" />
-    </svg>
+    <LuImage size={20} />
   );
+}
+function PhotoUploadIcon() {
+  return <LuUpload size={20} />;
 }
 
 function SponsorField({

@@ -21,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import type { StudentView } from '../../types';
 import StudentProfileSections, { type StudentFormState, type StudentFormErrors, GENDER_OPTIONS, ORPHAN_STATUS_OPTIONS, RELIGION_OPTIONS } from './StudentProfileSections';
+import { HiOutlineXMark } from 'react-icons/hi2';
 
 const init: StudentFormState = {
   first_name: '',
@@ -1096,10 +1097,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
           <div className="studentProfileViewHeader">
             <h2><ProfileViewIcon /> View Student</h2>
             <button type="button" className="studentWizardClose studentProfileViewClose" onClick={cancel} aria-label="Close">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <HiOutlineXMark/>
             </button>
           </div>
           <div className="studentProfileViewBanner">
@@ -1139,10 +1137,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
                 <h2>{title} Student</h2>
               </div>
               <button type="button" className="studentWizardClose" onClick={cancel} aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <HiOutlineXMark/>
               </button>
             </div>
             <div className="studentStepIndicator" aria-label="Student form steps">

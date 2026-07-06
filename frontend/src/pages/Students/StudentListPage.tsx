@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { FaSort, FaSortUp, FaSortDown, FaUserGraduate } from 'react-icons/fa';
 import { deactivateStudents, exportStudentsCsv, getStudents } from '../../api/studentApi';
 import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
@@ -19,8 +19,13 @@ import StudentDetailModal from './StudentDetailModal';
 import Modal from '../../components/common/Modal';
 import MultiSelectFilter, { csvValues, toggleCsvValue } from '../../components/common/MultiSelectFilter';
 import type { FilterOption } from '../../components/common/MultiSelectFilter';
-import closeIcon from "../../assets/clera cross favicon.png"
-import arrowIcon from "../../assets/Go arrow favicon.png"
+import { FiUpload, FiPlus, FiUsers, FiUser } from "react-icons/fi";
+import { FaMars, FaVenus } from "react-icons/fa";
+import { MdVolunteerActivism } from "react-icons/md";
+import { FiArrowRight } from "react-icons/fi";
+import { HiOutlineXMark } from "react-icons/hi2";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import { LuSearch } from 'react-icons/lu';
 const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', sponsor_status: '', is_active: '' };
 const truncateText = (value?: string | null, maxLength = 15) => {
   const text = value?.trim() || 'N/A';
@@ -455,27 +460,7 @@ export default function StudentListPage() {
           onClick={() => nav(`/students/edit/${s.student_id}`)}
           aria-label="Edit student"
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden
-          >
-            <path
-              d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M14 4l6 6"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <FiEdit2 size={18} />
         </Button>
         <Button
           size="sm"
@@ -487,48 +472,7 @@ export default function StudentListPage() {
           }}
           aria-label={`Delete ${s.full_name}`}
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden
-          >
-            <path
-              d="M3 6h18"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M10 11v6"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M14 11v6"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <FiTrash2 size={18} />
         </Button>
       </div>,
     ];
@@ -542,27 +486,11 @@ export default function StudentListPage() {
         </div>
         <div className="student-list-actions">
           <button type="button" className="btn btnGreen" aria-label="Import CSV">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M12 3v10" />
-              <path d="M8 9l4 4 4-4" />
-              <path d="M4 17v3h16v-3" />
-            </svg>
+            <FiUpload size={18} />
             &nbsp;Import CSV
           </button>
           <button type="button" className="btn btnGreen" onClick={() => nav("/students/add")}>
-            <svg
-              width="16"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
+          <FiPlus size={18} />
             &nbsp;Add Student
           </button>
         </div>
@@ -577,19 +505,7 @@ export default function StudentListPage() {
           </div>
          
           <div className="stat-card-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
+          <FiUsers />
           </div>
         </div>
         <div className="reminderRecordCard boys">
@@ -602,29 +518,8 @@ export default function StudentListPage() {
             className="stat-card-icon"
             aria-hidden="true"
           >
-            <svg viewBox="0 0 24 24" fill="none">
-              <circle
-                cx="10"
-                cy="14"
-                r="5.5"
-                stroke="currentColor"
-                strokeWidth="1.9"
-              ></circle>
-              <path
-                d="M13.8 10.2L20 4"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M16 4H20V8"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-            </svg>
+            <FaMars size={26} />
+            
           </div>
         </div>
         <div className="reminderRecordCard girls">
@@ -637,27 +532,7 @@ export default function StudentListPage() {
             className="stat-card-icon"
             aria-hidden="true"
           >
-            <svg viewBox="0 0 24 24" fill="none">
-              <circle
-                cx="12"
-                cy="9.5"
-                r="5.5"
-                stroke="currentColor"
-                strokeWidth="1.9"
-              ></circle>
-              <path
-                d="M12 15v5.5"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-              ></path>
-              <path
-                d="M9.2 18H14.8"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-              ></path>
-            </svg>
+          <FaVenus size={26} />
           </div>
         </div>
         <div className="reminderRecordCard sponsored">
@@ -667,34 +542,7 @@ export default function StudentListPage() {
             <div className="stat-card-note">With sponsors</div>
           </div>
           <div className="stat-card-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 20.4C8.4 18.6 4.7 15.1 4.7 10.8c0-2.8 2-4.9 4.7-4.9 1.5 0 2.9.7 3.7 1.9.8-1.2 2.2-1.9 3.7-1.9 2.7 0 4.7 2.1 4.7 4.9 0 4.3-3.7 7.8-8.7 9.6Z"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M5 14.3c1.1-1.1 2.2-1.9 3.7-2.4"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-              />
-              <path
-                d="M19 14.3c-1.1-1.1-2.2-1.9-3.7-2.4"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-              />
-              <path
-                d="M12 10.9l1.2-1.2c1-1 1.8-1.6 2.8-1.6"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <MdVolunteerActivism size={30} />
           </div>
         </div>
         <div className="reminderRecordCard orphans">
@@ -704,23 +552,12 @@ export default function StudentListPage() {
             <div className="stat-card-note">Full orphans</div>
           </div>
           <div className="stat-card-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 12h18M3 6h18M3 18h18"></path>
-              <circle cx="17" cy="12" r="3"></circle>
-              <circle cx="7" cy="12" r="3"></circle>
-            </svg>
+            <FiUser />
           </div>
         </div>
       </div>
 
-     <div className="student-filters-section">
+    <div className="student-filters-section">
   <p className="filters-name-tag">Filters</p>
 
   <div className="container-fluid">
@@ -804,18 +641,7 @@ export default function StudentListPage() {
       {/* Search */}
       <div className="col-4">
         <div className="filter-search-wrapper">
-          <svg
-            className="search-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="M21 21l-4.35-4.35"></path>
-          </svg>
+          <LuSearch className="search-icon" size={18} />
 
           <input
             className="filter-search-input"
@@ -940,19 +766,13 @@ export default function StudentListPage() {
               setPage(1);
               setOpenFilter(null);
             }}
-          ><img
-      src={closeIcon}
-      alt="Clear"
-      className="filterBtnIcon"
-    />
+          >
+          <HiOutlineXMark className="filterBtnIcon" />
             Clear
           </button>
-        <button className="gobtn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>  <img
-          src={arrowIcon}
-         alt="Clear"
-         className="filterBtnIcon"
-           />        
-             Go
+        <button className="gobtn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>  
+          <FiArrowRight className="filterBtnIcon" />
+            Go
             </button>
       </div>
 
@@ -989,7 +809,7 @@ export default function StudentListPage() {
                   <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M4 17v3h16v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                       &nbsp;Export CSV
+                      &nbsp;Export CSV
               </button>
               <button
                 className="btn btnRed"
@@ -1037,7 +857,7 @@ export default function StudentListPage() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                   &nbsp;Delete selected
+                  &nbsp;Delete selected
               </button>
             </div>
           </div>

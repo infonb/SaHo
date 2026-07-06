@@ -8,10 +8,13 @@ import PageHeader from '../../components/common/PageHeader';
 import { getDistricts, getMandals, getSchools, getStates, getVillages } from '../../api/locationApi';
 import { cancelReminder, getReminders, type ReminderDto } from '../../api/remindersApi';
 import { usePagination } from '../../hooks/usePagination';
-import closeIcon from '../../assets/clera cross favicon.png';
-import arrowIcon from '../../assets/Go arrow favicon.png';
 import { useToast } from '../../hooks/useToast';
 import EventDetailModal from './EventDetailModal';
+import { MdEventAvailable , MdEventBusy } from 'react-icons/md';
+import { FiArrowRight, FiCalendar, FiPlus,FiEdit2, FiTrash2  } from 'react-icons/fi';
+import { BsPlayCircle } from "react-icons/bs";
+import { HiOutlineCheckCircle, HiOutlineXMark } from "react-icons/hi2";
+import { LuSearch } from 'react-icons/lu';
 
 // Event status type
 type EventStatus = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
@@ -192,10 +195,7 @@ function ActionButtons({
           onEdit(event.id);
         }}
       >
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-          <path d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M14 4l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <FiEdit2 size={18} />
       </Button>
       <Button
         size="sm"
@@ -208,13 +208,7 @@ function ActionButtons({
           onDelete(event.id);
         }}
       >
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-          <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <FiTrash2 size={18} />
       </Button>
     </div>
   );
@@ -696,19 +690,7 @@ export default function ViewEvents() {
         actions={
           <Link to="/reminders/create">
             <Button className="btn btnGreen" size="sm">
-              <svg
-                width="16"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
+              <FiPlus size={18} />
               &nbsp;Create Event
             </Button>
           </Link>
@@ -723,12 +705,7 @@ export default function ViewEvents() {
             <div className="stat-card-note">Matching current filters</div>
           </div>
           <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
+            <FiCalendar size={28} />
           </div>
         </div>
         <div className="reminderRecordCard total">
@@ -738,10 +715,7 @@ export default function ViewEvents() {
             <div className="stat-card-note">Scheduled ahead</div>
           </div>
           <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9"></circle>
-              <path d="M12 7v5l3 3"></path>
-            </svg>
+            <MdEventAvailable size={28} />
           </div>
         </div>
         <div className="reminderRecordCard total">
@@ -751,9 +725,7 @@ export default function ViewEvents() {
             <div className="stat-card-note">Active programs</div>
           </div>
           <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
+            <BsPlayCircle size={28} />
           </div>
         </div>
         <div className="reminderRecordCard total">
@@ -763,9 +735,7 @@ export default function ViewEvents() {
             <div className="stat-card-note">Finished events</div>
           </div>
           <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 6L9 17l-5-5"></path>
-            </svg>
+            <HiOutlineCheckCircle size={28} />
           </div>
         </div>
         <div className="reminderRecordCard total">
@@ -775,11 +745,7 @@ export default function ViewEvents() {
             <div className="stat-card-note">Cancelled events</div>
           </div>
           <div className="stat-card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9"></circle>
-              <line x1="15" y1="9" x2="9" y2="15"></line>
-              <line x1="9" y1="9" x2="15" y2="15"></line>
-            </svg>
+            <MdEventBusy size={28} />
           </div>
         </div>
       </div>
@@ -835,10 +801,7 @@ export default function ViewEvents() {
             </div>
             <div className="col-4">
               <div className="filter-search-wrapper">
-                <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <path d="M21 21l-4.35-4.35"></path>
-                </svg>
+                <LuSearch className="search-icon" size={18} />
                 <input
                   className="filter-search-input"
                   placeholder="Search events..."
@@ -876,11 +839,11 @@ export default function ViewEvents() {
             <div className="col-2" />
             <div className="col-4 d-flex justify-content-end gap-2">
               <button type="button" className="clearbtn" onClick={handleClearFilters}>
-                <img src={closeIcon} alt="Clear" className="filterBtnIcon" />
+                <HiOutlineXMark className="filterBtnIcon" />
                 Clear
               </button>
               <button type="button" className="gobtn" onClick={applyFilters}>
-                <img src={arrowIcon} alt="Go" className="filterBtnIcon" />
+                <FiArrowRight className="filterBtnIcon" />
                 Go
               </button>
             </div>
@@ -1093,9 +1056,6 @@ export default function ViewEvents() {
             />
           </div>
         )}
-        {/* {viewMode === 'cards' ? (
-          <Pagination total={events.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
-        ) : null} */}
         </div>
       </div>
 

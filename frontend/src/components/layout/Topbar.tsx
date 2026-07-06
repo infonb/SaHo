@@ -6,6 +6,8 @@ import { getMyProfile } from '../../api/studentApi';
 import type { StudentView } from '../../types';
 import logo from '../../assets/logo.png';
 import '../../styles/Topbar.css';
+import { LuSparkles, LuX,LuLogOut } from "react-icons/lu";
+
 
 export const LeafLogo = () => (
   <svg className="brandMark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -94,9 +96,7 @@ export default function Topbar({
             onClick={onSidebarToggle}
           >
             {sidebarOpen ? (
-              <svg className="sidebarCancelIcon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
+              <LuX className="sidebarCancelIcon" size={22} />
             ) : (
               <>
                 <span />
@@ -120,9 +120,7 @@ export default function Topbar({
       <div className="topbarActions">
         {onAiOpen ? (
           <button className="topbarAiButton" type="button" aria-label="Open AI assistant" onClick={onAiOpen}>
-            <svg className="topbarAiSparkle" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M13.8 2.5 5.7 13.1h5.1l-1.3 8.4 8.8-11.8h-5.5l1-7.2Z" />
-            </svg>
+            <LuSparkles size={18} />
             <span>Ask AI</span>
           </button>
         ) : null}
@@ -158,11 +156,7 @@ export default function Topbar({
             </div>
             <div className="sdDropdownDivider" />
             <button className="sdDropdownSignOut" type="button" onClick={signOut}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
+              <LuLogOut size={16} />
               Sign Out
             </button>
           </div>

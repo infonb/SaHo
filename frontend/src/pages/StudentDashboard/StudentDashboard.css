@@ -46,6 +46,24 @@
   padding: 40px 0;
 }
 
+.loadingSpinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #e5e7eb;
+  border-top: 5px solid #1f6b35; /* Primary blue */
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ─── Card base ─── */
 .sdCard {
   background: var(--sd-surface);
@@ -664,3 +682,5 @@
 .sdCarouselDot:hover {
   background: var(--sd-primary);
 }
+
+
