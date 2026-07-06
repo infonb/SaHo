@@ -1124,7 +1124,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             <ProfileViewItem label="Guardian" value={guardianName} />
             <ProfileViewItem label="Relation" value={optionLabel(form.relation, currentRelationships)} />
             <ProfileViewItem label="Phone" value={form.phone || '-'} />
-            <ProfileViewItem label="Occupation" value={form.occ || '-'} />
+            <ProfileViewItem label="Guardian Occupation" value={form.occ || '-'} />
             <ProfileViewItem label="Sibling" value={form.has_sibling || '-'} />
           </div>
         </section>

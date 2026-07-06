@@ -295,7 +295,7 @@ h1, h2, h3, h4, h5, h6
   gap: 6px;
   padding: 6px 12px;
   border: 1px solid #1f6b35 !important;
-  font-size: 13px !important; 
+  font-size: 12px !important; 
   line-height: 1.5 !important;
   font-weight: 600 !important;
   transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
@@ -3509,6 +3509,76 @@ svg {
   }
 }
 
+@media (max-width: 480px) {
+  .sponsorWizardForm .pageHeader {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .sponsorWizardForm .pageHeader > div:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .sponsorWizardForm .pageHeader .actions {
+    flex: 0 0 auto;
+    width: auto;
+    justify-content: flex-end;
+    align-items: flex-start;
+  }
+
+  .sponsorWizardForm .pageHeader .studentWizardClose {
+    margin-left: auto;
+  }
+
+  .sponsorWizardForm .modalFooter {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    margin: 0 auto;
+    padding-top: 14px;
+    box-sizing: border-box;
+  }
+
+  .sponsorWizardForm .modalFooter .btn,
+  .sponsorWizardForm .modalFooter .maxBtn,
+  .sponsorWizardForm .modalFooter .btnRed,
+  .sponsorWizardForm .modalFooter .btnGreen {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 340px) {
+  .sponsorWizardForm .modalFooter {
+    gap: 10px;
+  }
+
+  .sponsorWizardForm .modalFooter .btn,
+  .sponsorWizardForm .modalFooter .maxBtn,
+  .sponsorWizardForm .modalFooter .btnRed,
+  .sponsorWizardForm .modalFooter .btnGreen {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    font-size: 12px !important;
+  }
+}
+
 /* Enterprise compact design layer */
 .appShell {
   background: linear-gradient(180deg, #f7fafc 0%, #f4f7fb 100%);
@@ -4429,6 +4499,59 @@ td {
   border-color: #fecaca;
   background: #fff7f7;
   transform: none;
+}
+
+.actionTooltip {
+  position: relative;
+}
+
+.actionTooltip::before,
+.actionTooltip::after {
+  position: absolute;
+  left: 50%;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease,
+    visibility 0.16s ease,
+    transform 0.16s ease;
+  z-index: 20;
+}
+
+.actionTooltip::before {
+  content: "";
+  top: calc(100% + 4px);
+  transform: translate(-50%, -3px);
+  border: 5px solid transparent;
+  border-bottom-color: #0f172a;
+}
+
+.actionTooltip::after {
+  content: attr(data-tooltip);
+  top: calc(100% + 13px);
+  transform: translate(-50%, -3px);
+  width: max-content;
+  max-width: 160px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.actionTooltip:hover::before,
+.actionTooltip:hover::after,
+.actionTooltip:focus-visible::before,
+.actionTooltip:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
 }
 
 @media (hover: none) {
@@ -7415,6 +7538,175 @@ td {
   background: #f0fdf4;
   color: #0f766e;
 }
+
+.studentWizardForm:not(.isViewMode) .studentStepGrid {
+  column-gap: 0;
+  row-gap: 0;
+  align-items: stretch;
+}
+
+.studentWizardForm:not(.isViewMode) .formField {
+  min-height: 50px;
+  gap: 0;
+  padding: 6px 14px 6px 0;
+  border-bottom: 1px solid #d8dee8;
+}
+
+.studentWizardForm:not(.isViewMode) .formField > label {
+  margin-bottom: 0;
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.studentWizardForm:not(.isViewMode) .studentFieldControl {
+  position: relative;
+  min-width: 0;
+}
+.studentWizardForm:not(.isViewMode) .formField.isLockedField {
+  cursor: not-allowed;
+}
+.studentWizardForm:not(.isViewMode) .formField.isLockedField .studentFieldControl,
+.studentWizardForm:not(.isViewMode) .formField.isLockedField .input,
+.studentWizardForm:not(.isViewMode) .formField.isLockedField .select,
+.studentWizardForm:not(.isViewMode) .formField.isLockedField .textarea {
+  cursor: not-allowed;
+}
+.studentWizardForm:not(.isViewMode) .formField.isLockedField::before,
+.studentWizardForm:not(.isViewMode) .formField.isLockedField::after {
+  position: absolute;
+  left: 12px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease,
+    visibility 0.16s ease,
+    transform 0.16s ease;
+  z-index: 30;
+}
+.studentWizardForm:not(.isViewMode) .formField.isLockedField::before {
+  content: "";
+  bottom: calc(100% + 2px);
+  transform: translateY(3px);
+  border: 5px solid transparent;
+  border-top-color: #0f172a;
+}
+.studentWizardForm:not(.isViewMode) .formField.isLockedField::after {
+  content: attr(data-tooltip);
+  bottom: calc(100% + 11px);
+  transform: translateY(3px);
+  width: max-content;
+  max-width: 190px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+}
+.studentWizardForm:not(.isViewMode) .formField.isLockedField:hover::before,
+.studentWizardForm:not(.isViewMode) .formField.isLockedField:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.studentWizardForm:not(.isViewMode) .input,
+.studentWizardForm:not(.isViewMode) .select,
+.studentWizardForm:not(.isViewMode) .textarea,
+.studentWizardForm:not(.isViewMode) .multiSelectTrigger {
+  width: 100%;
+  min-height: 24px;
+  padding: 2px 2px 1px !important;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #1a1a1a;
+  font-size: 12px !important;
+  font-weight: 600;
+  line-height: 1.45 !important;
+}
+
+.studentWizardForm:not(.isViewMode) .studentFormSelect.hasValue .multiSelectTrigger,
+.studentWizardForm:not(.isViewMode) .studentFormSelect:hover .multiSelectTrigger,
+.studentWizardForm:not(.isViewMode) .studentFormSelect[open] .multiSelectTrigger {
+  color: #1a1a1a;
+  font-size: 12px !important;
+  font-weight: 600;
+  line-height: 1.45 !important;
+}
+
+.studentWizardForm:not(.isViewMode) .textarea {
+  min-height: 64px;
+  border: 0;
+  border-radius: 0;
+  padding: 4px 2px !important;
+  resize: vertical;
+}
+
+.studentWizardForm:not(.isViewMode) .input::placeholder,
+.studentWizardForm:not(.isViewMode) .textarea::placeholder,
+.studentWizardForm:not(.isViewMode) .multiSelectTrigger span {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  opacity: 1;
+}
+
+.studentWizardForm:not(.isViewMode) .input:hover,
+.studentWizardForm:not(.isViewMode) .select:hover,
+.studentWizardForm:not(.isViewMode) .textarea:hover,
+.studentWizardForm:not(.isViewMode) .studentFormSelect:hover .multiSelectTrigger {
+  background: transparent;
+}
+
+.studentWizardForm:not(.isViewMode) .input:focus,
+.studentWizardForm:not(.isViewMode) .select:focus,
+.studentWizardForm:not(.isViewMode) .textarea:focus,
+.studentWizardForm:not(.isViewMode) .studentFormSelect[open] .multiSelectTrigger {
+  background: transparent;
+  box-shadow: none;
+}
+
+.studentWizardForm:not(.isViewMode) .formField:hover,
+.studentWizardForm:not(.isViewMode) .formField:focus-within {
+  border-bottom-color: #10b981;
+}
+
+.studentWizardForm:not(.isViewMode) .formField.has-error {
+  border-bottom-color: var(--student-error);
+}
+
+.studentWizardForm:not(.isViewMode) .formField.has-error .studentFieldControl .input,
+.studentWizardForm:not(.isViewMode) .formField.has-error .studentFieldControl .select,
+.studentWizardForm:not(.isViewMode) .formField.has-error .studentFieldControl .textarea,
+.studentWizardForm:not(.isViewMode) .formField.has-error .studentFieldControl .multiSelectTrigger span {
+  color: transparent;
+  caret-color: var(--student-error);
+}
+
+.studentWizardForm:not(.isViewMode) .formField.has-error .studentFieldControl .input:focus,
+.studentWizardForm:not(.isViewMode) .formField.has-error .studentFieldControl .select:focus,
+.studentWizardForm:not(.isViewMode) .formField.has-error .studentFieldControl .textarea:focus,
+.studentWizardForm:not(.isViewMode) .formField.has-error .studentFieldControl:focus-within .multiSelectTrigger span {
+  color: #1a1a1a;
+}
+
+.studentWizardForm:not(.isViewMode) .formField.has-success {
+  border-bottom-color: var(--student-success);
+}
+
 .studentWizardForm .formField.has-error .multiSelectTrigger {
   border-color: var(--student-error);
   background: #fffafa;
@@ -7469,6 +7761,22 @@ td {
 .studentWizardForm .formField.has-success .textarea {
   border-color: var(--student-success);
 }
+.studentWizardForm:not(.isViewMode) .formField:not(.has-error) .input,
+.studentWizardForm:not(.isViewMode) .formField:not(.has-error) .select,
+.studentWizardForm:not(.isViewMode) .formField:not(.has-error) .textarea,
+.studentWizardForm:not(.isViewMode) .formField:not(.has-error) .multiSelectTrigger {
+  background: transparent;
+  box-shadow: none;
+}
+
+.studentWizardForm:not(.isViewMode) .formField:not(.has-error) .input:focus,
+.studentWizardForm:not(.isViewMode) .formField:not(.has-error) .select:focus,
+.studentWizardForm:not(.isViewMode) .formField:not(.has-error) .textarea:focus,
+.studentWizardForm:not(.isViewMode) .formField:not(.has-error) .studentFormSelect[open] .multiSelectTrigger {
+  border-color: #10b981;
+  background: transparent;
+  box-shadow: none;
+}
 .validationMessage {
   display: flex;
   align-items: center;
@@ -7479,6 +7787,19 @@ td {
   line-height: 1.35;
   margin-top: 2px;
   white-space: pre-line;
+}
+.studentWizardForm:not(.isViewMode) .studentFieldControl .validationMessage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin-top: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.studentWizardForm:not(.isViewMode) .studentFieldControl:focus-within .validationMessage {
+  display: none;
 }
 .validationMessage span {
   width: 16px;
@@ -7510,6 +7831,7 @@ td {
 
 .studentPhotoField {
   grid-column: 1 / -1;
+  margin-top: 12px;
 }
 .sponsorPhotoField {
   padding-top: 10px;
@@ -7722,9 +8044,7 @@ td {
 .studentWizardActions {
   display: flex;
   justify-content: center;
-  align-items: center;
   gap: 10px;
-  padding: 14px 0;
 }
 .studentWizardActions .btn {
   border-radius: 12px;
@@ -7792,9 +8112,6 @@ td {
   cursor: not-allowed;
   opacity: 0.7;
 }
-.studentWizardForm:not(.isEmbedded) {
-  padding: 0 8px 24px;
-}
 .studentWizardForm.isViewMode:has(.studentProfileViewCard) {
   display: block;
 }
@@ -7825,6 +8142,15 @@ td {
   width: 18px;
   height: 18px;
   color: #0f766e;
+  flex: 0 0 auto;
+}
+.sponsorProfileViewHeader {
+  min-height: 54px;
+}
+.sponsorProfileViewHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   flex: 0 0 auto;
 }
 .studentProfileViewClose {
@@ -7867,6 +8193,15 @@ td {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.sponsorProfileViewAvatar {
+  border-color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+.sponsorProfileViewAvatar svg {
+  width: 32px;
+  height: 32px;
 }
 .studentProfileViewBannerText {
   min-width: 0;
@@ -7915,7 +8250,7 @@ td {
 }
 .studentProfileViewValue {
   color: #1a1a1a;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.45;
   overflow-wrap: anywhere;
@@ -7935,6 +8270,52 @@ td {
   font-weight: 700;
   line-height: 1.1;
   overflow-wrap: anywhere;
+}
+.eventProfileStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 22px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.eventProfileStatusBadge span {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 999px;
+  background: currentColor;
+}
+.eventProfileStatusBadge.isActive {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+.eventProfileStatusBadge.isCancelled {
+  border-color: #fecdd3;
+  background: #fff1f2;
+  color: #be123c;
+}
+.eventProfileDescriptionItem {
+  grid-column: 1 / -1;
+  min-height: auto;
+  padding-top: 12px;
+  padding-bottom: 14px;
+}
+.eventProfileFullWidthItem {
+  grid-column: 1 / -1;
+}
+.eventProfileDescriptionText {
+  max-width: 780px;
+  line-height: 1.6;
+  font-weight: 500;
 }
 .studentWizardForm.isViewMode .sdGenderBadge {
   display: inline-block;
@@ -8022,6 +8403,9 @@ td {
   .studentProfileViewHeader {
     padding: 12px 16px;
   }
+  .sponsorProfileViewHeaderActions {
+    gap: 8px;
+  }
   .studentProfileViewBanner {
     margin: 16px;
     padding: 16px;
@@ -8040,6 +8424,9 @@ td {
   }
   .studentProfileViewItem {
     min-height: 50px;
+  }
+  .sponsorProfileViewGrid {
+    grid-template-columns: 1fr;
   }
   .studentWizardForm .studentSearchRow {
     grid-column: 1 / -1;
@@ -8089,6 +8476,432 @@ td {
   }
   .siblingSearch {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .layoutMain:has(.studentWizardForm:not(.isEmbedded):not(.isViewMode)) {
+    padding-left: 16px;
+    padding-right: 16px;
+    overflow-x: hidden;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0 0 22px;
+    overflow-x: hidden;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepIndicator {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepPill {
+    min-width: 0;
+    padding: 8px 9px;
+    gap: 7px;
+    overflow: hidden;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepPill span {
+    flex: 0 0 auto;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentFormSection,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentFormContainer,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .formGrid,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .field,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .formField {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .input,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .select,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .textarea,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectFilter,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectTrigger {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectMenu,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectOptions,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectOption {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUpload {
+    flex-wrap: wrap;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadPreview {
+    flex: 1 1 220px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadActions {
+    flex: 1 1 220px;
+    margin-left: 0;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+}
+
+@media (min-width: 321px) and (max-width: 480px) {
+  .layoutMain:has(.studentWizardForm:not(.isEmbedded):not(.isViewMode)) {
+    padding-left: 10px;
+    padding-right: 10px;
+    overflow-x: hidden;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    gap: 14px;
+    padding: 0 0 18px;
+    overflow-x: hidden;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardHeader {
+    gap: 12px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardHeaderTop {
+    align-items: center;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardHeader h2 {
+    font-size: 21px;
+    line-height: 1.15;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepIndicator {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepPill {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    box-sizing: border-box;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentFormSection {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 14px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .formGrid,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .field,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .formField,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentSearchRow {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .input,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .select,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .textarea,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectFilter,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectTrigger {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    font-size: 11px !important;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectMenu,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectOptions,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectOption {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectTrigger span,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectOption span,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .formHelperText,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .validationMessage {
+    overflow-wrap: anywhere;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUpload {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadPreview {
+    width: 100%;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadPreview span {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadActions {
+    width: 100%;
+    margin-left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadActions .btn,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadActions label.btn {
+    flex: 1 1 140px;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardActions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    max-width: 372px;
+    margin: 0 auto;
+    padding: 12px 0 0;
+    box-sizing: border-box;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardActions .btn,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardActions .btnGreen,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardActions .btnRed {
+    flex: 1 1 calc((100% - 12px) / 2);
+    width: auto;
+    max-width: 100%;
+    min-width: min(128px, 100%);
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 320px) {
+  .layoutMain:has(.studentWizardForm:not(.isEmbedded):not(.isViewMode)) {
+    padding-left: 8px;
+    padding-right: 8px;
+    overflow-x: hidden;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    gap: 12px;
+    padding: 0 0 16px;
+    overflow-x: hidden;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardHeader {
+    gap: 10px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardHeaderTop {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardHeader h2 {
+    font-size: 19px;
+    line-height: 1.15;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardClose {
+    padding: 7px;
+    border-radius: 10px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepIndicator {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepPill {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 7px 8px;
+    gap: 7px;
+    box-sizing: border-box;
+    font-size: 11px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepPill span {
+    inline-size: 18px;
+    font-size: 10px;
+    flex: 0 0 auto;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentFormSection {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 12px;
+    border-radius: 14px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepTitle {
+    margin-bottom: 12px;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepIcon {
+    inline-size: 24px;
+    padding: 6px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentStepGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .formGrid,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .field,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .formField,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentSearchRow {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .field > span,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .field > label,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .formField > label {
+    font-size: 11px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .input,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .select,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .textarea,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectFilter,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectTrigger {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    font-size: 11px !important;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectMenu,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectOptions,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectOption {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectTrigger span,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .multiSelectOption span,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .formHelperText,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .validationMessage {
+    overflow-wrap: anywhere;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUpload {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadPreview {
+    width: 100%;
+    gap: 9px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadPreview span {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadActions {
+    width: 100%;
+    margin-left: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadActions .btn,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentModalUploadActions label.btn {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    white-space: normal;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardActions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 12px 0 0;
+    box-sizing: border-box;
+  }
+
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardActions .btn,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardActions .btnGreen,
+  .studentWizardForm:not(.isEmbedded):not(.isViewMode) .studentWizardActions .btnRed {
+    flex: 1 1 calc((100% - 12px) / 2);
+    width: auto;
+    max-width: 100%;
+    min-width: min(128px, 100%);
+    min-height: 44px;
+    box-sizing: border-box;
   }
 }
 

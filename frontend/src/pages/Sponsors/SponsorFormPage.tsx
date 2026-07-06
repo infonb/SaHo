@@ -160,6 +160,7 @@ export default function SponsorFormPage() {
   const [form, setForm] = useState<SponsorFormState>(init);
   const [errors, setErrors] = useState<SponsorFormErrors>({});
   const [touchedFields, setTouchedFields] = useState<Set<keyof SponsorFormState>>(() => new Set());
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [loadingSponsor, setLoadingSponsor] = useState(false);
   const [saving, setSaving] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -252,22 +253,17 @@ export default function SponsorFormPage() {
   const handleFieldBlur = (key: keyof SponsorFormState) => {
     if (isView) return;
     touchField(key);
-    const nextError = validateSponsorField(key, form);
-    setErrors((current) => {
-      const next = { ...current };
-      if (nextError) next[key] = nextError;
-      else delete next[key];
-      return next;
-    });
   };
 
   const fieldState = (key: keyof SponsorFormState) => {
     if (isView) return 'default' as const;
     const touched = touchedFields.has(key);
-    if (errors[key] && touched) return 'error' as const;
+    if (errors[key] && submitAttempted) return 'error' as const;
     if (!errors[key] && touched && String(form[key] ?? '').trim()) return 'success' as const;
     return 'default' as const;
   };
+
+  const showError = (key: keyof SponsorFormState) => submitAttempted ? errors[key] : undefined;
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -529,6 +525,7 @@ export default function SponsorFormPage() {
     event.preventDefault();
     if (isView) return;
 
+    setSubmitAttempted(true);
     const nextErrors = validateSponsorForm(form);
     setErrors(nextErrors);
     setTouchedFields(new Set(formFieldKeys));
@@ -587,7 +584,7 @@ export default function SponsorFormPage() {
   const sponsorLoading = loadingSponsor && (mode === 'edit' || mode === 'view');
 
   return (
-    <form className="studentWizardForm" onSubmit={handleSubmit} noValidate>
+    <form className="studentWizardForm sponsorWizardForm" onSubmit={handleSubmit} noValidate>
       <PageHeader
         title={pageTitle}
         subtitle={pageSubtitle}
@@ -613,7 +610,7 @@ export default function SponsorFormPage() {
                 value={form.name}
                 onChange={(value) => setField('name', value)}
                 onBlur={() => handleFieldBlur('name')}
-                error={touchedFields.has('name') ? errors.name : undefined}
+                error={showError('name')}
                 state={fieldState('name')}
                 readOnly={isView}
               />
@@ -625,7 +622,7 @@ export default function SponsorFormPage() {
                 value={form.email}
                 onChange={(value) => setField('email', value)}
                 onBlur={() => handleFieldBlur('email')}
-                error={touchedFields.has('email') ? errors.email : undefined}
+                error={showError('email')}
                 state={fieldState('email')}
                 readOnly={isView}
               />
@@ -637,7 +634,7 @@ export default function SponsorFormPage() {
                 value={form.dob}
                 onChange={(value) => setField('dob', value)}
                 onBlur={() => handleFieldBlur('dob')}
-                error={touchedFields.has('dob') ? errors.dob : undefined}
+                error={showError('dob')}
                 state={fieldState('dob')}
                 readOnly={isView}
               />
@@ -648,7 +645,7 @@ export default function SponsorFormPage() {
                 value={form.ph_no}
                 onChange={(value) => setField('ph_no', value)}
                 onBlur={() => handleFieldBlur('ph_no')}
-                error={touchedFields.has('ph_no') ? errors.ph_no : undefined}
+                error={showError('ph_no')}
                 state={fieldState('ph_no')}
                 readOnly={isView}
                 numericOnly
@@ -662,7 +659,7 @@ export default function SponsorFormPage() {
                 onChange={(value) => setField('nationality', value)}
                 onBlur={() => handleFieldBlur('nationality')}
                 options={nationalityOptions}
-                error={touchedFields.has('nationality') ? errors.nationality : undefined}
+                error={showError('nationality')}
                 state={fieldState('nationality')}
                 readOnly={isView}
               />
@@ -673,7 +670,7 @@ export default function SponsorFormPage() {
                 value={form.contrib}
                 onChange={(value) => setField('contrib', value)}
                 onBlur={() => handleFieldBlur('contrib')}
-                error={touchedFields.has('contrib') ? errors.contrib : undefined}
+                error={showError('contrib')}
                 state={fieldState('contrib')}
                 readOnly={isView}
               />
@@ -685,7 +682,7 @@ export default function SponsorFormPage() {
                 onChange={(value) => setField('type', value as SponsorFormState['type'])}
                 onBlur={() => handleFieldBlur('type')}
                 options={['Individual', 'Organisation']}
-                error={touchedFields.has('type') ? errors.type : undefined}
+                error={showError('type')}
                 state={fieldState('type')}
                 readOnly={isView}
               />
@@ -966,28 +963,30 @@ function SponsorField({
 
   return (
     <div className={`field formField has-${state}`}>
-      {readOnly ? <span>{label.replace(/\*/g, '')}</span> : null}
-      <input
-        id={inputId}
-        data-field={fieldKey}
-        required={!readOnly && label.includes('*')}
-        readOnly={readOnly}
-        aria-label={!readOnly ? label.replace(/\*/g, '') : undefined}
-        aria-readonly={readOnly || undefined}
-        aria-invalid={state === 'error' || undefined}
-        aria-describedby={error ? messageId : undefined}
-        tabIndex={readOnly ? -1 : undefined}
-        maxLength={maxLength}
-        type={readOnly || numericOnly ? 'text' : type}
-        inputMode={numericOnly ? 'numeric' : undefined}
-        pattern={numericOnly ? '\\d*' : undefined}
-        className={readOnly ? 'input readonlyField' : 'input'}
-        placeholder={readOnly ? undefined : placeholder ?? label.replace(/\*/g, '')}
-        value={readOnly ? (value || '-') : value}
-        onChange={(event) => handleChange(event.target.value)}
-        onBlur={onBlur}
-      />
-      <ValidationMessage id={messageId} message={error} />
+      <label htmlFor={inputId}>{label.replace(/\*/g, '')}</label>
+      <div className="studentFieldControl">
+        <input
+          id={inputId}
+          data-field={fieldKey}
+          required={!readOnly && label.includes('*')}
+          readOnly={readOnly}
+          aria-label={!readOnly ? label.replace(/\*/g, '') : undefined}
+          aria-readonly={readOnly || undefined}
+          aria-invalid={state === 'error' || undefined}
+          aria-describedby={error ? messageId : undefined}
+          tabIndex={readOnly ? -1 : undefined}
+          maxLength={maxLength}
+          type={readOnly || numericOnly ? 'text' : type}
+          inputMode={numericOnly ? 'numeric' : undefined}
+          pattern={numericOnly ? '\\d*' : undefined}
+          className={readOnly ? 'input readonlyField' : 'input'}
+          placeholder=""
+          value={readOnly ? (value || '-') : value}
+          onChange={(event) => handleChange(event.target.value)}
+          onBlur={onBlur}
+        />
+        <ValidationMessage id={messageId} message={error} />
+      </div>
     </div>
   );
 }
@@ -1032,64 +1031,66 @@ export function SponsorSelect({
 
   return (
     <div className={`field formField has-${state}`}>
-      {readOnly ? <span>{label.replace(/\*/g, '')}</span> : null}
-      {readOnly ? (
-        <input
-          id={inputId}
-          data-field={fieldKey}
-          className="input readonlyField"
-          value={value || '-'}
-          readOnly
-          aria-readonly="true"
-          tabIndex={-1}
-        />
-      ) : (
-        <details
-          ref={detailsRef}
-          className={`multiSelectFilter studentFormSelect sponsorFormSelect${value ? ' hasValue' : ''}`}
-        >
-          <summary
+      <label htmlFor={inputId}>{label.replace(/\*/g, '')}</label>
+      <div className="studentFieldControl">
+        {readOnly ? (
+          <input
             id={inputId}
             data-field={fieldKey}
-            className="multiSelectTrigger"
-            aria-label={label.replace(/\*/g, '')}
-            aria-invalid={state === 'error' || undefined}
-            aria-describedby={error ? messageId : undefined}
-            onClick={(event) => {
-              event.preventDefault();
-              const shouldOpen = !detailsRef.current?.open;
-              document.querySelectorAll<HTMLDetailsElement>('.sponsorFormSelect[open]').forEach((details) => {
-                if (details !== detailsRef.current) details.removeAttribute('open');
-              });
-              if (shouldOpen) detailsRef.current?.setAttribute('open', '');
-              else detailsRef.current?.removeAttribute('open');
-            }}
+            className="input readonlyField"
+            value={value || '-'}
+            readOnly
+            aria-readonly="true"
+            tabIndex={-1}
+          />
+        ) : (
+          <details
+            ref={detailsRef}
+            className={`multiSelectFilter studentFormSelect sponsorFormSelect${value ? ' hasValue' : ''}`}
           >
-            <span>{selectedLabel || placeholder || label.replace(/\*/g, '')}</span>
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </summary>
-          <div className="multiSelectMenu">
-            <div className="multiSelectOptions">
-              {options.map((option) => (
-                <button
-                  type="button"
-                  className={`multiSelectOption${value === option ? ' isSelected' : ''}`}
-                  key={option}
-                  onClick={() => {
-                    onChange(option);
-                    detailsRef.current?.removeAttribute('open');
-                  }}
-                >
-                  <span>{option}</span>
-                </button>
-              ))}
+            <summary
+              id={inputId}
+              data-field={fieldKey}
+              className="multiSelectTrigger"
+              aria-label={label.replace(/\*/g, '')}
+              aria-invalid={state === 'error' || undefined}
+              aria-describedby={error ? messageId : undefined}
+              onClick={(event) => {
+                event.preventDefault();
+                const shouldOpen = !detailsRef.current?.open;
+                document.querySelectorAll<HTMLDetailsElement>('.sponsorFormSelect[open]').forEach((details) => {
+                  if (details !== detailsRef.current) details.removeAttribute('open');
+                });
+                if (shouldOpen) detailsRef.current?.setAttribute('open', '');
+                else detailsRef.current?.removeAttribute('open');
+              }}
+            >
+              <span>{selectedLabel}</span>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </summary>
+            <div className="multiSelectMenu">
+              <div className="multiSelectOptions">
+                {options.map((option) => (
+                  <button
+                    type="button"
+                    className={`multiSelectOption${value === option ? ' isSelected' : ''}`}
+                    key={option}
+                    onClick={() => {
+                      onChange(option);
+                      detailsRef.current?.removeAttribute('open');
+                    }}
+                  >
+                    <span>{option}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        </details>
-      )}
-      <ValidationMessage id={messageId} message={error} />
+          </details>
+        )}
+        <ValidationMessage id={messageId} message={error} />
+      </div>
     </div>
   );
 }

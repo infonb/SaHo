@@ -379,6 +379,100 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+@media (max-width: 900px) {
+  .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .sponsor-list-page .sponsorRecordCard {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 18px 16px 16px;
+    grid-template-rows: auto;
+    overflow: hidden;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardTop {
+    box-sizing: border-box;
+    padding-right: 70px;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardTop,
+  .sponsor-list-page .sponsorRecordCard .sponsorCardIdentity,
+  .sponsor-list-page .sponsorMetricsGrid,
+  .sponsor-list-page .sponsorRecordCard .sponsorCardMetric,
+  .sponsor-list-page .sponsorRecordCard .sponsorCountCard {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorMetaLine {
+    flex-wrap: wrap;
+    white-space: normal;
+    overflow: hidden;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardMetric,
+  .sponsor-list-page .sponsorRecordCard .sponsorCountCard {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardMetric span,
+  .sponsor-list-page .sponsorRecordCard .sponsorCountCard span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardMetric strong,
+  .sponsor-list-page .sponsorRecordCard .sponsorCountCard strong {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .actions.student-actions {
+    position: absolute;
+    top: 18px;
+    right: 16px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .sponsor-list-page .sponsorRecordCard {
+    padding: 16px 14px 14px;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardTop {
+    gap: 7px;
+    padding-right: 64px;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardMetric,
+  .sponsor-list-page .sponsorRecordCard .sponsorCountCard {
+    gap: 8px;
+  }
+}
 .assignSponsorButtonIcon {
   width: 18px;
   height: 18px;
