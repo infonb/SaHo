@@ -374,12 +374,37 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
               <Field fieldKey="last_name" label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} onBlur={() => touch?.('last_name')} readOnly={readOnly} alphabeticOnly error={showMessage('last_name') ? errors.last_name : undefined} state={getFieldState('last_name')} />
               <Field fieldKey="email" label="Email ID*" type="email" value={form.email} onChange={v => set('email', v)} onBlur={() => touch?.('email')} readOnly={readOnly} error={showMessage('email') ? errors.email : undefined} state={getFieldState('email')} />
               <Field fieldKey="dob" label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} onBlur={() => touch?.('dob')} readOnly={readOnly} error={showMessage('dob') ? errors.dob : undefined} state={getFieldState('dob')} />
-              <Select fieldKey="gender" label="Gender*" value={form.gender} onChange={v => set('gender', v)} onBlur={() => touch?.('gender')} options={GENDER_OPTIONS} readOnly={readOnly || isEdit} subText={isEdit ? 'Gender cannot be modified after registration.' : undefined} error={showMessage('gender') ? errors.gender : undefined} state={getFieldState('gender')} />
+              <Select
+                fieldKey="gender"
+                label="Gender*"
+                value={form.gender}
+                onChange={v => set('gender', v)}
+                onBlur={() => touch?.('gender')}
+                options={GENDER_OPTIONS}
+                readOnly={readOnly || isEdit}
+                lockedTooltip={isEdit ? "Gender can't be edited." : undefined}
+                error={showMessage('gender') ? errors.gender : undefined}
+                state={getFieldState('gender')}
+              />
               <Select fieldKey="blood_group" label="Blood Group" value={form.blood_group} onChange={v => set('blood_group', v)} options={['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']} readOnly={readOnly} state={getFieldState('blood_group')} />
               <Select fieldKey="religion" label="Religion*" value={form.religion} onChange={v => set('religion', v)} onBlur={() => touch?.('religion')} options={religionOptions} readOnly={readOnly} error={showMessage('religion') ? errors.religion : undefined} state={getFieldState('religion')} />
               <Select fieldKey="caste" label="Caste*" value={form.caste} onChange={v => set('caste', v)} onBlur={() => touch?.('caste')} options={casteOptions} readOnly={readOnly} error={showMessage('caste') ? errors.caste : undefined} state={getFieldState('caste')} />
               <Select fieldKey="class_id" label="Class*" value={form.class_id} onChange={v => set('class_id', v)} onBlur={() => touch?.('class_id')} options={classOptions} readOnly={readOnly} error={showMessage('class_id') ? errors.class_id : undefined} state={getFieldState('class_id')} />
-              <Field fieldKey="aadhaar_number" label="Aadhaar Number*" value={form.aadhaar_number} onChange={v => set('aadhaar_number', v)} onBlur={() => touch?.('aadhaar_number')} maxLength={12} subText={isEdit ? 'Aadhaar number cannot be modified after registration.' : (readOnly || errors.aadhaar_number ? undefined : props.aadhaarStatus)} readOnly={readOnly || isEdit} numericOnly aadhaarFormat error={showMessage('aadhaar_number') ? errors.aadhaar_number : undefined} state={getFieldState('aadhaar_number')} />
+              <Field
+                fieldKey="aadhaar_number"
+                label="Aadhaar Number*"
+                value={form.aadhaar_number}
+                onChange={v => set('aadhaar_number', v)}
+                onBlur={() => touch?.('aadhaar_number')}
+                maxLength={12}
+                subText={isEdit || readOnly || errors.aadhaar_number ? undefined : props.aadhaarStatus}
+                lockedTooltip={isEdit ? "Aadhaar Number can't be edited." : undefined}
+                readOnly={readOnly || isEdit}
+                numericOnly
+                aadhaarFormat
+                error={showMessage('aadhaar_number') ? errors.aadhaar_number : undefined}
+                state={getFieldState('aadhaar_number')}
+              />
               <Select fieldKey="orphan_status" label="Orphan / Single Parent*" value={form.orphan_status} onChange={v => set('orphan_status', v)} onBlur={() => touch?.('orphan_status')} options={orphanStatusOptions} readOnly={readOnly} error={showMessage('orphan_status') ? errors.orphan_status : undefined} state={getFieldState('orphan_status')} />
               <div className="field studentPhotoField">
                 <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><PhotoImageIcon /></span>Student Photo</h3>
@@ -511,9 +536,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
               <Select fieldKey="relation" label="Relation*" value={form.relation} onChange={v => set('relation', v)} onBlur={() => touch?.('relation')} options={relationships} readOnly={readOnly} error={showMessage('relation') ? errors.relation : undefined} state={getFieldState('relation')} />
               <Field fieldKey="phone" label="Phone Number*" value={form.phone} onChange={v => set('phone', v)} onBlur={() => touch?.('phone')} maxLength={10} numericOnly readOnly={readOnly} error={showMessage('phone') ? errors.phone : undefined} state={getFieldState('phone')} />
               <Field fieldKey="occ" label="Occupation" value={form.occ} onChange={v => set('occ', v)} readOnly={readOnly} state={getFieldState('occ')} />
-              <FormField fieldKey="addr" label="Address" readOnly={readOnly} state={getFieldState('addr')}>
-                <textarea id="student-field-addr" data-field="addr" className={readOnly ? 'textarea readonlyField' : 'textarea'} value={form.addr} readOnly={readOnly} aria-readonly={readOnly || undefined} tabIndex={readOnly ? -1 : undefined} onChange={e => set('addr', e.target.value)} />
-              </FormField>
+              <Field fieldKey="addr" label="Address" value={form.addr} onChange={v => set('addr', v)} readOnly={readOnly} state={getFieldState('addr')} />
             </div>
           </div>
 
@@ -530,13 +553,16 @@ function placeholderLabel(label: string) {
   return label.replace(/\*/g, '').trim();
 }
 
-function FormField({ fieldKey, label, children, error, subText, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; children: ReactNode; error?: string; subText?: string; readOnly?: boolean; state?: FieldState }) {
+function FormField({ fieldKey, label, children, error, subText, lockedTooltip, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; children: ReactNode; error?: string; subText?: string; lockedTooltip?: string; readOnly?: boolean; state?: FieldState }) {
   const inputId = `student-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
   return (
-    <div className={`field formField has-${state}`}>
-      {children}
-      <ValidationMessage id={messageId} message={error} />
+    <div className={`field formField has-${state}${lockedTooltip ? ' isLockedField' : ''}`} data-tooltip={lockedTooltip}>
+      <label htmlFor={inputId}>{placeholderLabel(label)}</label>
+      <div className="studentFieldControl">
+        {children}
+        <ValidationMessage id={messageId} message={error} />
+      </div>
       {!error && subText ? <div id={messageId} className="formHelperText">{subText}</div> : null}
     </div>
   );
@@ -556,7 +582,7 @@ function normalizeDateValue(value: string) {
   return value.replace(/^(\d{4})\d+-(\d{2})-(\d{2})$/, '$1-$2-$3');
 }
 
-function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLength, subText, error, readOnly = false, numericOnly = false, alphabeticOnly = false, aadhaarFormat = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; type?: string; maxLength?: number; subText?: string; error?: string; readOnly?: boolean; numericOnly?: boolean; alphabeticOnly?: boolean; aadhaarFormat?: boolean; state?: FieldState }) {
+function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLength, subText, lockedTooltip, error, readOnly = false, numericOnly = false, alphabeticOnly = false, aadhaarFormat = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; type?: string; maxLength?: number; subText?: string; lockedTooltip?: string; error?: string; readOnly?: boolean; numericOnly?: boolean; alphabeticOnly?: boolean; aadhaarFormat?: boolean; state?: FieldState }) {
   const inputType = readOnly || numericOnly || alphabeticOnly ? 'text' : type;
   const inputId = `student-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
@@ -573,7 +599,7 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLen
   };
 
   return (
-    <FormField fieldKey={fieldKey} label={label} error={error} subText={subText} readOnly={readOnly} state={state}>
+    <FormField fieldKey={fieldKey} label={label} error={error} subText={subText} lockedTooltip={lockedTooltip} readOnly={readOnly} state={state}>
       <input
         id={inputId}
         data-field={fieldKey}
@@ -588,7 +614,7 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', maxLen
         type={inputType}
         inputMode={numericOnly ? 'numeric' : alphabeticOnly ? 'text' : undefined}
         pattern={numericOnly ? '\\d*' : alphabeticOnly ? '[A-Za-z]*' : undefined}
-        placeholder={placeholder}
+        placeholder=""
         className={readOnly ? 'input readonlyField' : 'input'}
         value={readOnly ? (aadhaarFormat && value ? formatAadhaar(value) : value || '-') : aadhaarFormat ? formatAadhaar(value) : value}
         onChange={e => handleChange(e.target.value)}
@@ -654,7 +680,7 @@ function SiblingInfoIcon() {
 function PhotoUploadIcon() {
   return <LuUpload size={20} />;
 }
-function Select({ fieldKey, label, value, onChange, onBlur, options, subText, error, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; options: (string | [string, string])[]; subText?: string; error?: string; readOnly?: boolean; state?: FieldState }) {
+function Select({ fieldKey, label, value, onChange, onBlur, options, subText, lockedTooltip, error, readOnly = false, state = 'default' }: { fieldKey: keyof StudentFormState; label: string; value: string; onChange: (v: string) => void; onBlur?: () => void; options: (string | [string, string])[]; subText?: string; lockedTooltip?: string; error?: string; readOnly?: boolean; state?: FieldState }) {
   const inputId = `student-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
   const detailsRef = useRef<HTMLDetailsElement>(null);
@@ -678,7 +704,7 @@ function Select({ fieldKey, label, value, onChange, onBlur, options, subText, er
   }, []);
 
   return (
-    <FormField fieldKey={fieldKey} label={label} error={error} subText={subText} readOnly={readOnly} state={state}>
+    <FormField fieldKey={fieldKey} label={label} error={error} subText={subText} lockedTooltip={lockedTooltip} readOnly={readOnly} state={state}>
       {readOnly ? (
         <input id={inputId} data-field={fieldKey} className="input readonlyField" value={selectedLabel || value || '-'} readOnly aria-readonly="true" tabIndex={-1} />
       ) : (
@@ -700,7 +726,7 @@ function Select({ fieldKey, label, value, onChange, onBlur, options, subText, er
               else detailsRef.current?.removeAttribute('open');
             }}
           >
-            <span>{selectedLabel || placeholder}</span>
+            <span>{selectedLabel}</span>
             <svg viewBox="0 0 24 24" fill="none" aria-hidden>
               <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

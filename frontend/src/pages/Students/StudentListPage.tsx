@@ -11,12 +11,11 @@ import DataTable from '../../components/common/DataTable';
 import Pagination from '../../components/common/Pagination';
 import Avatar from '../../components/common/Avatar';
 import StudentPhoto from '../../components/common/StudentPhoto';
-import Badge from '../../components/common/Badge';
+import SponsorDetailsModal from '../../components/common/SponsorDetailsModal';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import type { StudentFilters, StudentView, SponsorView } from '../../types';
 import StudentDetailModal from './StudentDetailModal';
-import Modal from '../../components/common/Modal';
 import MultiSelectFilter, { csvValues, toggleCsvValue } from '../../components/common/MultiSelectFilter';
 import type { FilterOption } from '../../components/common/MultiSelectFilter';
 import { FiUpload, FiPlus, FiUsers, FiUser } from "react-icons/fi";
@@ -298,6 +297,7 @@ export default function StudentListPage() {
   };
 
   const openSponsor = async (id: number) => {
+    setSponsorDetails(null);
     const sp = await getSponsorById(id);
     if (sp) setSponsorDetails(sp);
     setSponsorOpen(true);
@@ -900,61 +900,11 @@ export default function StudentListPage() {
         </div>
       </div>
       <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
-      <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title="Sponsor Details" width={760}>
-        {sponsorDetails ? (
-          <div className="studentSponsorDetailsModal">
-            <div className="rowFlex" style={{ marginBottom: 18 }}>
-              <Avatar name={sponsorDetails.sponsorName} size="lg" />
-              <div>
-                <h2 style={{ margin: 0, fontFamily: 'var(--font-display)' }}>
-                  {sponsorDetails.sponsorName}
-                </h2>
-                <div className="actions" style={{ marginTop: 8 }}>
-                  <span
-                    className={`sponsorTypeBadge ${
-                      sponsorDetails.type === 'Organisation' ? 'organisation' : 'individual'
-                    }`}
-                  >
-                    {sponsorDetails.type}
-                  </span>
-                  <Badge variant="assigned">
-                    {sponsorDetails.students_count} Students
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            <div className="formGrid">
-              <div className="field">
-                <span>Email</span>
-                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.email || '-'}</div>
-              </div>
-              <div className="field">
-                <span>Phone</span>
-                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.ph_no || '-'}</div>
-              </div>
-              <div className="field">
-                <span>Nationality</span>
-                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.nationality || '-'}</div>
-              </div>
-              <div className="field">
-                <span>Contribution</span>
-                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.contrib || '-'}</div>
-              </div>
-              <div className="field">
-                <span>Date of Birth</span>
-                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.dob || '-'}</div>
-              </div>
-              <div className="field">
-                <span>Location</span>
-                <div className="input" style={{ background: '#f8fafc' }}>{sponsorDetails.loc || '-'}</div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div>No sponsor information available</div>
-        )}
-      </Modal>
+      <SponsorDetailsModal
+        open={sponsorOpen}
+        sponsor={sponsorDetails}
+        onClose={() => setSponsorOpen(false)}
+      />
 
       <ConfirmModal
         open={singleDelete !== null}

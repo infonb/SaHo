@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { FaSort, FaSortUp, FaSortDown, FaUserCheck } from 'react-icons/fa';
 import { deactivateSponsors, getSponsors } from '../../api/sponsorApi';
 import Avatar from '../../components/common/Avatar';
-import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import DataTable from '../../components/common/DataTable';
-import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
+import SponsorDetailsModal from '../../components/common/SponsorDetailsModal';
 import { usePagination } from '../../hooks/usePagination';
 import { useToast } from '../../hooks/useToast';
 import type { SponsorFilters, SponsorView } from '../../types';
@@ -411,9 +410,10 @@ export default function SponsorListPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="iconBtn editActionButton"
+                        className="iconBtn editActionButton actionTooltip"
                         title="Edit Sponsor"
                         aria-label="Edit sponsor"
+                        data-tooltip="Edit Sponsor"
                         onClick={(event) => {
                           event.stopPropagation();
                           nav(`/sponsors/edit/${s.sponsor_id}`);
@@ -424,9 +424,10 @@ export default function SponsorListPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="iconBtn deleteActionButton"
+                        className="iconBtn deleteActionButton actionTooltip"
                         title="Delete Sponsor"
                         aria-label={`Delete ${s.sponsorName}`}
+                        data-tooltip="Delete Sponsor"
                         onClick={(event) => {
                           event.stopPropagation();
                           setSingleDelete(s.sponsor_id);
@@ -495,138 +496,11 @@ export default function SponsorListPage() {
         )}
       </div>
 
-      <SponsorModal sponsor={selected} onClose={() => setSelected(null)} />
+      <SponsorDetailsModal open={!!selected} sponsor={selected} onClose={() => setSelected(null)} />
       <ConfirmModal open={singleDelete !== null} onClose={() => setSingleDelete(null)} onConfirm={confirmSingleDelete} title="Delete Sponsor" message="Delete selected sponsor?" />
       <ConfirmModal open={bulkOpen} onClose={() => setBulkOpen(false)} onConfirm={confirmBulkDelete} title="Delete Selected Sponsors" message={`Delete ${checked.length} selected sponsors?`} />
     </div>
   );
-}
-
-function SponsorModal({
-  sponsor,
-  onClose
-}: {
-  sponsor: SponsorView | null;
-  onClose: () => void;
-}) {
-
-  const nav = useNavigate();
-
-  if (!sponsor) return null;
-
-  return (
-
-    <Modal
-      open={!!sponsor}
-      onClose={onClose}
-      title="Sponsor Details"
-      width={680}
-      footer={
-        <>
-          <Button className="clearbtn"
-            variant="outline"
-            
-            onClick={onClose}
-          >
-            Close
-          </Button>
-
-          <Button
-            className="btn btnGreen"
-            onClick={() =>
-              nav(`/sponsors/edit/${sponsor.sponsor_id}`)
-            }
-          >
-            Modify Sponsor
-          </Button>
-        </>
-      }
-    >
-
-      <div
-        className="rowFlex"
-        style={{ marginBottom: 18 }}
-      >
-
-        <Avatar
-          name={sponsor.sponsorName}
-          size="lg"
-        />
-
-        <div>
-
-          <h2
-            style={{
-              margin: 0,
-              fontFamily: 'var(--font-display)'
-            }}
-          >
-            {sponsor.sponsorName}
-          </h2>
-
-          <div
-            className="actions"
-            style={{ marginTop: 8 }}
-          >
-
-            <span
-              className={`sponsorTypeBadge ${
-                sponsor.type === 'Organisation'
-                  ? 'organisation'
-                  : 'individual'
-              }`}
-            >
-              {sponsor.type}
-            </span>
-
-            <Badge variant="assigned">
-              {sponsor.students_count} Students
-            </Badge>
-
-          </div>
-        </div>
-      </div>
-
-      <div className="formGrid sponsorDetailsModal">
-
-        <Info
-          label="Email"
-          value={sponsor.email}
-        />
-
-        <Info
-          label="Phone"
-          value={sponsor.ph_no}
-        />
-
-        <Info
-          label="Nationality"
-          value={sponsor.nationality}
-        />
-
-        <Info
-          label="Contribution"
-          value={contribution(sponsor.contrib)}
-        />
-
-        <Info
-          label="Date of Birth"
-          value={sponsor.dob}
-        />
-
-        <Info
-          label="Location"
-          value={sponsor.loc}
-        />
-
-      </div>
-
-    </Modal>
-  );
-}
-
-function Info({ label, value }: { label: string; value?: string | number | null }) {
-  return <div className="field"><span>{label}</span><div className="input" style={{ background: '#f8fafc' }}>{value || '-'}</div></div>;
 }
 
 function SponsorSelectFilter({

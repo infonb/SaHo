@@ -154,9 +154,57 @@ function FormField({ fieldKey, label, children, error, readOnly = false, state =
   const messageId = `${inputId}-message`;
   return (
     <div className={`field formField has-${state}`}>
-      {children}
-      <ValidationMessage id={messageId} message={error} />
+      <label htmlFor={inputId}>{label.replace(/\*/g, '').trim()}</label>
+      <div className="studentFieldControl">
+        {children}
+        <ValidationMessage id={messageId} message={error} />
+      </div>
     </div>
+  );
+}
+
+function ProfileViewItem({ label, value, wide = false }: { label: string; value: string; wide?: boolean }) {
+  return (
+    <div className={`studentProfileViewItem${wide ? ' eventProfileFullWidthItem' : ''}`}>
+      <div className="studentProfileViewLabel">{label}</div>
+      <div className="studentProfileViewValue">{value || '-'}</div>
+    </div>
+  );
+}
+
+function EventStatusItem({ value }: { value: string }) {
+  const status = value || '-';
+  const normalized = status.toLowerCase();
+  const className = normalized.includes('cancel') ? 'isCancelled' : normalized.includes('active') ? 'isActive' : '';
+
+  return (
+    <div className="studentProfileViewItem">
+      <div className="studentProfileViewLabel">Status</div>
+      <div className="studentProfileViewValue">
+        <span className={`eventProfileStatusBadge ${className}`}>
+          <span aria-hidden="true" />
+          {status}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function EventDescriptionItem({ value }: { value: string }) {
+  return (
+    <div className="studentProfileViewItem eventProfileDescriptionItem">
+      <div className="studentProfileViewLabel">Description</div>
+      <div className="studentProfileViewValue eventProfileDescriptionText">{value || '-'}</div>
+    </div>
+  );
+}
+
+function EventProfileViewIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M7 3.8v3.4M17 3.8v3.4M4.8 9.2h14.4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M6.8 5.5h10.4a2.2 2.2 0 0 1 2.2 2.2v9.5a2.2 2.2 0 0 1-2.2 2.2H6.8a2.2 2.2 0 0 1-2.2-2.2V7.7a2.2 2.2 0 0 1 2.2-2.2Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
   );
 }
 
@@ -186,7 +234,7 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', error,
         type={readOnly ? 'text' : type}
         min={htmlMin}
         max={htmlMax}
-        placeholder={placeholder}
+        placeholder=""
         className={readOnly ? 'input readonlyField' : 'input'}
         value={readOnly ? (value || '-') : value}
         onChange={e => handleChange(e.target.value)}
@@ -252,7 +300,7 @@ function LocationMultiSelect({ fieldKey, label, options, selectedIds, onChange, 
   const summary = readOnly
     ? selectedNames.join(', ') || '-'
     : selectedIds.length === 0
-    ? `Select ${cleanLabel}`
+    ? ''
     : selectedIds.length === 1
     ? selectedNames[0] ?? '1 selected'
     : `${selectedIds.length} selected`;
@@ -260,75 +308,81 @@ function LocationMultiSelect({ fieldKey, label, options, selectedIds, onChange, 
   if (readOnly) {
     return (
       <div className={`field formField has-${state}`}>
-        <input
-          id={inputId}
-          data-field={fieldKey}
-          className="input readonlyField"
-          value={summary}
-          readOnly
-          disabled
-          aria-label={cleanLabel}
-        />
-        <ValidationMessage id={messageId} message={error} />
+        <label htmlFor={inputId}>{cleanLabel}</label>
+        <div className="studentFieldControl">
+          <input
+            id={inputId}
+            data-field={fieldKey}
+            className="input readonlyField"
+            value={summary}
+            readOnly
+            disabled
+            aria-label={cleanLabel}
+          />
+          <ValidationMessage id={messageId} message={error} />
+        </div>
       </div>
     );
   }
 
   return (
     <div className={`field formField has-${state}`}>
-      <details
-        ref={detailsRef}
-        className={`multiSelectFilter studentFormSelect${selectedIds.length > 0 ? ' hasValue' : ''}`}
-      >
-        <summary
-          id={inputId}
-          data-field={fieldKey}
-          className="multiSelectTrigger"
-          aria-label={cleanLabel}
-          aria-disabled={readOnly || undefined}
-          aria-invalid={state === 'error' || undefined}
-          aria-describedby={error ? messageId : undefined}
-          onClick={(event) => {
-            event.preventDefault();
-            if (readOnly) return;
-            const details = detailsRef.current;
-            if (!details) return;
-            document.querySelectorAll<HTMLDetailsElement>('.studentWizardForm .studentFormSelect[open]').forEach(d => {
-              if (d !== details) d.removeAttribute('open');
-            });
-            if (details.open) details.removeAttribute('open');
-            else details.setAttribute('open', '');
-          }}
+      <label htmlFor={inputId}>{cleanLabel}</label>
+      <div className="studentFieldControl">
+        <details
+          ref={detailsRef}
+          className={`multiSelectFilter studentFormSelect${selectedIds.length > 0 ? ' hasValue' : ''}`}
         >
-          <span>{summary}</span>
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </summary>
-        {!readOnly ? <div className="multiSelectMenu">
-          <div className="multiSelectMenuHead">
-            <span>{cleanLabel}</span>
-            {selectedIds.length > 0 ? <button type="button" onClick={clear}>Clear</button> : null}
-          </div>
-          <div className="multiSelectOptions">
-            {options.length === 0 ? (
-              <div className="multiSelectEmpty">No options available</div>
-            ) : (
-              options.map(option => (
-                <label key={option.id} className="multiSelectOption">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(option.id)}
-                    onChange={() => toggle(option.id)}
-                  />
-                  <span>{option.name}</span>
-                </label>
-              ))
-            )}
-          </div>
-        </div> : null}
-      </details>
-      <ValidationMessage id={messageId} message={error} />
+          <summary
+            id={inputId}
+            data-field={fieldKey}
+            className="multiSelectTrigger"
+            aria-label={cleanLabel}
+            aria-disabled={readOnly || undefined}
+            aria-invalid={state === 'error' || undefined}
+            aria-describedby={error ? messageId : undefined}
+            onClick={(event) => {
+              event.preventDefault();
+              if (readOnly) return;
+              const details = detailsRef.current;
+              if (!details) return;
+              document.querySelectorAll<HTMLDetailsElement>('.studentWizardForm .studentFormSelect[open]').forEach(d => {
+                if (d !== details) d.removeAttribute('open');
+              });
+              if (details.open) details.removeAttribute('open');
+              else details.setAttribute('open', '');
+            }}
+          >
+            <span>{summary}</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </summary>
+          {!readOnly ? <div className="multiSelectMenu">
+            <div className="multiSelectMenuHead">
+              <span>{cleanLabel}</span>
+              {selectedIds.length > 0 ? <button type="button" onClick={clear}>Clear</button> : null}
+            </div>
+            <div className="multiSelectOptions">
+              {options.length === 0 ? (
+                <div className="multiSelectEmpty">No options available</div>
+              ) : (
+                options.map(option => (
+                  <label key={option.id} className="multiSelectOption">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(option.id)}
+                      onChange={() => toggle(option.id)}
+                    />
+                    <span>{option.name}</span>
+                  </label>
+                ))
+              )}
+            </div>
+          </div> : null}
+        </details>
+        <ValidationMessage id={messageId} message={error} />
+      </div>
     </div>
   );
 }
@@ -425,15 +479,6 @@ export default function EventFormPage({
       if (prev.has(key)) return prev;
       const next = new Set(prev);
       next.add(key);
-      return next;
-    });
-    const step = fieldStepMap[key];
-    if (!step) return;
-    setErrors(current => {
-      const stepErrors = buildValidationErrors([step]);
-      const next = { ...current };
-      if (stepErrors[key]) next[key] = stepErrors[key];
-      else delete next[key];
       return next;
     });
   };
@@ -991,6 +1036,62 @@ export default function EventFormPage({
     return Boolean(errors[key]) && (touchedFields.has(key) || validatedFields.has(key));
   };
 
+  const optionNames = (ids: number[], options: { id: number; name: string }[]) =>
+    ids.map(id => options.find(option => option.id === id)?.name ?? String(id)).filter(Boolean).join(', ') || '-';
+
+  const eventInitials = (form.title || 'Event')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part.charAt(0).toUpperCase())
+    .join('') || 'EV';
+  const viewClasses = optionNames(parseCsv(form.classIdsCsv), classes);
+  const viewLocation = [
+    optionNames(stIdArray, states),
+    optionNames(distIdArray, districts),
+    optionNames(mndlIdArray, mandals),
+    optionNames(vilIdArray, villages),
+    optionNames(parseCsv(form.schIdsCsv), schools),
+  ].filter(value => value && value !== '-').join(', ') || '-';
+
+  if (isView) {
+    return (
+      <form ref={formRef} className={`studentWizardForm${embedded ? ' isEmbedded' : ''} isViewMode`} onSubmit={submit} noValidate>
+        <section className="studentProfileViewCard" aria-label="Event details">
+          <div className="studentProfileViewHeader">
+            <h2><EventProfileViewIcon /> View Event</h2>
+            <button type="button" className="studentWizardClose studentProfileViewClose" onClick={cancel} aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+          <div className="studentProfileViewBanner">
+            <div className="studentProfileViewAvatar" aria-hidden="true">
+              {eventInitials}
+            </div>
+            <div className="studentProfileViewBannerText">
+              <div className="studentProfileViewBannerName">{form.title || '-'}</div>
+              <div className="studentProfileViewBannerMeta">
+                Event ID: {editingRemId ?? '-'} | {form.venue || '-'}
+              </div>
+            </div>
+          </div>
+          <div className="studentProfileViewGrid">
+            <ProfileViewItem label="Event Name" value={form.title || '-'} />
+            <ProfileViewItem label="Event Date" value={formatDateTime(form.eventDate)} />
+            <ProfileViewItem label="Venue" value={form.venue || '-'} />
+            <EventStatusItem value={form.status || '-'} />
+            <ProfileViewItem label="Classes" value={viewClasses} />
+            <EventDescriptionItem value={form.description || '-'} />
+            <ProfileViewItem label="Location" value={viewLocation} wide />
+          </div>
+        </section>
+      </form>
+    );
+  }
+
   return (
     <form ref={formRef} className={`studentWizardForm${embedded ? ' isEmbedded' : ''}${isView ? ' isViewMode' : ''}`} onSubmit={submit} noValidate>
       <div className="studentWizardHeader">
@@ -1062,12 +1163,14 @@ export default function EventFormPage({
                 />
               </div>
               <div style={{ gridColumn: 'span 4' }}>
-                <div className="field">
-                  <textarea
+                <div className="field formField has-default">
+                  <label htmlFor="event-field-description">Description</label>
+                  <input
                     id="event-field-description"
                     data-field="description"
-                    className="textarea"
-                    placeholder="Description"
+                    className={isView ? 'input readonlyField' : 'input'}
+                    type="text"
+                    placeholder=""
                     value={isView ? (form.description || '-') : form.description}
                     readOnly={isView}
                     disabled={isView}
