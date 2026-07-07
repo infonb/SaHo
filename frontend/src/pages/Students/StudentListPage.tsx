@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSort, FaSortUp, FaSortDown, FaUserGraduate } from 'react-icons/fa';
-import { deactivateStudents, exportStudentsCsv, getStudents } from '../../api/studentApi';
+import { deactivateStudents, exportStudentsCsv,getStudentIds, getStudents } from '../../api/studentApi';
 import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
 import { getSponsorById } from '../../api/sponsorApi';
@@ -64,6 +64,7 @@ export default function StudentListPage() {
   const [classes, setClasses] = useState<any[]>([]);
   const [selected, setSelected] = useState<StudentView | null>(null);
   const [checked, setChecked] = useState<number[]>([]);
+  const [globalSelection, setGlobalSelection] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [singleDelete, setSingleDelete] = useState<number | null>(null);
   const [sponsorOpen, setSponsorOpen] = useState(false);
@@ -111,6 +112,7 @@ export default function StudentListPage() {
       setSponsoredCount(0);
       setOrphansCount(0);
       setChecked([]);
+      setGlobalSelection(false);
       setError("Unable to load students from the database.");
     } finally {
       setLoading(false);
@@ -265,24 +267,54 @@ export default function StudentListPage() {
     { value: "2", label: "Single Parent" },
   ];
   const pageIds = students.map((s) => s.student_id);
-  const hasSelection = checked.length > 0;
-  const allPageChecked =
-    pageIds.length > 0 && pageIds.every((id) => checked.includes(id));
-  const toggle = (id: number) =>
-    setChecked((ids) =>
-      ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
-    );
-  const togglePage = () =>
-    setChecked((ids) =>
-      allPageChecked
-        ? ids.filter((id) => !pageIds.includes(id))
-        : [...new Set([...ids, ...pageIds])],
-    );
+  const allSelected = globalSelection || checked.length >= total;
+  const hasSelection = globalSelection || checked.length > 0;
+  const allPageChecked = allSelected || (pageIds.length > 0 && pageIds.every((id) => checked.includes(id)));
+  const showSelectAllLink = allPageChecked && !allSelected;
+
+  const toggle = (id: number) => {
+    if (globalSelection) {
+      setGlobalSelection(false);
+      getStudentIds(applied).then(allIds => {
+        setChecked(allIds.filter(x => x !== id));
+      }).catch(() => setChecked([]));
+    } else {
+      setChecked((ids) =>
+        ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+      );
+    }
+  };
+  const togglePage = () => {
+    if (globalSelection) {
+      setChecked([]);
+      setGlobalSelection(false);
+    } else if (allPageChecked) {
+      setChecked((ids) => ids.filter((id) => !pageIds.includes(id)));
+    } else {
+      setChecked((ids) => [...new Set([...ids, ...pageIds])]);
+    }
+  };
+
+  const selectAllMatchingStudents = async () => {
+    try {
+      const ids = await getStudentIds(applied);
+      setChecked(ids);
+      setGlobalSelection(true);
+      toast(`All ${ids.length} students matching this search are selected.`, "success");
+    } catch {
+      toast("Failed to select all students.", "error");
+    }
+  };
 
   const confirmBulkDelete = async () => {
-    await deactivateStudents(checked, user?.username ?? "admin");
-    const removedCount = checked.length;
+    let ids = checked;
+    if (globalSelection && ids.length === 0) {
+      ids = await getStudentIds(applied);
+    }
+    await deactivateStudents(ids, user?.username ?? "admin");
+    const removedCount = ids.length;
     setChecked([]);
+    setGlobalSelection(false);
     setBulkOpen(false);
     toast(`${removedCount} students removed.`, "success");
     load(page, pageSize);
@@ -326,7 +358,7 @@ export default function StudentListPage() {
       filters: applied,
       sortColumn: sortColumn ?? undefined,
       sortDirection: sortDirection ?? undefined,
-      studentIds: checked.length ? checked : undefined,
+      studentIds: allSelected ? undefined : (checked.length ? checked : undefined),
     });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -797,10 +829,27 @@ export default function StudentListPage() {
         >
           <div className="selectHeaderRow studentBulkToolbar">
             <div className="bulkToolbarInfo">
-              <span className="bulkSelectAllText">Select all on this page</span>
-              <span className="selected-count">
-                Selected {checked.length} of {total}
-              </span>
+              {allSelected ? (
+                <>
+                  <span className="selected-count">
+                    All {total} students matching this search are selected.
+                  </span>
+                  <button className="clearSelectionLink" onClick={() => { setChecked([]); setGlobalSelection(false); }}>
+                    Clear selection
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="selected-count">
+                    Selected {checked.length} of {total}
+                  </span>
+                  {showSelectAllLink ? (
+                    <button className="selectAllLink" onClick={selectAllMatchingStudents}>
+                      Select all {total} students matching this search
+                    </button>
+                  ) : null}
+                </>
+              )}
             </div>
             <div className="bulkToolbarActions">
               <button className="btn btnGreen" onClick={handleExportCsv}>
@@ -868,7 +917,7 @@ export default function StudentListPage() {
             loading={loading}
             loadingRowCount={Math.min(pageSize, 20)}
             columns={[
-              { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
+              { key: 'id', label: <div className={`idSelectCell header${allPageChecked ? ' isSelectedHeader' : ''}`}><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
               { key: 'student', label: sortHeader('STUDENT', 'student_name'), width: '250px' },
               { key: 'age', label: sortHeader('AGE', 'age'), width: '92px' },
               { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
@@ -919,7 +968,7 @@ export default function StudentListPage() {
         onClose={() => setBulkOpen(false)}
         onConfirm={confirmBulkDelete}
         title="Delete Selected Students"
-        message={`Delete ${checked.length} selected students?`}
+        message={`Delete ${allSelected ? total : checked.length} selected students?`}
       />
     </div>
   );

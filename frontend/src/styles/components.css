@@ -1040,6 +1040,39 @@ h1, h2, h3, h4, h5, h6
   font-weight: 700;
 }
 
+.selectAllLink {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #475569;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  
+}
+.selectAllLink:hover {
+  color: var(--color-primary-dark, #0f766e);
+}
+
+.clearSelectionLink {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #475569;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.clearSelectionLink:hover {
+  color: #b91c1c;
+  text-decoration: none;
+}
+
 .confirmModalContent {
   display: flex;
   gap: 14px;
@@ -1603,6 +1636,15 @@ tr.clickable:hover {
 }
 
 .tableWrap tbody tr.studentTableRow.isSelected > td:first-child {
+  box-shadow: inset 2px 0 0 rgba(16, 185, 129, 0.55);
+}
+
+.student-table-section .idSelectCell.header.isSelectedHeader {
+  box-shadow: none;
+}
+
+.student-table-section .tableWrap thead th:first-child:has(.idSelectCell.header.isSelectedHeader),
+.sponsor-list-page .student-table-section .tableWrap thead th:first-child:has(.idSelectCell.header.isSelectedHeader) {
   box-shadow: inset 2px 0 0 rgba(16, 185, 129, 0.55);
 }
 
@@ -9046,6 +9088,7 @@ td {
 .student-table-section td:nth-child(8){
   /* text-align:center; */
 }
+
 
 .student-table-section th:nth-child(2),
 .student-table-section td:nth-child(2),

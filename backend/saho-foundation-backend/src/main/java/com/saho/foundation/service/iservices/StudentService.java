@@ -51,4 +51,16 @@ public interface StudentService {
     StudentResponseDto updateStudent(Integer studentId, StudentRequestDto requestDto);
 
     void deleteStudent(Integer studentId);
+
+    List<Integer> getAllStudentIds(
+            String search,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId
+    );
 }

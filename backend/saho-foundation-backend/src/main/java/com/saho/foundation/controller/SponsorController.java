@@ -91,6 +91,24 @@ getSponsorById(@PathVariable Integer sponsorId) {
         );
     }
 
+    @GetMapping("/ids")
+    public ResponseEntity<ApiResponseDto<List<Integer>>> getSponsorIds(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String nationality,
+            @RequestParam(required = false) String isActive
+    ) {
+        List<Integer> ids = sponsorService.getSponsorIds(search, type, nationality, isActive);
+
+        return ResponseEntity.ok(
+                new ApiResponseDto<>(
+                        true,
+                        "Sponsor IDs fetched successfully",
+                        ids
+                )
+        );
+    }
+
     @DeleteMapping("/{sponsorId}")
     public ResponseEntity<ApiResponseDto<String>> deleteSponsorById(
             @PathVariable Integer sponsorId,

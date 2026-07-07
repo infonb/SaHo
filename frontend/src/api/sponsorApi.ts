@@ -162,6 +162,15 @@ const normalizeNationalityFilter = (value?: string): string | undefined => {
   return trimmed;
 };
 
+const normalizeStatusFilter = (value?: string): string | undefined => {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  if (trimmed === 'true' || trimmed === 'false') return trimmed;
+  if (trimmed.toLowerCase().startsWith('act')) return 'true';
+  if (trimmed.toLowerCase().startsWith('inact')) return 'false';
+  return trimmed;
+};
+
 // ===============================
 // BACKEND -> FRONTEND MAPPING
 // ===============================
@@ -232,6 +241,10 @@ export const getSponsors = async (
     if (nationalityFilter) {
       params.append('nationality', nationalityFilter);
     }
+    const statusFilter = normalizeStatusFilter(filters?.is_active);
+    if (statusFilter) {
+      params.append('isActive', statusFilter);
+    }
     if (options?.sortColumn) {
       params.append('sortColumn', options.sortColumn);
     }
@@ -267,6 +280,20 @@ export const getSponsors = async (
 
     throw error;
   }
+};
+
+export const getSponsorIds = async (filters?: Partial<SponsorFilters>): Promise<number[]> => {
+  const params = new URLSearchParams();
+  if (filters?.search?.trim()) params.append('search', filters.search.trim());
+  const typeFilter = normalizeSponsorTypeFilter(filters?.type);
+  if (typeFilter) params.append('type', typeFilter);
+  const nationalityFilter = normalizeNationalityFilter(filters?.nationality);
+  if (nationalityFilter) params.append('nationality', nationalityFilter);
+  const statusFilter = normalizeStatusFilter(filters?.is_active);
+  if (statusFilter) params.append('isActive', statusFilter);
+
+  const response = await apiClient.get<ApiResponse<number[]>>('/sponsors/ids', { params });
+  return response.data?.data ?? [];
 };
 
 // ===============================

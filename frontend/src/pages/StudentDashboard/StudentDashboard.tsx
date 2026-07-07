@@ -265,7 +265,7 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* ─── D. My Profile + Sidebar (70/30) ─── */}
+      
       <div className="sdContentRow">
         <div className="sdContentMain">
           <div className="sdCard">
@@ -274,13 +274,13 @@ export default function StudentDashboard() {
               My Profile
             </div>
             <div className="sdCardBody">
-              <div className="sdProfileIdentity">
+              {/* <div className="sdProfileIdentity">
                 <StudentPhoto name={profile.full_name} src={profile.image_url} size="lg" />
                 <div className="sdProfileIdentityText">
                   <span className="sdFieldLabel">Student Profile</span>
                   <span className="sdFieldValue">{profile.full_name}</span>
                 </div>
-              </div>
+              </div> */}
               <div className="sdProfileGrid">
                 <div className="sdProfileField">
                   <span className="sdFieldLabel">Full Name</span>
