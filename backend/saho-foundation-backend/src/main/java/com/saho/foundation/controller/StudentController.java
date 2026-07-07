@@ -72,6 +72,21 @@ public class StudentController {
         return studentService.getAllStudents(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, sortColumn, sortDirection);
     }
 
+    @GetMapping("/ids")
+    public java.util.List<Integer> getAllStudentIds(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) String classId,
+            @RequestParam(required = false) String orphanStatus,
+            @RequestParam(required = false) String stId,
+            @RequestParam(required = false) String distId,
+            @RequestParam(required = false) String mndlId,
+            @RequestParam(required = false) String vilId,
+            @RequestParam(required = false) String schId
+    ) {
+        return studentService.getAllStudentIds(search, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId);
+    }
+
     @GetMapping("/me")
     public StudentProfileResponseDto getMyProfile(@RequestParam Integer userId) {
         return studentService.getStudentProfileByUserId(userId);

@@ -45,6 +45,42 @@ export interface StudentsResponse {
   hasMore: boolean;
 }
 
+export const getStudentIds = async (filters?: Partial<StudentFilters>): Promise<number[]> => {
+  const normalizeGenderValue = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed === 'Male') return '1';
+    if (trimmed === 'Female') return '2';
+    if (trimmed === 'Other') return '3';
+    return trimmed;
+  };
+
+  const genderValues = filters?.gender?.split(',').map(v => normalizeGenderValue(v)).filter(Boolean) ?? [];
+  const orphanValues = filters?.orphan_status?.split(',').map(v => v.trim()).filter(Boolean) ?? [];
+
+  if (genderValues.length > 1) {
+    const results = await Promise.all(genderValues.map(g => getStudentIds({ ...filters, gender: g })));
+    return [...new Set(results.flat())];
+  }
+
+  if (orphanValues.length > 1) {
+    const results = await Promise.all(orphanValues.map(o => getStudentIds({ ...filters, orphan_status: o })));
+    return [...new Set(results.flat())];
+  }
+
+  const params: any = {};
+  if (filters?.search?.trim()) params.search = filters.search.trim();
+  if (filters?.gender) params.gender = normalizeGenderValue(filters.gender);
+  if (filters?.class_id) params.classId = filters.class_id;
+  if (filters?.orphan_status) params.orphanStatus = filters.orphan_status;
+  if (filters?.st_id) params.stId = filters.st_id;
+  if (filters?.dist_id) params.distId = filters.dist_id;
+  if (filters?.mndl_id) params.mndlId = filters.mndl_id;
+  if (filters?.vil_id) params.vilId = filters.vil_id;
+  if (filters?.sch_id) params.schId = filters.sch_id;
+  const res = await apiClient.get('/students/ids', { params });
+  return res.data as number[];
+};
+
 export const getStudents = async ({
   pageNumber = 1,
   pageSize = 10,

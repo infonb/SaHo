@@ -349,6 +349,38 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Integer> getAllStudentIds(
+            String search,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId
+    ) {
+        return studentRepository.getAllStudentsWithPagination(
+                search,
+                1,
+                Integer.MAX_VALUE,
+                gender,
+                classId,
+                orphanStatus,
+                stId,
+                distId,
+                mndlId,
+                vilId,
+                schId,
+                "student_id",
+                "ASC"
+        ).stream()
+        .map(StudentListResponseDto::getStudentId)
+        .toList();
+    }
+
+    @Override
     @Transactional
     public void deleteStudent(Integer studentId) {
         Student existingStudent = studentRepository.findById(studentId)

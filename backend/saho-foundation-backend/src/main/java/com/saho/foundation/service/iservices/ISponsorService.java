@@ -4,6 +4,8 @@ import com.saho.foundation.dto.request.SponsorRequestDto;
 import com.saho.foundation.dto.response.SponsorListResponseDto;
 import com.saho.foundation.dto.response.SponsorResponseDto;
 
+import java.util.List;
+
 public interface ISponsorService {
 
     void createOrUpdateSponsor(SponsorRequestDto request);
@@ -16,6 +18,12 @@ public interface ISponsorService {
             String nationality,
             String sortColumn,
             String sortDirection
+    );
+    List<Integer> getSponsorIds(
+            String search,
+            String sponsorType,
+            String nationality,
+            String isActive
     );
     void deleteSponsorById(Integer sponsorId, Integer modifiedBy);
 

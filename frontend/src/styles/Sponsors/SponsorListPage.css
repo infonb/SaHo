@@ -485,3 +485,38 @@
 .btnGreen:hover .assignSponsorButtonIcon {
   filter: invert(28%) sepia(17%) saturate(1628%) hue-rotate(88deg) brightness(91%) contrast(88%);
 }
+
+.custom-range-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+
+.custom-range-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.custom-range-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text2, #475569);
+  white-space: nowrap;
+}
+
+.custom-range-input {
+  width: 70px;
+  box-sizing: border-box;
+}
+
+.custom-range-input:focus {
+  outline: none;
+}
+
+.custom-range-input::placeholder {
+  color: #94a3b8;
+}

@@ -3,6 +3,7 @@ package com.saho.foundation.service.impl;
 import com.saho.foundation.dto.request.SponsorRequestDto;
 import com.saho.foundation.dto.response.SponsorListResponseDto;
 import com.saho.foundation.dto.response.SponsorResponseDto;
+import com.saho.foundation.entity.Sponsor;
 import com.saho.foundation.repository.SponsorRepository;
 import com.saho.foundation.service.iservices.ISponsorService;
 
@@ -96,7 +97,7 @@ public class SponsorServiceImpl
 
         return entityManager.unwrap(Session.class).doReturningWork(connection -> {
             try (CallableStatement statement =
-                         connection.prepareCall("{ call public.getallsponsors_v2(?, ?, ?, ?, ?, ?, ?, ?) }")) {
+                        connection.prepareCall("{ call public.getallsponsors_v2(?, ?, ?, ?, ?, ?, ?, ?) }")) {
 
                 statement.setString(1, search == null || search.trim().isEmpty() ? null : search.trim());
                 statement.setInt(2, pageNumber != null ? pageNumber : 1);
@@ -134,6 +135,23 @@ public class SponsorServiceImpl
                 return response;
             }
         });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Integer> getSponsorIds(
+            String search,
+            String sponsorType,
+            String nationality,
+            String isActive) {
+        return sponsorRepository.findAll().stream()
+                .filter(sponsor -> sponsor.getIsDeleted() == null || !sponsor.getIsDeleted())
+                .filter(sponsor -> matchesSearch(sponsor, search))
+                .filter(sponsor -> matchesSponsorType(sponsor, sponsorType))
+                .filter(sponsor -> matchesNationality(sponsor, nationality))
+                .filter(sponsor -> matchesActiveStatus(sponsor, isActive))
+                .map(Sponsor::getSponsorId)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
@@ -182,6 +200,52 @@ public class SponsorServiceImpl
 );
 
         return response;
+    }
+
+    private boolean matchesSearch(com.saho.foundation.entity.Sponsor sponsor, String search) {
+        if (search == null || search.trim().isEmpty()) {
+            return true;
+        }
+        String needle = search.trim().toLowerCase();
+        return contains(sponsor.getSponsorName(), needle)
+                || contains(sponsor.getEmail(), needle)
+                || contains(sponsor.getPhoneNumber(), needle)
+                || contains(sponsor.getLocation(), needle)
+                || contains(sponsor.getContribution(), needle);
+    }
+
+    private boolean matchesSponsorType(com.saho.foundation.entity.Sponsor sponsor, String sponsorType) {
+        if (sponsorType == null || sponsorType.trim().isEmpty()) {
+            return true;
+        }
+        String normalized = normalizeSponsorTypeForUi(sponsor.getSponsorType());
+        return normalized.equalsIgnoreCase(normalizeSponsorTypeForUi(sponsorType));
+    }
+
+    private boolean matchesNationality(com.saho.foundation.entity.Sponsor sponsor, String nationality) {
+        if (nationality == null || nationality.trim().isEmpty()) {
+            return true;
+        }
+        String normalized = normalizeNationalityForUi(sponsor.getNationality());
+        return normalized.equalsIgnoreCase(normalizeNationalityForUi(nationality));
+    }
+
+    private boolean matchesActiveStatus(com.saho.foundation.entity.Sponsor sponsor, String isActive) {
+        if (isActive == null || isActive.trim().isEmpty()) {
+            return true;
+        }
+        boolean active = !Boolean.TRUE.equals(sponsor.getIsDeleted());
+        if ("true".equalsIgnoreCase(isActive) || "active".equalsIgnoreCase(isActive)) {
+            return active;
+        }
+        if ("false".equalsIgnoreCase(isActive) || "inactive".equalsIgnoreCase(isActive)) {
+            return !active;
+        }
+        return true;
+    }
+
+    private boolean contains(String value, String needle) {
+        return value != null && value.toLowerCase().contains(needle);
     }
 
     private String normalizeNationalityForDb(String nationality) {

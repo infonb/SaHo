@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSponsors } from '../../api/sponsorApi';
-import { getStudents } from '../../api/studentApi';
+import { getStudentIds, getStudents } from '../../api/studentApi';
 import { assignSponsor } from '../../api/studentSponsorApi';
 import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
@@ -63,6 +63,7 @@ export default function AssignSponsorPage() {
   const [sponsorSearch, setSponsorSearch] = useState('');
   const [sponsorType, setSponsorType] = useState('');
   const [checkedStudents, setCheckedStudents] = useState<number[]>([]);
+  const [globalSelection, setGlobalSelection] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [openFilter, setOpenFilter] = useState<string | null>(null);
@@ -179,7 +180,6 @@ export default function AssignSponsorPage() {
     { value: 'Individual', label: 'Individual' },
     { value: 'Organisation', label: 'Organisation' }
   ];
-
   const genderOptions: FilterOption[] = [
     { value: 'Male', label: 'Male' },
     { value: 'Female', label: 'Female' }
@@ -221,20 +221,40 @@ export default function AssignSponsorPage() {
   const showVillageFilter = csvValues(pending.mndl_id).length > 0;
   const showSchoolFilter = csvValues(pending.vil_id).length > 0;
 
+  const pageIds = pageStudents.map(s => s.student_id);
+  const allSelected = globalSelection || checkedStudents.length >= total;
+  const allPageChecked = allSelected || (pageIds.length > 0 && pageIds.every(id => checkedStudents.includes(id)));
+  const showSelectAllLink = allPageChecked && !allSelected;
+
   const toggleStudent = (id: number) => {
-    setCheckedStudents(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+    if (globalSelection) {
+      setGlobalSelection(false);
+      setCheckedStudents(prev => prev.filter(x => x !== id));
+    } else {
+      setCheckedStudents(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+    }
   };
 
-  const pageIds = pageStudents.map(s => s.student_id);
-  const allPageChecked = pageIds.length > 0 && pageIds.every(id => checkedStudents.includes(id));
-
   const togglePage = () => {
-    const pageIds = pageStudents.map(s => s.student_id);
-    const allChecked = pageIds.length > 0 && pageIds.every(id => checkedStudents.includes(id));
+    if (allSelected) {
+      setCheckedStudents([]);
+      setGlobalSelection(false);
+    } else if (allPageChecked) {
+      setCheckedStudents(ids => ids.filter(id => !pageIds.includes(id)));
+    } else {
+      setCheckedStudents(ids => [...new Set([...ids, ...pageIds])]);
+    }
+  };
 
-    setCheckedStudents(ids =>
-      allChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]
-    );
+  const selectAllMatchingStudents = async () => {
+    try {
+      const ids = await getStudentIds(applied);
+      setCheckedStudents(ids);
+      setGlobalSelection(true);
+      toast(`All ${ids.length} students matching this search are selected.`, "success");
+    } catch {
+      toast("Failed to select all students.", "error");
+    }
   };
 
   const selectedStudentsPreview = useMemo(() => {
@@ -325,6 +345,7 @@ export default function AssignSponsorPage() {
       toast('Sponsor assigned successfully.', 'success');
       setConfirmOpen(false);
       setCheckedStudents([]);
+      setGlobalSelection(false);
       setSelectedSponsor(null);
       loadSponsors();
       loadStudents(page, pageSize);
@@ -339,7 +360,7 @@ export default function AssignSponsorPage() {
         title="Assign Sponsor to Students"
         actions={<Button variant="outline" className="clearbtn" onClick={() => nav(-1)}>  <HiOutlineArrowLeft size={15} style={{ marginRight: "6px" }} />Back</Button>}
       />
-
+      
       <div className="assignGrid">
         <div className="assignStack">
           <div className="student-table-section sponsorRecordsPanel sponsorTableSection">
@@ -599,13 +620,30 @@ export default function AssignSponsorPage() {
               </div>
             </div>
 
-            <div className={`bulkToolbarShell ${checkedStudents.length > 0 ? 'isActive' : ''}`} aria-hidden={checkedStudents.length === 0}>
+            <div className={`bulkToolbarShell ${checkedStudents.length > 0 || globalSelection ? 'isActive' : ''}`} aria-hidden={checkedStudents.length === 0 && !globalSelection}>
               <div className="selectHeaderRow studentBulkToolbar">
                 <div className="bulkToolbarInfo">
-                  <span className="bulkSelectAllText">Select all on this page</span>
-                  <span className="selected-count">
-                    Selected {checkedStudents.length} of {total}
-                  </span>
+                  {allSelected ? (
+                    <>
+                      <span className="selected-count">
+                        All {total} students matching this search are selected.
+                      </span>
+                      <button className="clearSelectionLink" onClick={() => { setCheckedStudents([]); setGlobalSelection(false); }}>
+                        Clear selection
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="selected-count">
+                        Selected {checkedStudents.length} of {total}
+                      </span>
+                      {showSelectAllLink ? (
+                        <button className="selectAllLink" onClick={selectAllMatchingStudents}>
+                          Select all {total} students matching this search
+                        </button>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -613,7 +651,7 @@ export default function AssignSponsorPage() {
             <DataTable
               loading={loading}
               columns={[
-                { key: 'id', label: <div className="idSelectCell header"><input type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span>ID</span></div>, width: '92px' },
+                { key: 'id', label: <div className={`idSelectCell header${allPageChecked ? ' isSelectedHeader' : ''}`}><input type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span>ID</span></div>, width: '92px' },
                 { key: 's', label: 'Student', width: '260px' },
                 { key: 'class', label: 'Class', width: '88px' },
                 { key: 'sch', label: 'School',  width: '235px' },
@@ -745,8 +783,10 @@ export default function AssignSponsorPage() {
   confirmLabel="Yes, Assign"
   danger={false}
   cancelDanger={true}
-  message={`Assign ${checkedStudents.length} students to ${selectedSponsor?.sponsorName}?`}
+   message={`Assign ${allSelected ? total : checkedStudents.length} students to ${selectedSponsor?.sponsorName}?`}
 />
     </div>
   );
 }
+
+

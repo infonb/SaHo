@@ -204,6 +204,9 @@ export interface SponsorFilters {
   type: string;
   nationality: string;
   is_active: string;
+  studentCount: string;
+  studentCountMin: string;
+  studentCountMax: string;
 }
 export interface VolunteerFilters {
   search: string;
