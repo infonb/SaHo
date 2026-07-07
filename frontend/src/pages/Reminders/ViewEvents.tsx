@@ -42,6 +42,7 @@ const limitText = (value: string | null | undefined, maxLength: number) => {
 
 const EVENT_CARD_TITLE_LIMIT = 30;
 const EVENT_CARD_LOCATION_LIMIT = 25;
+const EVENT_CARD_WINDOW_SIZE = 5;
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const CALENDAR_STATUS_LEGEND: { status: EventStatus; label: string }[] = [
   { status: 'upcoming', label: 'Upcoming' },
@@ -301,6 +302,7 @@ export default function ViewEvents() {
   const [error, setError] = useState<string | null>(null);
   const [reminders, setReminders] = useState<ReminderDto[]>([]);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
+  const [cardStartIndex, setCardStartIndex] = useState(0);
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const today = new Date();
@@ -531,6 +533,38 @@ export default function ViewEvents() {
   })), [reminders]);
   const filteredEvents = useMemo(() => events, [events]);
   const pager = usePagination(filteredEvents, 5);
+  const dateSortedCardEvents = useMemo(() => (
+    [...filteredEvents].sort((first, second) => {
+      const firstTime = new Date(first.date).getTime();
+      const secondTime = new Date(second.date).getTime();
+
+      if (Number.isNaN(firstTime) && Number.isNaN(secondTime)) return first.id - second.id;
+      if (Number.isNaN(firstTime)) return 1;
+      if (Number.isNaN(secondTime)) return -1;
+      return firstTime - secondTime || first.id - second.id;
+    })
+  ), [filteredEvents]);
+  const cardEvents = useMemo(() => {
+    if (!dateSortedCardEvents.length) return [];
+
+    const visibleCount = Math.min(EVENT_CARD_WINDOW_SIZE, dateSortedCardEvents.length);
+    return Array.from(
+      { length: visibleCount },
+      (_, index) => dateSortedCardEvents[(cardStartIndex + index) % dateSortedCardEvents.length],
+    );
+  }, [dateSortedCardEvents, cardStartIndex]);
+  const canRotateCards = dateSortedCardEvents.length > EVENT_CARD_WINDOW_SIZE;
+
+  useEffect(() => {
+    setCardStartIndex(0);
+  }, [dateSortedCardEvents]);
+
+  const rotateCards = (direction: -1 | 1) => {
+    if (!dateSortedCardEvents.length) return;
+    setCardStartIndex((current) => (
+      current + direction + dateSortedCardEvents.length
+    ) % dateSortedCardEvents.length);
+  };
 
   const handleFilterChange = (key: keyof EventFilters, value: string) => {
     setPending(f => {
@@ -981,20 +1015,40 @@ export default function ViewEvents() {
         {viewMode === 'cards' ? (
           <div className="eventCardsOuter">
             {loading ? (
-              <div className="sponsorCardGrid">
-                {[0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>)}
+              <div className="eventCardCarousel">
+                <button className="pageNav eventCardNav" type="button" disabled aria-label="Previous card">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                <div className="sponsorCardGrid">
+                  {[0, 1, 2, 3, 4].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>)}
+                </div>
+                <button className="pageNav eventCardNav" type="button" disabled aria-label="Next card">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
               </div>
             ) : events.length === 0 ? (
-              <>
-                <div className="empty">
-                  <p>No records found.</p>
-                </div>
-                <Pagination total={events.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
-              </>
+              <div className="empty">
+                <p>No records found.</p>
+              </div>
             ) : (
-              <>
+              <div className="eventCardCarousel">
+                <button
+                  className="pageNav eventCardNav"
+                  type="button"
+                  onClick={() => rotateCards(-1)}
+                  disabled={!canRotateCards}
+                  aria-label="Previous card"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
                 <div className="sponsorCardGrid">
-                  {pager.current.map(event => (
+                  {cardEvents.map(event => (
                     <article key={event.id} className="sponsorCard reminderRecordCard" onClick={() => handleView(event.id)} role="button" tabIndex={0} onKeyDown={(keyEvent) => { if (keyEvent.key === 'Enter' || keyEvent.key === ' ') { keyEvent.preventDefault(); handleView(event.id); } }}>
                       <div className="sponsorCardTop">
                         <div className="eventDateBadge">
@@ -1023,8 +1077,18 @@ export default function ViewEvents() {
                     </article>
                   ))}
                 </div>
-                <Pagination total={events.length} page={pager.page} pageSize={pager.pageSize} onChange={pager.setPage} onPageSizeChange={pager.setPageSize} />
-              </>
+                <button
+                  className="pageNav eventCardNav"
+                  type="button"
+                  onClick={() => rotateCards(1)}
+                  disabled={!canRotateCards}
+                  aria-label="Next card"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
             )}
           </div>
         ) : (
@@ -1058,220 +1122,6 @@ export default function ViewEvents() {
         )}
         </div>
       </div>
-
-      {false && <style>{`
-        .filters-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-        }
-
-        .clear-filters-btn {
-          background: none;
-          border: none;
-          color: var(--color-primary);
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          padding: 4px 8px;
-        }
-
-        .clear-filters-btn:hover {
-          text-decoration: underline;
-        }
-
-        .filters-grid {
-          display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: 16px;
-        }
-
-        .filter-group {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .filter-label {
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--color-text2);
-        }
-
-        .filter-select {
-          padding: 8px 12px;
-          border: 1px solid var(--color-border);
-          border-radius: var(--r-md);
-          font-size: 14px;
-          color: var(--color-text);
-          background: var(--color-surface);
-          cursor: pointer;
-        }
-
-        .filter-select:focus {
-          outline: none;
-          border-color: var(--color-primary);
-        }
-
-        .filter-select:disabled {
-          background: var(--br-50);
-          color: var(--color-muted);
-          cursor: not-allowed;
-        }
-
-        .table-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-        }
-
-        .event-count {
-          font-size: 13px;
-          color: var(--color-text3);
-        }
-
-        .table-wrapper {
-          overflow-x: auto;
-        }
-
-        .data-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        .data-table th,
-        .data-table td {
-          padding: 12px 16px;
-          text-align: left;
-          border-bottom: 1px solid var(--color-border);
-        }
-
-        .data-table th {
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-text3);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          background: var(--br-50);
-        }
-
-        .data-table tr:hover {
-          background: var(--br-50);
-        }
-
-        .event-title {
-          font-weight: 500;
-          color: var(--color-text);
-        }
-
-        .location-cell {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .location-detail {
-          font-size: 12px;
-          color: var(--color-text3);
-        }
-
-        .status-badge {
-          display: inline-block;
-          padding: 4px 10px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .status-upcoming {
-          background: var(--blue-bg);
-          color: #475569;
-        }
-
-        .status-ongoing {
-          background: var(--amber-bg);
-          color: #475569;
-        }
-
-        .status-completed {
-          background: var(--green-bg);
-          color: #475569;
-        }
-
-        .status-cancelled {
-          background: var(--red-bg);
-          color: #475569;
-        }
-
-        .action-buttons {
-          display: flex;
-          gap: 8px;
-        }
-
-        .action-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 32px;
-          border: none;
-          border-radius: var(--r-sm);
-          cursor: pointer;
-          transition: background 0.15s;
-        }
-
-        .action-btn.edit {
-          background: var(--blue-bg);
-          color: var(--blue);
-        }
-
-        .action-btn.edit:hover {
-          background: var(--blue-border);
-        }
-
-        .action-btn.delete {
-          background: var(--red-bg);
-          color: var(--red);
-        }
-
-        .action-btn.delete:hover {
-          background: var(--red-border);
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: 40px 20px;
-          color: var(--color-text3);
-        }
-
-        .empty-state p {
-          margin-bottom: 16px;
-        }
-
-        .table-loading {
-          padding: 20px 0;
-        }
-
-        @media (max-width: 1024px) {
-          .filters-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-
-        @media (max-width: 768px) {
-          .filters-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        @media (max-width: 480px) {
-          .filters-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>}
 
       <ConfirmModal
         open={deleteTarget !== null}
