@@ -23,7 +23,20 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   if (config.data instanceof FormData) {
-    delete config.headers['Content-Type'];
+    config.headers = {
+      ...(config.headers || {}),
+    } as any;
+
+    const headers: any = config.headers;
+    if (typeof headers?.delete === 'function') {
+      headers.delete('Content-Type');
+      headers.delete('content-type');
+    }
+    delete headers['Content-Type'];
+    delete headers['content-type'];
+    if (typeof headers?.setContentType === 'function') {
+      headers.setContentType(undefined);
+    }
   }
 
   const token = localStorage.getItem('saho_token');

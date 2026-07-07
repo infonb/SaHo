@@ -989,14 +989,16 @@ export default function EventFormPage({
         vilIdsCsv: form.vilIdsCsv || null,
         schIdsCsv: form.schIdsCsv || null,
         classIdsCsv: form.classIdsCsv || null,
+        imageUrl: selectedBannerFile ? undefined : form.bannerImage || null,
+        bannerImage: selectedBannerFile ? undefined : form.bannerImage || null,
         updatedBy: user?.user_id || 1,
       };
 
       if (editingRemId) {
-        await updateReminder(editingRemId, payload as any);
+        await updateReminder(editingRemId, payload as any, selectedBannerFile ?? undefined);
         toast('Event updated successfully.', 'success');
       } else {
-        await createReminder(payload as any);
+        await createReminder(payload as any, selectedBannerFile ?? undefined);
         toast('Event created successfully.', 'success');
       }
       navigate('/reminders');
@@ -1069,7 +1071,7 @@ export default function EventFormPage({
           </div>
           <div className="studentProfileViewBanner">
             <div className="studentProfileViewAvatar" aria-hidden="true">
-              {eventInitials}
+              {form.bannerImage ? <img src={form.bannerImage} alt="" /> : eventInitials}
             </div>
             <div className="studentProfileViewBannerText">
               <div className="studentProfileViewBannerName">{form.title || '-'}</div>

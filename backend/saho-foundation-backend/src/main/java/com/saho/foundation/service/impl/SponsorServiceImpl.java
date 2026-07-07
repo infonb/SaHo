@@ -58,6 +58,19 @@ public class SponsorServiceImpl
                 statement.execute();
             }
         });
+
+        Integer sponsorId = request.getSponsorId();
+        boolean hasExistingSponsorId = sponsorId != null && sponsorId > 0;
+        boolean hasNewImageUrl = request.getImageUrl() != null && !request.getImageUrl().isBlank();
+        if (hasExistingSponsorId || hasNewImageUrl) {
+            if (!hasExistingSponsorId) {
+                Sponsor createdSponsor = sponsorRepository.findTopByEmailOrderBySponsorIdDesc(request.getEmail());
+                sponsorId = createdSponsor != null ? createdSponsor.getSponsorId() : null;
+            }
+            if (sponsorId != null && sponsorId > 0) {
+                sponsorRepository.updateImageUrl(sponsorId, request.getImageUrl());
+            }
+        }
     }
 
     @Override
@@ -196,10 +209,19 @@ public class SponsorServiceImpl
         response.setLoc(resultSet.getString("loc"));
        
         response.setContrib(resultSet.getString("contrib"));
-        response.setStudentsCount(resultSet.getInt("students_count")
-);
+        response.setImageUrl(getOptionalColumn(resultSet, "image_url"));
+        response.setStudentsCount(resultSet.getInt("students_count"));
 
         return response;
+    }
+
+    private String getOptionalColumn(ResultSet resultSet, String columnName) {
+        try {
+            resultSet.findColumn(columnName);
+            return resultSet.getString(columnName);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     private boolean matchesSearch(com.saho.foundation.entity.Sponsor sponsor, String search) {

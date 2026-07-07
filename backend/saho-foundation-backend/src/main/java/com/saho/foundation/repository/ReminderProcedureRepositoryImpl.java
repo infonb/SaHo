@@ -141,7 +141,19 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
                 cs.setInt(12, requestDto.getUpdatedBy() != null ? requestDto.getUpdatedBy() : 1);
 
                 cs.execute();
-                return cs.getInt(1);
+                Integer savedRemId = cs.getInt(1);
+                boolean hasExistingReminderId = requestDto.getRemId() != null && requestDto.getRemId() > 0;
+                String reminderImage = firstNonBlank(requestDto.getImageUrl(), requestDto.getBannerImage());
+                boolean hasBannerImage = reminderImage != null && !reminderImage.isBlank();
+                if (savedRemId != null && savedRemId > 0 && (hasExistingReminderId || hasBannerImage)) {
+                    try (PreparedStatement ps = con.prepareStatement(
+                            "UPDATE reminders SET image_url = ? WHERE rem_id = ?")) {
+                        ps.setString(1, reminderImage);
+                        ps.setInt(2, savedRemId);
+                        ps.executeUpdate();
+                    }
+                }
+                return savedRemId;
             }
         });
     }
@@ -192,6 +204,14 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
                 .createdBy((Integer) getOptionalObject(rs, "created_by"))
                 .createdAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
                 .updatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
+                .imageUrl(firstNonBlank(
+                        getOptionalColumn(rs, "image_url"),
+                        getOptionalColumn(rs, "banner_image")
+                ))
+                .bannerImage(firstNonBlank(
+                        getOptionalColumn(rs, "image_url"),
+                        getOptionalColumn(rs, "banner_image")
+                ))
                 .totalCount(rs.getObject("total_count") != null ? rs.getInt("total_count") : null)
                 .build();
     }
@@ -203,7 +223,9 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
             SELECT r.rem_id, r.title, r.description, r.event_date, r.venue,
                    r.st_id_csv, r.dist_ids_csv, r.mndl_ids_csv, r.vil_ids_csv,
                    r.sch_ids_csv, r.class_ids_csv, r.status, r.created_by,
-                   r.created_at, r.updated_at, 0 AS total_count
+                   r.created_at, r.updated_at,
+                   COALESCE(r.image_url, r.banner_image) AS image_url,
+                   0 AS total_count
             FROM student_reminders sr
             JOIN reminders r ON sr.rem_id = r.rem_id
             WHERE sr.std_id = ?
@@ -230,5 +252,15 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    private String firstNonBlank(String first, String second) {
+        if (first != null && !first.isBlank()) {
+            return first;
+        }
+        if (second != null && !second.isBlank()) {
+            return second;
+        }
+        return null;
     }
 }

@@ -167,6 +167,8 @@ export default function SponsorFormPage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null);
+  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | Blob | null>(null);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [cropUrl, setCropUrl] = useState<string | null>(null);
   const [cropScale, setCropScale] = useState(1);
@@ -337,6 +339,7 @@ export default function SponsorFormPage() {
     }
 
     setUploadError(null);
+    setSelectedImageFile(file);
     if (form.image_url?.startsWith('blob:')) {
       try {
         URL.revokeObjectURL(form.image_url);
@@ -355,6 +358,7 @@ export default function SponsorFormPage() {
       URL.revokeObjectURL(capturedUrl);
       setCapturedUrl(null);
     }
+    setCapturedBlob(null);
     setUploadError(null);
     setCameraError(null);
     setCameraOpen(true);
@@ -366,14 +370,17 @@ export default function SponsorFormPage() {
       URL.revokeObjectURL(capturedUrl);
       setCapturedUrl(null);
     }
+    setCapturedBlob(null);
     setCameraOpen(false);
   };
 
   const useCapturedPhoto = () => {
     if (isView || !capturedUrl) return;
     setUploadError(null);
+    if (capturedBlob) setSelectedImageFile(capturedBlob);
     setField('image_url', capturedUrl);
     setCapturedUrl(null);
+    setCapturedBlob(null);
     setCameraOpen(false);
   };
 
@@ -383,6 +390,7 @@ export default function SponsorFormPage() {
       URL.revokeObjectURL(capturedUrl);
       setCapturedUrl(null);
     }
+    setCapturedBlob(null);
     setUploadError(null);
     setCameraError(null);
   };
@@ -398,6 +406,7 @@ export default function SponsorFormPage() {
       }
     }
     setField('image_url', '');
+    setSelectedImageFile(null);
   };
 
   const openCrop = () => {
@@ -474,6 +483,7 @@ export default function SponsorFormPage() {
             // ignore
           }
         }
+        setSelectedImageFile(blob);
         setField('image_url', URL.createObjectURL(blob));
         closeCrop();
       }, 'image/jpeg', 0.88);
@@ -518,6 +528,7 @@ export default function SponsorFormPage() {
 
     stopCamera();
     if (capturedUrl) URL.revokeObjectURL(capturedUrl);
+    setCapturedBlob(blob);
     setCapturedUrl(URL.createObjectURL(blob));
   };
 
@@ -555,12 +566,12 @@ export default function SponsorFormPage() {
         await updateSponsor(Number(id), {
           ...payload,
           modified_by: user?.user_id ?? 1,
-        });
+        }, selectedImageFile ?? undefined);
       } else {
         await createSponsor({
           ...payload,
           created_by: user?.user_id ?? 1,
-        });
+        }, selectedImageFile ?? undefined);
       }
 
       toast(isEdit ? 'Sponsor updated.' : 'Sponsor added.', 'success');

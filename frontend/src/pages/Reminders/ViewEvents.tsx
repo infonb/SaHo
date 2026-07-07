@@ -10,6 +10,7 @@ import { cancelReminder, getReminders, type ReminderDto } from '../../api/remind
 import { usePagination } from '../../hooks/usePagination';
 import { useToast } from '../../hooks/useToast';
 import EventDetailModal from './EventDetailModal';
+import { resolveImageUrl } from '../../utils/imageUrl';
 import { MdEventAvailable , MdEventBusy } from 'react-icons/md';
 import { FiArrowRight, FiCalendar, FiPlus,FiEdit2, FiTrash2  } from 'react-icons/fi';
 import { BsPlayCircle } from "react-icons/bs";
@@ -119,6 +120,8 @@ interface EventData {
   village: string;
   school: string;
   status: EventStatus;
+  imageUrl?: string | null;
+  bannerImage?: string | null;
 }
 
 const inferStatus = (eventDate: string): EventStatus => {
@@ -530,6 +533,8 @@ export default function ViewEvents() {
     village: r.vilIdsCsv ?? '',
     school: r.schIdsCsv ?? '',
     status: r.status === false ? 'cancelled' : inferStatus(r.eventDate),
+    imageUrl: r.imageUrl ?? r.bannerImage ?? null,
+    bannerImage: r.bannerImage ?? r.imageUrl ?? null,
   })), [reminders]);
   const filteredEvents = useMemo(() => events, [events]);
   const pager = usePagination(filteredEvents, 5);
@@ -1048,11 +1053,16 @@ export default function ViewEvents() {
                   </svg>
                 </button>
                 <div className="sponsorCardGrid">
-                  {cardEvents.map(event => (
-                    <article key={event.id} className="sponsorCard reminderRecordCard" onClick={() => handleView(event.id)} role="button" tabIndex={0} onKeyDown={(keyEvent) => { if (keyEvent.key === 'Enter' || keyEvent.key === ' ') { keyEvent.preventDefault(); handleView(event.id); } }}>
-                      <div className="sponsorCardTop">
-                        <div className="eventDateBadge">
-                          <strong>{new Date(event.date).getDate()}</strong>
+                    {cardEvents.map(event => (
+                      <article key={event.id} className="sponsorCard reminderRecordCard" onClick={() => handleView(event.id)} role="button" tabIndex={0} onKeyDown={(keyEvent) => { if (keyEvent.key === 'Enter' || keyEvent.key === ' ') { keyEvent.preventDefault(); handleView(event.id); } }}>
+                        {resolveImageUrl(event.imageUrl ?? event.bannerImage) ? (
+                          <div className="reminderCardImageWrap" aria-hidden="true">
+                            <img src={resolveImageUrl(event.imageUrl ?? event.bannerImage) ?? ''} alt="" />
+                          </div>
+                        ) : null}
+                        <div className="sponsorCardTop">
+                          <div className="eventDateBadge">
+                            <strong>{new Date(event.date).getDate()}</strong>
                           <span>{new Date(event.date).toLocaleString('en-US', { month: 'short' })}</span>
                         </div>
                         <div className="sponsorCardIdentity">

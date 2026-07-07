@@ -57,6 +57,9 @@ public class Reminder {
     @Column(name = "class_ids_csv")
     private String classIdsCsv;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Builder.Default
     @Column(name = "status")
     private Boolean status = true;

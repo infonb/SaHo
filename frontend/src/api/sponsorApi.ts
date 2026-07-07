@@ -1,62 +1,5 @@
-import axios from 'axios';
-import type { Sponsor, SponsorFilters, SponsorView } from '../types';
-
-// ===============================
-// API BASE URL
-// ===============================
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  '/api';
-
-// ===============================
-// AXIOS INSTANCE
-// ===============================
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// ===============================
-// REQUEST INTERCEPTOR (MIDDLEWARE)
-// ===============================
-
-apiClient.interceptors.request.use(
-  (config) => {
-
-    const token = localStorage.getItem('saho_token');
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// ===============================
-// RESPONSE INTERCEPTOR
-// ===============================
-
-apiClient.interceptors.response.use(
-  (response) => response,
-
-  (error) => {
-
-    if (error.response?.status === 401) {
-
-      localStorage.removeItem('saho_token');
-
-      window.location.href = '/login';
-    }
-
-    return Promise.reject(error);
-  }
-);
+import { apiClient } from './client';
+import type { SponsorFilters, SponsorView } from '../types';
 
 // ===============================
 // CURRENT USER
@@ -113,6 +56,7 @@ interface BackendSponsorRequest {
   nationality: string;
   contrib: string;
   loc?: string | null;
+  imageUrl?: string | null;
   createdBy?: number;
   modifiedBy?: number | null;
 }
@@ -136,8 +80,35 @@ const mapFrontendToBackend = (
     nationality: payload.nationality,
     contrib: String(payload.contrib),
     loc: payload.loc || null,
+    imageUrl: payload.image_url || null,
     createdBy: userId,
   };
+};
+
+const sendSponsorForm = async (
+  url: string,
+  method: 'post' | 'put',
+  backendPayload: BackendSponsorRequest,
+  imageFile?: File | Blob
+) => {
+  if (imageFile) {
+    const formData = new FormData();
+    formData.append('request', JSON.stringify(backendPayload));
+    formData.append('image', imageFile);
+    const response = await apiClient.request({
+      url,
+      method,
+      data: formData,
+    });
+    return response.data;
+  }
+
+  const response = await apiClient.request({
+    url,
+    method,
+    data: backendPayload,
+  });
+  return response.data;
 };
 
 const normalizeSponsorTypeFilter = (value?: string): string | undefined => {
@@ -340,7 +311,8 @@ export const getSponsorById = async (
 // ===============================
 
 export const createSponsor = async (
-  payload: CreateSponsorPayload
+  payload: CreateSponsorPayload,
+  imageFile?: File | Blob
 ): Promise<void> => {
 
   try {
@@ -355,22 +327,16 @@ export const createSponsor = async (
       backendPayload
     );
 
-    const response = await apiClient.post<ApiResponse<any>>(
-      '/sponsors',
-      backendPayload
-    );
+    const response = await sendSponsorForm('/sponsors', 'post', backendPayload, imageFile);
 
-    console.log(
-      'Create Sponsor Response:',
-      response.data
-    );
+    console.log('Create Sponsor Response:', response);
 
-    if (response.data?.success) {
+    if (response?.success) {
       return;
     }
 
     throw new Error(
-      response.data?.message ||
+      response?.message ||
       'Failed to create sponsor'
     );
 
@@ -390,7 +356,8 @@ export const createSponsor = async (
 
 export const updateSponsor = async (
   id: number,
-  payload: Partial<SponsorView>
+  payload: Partial<SponsorView>,
+  imageFile?: File | Blob
 ) => {
 
   try {
@@ -403,40 +370,39 @@ export const updateSponsor = async (
 
       sponsorId: id,
 
-      sponsorName: payload.sponsorName,
+      sponsorName: payload.sponsorName ?? '',
 
-      email: payload.email,
+      email: payload.email ?? '',
 
-      dob: payload.dob,
+      dob: payload.dob ?? '',
 
-      phNo: payload.ph_no,
+      phNo: payload.ph_no ?? '',
 
       sponsorType,
 
-      nationality: payload.nationality,
+      nationality: payload.nationality ?? '',
 
-      contrib: payload.contrib,
+      contrib: payload.contrib ?? '',
 
-      loc: payload.loc,
+      loc: payload.loc ?? null,
+
+      imageUrl: (payload as any).image_url ?? (payload as any).imageUrl ?? null,
 
       modifiedBy: currentUserId
     };
 
     console.log('Update Sponsor Payload:', backendPayload);
 
-    const response = await apiClient.post(
-      '/sponsors',
-      backendPayload
-    );
+    const response = await sendSponsorForm(`/sponsors/${id}`, 'put', backendPayload, imageFile);
 
-    console.log('Update Sponsor Response:', response.data);
+    console.log('Update Sponsor Response:', response);
 
-    if (response.data?.success) {
+    if (response?.success) {
       return;
     }
 
     throw new Error(
-      response.data?.message ||
+      response?.message ||
       'Failed to update sponsor'
     );
 

@@ -16,6 +16,8 @@ export interface ReminderDto {
   createdBy?: number | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  imageUrl?: string | null;
+  bannerImage?: string | null;
   totalCount?: number | null;
 }
 
@@ -30,6 +32,8 @@ export interface ReminderCreatePayload {
   vilIdsCsv?: string | null;
   schIdsCsv?: string | null;
   classIdsCsv?: string | null;
+  imageUrl?: string | null;
+  bannerImage?: string | null;
   updatedBy: number;
 }
 
@@ -61,6 +65,8 @@ const normalizeReminder = (r: any): ReminderDto => ({
   createdBy: r?.createdBy ?? r?.created_by ?? null,
   createdAt: r?.createdAt ?? r?.created_at ?? null,
   updatedAt: r?.updatedAt ?? r?.updated_at ?? null,
+  imageUrl: r?.imageUrl ?? r?.image_url ?? r?.bannerImage ?? r?.banner_image ?? null,
+  bannerImage: r?.bannerImage ?? r?.banner_image ?? r?.imageUrl ?? r?.image_url ?? null,
   totalCount: r?.totalCount ?? r?.total_count ?? null,
 });
 
@@ -89,14 +95,24 @@ export const getReminderById = async (remId: number): Promise<ReminderDto | unde
   return res.data ? normalizeReminder(res.data) : undefined;
 };
 
-export const createReminder = async (payload: ReminderCreatePayload): Promise<number> => {
-  const res = await apiClient.post('/reminders', payload);
+const sendReminderForm = async (url: string, method: 'post' | 'put', payload: ReminderCreatePayload, imageFile?: File | Blob) => {
+  if (imageFile) {
+    const formData = new FormData();
+    formData.append('request', JSON.stringify(payload));
+    formData.append('image', imageFile);
+    const res = await apiClient.request({ url, method, data: formData });
+    return Number(res.data);
+  }
+  const res = await apiClient.request({ url, method, data: payload });
   return Number(res.data);
 };
 
-export const updateReminder = async (remId: number, payload: ReminderCreatePayload): Promise<number> => {
-  const res = await apiClient.put(`/reminders/${remId}`, payload);
-  return Number(res.data);
+export const createReminder = async (payload: ReminderCreatePayload, imageFile?: File | Blob): Promise<number> => {
+  return sendReminderForm('/reminders', 'post', payload, imageFile);
+};
+
+export const updateReminder = async (remId: number, payload: ReminderCreatePayload, imageFile?: File | Blob): Promise<number> => {
+  return sendReminderForm(`/reminders/${remId}`, 'put', payload, imageFile);
 };
 
 export const deleteReminder = async (remId: number): Promise<void> => {
