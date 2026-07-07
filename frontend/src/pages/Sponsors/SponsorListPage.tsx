@@ -134,18 +134,47 @@ export default function SponsorListPage() {
   const activeSponsors = filteredItems.filter(s => s.is_active).length;
   const pendingSponsors = filteredItems.filter(s => !s.is_active).length;
   const pageIds = pager.current.map(s => s.sponsor_id);
-  const hasSelection = checked.length > 0;
-  const selectedSponsors = useMemo(() => items.filter(s => checked.includes(s.sponsor_id)), [checked, items]);
-  const allPageChecked = pageIds.length > 0 && pageIds.every(id => checked.includes(id));
-  const toggle = (id: number) => setChecked(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
-  const togglePage = () => setChecked(ids => allPageChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]);
-  const confirmBulkDelete = async () => { await deactivateSponsors(checked); setBulkOpen(false); toast(`${checked.length} sponsors removed.`, 'success'); load(); };
-
-  const rotateCards = (direction: -1 | 1) => {
-    if (!sortedItems.length) return;
-    setCardStartIndex((current) => (
-      current + direction + sortedItems.length
-    ) % sortedItems.length);
+  const allSelected = globalSelection || checked.length >= totalSponsors;
+  const hasSelection = globalSelection || checked.length > 0;
+  const allPageChecked = allSelected || (pageIds.length > 0 && pageIds.every(id => checked.includes(id)));
+  const showSelectAllLink = allPageChecked && !allSelected;
+  const selectedSponsors = useMemo(() => filteredItems.filter(s => checked.includes(s.sponsor_id)), [checked, filteredItems]);
+  const toggle = (id: number) => {
+    if (globalSelection) {
+      setGlobalSelection(false);
+      const allIds = filteredItems.map(s => s.sponsor_id);
+      setChecked(allIds.filter(x => x !== id));
+      return;
+    }
+    setChecked(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
+  };
+  const togglePage = () => {
+    if (globalSelection) {
+      setChecked([]);
+      setGlobalSelection(false);
+    } else if (allPageChecked) {
+      setChecked(ids => ids.filter(id => !pageIds.includes(id)));
+    } else {
+      setChecked(ids => [...new Set([...ids, ...pageIds])]);
+    }
+  };
+  const selectAllMatchingSponsors = async () => {
+    const ids = filteredItems.map(s => s.sponsor_id);
+    setChecked(ids);
+    setGlobalSelection(true);
+    toast(`All ${ids.length} sponsors matching this search are selected.`, 'success');
+  };
+  const confirmBulkDelete = async () => {
+    let ids = checked;
+    if (globalSelection && ids.length === 0) {
+      ids = filteredItems.map(s => s.sponsor_id);
+    }
+    await deactivateSponsors(ids);
+    setChecked([]);
+    setGlobalSelection(false);
+    setBulkOpen(false);
+    toast(`${ids.length} sponsors removed.`, 'success');
+    load();
   };
 
   const handleSort = (column: string) => {
@@ -479,9 +508,42 @@ export default function SponsorListPage() {
         )}
 
         {viewMode === 'cards' ? (
-          <>
-            <div className="sponsorCardGrid">
-              {loading ? [0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>) : sortedItems.slice((pager.page - 1) * pager.pageSize, pager.page * pager.pageSize).map(s => {
+          <div className="eventCardsOuter sponsorCardsOuter">
+            {loading ? (
+              <div className="eventCardCarousel">
+                <button className="pageNav eventCardNav" type="button" disabled aria-label="Previous card">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                <div className="sponsorCardGrid">
+                  {[0, 1, 2, 3, 4].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>)}
+                </div>
+                <button className="pageNav eventCardNav" type="button" disabled aria-label="Next card">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            ) : sortedItems.length === 0 ? (
+              <div className="empty">
+                <p>No records found.</p>
+              </div>
+            ) : (
+              <div className="eventCardCarousel">
+                <button
+                  className="pageNav eventCardNav"
+                  type="button"
+                  onClick={() => rotateCards(-1)}
+                  disabled={!canRotateCards}
+                  aria-label="Previous card"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                <div className="sponsorCardGrid">
+              {cardSponsors.map(s => {
                 const sponsoredCount = Number(s.students_count) || 0;
                 return (
                   <article key={s.sponsor_id} className="sponsorCard reminderRecordCard sponsorRecordCard">
