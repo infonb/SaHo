@@ -177,6 +177,13 @@ export default function SponsorListPage() {
     load();
   };
 
+  const rotateCards = (direction: -1 | 1) => {
+    if (!sortedItems.length) return;
+    setCardStartIndex((current) => (
+      current + direction + sortedItems.length
+    ) % sortedItems.length);
+  };
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       if (sortDirection === null) {
