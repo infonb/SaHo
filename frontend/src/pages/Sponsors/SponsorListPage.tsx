@@ -44,6 +44,7 @@ const contribution = (value?: string | null, nationality?: string) => {
 };
 const truncateText = (value: string, limit = 15) =>
   value.length > limit ? `${value.slice(0, limit).trimEnd()}...` : value;
+const SPONSOR_CARD_WINDOW_SIZE = 5;
 
 export default function SponsorListPage() {
   const [items, setItems] = useState<SponsorView[]>([]);
@@ -56,6 +57,7 @@ export default function SponsorListPage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [singleDelete, setSingleDelete] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
+  const [cardStartIndex, setCardStartIndex] = useState(0);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC' | null>(null);
   const [openFilter, setOpenFilter] = useState<string | null>(null);
@@ -101,6 +103,16 @@ export default function SponsorListPage() {
     return next;
   }, [filteredItems, sortColumn, sortDirection]);
   const pager = usePagination(sortedItems, 5);
+  const cardSponsors = useMemo(() => {
+    if (!sortedItems.length) return [];
+
+    const visibleCount = Math.min(SPONSOR_CARD_WINDOW_SIZE, sortedItems.length);
+    return Array.from(
+      { length: visibleCount },
+      (_, index) => sortedItems[(cardStartIndex + index) % sortedItems.length],
+    );
+  }, [sortedItems, cardStartIndex]);
+  const canRotateCards = sortedItems.length > SPONSOR_CARD_WINDOW_SIZE;
   const load = () => {
     setLoading(true);
     getSponsors(applied, {
@@ -113,53 +125,27 @@ export default function SponsorListPage() {
       .finally(() => setLoading(false));
   };
   useEffect(load, [applied]);
+  useEffect(() => {
+    setCardStartIndex(0);
+  }, [sortedItems]);
   const nationalities = [...new Set(items.map(s => s.nationality))];
   const totalSponsors = filteredItems.length;
   const totalStudentsSponsored = filteredItems.reduce((sum, s) => sum + Number(s.students_count), 0);
   const activeSponsors = filteredItems.filter(s => s.is_active).length;
   const pendingSponsors = filteredItems.filter(s => !s.is_active).length;
   const pageIds = pager.current.map(s => s.sponsor_id);
-  const allSelected = globalSelection || checked.length >= totalSponsors;
-  const hasSelection = globalSelection || checked.length > 0;
-  const allPageChecked = allSelected || (pageIds.length > 0 && pageIds.every(id => checked.includes(id)));
-  const showSelectAllLink = allPageChecked && !allSelected;
-  const selectedSponsors = useMemo(() => filteredItems.filter(s => checked.includes(s.sponsor_id)), [checked, filteredItems]);
-  const toggle = (id: number) => {
-    if (globalSelection) {
-      setGlobalSelection(false);
-      const allIds = filteredItems.map(s => s.sponsor_id);
-      setChecked(allIds.filter(x => x !== id));
-      return;
-    }
-    setChecked(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
-  };
-  const togglePage = () => {
-    if (globalSelection) {
-      setChecked([]);
-      setGlobalSelection(false);
-    } else if (allPageChecked) {
-      setChecked(ids => ids.filter(id => !pageIds.includes(id)));
-    } else {
-      setChecked(ids => [...new Set([...ids, ...pageIds])]);
-    }
-  };
-  const selectAllMatchingSponsors = async () => {
-    const ids = filteredItems.map(s => s.sponsor_id);
-    setChecked(ids);
-    setGlobalSelection(true);
-    toast(`All ${ids.length} sponsors matching this search are selected.`, 'success');
-  };
-  const confirmBulkDelete = async () => {
-    let ids = checked;
-    if (globalSelection && ids.length === 0) {
-      ids = filteredItems.map(s => s.sponsor_id);
-    }
-    await deactivateSponsors(ids);
-    setChecked([]);
-    setGlobalSelection(false);
-    setBulkOpen(false);
-    toast(`${ids.length} sponsors removed.`, 'success');
-    load();
+  const hasSelection = checked.length > 0;
+  const selectedSponsors = useMemo(() => items.filter(s => checked.includes(s.sponsor_id)), [checked, items]);
+  const allPageChecked = pageIds.length > 0 && pageIds.every(id => checked.includes(id));
+  const toggle = (id: number) => setChecked(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]);
+  const togglePage = () => setChecked(ids => allPageChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]);
+  const confirmBulkDelete = async () => { await deactivateSponsors(checked); setBulkOpen(false); toast(`${checked.length} sponsors removed.`, 'success'); load(); };
+
+  const rotateCards = (direction: -1 | 1) => {
+    if (!sortedItems.length) return;
+    setCardStartIndex((current) => (
+      current + direction + sortedItems.length
+    ) % sortedItems.length);
   };
 
   const handleSort = (column: string) => {
@@ -495,7 +481,7 @@ export default function SponsorListPage() {
         {viewMode === 'cards' ? (
           <>
             <div className="sponsorCardGrid">
-              {loading ? [0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>) : pager.current.map(s => {
+              {loading ? [0, 1, 2].map(i => <div key={i} className="sponsorCard"><div className="skeleton" style={{ height: 120 }} /></div>) : sortedItems.slice((pager.page - 1) * pager.pageSize, pager.page * pager.pageSize).map(s => {
                 const sponsoredCount = Number(s.students_count) || 0;
                 return (
                   <article key={s.sponsor_id} className="sponsorCard reminderRecordCard sponsorRecordCard">
@@ -563,15 +549,21 @@ export default function SponsorListPage() {
                   </article>
                 );
               })}
-            </div>
-            <Pagination
-              total={items.length}
-              page={pager.page}
-              pageSize={pager.pageSize}
-              onChange={pager.setPage}
-              onPageSizeChange={pager.setPageSize}
-            />
-          </>
+                </div>
+                <button
+                  className="pageNav eventCardNav"
+                  type="button"
+                  onClick={() => rotateCards(1)}
+                  disabled={!canRotateCards}
+                  aria-label="Next card"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="sponsorTableOuter">
             <DataTable

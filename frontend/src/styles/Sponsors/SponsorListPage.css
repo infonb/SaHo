@@ -50,15 +50,15 @@
 }
 
 .sponsorTypeBadge.individual {
-  color: #0f8b8d;
-  background: #dff8fb;
+  color: #0284C7;
+  background: #F8FCFF;
   border: 1px solid #c5eef3;
 }
 
 .sponsorTypeBadge.organisation {
-  color: #b7791f;
+ color: #b76227;
   background: #fff7dc;
-  border: 1px solid #fdecc0;
+  border-color: #fdecc0;
 }
 
 .sponsorMetaLine {
@@ -190,15 +190,14 @@
 .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 18px;
-  margin-top: 12px;
+  margin-top: 0;
   max-width: 100%;
   overflow: visible;
   padding: 0;
 }
 
-.sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid + .pagination,
-.sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid + nav {
-  padding: 16px 4px;
+.sponsor-list-page .sponsorCardsOuter {
+  padding: 14px;
 }
 
 .sponsor-list-page .sponsorRecordCard {
@@ -370,13 +369,19 @@
 
 @media (max-width: 1400px) {
   .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 1100px) {
   .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -1782,17 +1782,17 @@ tr.clickable:hover {
 
 .pageBtn.active {
   /* background: #991b1b; */
-  background: #0f766e;
+  background: #1f6b35;
   color: #ffffff;
   box-shadow: none;
-  border: 0.5px solid #0f766e;
+  border: 0.5px solid #1f6b35;
 }
 
 .pageBtn:hover,
 .pageNav:hover {
   background: #fff;
-  color: #0f766e;
-  border: 0.5px solid #0f766e;
+  color: #1f6b35;
+  border: 0.5px solid #1f6b35;
 }
 
 .pageBtn:disabled,
@@ -5937,6 +5937,26 @@ td {
   padding: 14px;
 }
 
+.eventCardCarousel {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 12px;
+}
+
+.eventCardNav {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.eventCardNav svg {
+  width: 18px;
+  height: 18px;
+}
+
 .eventRecordsPanel .sponsorCardGrid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 18px;
@@ -6556,6 +6576,17 @@ td {
 
   .eventRecordsPanel .sponsorCardGrid {
     grid-template-columns: 1fr;
+  }
+
+  .eventCardCarousel {
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    gap: 8px;
+  }
+
+  .eventCardNav {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
   }
 
   .reminderPanel .table-header {
@@ -9471,14 +9502,14 @@ td {
 }
 
 .orphanStatusBadge.orphan {
-  color: #b7791f;
+  color: #b76227;
   background: #fff7dc;
   border-color: #fdecc0;
 }
 
 .orphanStatusBadge.semi {
-  color: #0f8b8d;
-  background: #dff8fb;
+  color: #0284C7;
+  background: #F8FCFF;
   border-color: #c5eef3;
 }
 
