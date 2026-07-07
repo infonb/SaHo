@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import type { SponsorView } from '../../types';
 import Modal from './Modal';
+import { resolveImageUrl } from '../../utils/imageUrl';
 
 interface SponsorDetailsModalProps {
   open: boolean;
@@ -21,14 +23,6 @@ const contribution = (value?: string | null, nationality?: string) => {
   }
   return trimmed;
 };
-
-const sponsorInitials = (name?: string | null) =>
-  String(name || 'SP')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part.charAt(0).toUpperCase())
-    .join('') || 'SP';
 
 const formatSponsorDate = (value?: string | null) => {
   const trimmed = String(value ?? '').trim();
@@ -57,6 +51,19 @@ function SponsorProfileViewIcon() {
 }
 
 export default function SponsorDetailsModal({ open, sponsor, onClose }: SponsorDetailsModalProps) {
+  const resolvedImageUrl = resolveImageUrl(sponsor?.image_url);
+  const [imageFailed, setImageFailed] = useState(false);
+  const sponsorInitials = String(sponsor?.sponsorName || 'SP')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('') || 'SP';
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [resolvedImageUrl]);
+
   return (
     <Modal
       open={open}
@@ -81,10 +88,14 @@ export default function SponsorDetailsModal({ open, sponsor, onClose }: SponsorD
 
             <div className="studentProfileViewBanner sponsorProfileViewBanner">
               <div className="studentProfileViewAvatar sponsorProfileViewAvatar" aria-hidden="true">
-                {sponsor.image_url ? (
-                  <img src={sponsor.image_url} alt="" />
+                {resolvedImageUrl && !imageFailed ? (
+                  <img
+                    src={resolvedImageUrl}
+                    alt=""
+                    onError={() => setImageFailed(true)}
+                  />
                 ) : (
-                  sponsorInitials(sponsor.sponsorName)
+                  sponsorInitials
                 )}
               </div>
               <div className="studentProfileViewBannerText">

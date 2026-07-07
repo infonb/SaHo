@@ -25,5 +25,6 @@ public class SponsorResponseDto {
     private String loc;
 
     private String contrib;
+    private String imageUrl;
     private Integer studentsCount;
 }

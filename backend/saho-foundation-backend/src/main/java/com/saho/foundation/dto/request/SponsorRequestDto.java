@@ -26,6 +26,7 @@ public class SponsorRequestDto {
     private String loc;
 
     private String contrib;
+    private String imageUrl;
     private Integer studentsCount;
 
     private Integer createdBy;

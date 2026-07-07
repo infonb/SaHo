@@ -6,6 +6,7 @@ import { getSponsorById } from '../../api/sponsorApi';
 import { getStudentReminders } from '../../api/remindersApi';
 import Badge from '../../components/common/Badge';
 import StudentPhoto from '../../components/common/StudentPhoto';
+import { resolveImageUrl } from '../../utils/imageUrl';
 import type { StudentView, SponsorView, StudentSponsor } from '../../types';
 import type { ReminderDto } from '../../api/remindersApi';
 import './StudentDashboard.css';
@@ -175,14 +176,20 @@ export default function StudentDashboard() {
                 className="sdCarouselTrack"
                 style={{ transform: `translateX(-${activeIndex * 100}%)` }}
               >
-              {events.map(ev => {
-                const { day, month, year } = formatDate(ev.eventDate);
-                return (
-                  <div className="sdCarouselSlide" key={ev.remId}>
-                    <div className="sdCarouselSlideInner">
-                      <div className="sdCarouselDateBox">
-                        <span className="sdCarouselDay">{day}</span>
-                        <span className="sdCarouselMonth">{month}</span>
+                {events.map(ev => {
+                  const { day, month, year } = formatDate(ev.eventDate);
+                  const eventImageUrl = resolveImageUrl(ev.imageUrl ?? ev.bannerImage);
+                  return (
+                    <div className="sdCarouselSlide" key={ev.remId}>
+                      <div className="sdCarouselSlideInner">
+                        {eventImageUrl ? (
+                          <div className="sdCarouselImageWrap" aria-hidden="true">
+                            <img src={eventImageUrl} alt="" />
+                          </div>
+                        ) : null}
+                        <div className="sdCarouselDateBox">
+                          <span className="sdCarouselDay">{day}</span>
+                          <span className="sdCarouselMonth">{month}</span>
                       </div>
                       <div className="sdCarouselInfo">
                         <h3 className="sdCarouselTitle">{ev.title}</h3>

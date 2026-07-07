@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSort, FaSortUp, FaSortDown, FaUserCheck } from 'react-icons/fa';
 import { deactivateSponsors, getSponsors } from '../../api/sponsorApi';
-import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import DataTable from '../../components/common/DataTable';
@@ -10,6 +9,7 @@ import Pagination from '../../components/common/Pagination';
 import SponsorDetailsModal from '../../components/common/SponsorDetailsModal';
 import { usePagination } from '../../hooks/usePagination';
 import { useToast } from '../../hooks/useToast';
+import StudentPhoto from '../../components/common/StudentPhoto';
 import SponsorSelectFilter from '../../components/common/SponsorSelectFilter';
 import type { SponsorFilters, SponsorView } from '../../types';
 import "../../styles/Sponsors/SponsorListPage.css";
@@ -261,7 +261,7 @@ export default function SponsorListPage() {
       <span className="studentIdCell">{s.sponsor_id}</span>
     </div>,
     <div className="rowFlex studentCell">
-      <Avatar name={s.sponsorName} size="md" />
+      <StudentPhoto name={s.sponsorName} src={s.image_url} size="md" />
       <div className="tableCellStack studentCellStack">
         <button
           type="button"
@@ -555,7 +555,7 @@ export default function SponsorListPage() {
                 return (
                   <article key={s.sponsor_id} className="sponsorCard reminderRecordCard sponsorRecordCard">
                     <div className="sponsorCardTop">
-                      <Avatar name={s.sponsorName} size="lg" />
+                      <StudentPhoto name={s.sponsorName} src={s.image_url} size="lg" />
                       <div className="sponsorCardIdentity">
                         <button
                           type="button"

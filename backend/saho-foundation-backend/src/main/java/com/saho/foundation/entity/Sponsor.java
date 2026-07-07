@@ -42,6 +42,9 @@ public class Sponsor {
     @Column(name = "contrib")
     private String contribution;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 

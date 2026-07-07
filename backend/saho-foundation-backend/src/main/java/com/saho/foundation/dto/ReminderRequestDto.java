@@ -25,6 +25,8 @@ public class ReminderRequestDto {
     private String vilIdsCsv;
     private String schIdsCsv;
     private String classIdsCsv;
+    private String imageUrl;
+    private String bannerImage;
 
     private Integer updatedBy;
 }
