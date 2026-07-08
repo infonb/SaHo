@@ -149,6 +149,13 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
   return <div id={id} className="validationMessage" role="alert"><span aria-hidden="true">!</span>{message}</div>;
 }
 
+function formatEventName(value: string) {
+  return value
+    .replace(/[^A-Za-z\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/[A-Za-z]+/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+}
+
 function FormField({ fieldKey, label, children, error, readOnly = false, state = 'default' }: { fieldKey: string; label: string; children: ReactNode; error?: string; readOnly?: boolean; state?: FieldState }) {
   const inputId = `event-field-${fieldKey}`;
   const messageId = `${inputId}-message`;
@@ -214,7 +221,7 @@ function Field({ fieldKey, label, value, onChange, onBlur, type = 'text', error,
   const placeholder = label.replace(/\*/g, '').trim();
 
   const handleChange = (nextValue: string) => {
-    const cleanValue = alphabeticOnly ? nextValue.replace(/[^A-Za-z\s]/g, '').replace(/\s+/g, ' ') : nextValue;
+    const cleanValue = alphabeticOnly ? formatEventName(nextValue) : nextValue;
     onChange(cleanValue);
   };
 

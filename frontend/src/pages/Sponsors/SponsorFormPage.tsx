@@ -55,6 +55,7 @@ const emailPattern = /^[^\s@]+@(gmail\.com|nichebit\.com)$/i;
 const phonePattern = /^\d{10}$/;
 const MIN_IMAGE_BYTES = 5 * 1024;
 const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
+const NAME_MAX_LENGTH = 15;
 
 const mapSponsorToForm = (sponsor: SponsorView): SponsorFormState => ({
   name: sponsor.sponsorName ?? '',
@@ -621,6 +622,7 @@ export default function SponsorFormPage() {
                 value={form.name}
                 onChange={(value) => setField('name', value)}
                 onBlur={() => handleFieldBlur('name')}
+                maxLength={NAME_MAX_LENGTH}
                 error={showError('name')}
                 state={fieldState('name')}
                 readOnly={isView}
@@ -942,6 +944,7 @@ function SponsorField({
   onBlur,
   type = 'text',
   maxLength,
+  subText,
   error,
   readOnly = false,
   numericOnly = false,
@@ -955,6 +958,7 @@ function SponsorField({
   onBlur?: () => void;
   type?: string;
   maxLength?: number;
+  subText?: string;
   error?: string;
   readOnly?: boolean;
   numericOnly?: boolean;
@@ -984,7 +988,7 @@ function SponsorField({
           aria-label={!readOnly ? label.replace(/\*/g, '') : undefined}
           aria-readonly={readOnly || undefined}
           aria-invalid={state === 'error' || undefined}
-          aria-describedby={error ? messageId : undefined}
+          aria-describedby={error || subText ? messageId : undefined}
           tabIndex={readOnly ? -1 : undefined}
           maxLength={maxLength}
           type={readOnly || numericOnly ? 'text' : type}
@@ -998,6 +1002,7 @@ function SponsorField({
         />
         <ValidationMessage id={messageId} message={error} />
       </div>
+      {!error && subText ? <div id={messageId} className="formHelperText">{subText}</div> : null}
     </div>
   );
 }

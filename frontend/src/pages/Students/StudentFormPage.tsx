@@ -253,6 +253,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const [editLoading, setEditLoading] = useState(false);
   const [profileSchoolName, setProfileSchoolName] = useState('');
   const [profileImageFailed, setProfileImageFailed] = useState(false);
+  const [profileImagePreviewOpen, setProfileImagePreviewOpen] = useState(false);
   const [errors, setErrors] = useState<StudentFormErrors>({});
   const [validatedFields, setValidatedFields] = useState<Set<keyof StudentFormState>>(() => new Set());
   const [touchedFields, setTouchedFields] = useState<Set<keyof StudentFormState>>(() => new Set());
@@ -296,9 +297,11 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       ? normalizeDateValue(value)
       : value;
     setForm((current) => {
-      const apply = (next: StudentFormState) => {
+      const apply = (next: StudentFormState, extraSteps: StudentFormStep[] = []) => {
         const step = fieldStepMap[key];
-        if (step) updateStepErrors(step, next);
+        const stepsToValidate = new Set<StudentFormStep>(extraSteps);
+        if (step) stepsToValidate.add(step);
+        stepsToValidate.forEach(stepToValidate => updateStepErrors(stepToValidate, next));
         return next;
       };
       if (key === 'st_id') return apply({ ...current, st_id: nextValue, dist_id: '', mndl_id: '', vil_id: '', sch_id: '' });
@@ -316,7 +319,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
               guardian_middle: current.father_middle,
               guardian_last: current.father_last,
               relation: relationValue('Father'),
-            })
+            }, ['guardian'])
           : apply({
               ...current,
               father_is_guardian: 'No',
@@ -324,7 +327,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
               guardian_middle: '',
               guardian_last: '',
               relation: '',
-            });
+            }, ['guardian']);
       }
       if (key === 'mother_is_guardian') {
         return nextValue === 'Yes'
@@ -336,7 +339,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
               guardian_middle: current.mother_middle,
               guardian_last: current.mother_last,
               relation: relationValue('Mother'),
-            })
+            }, ['guardian'])
           : apply({
               ...current,
               mother_is_guardian: 'No',
@@ -344,7 +347,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
               guardian_middle: '',
               guardian_last: '',
               relation: '',
-            });
+            }, ['guardian']);
       }
       if (key === 'father_first' || key === 'father_middle' || key === 'father_last') {
         const next = { ...current, [key]: nextValue };
@@ -353,6 +356,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
           next.guardian_middle = key === 'father_middle' ? nextValue : current.father_middle;
           next.guardian_last = key === 'father_last' ? nextValue : current.father_last;
           next.relation = relationValue('Father');
+          return apply(next, ['guardian']);
         }
         return apply(next);
       }
@@ -363,6 +367,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
           next.guardian_middle = key === 'mother_middle' ? nextValue : current.mother_middle;
           next.guardian_last = key === 'mother_last' ? nextValue : current.mother_last;
           next.relation = relationValue('Mother');
+          return apply(next, ['guardian']);
         }
         return apply(next);
       }
@@ -1071,6 +1076,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const showProfileImage = Boolean(profileImageUrl && !profileImageFailed);
   useEffect(() => {
     setProfileImageFailed(false);
+    setProfileImagePreviewOpen(false);
   }, [profileImageUrl]);
   const address = form.addr || [
     optionLabel(form.vil_id, villages),
@@ -1101,9 +1107,20 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             </button>
           </div>
           <div className="studentProfileViewBanner">
-            <div className="studentProfileViewAvatar" aria-hidden="true">
-              {showProfileImage ? <img src={profileImageUrl} alt="" onError={() => setProfileImageFailed(true)} /> : profileInitials}
-            </div>
+            {showProfileImage ? (
+              <button
+                type="button"
+                className="studentProfileViewAvatar studentProfileViewAvatarButton"
+                onClick={() => setProfileImagePreviewOpen(true)}
+                aria-label="View student photo"
+              >
+                <img src={profileImageUrl} alt="" onError={() => setProfileImageFailed(true)} />
+              </button>
+            ) : (
+              <div className="studentProfileViewAvatar" aria-hidden="true">
+                {profileInitials}
+              </div>
+            )}
             <div className="studentProfileViewBannerText">
               <div className="studentProfileViewBannerName">{fullName}</div>
               <div className="studentProfileViewBannerMeta">Student ID: {profileStudentId} | {schoolName}</div>
@@ -1127,6 +1144,16 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             <ProfileViewItem label="Guardian Occupation" value={form.occ || '-'} />
             <ProfileViewItem label="Sibling" value={form.has_sibling || '-'} />
           </div>
+          {profileImagePreviewOpen ? (
+            <div className="studentImagePreviewOverlay" role="dialog" aria-modal="true" aria-label="Student photo preview" onClick={() => setProfileImagePreviewOpen(false)}>
+              <button type="button" className="studentImagePreviewClose" onClick={() => setProfileImagePreviewOpen(false)} aria-label="Close photo preview">
+                <HiOutlineXMark />
+              </button>
+              <div className="studentImagePreviewFrame" onClick={(event) => event.stopPropagation()}>
+                <img src={profileImageUrl} alt={fullName} />
+              </div>
+            </div>
+          ) : null}
         </section>
       ) : (
         <>
