@@ -275,3 +275,18 @@ export interface DashboardData {
 }
 
 export type DashboardStats = DashboardData;
+
+export interface ImportError {
+  row: number;
+  message: string;
+}
+
+export interface BulkImportResponse {
+  success: boolean;
+  totalRows: number;
+  validRows: number;
+  invalidRows: number;
+  studentsImported?: number;
+  guardiansCreated?: number;
+  errors?: ImportError[];
+}

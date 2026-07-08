@@ -28,4 +28,6 @@ public interface GuardianRepository extends JpaRepository<Guardian, Integer> {
             String lastName,
             String phoneNumber
     );
+
+    Optional<Guardian> findByPhoneNumber(String phoneNumber);
 }

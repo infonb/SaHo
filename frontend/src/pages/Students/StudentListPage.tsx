@@ -18,13 +18,15 @@ import type { StudentFilters, StudentView, SponsorView } from '../../types';
 import StudentDetailModal from './StudentDetailModal';
 import MultiSelectFilter, { csvValues, toggleCsvValue } from '../../components/common/MultiSelectFilter';
 import type { FilterOption } from '../../components/common/MultiSelectFilter';
-import { FiUpload, FiPlus, FiUsers, FiUser } from "react-icons/fi";
+import { FiUpload, FiPlus, FiUsers, FiUser, FiDownload } from "react-icons/fi";
 import { FaMars, FaVenus } from "react-icons/fa";
 import { MdVolunteerActivism } from "react-icons/md";
 import { FiArrowRight } from "react-icons/fi";
 import { HiOutlineXMark } from "react-icons/hi2";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { LuSearch } from 'react-icons/lu';
+import { downloadTemplate } from '../../api/importApi';
+import ImportModal from '../../components/common/ImportModal';
 const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', sponsor_status: '', is_active: '' };
 const truncateText = (value?: string | null, maxLength = 15) => {
   const text = value?.trim() || 'N/A';
@@ -74,6 +76,7 @@ export default function StudentListPage() {
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC' | null>(null);
+  const [showImport, setShowImport] = useState(false);
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -517,9 +520,13 @@ export default function StudentListPage() {
           <h1>Student Management</h1>
         </div>
         <div className="student-list-actions">
-          <button type="button" className="btn btnGreen" aria-label="Import CSV">
+          {/* <button type="button" className="btn btnGreen" onClick={downloadTemplate}>
+            <FiDownload size={18} />
+            &nbsp;Download Template
+          </button> */}
+          <button type="button" className="btn btnGreen" onClick={() => setShowImport(true)}>
             <FiUpload size={18} />
-            &nbsp;Import CSV
+            &nbsp;Import Students
           </button>
           <button type="button" className="btn btnGreen" onClick={() => nav("/students/add")}>
           <FiPlus size={18} />
@@ -954,6 +961,7 @@ export default function StudentListPage() {
         sponsor={sponsorDetails}
         onClose={() => setSponsorOpen(false)}
       />
+      <ImportModal open={showImport} onClose={() => { setShowImport(false); load(page, pageSize); }} />
 
       <ConfirmModal
         open={singleDelete !== null}
