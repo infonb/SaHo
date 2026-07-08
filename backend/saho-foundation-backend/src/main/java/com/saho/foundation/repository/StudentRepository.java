@@ -21,6 +21,10 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
 
     Optional<Student> findByAadhaarNumber(String aadhaarNumber);
 
+    boolean existsByAadhaarNumberAndIsDeletedFalse(String aadhaarNumber);
+
+    boolean existsByEmailIdAndIsDeletedFalse(String emailId);
+
     @Procedure(procedureName = "createorupdatestudent")
     void createOrUpdateStudent(
             @Param("p_student_id") Integer studentId,
