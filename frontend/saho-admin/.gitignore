@@ -1,6 +1,0 @@
-node_modules
-dist
-.npm-cache
-.codex
-.env
-.DS_Store

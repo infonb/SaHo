@@ -25,11 +25,15 @@ public class StudentProfileResponseDto {
     private String religion;
     private String bloodGroup;
     private Integer classId;
+    private String className;
     private String siblingId;
     private String orphanStatus;
     private String imageUrl;
 
     private String guardianName;
+    private String guardianFirstName;
+    private String guardianMiddleName;
+    private String guardianLastName;
     private String phoneNumber;
     private String guardianRelationName;
     private String occ;

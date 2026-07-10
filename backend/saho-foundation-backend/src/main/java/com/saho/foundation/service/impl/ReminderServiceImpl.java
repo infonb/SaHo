@@ -1,5 +1,6 @@
 package com.saho.foundation.service.impl;
 
+import com.saho.foundation.dto.ReminderFilterDto;
 import com.saho.foundation.dto.ReminderRequestDto;
 import com.saho.foundation.dto.ReminderResponseDto;
 import com.saho.foundation.repository.ReminderProcedureRepository;
@@ -18,8 +19,8 @@ public class ReminderServiceImpl implements ReminderService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReminderResponseDto> getRemindersAdmin() {
-        return reminderProcedureRepository.getRemindersAdmin();
+    public List<ReminderResponseDto> getRemindersAdmin(ReminderFilterDto filter) {
+        return reminderProcedureRepository.getRemindersAdmin(filter);
     }
 
     @Override
@@ -44,5 +45,11 @@ public class ReminderServiceImpl implements ReminderService {
     @Transactional
     public void cancelReminder(Integer remId, Integer updatedBy) {
         reminderProcedureRepository.cancelReminder(remId, updatedBy);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReminderResponseDto> getStudentReminders(Integer studentId) {
+        return reminderProcedureRepository.getStudentReminders(studentId);
     }
 }

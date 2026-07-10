@@ -27,11 +27,40 @@ public interface StudentService {
             String sortDirection
     );
 
+    byte[] exportStudentsCsv(
+            String search,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId,
+            String sortColumn,
+            String sortDirection,
+            String studentIdsCsv
+    );
+
     StudentProfileResponseDto getStudentById(Integer studentId);
+
+    StudentProfileResponseDto getStudentProfileByUserId(Integer userId);
 
     StudentSiblingSearchResponseDto getStudentByAadhaarNumber(String aadhaarNumber);
 
     StudentResponseDto updateStudent(Integer studentId, StudentRequestDto requestDto);
 
     void deleteStudent(Integer studentId);
+
+    List<Integer> getAllStudentIds(
+            String search,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId
+    );
 }

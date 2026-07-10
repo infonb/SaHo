@@ -28,5 +28,8 @@ public class ReminderResponseDto {
     private Integer createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String imageUrl;
+    private String bannerImage;
+    private Integer totalCount;
 }
 

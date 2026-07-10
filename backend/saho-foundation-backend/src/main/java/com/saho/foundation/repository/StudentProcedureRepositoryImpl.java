@@ -51,14 +51,18 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 s.student_id,
                 CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) AS student_name,
                 s.email_id, s.dob, s.gender, s.aadhaar_number, s.caste_id, cm.caste_name, s.religion, s.blood_group,
-                s.class_id, s.sibling_id, s.orphan_status, s.image_url,
-                CONCAT(g.first_name, ' ', COALESCE(g.middle_name, ''), ' ', g.last_name) AS guardian_name,
+                s.class_id, clm.class_name, s.sibling_id, s.orphan_status, s.image_url,
+            CONCAT(g.first_name, ' ', COALESCE(g.middle_name, ''), ' ', g.last_name) AS guardian_name,
+                g.first_name AS guardian_first_name,
+                g.middle_name AS guardian_middle_name,
+                g.last_name AS guardian_last_name,
                 g.phone_number, rm.relationship_name, g.occ, g.addr,
                 sc.sch_name, sc.sch_address,
                 v.vil_name, v.vil_pincode, m.mndl_name, d.dist_name, st.st_name
             FROM students s
+            LEFT JOIN class_master clm ON s.class_id = clm.class_id
             LEFT JOIN caste_master cm ON s.caste_id = cm.caste_id
-            LEFT JOIN guardians g ON s.guardian_id = g.guardian_id
+        LEFT JOIN guardians g ON s.guardian_id = g.guardian_id
             LEFT JOIN relationship_master rm ON g.relationship_id = rm.relationship_id
             LEFT JOIN school_master sc ON s.sch_id = sc.sch_id
             LEFT JOIN village_master v ON sc.vil_id = v.vil_id
@@ -90,10 +94,14 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 .religion(rs.getString("religion"))
                 .bloodGroup(rs.getString("blood_group"))
                 .classId((Integer) rs.getObject("class_id"))
+                .className(rs.getString("class_name"))
                 .siblingId(rs.getString("sibling_id"))
                 .orphanStatus(rs.getString("orphan_status"))
                 .imageUrl(rs.getString("image_url"))
                 .guardianName(rs.getString("guardian_name"))
+                .guardianFirstName(rs.getString("guardian_first_name"))
+                .guardianMiddleName(rs.getString("guardian_middle_name"))
+                .guardianLastName(rs.getString("guardian_last_name"))
                 .phoneNumber(rs.getString("phone_number"))
                 .guardianRelationName(rs.getString("relationship_name"))
                 .occ(rs.getString("occ"))
@@ -133,7 +141,13 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 .stName(getOptionalColumn(rs, "st_name"))
                 .siblingId(getOptionalColumn(rs, "sibling_id"))
                 .orphanStatus(getOptionalColumn(rs, "orphan_status"))
+                .sponsorId((Integer) getOptionalObject(rs, "sponsor_id"))
+                .sponsorName(getOptionalColumn(rs, "sponsor_name"))
                 .totalCount((Integer) getOptionalObject(rs, "total_count"))
+                .boysCount((Integer) getOptionalObject(rs, "boys_count"))
+                .girlsCount((Integer) getOptionalObject(rs, "girls_count"))
+                .sponsoredCount((Integer) getOptionalObject(rs, "sponsored_count"))
+                .orphansCount((Integer) getOptionalObject(rs, "orphans_count"))
                 .imageUrl(getOptionalColumn(rs, "image_url"))
                 .createdAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
                 .createdBy(toInteger(getOptionalObject(rs, "created_by")))
