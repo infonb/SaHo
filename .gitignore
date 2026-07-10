@@ -1,2 +1,4 @@
+frontend-dev.err.log
 *.log
+/frontend/node_modules/@esbuild/win32-x64
 /frontend/node_modules
