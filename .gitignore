@@ -1,0 +1,2 @@
+*.log
+/frontend/node_modules
