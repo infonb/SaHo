@@ -49,12 +49,11 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
         String sql = """
             SELECT
                 s.student_id,
-                CONCAT(s.first_name, ' ', COALESCE(s.middle_name, ''), ' ', s.last_name) AS student_name,
+                CONCAT_WS(' ', s.first_name, s.last_name) AS student_name,
                 s.email_id, s.dob, s.gender, s.aadhaar_number, s.caste_id, cm.caste_name, s.religion, s.blood_group,
                 s.class_id, clm.class_name, s.sibling_id, s.orphan_status, s.image_url,
-            CONCAT(g.first_name, ' ', COALESCE(g.middle_name, ''), ' ', g.last_name) AS guardian_name,
+            CONCAT_WS(' ', g.first_name, g.last_name) AS guardian_name,
                 g.first_name AS guardian_first_name,
-                g.middle_name AS guardian_middle_name,
                 g.last_name AS guardian_last_name,
                 g.phone_number, rm.relationship_name, g.occ, g.addr,
                 sc.sch_name, sc.sch_address,
@@ -100,7 +99,6 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 .imageUrl(rs.getString("image_url"))
                 .guardianName(rs.getString("guardian_name"))
                 .guardianFirstName(rs.getString("guardian_first_name"))
-                .guardianMiddleName(rs.getString("guardian_middle_name"))
                 .guardianLastName(rs.getString("guardian_last_name"))
                 .phoneNumber(rs.getString("phone_number"))
                 .guardianRelationName(rs.getString("relationship_name"))

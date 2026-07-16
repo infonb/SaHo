@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 public class StudentImportRow {
     private int rowNumber;
     private String firstName;
-    private String middleName;
     private String lastName;
     private String email;
     private String dob;
@@ -29,7 +28,6 @@ public class StudentImportRow {
     private String school;
     private String className;
     private String guardianFirstName;
-    private String guardianMiddleName;
     private String guardianLastName;
     private String guardianPhone;
     private String relationship;

@@ -32,7 +32,6 @@ public class StudentProfileResponseDto {
 
     private String guardianName;
     private String guardianFirstName;
-    private String guardianMiddleName;
     private String guardianLastName;
     private String phoneNumber;
     private String guardianRelationName;

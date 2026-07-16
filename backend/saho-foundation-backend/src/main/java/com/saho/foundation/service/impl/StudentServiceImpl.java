@@ -62,7 +62,6 @@ public class StudentServiceImpl implements StudentService {
         guardianRepository.createOrUpdateGuardian(
                 null,
                 requestDto.getGuardian().getFirstName(),
-                requestDto.getGuardian().getMiddleName(),
                 requestDto.getGuardian().getLastName(),
                 requestDto.getGuardian().getPhoneNumber(),
                 requestDto.getGuardian().getRelationshipId(),
@@ -81,7 +80,6 @@ public class StudentServiceImpl implements StudentService {
         studentRepository.createOrUpdateStudent(
                 null,
                 requestDto.getFirstName(),
-                requestDto.getMiddleName(),
                 requestDto.getLastName(),
                 requestDto.getEmailId(),
                 requestDto.getDob(),
@@ -307,7 +305,6 @@ public class StudentServiceImpl implements StudentService {
             guardianRepository.createOrUpdateGuardian(
                     guardianId,
                     requestDto.getGuardian().getFirstName(),
-                    requestDto.getGuardian().getMiddleName(),
                     requestDto.getGuardian().getLastName(),
                     requestDto.getGuardian().getPhoneNumber(),
                     requestDto.getGuardian().getRelationshipId(),
@@ -323,7 +320,6 @@ public class StudentServiceImpl implements StudentService {
         studentRepository.createOrUpdateStudent(
                 existingStudent.getStudentId(),
                 requestDto.getFirstName(),
-                requestDto.getMiddleName(),
                 requestDto.getLastName(),
                 requestDto.getEmailId(),
                 requestDto.getDob(),
@@ -403,7 +399,6 @@ public class StudentServiceImpl implements StudentService {
         return StudentResponseDto.builder()
                 .studentId(student.getStudentId())
                 .firstName(student.getFirstName())
-                .middleName(student.getMiddleName())
                 .lastName(student.getLastName())
                 .emailId(student.getEmailId())
                 .dob(student.getDob())
@@ -428,8 +423,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     private String buildStudentName(Student student) {
-        String middleName = student.getMiddleName() != null ? student.getMiddleName() + " " : "";
-        return student.getFirstName() + " " + middleName + student.getLastName();
+        return student.getFirstName() + " " + student.getLastName();
     }
 
     private StudentResponseDto.GuardianDto mapGuardianDto(Guardian guardian) {
@@ -440,7 +434,6 @@ public class StudentServiceImpl implements StudentService {
         return StudentResponseDto.GuardianDto.builder()
                 .guardianId(guardian.getGuardianId())
                 .firstName(guardian.getFirstName())
-                .middleName(guardian.getMiddleName())
                 .lastName(guardian.getLastName())
                 .phoneNumber(guardian.getPhoneNumber())
                 .relationshipId(guardian.getRelationshipId())

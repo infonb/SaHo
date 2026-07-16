@@ -12,7 +12,6 @@ import java.time.LocalDate;
 public class StudentRequestDto {
 
     private String firstName;
-    private String middleName;
     private String lastName;
     private String emailId;
     private LocalDate dob;
@@ -36,7 +35,6 @@ public class StudentRequestDto {
     @AllArgsConstructor
     public static class GuardianRequestDto {
         private String firstName;
-        private String middleName;
         private String lastName;
         private String phoneNumber;
         private Integer relationshipId;

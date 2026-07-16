@@ -29,7 +29,6 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
     void createOrUpdateStudent(
             @Param("p_student_id") Integer studentId,
             @Param("p_first_name") String firstName,
-            @Param("p_middle_name") String middleName,
             @Param("p_last_name") String lastName,
             @Param("p_email_id") String emailId,
             @Param("p_dob") java.time.LocalDate dob,
