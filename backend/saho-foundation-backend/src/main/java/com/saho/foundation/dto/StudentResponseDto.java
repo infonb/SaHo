@@ -16,7 +16,6 @@ public class StudentResponseDto {
 
     private Integer studentId;
     private String firstName;
-    private String middleName;
     private String lastName;
     private String emailId;
     private LocalDate dob;
@@ -45,7 +44,6 @@ public class StudentResponseDto {
     public static class GuardianDto {
         private Integer guardianId;
         private String firstName;
-        private String middleName;
         private String lastName;
         private String phoneNumber;
         private Integer relationshipId;

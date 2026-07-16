@@ -38,10 +38,10 @@ public class StudentImportService {
     private static final Set<String> VALID_BLOOD_GROUPS = Set.of("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-");
     private static final Set<String> VALID_RELATIONSHIPS = Set.of("Father", "Mother", "Guardian");
     private static final List<String> TEMPLATE_HEADERS = List.of(
-            "First Name", "Middle Name", "Last Name", "Email", "DOB", "Gender",
+            "First Name", "Last Name", "Email", "DOB", "Gender",
             "Aadhaar", "Religion", "Blood Group", "Caste",
             "State", "District", "Mandal", "Village", "School", "Class",
-            "Guardian First Name", "Guardian Middle Name", "Guardian Last Name",
+            "Guardian First Name", "Guardian Last Name",
             "Guardian Phone", "Relationship", "Occupation", "Address",
             "Orphan Status"
     );
@@ -86,29 +86,27 @@ public class StudentImportService {
 
             Row exampleRow = sheet.createRow(1);
             exampleRow.createCell(0).setCellValue("Raj");
-            exampleRow.createCell(1).setCellValue("");
-            exampleRow.createCell(2).setCellValue("Kumar");
-            exampleRow.createCell(3).setCellValue("raj.kumar@email.com");
-            exampleRow.createCell(4).setCellValue("10-10-2017");
-            exampleRow.createCell(5).setCellValue("Male");
-            exampleRow.createCell(6).setCellValue("123456789012");
-            exampleRow.createCell(7).setCellValue("Hindu");
-            exampleRow.createCell(8).setCellValue("O+");
-            exampleRow.createCell(9).setCellValue("BC-A");
-            exampleRow.createCell(10).setCellValue("Andhra Pradesh");
-            exampleRow.createCell(11).setCellValue("Nellore");
+            exampleRow.createCell(1).setCellValue("Kumar");
+            exampleRow.createCell(2).setCellValue("raj.kumar@email.com");
+            exampleRow.createCell(3).setCellValue("10-10-2017");
+            exampleRow.createCell(4).setCellValue("Male");
+            exampleRow.createCell(5).setCellValue("123456789012");
+            exampleRow.createCell(6).setCellValue("Hindu");
+            exampleRow.createCell(7).setCellValue("O+");
+            exampleRow.createCell(8).setCellValue("BC-A");
+            exampleRow.createCell(9).setCellValue("Andhra Pradesh");
+            exampleRow.createCell(10).setCellValue("Nellore");
+            exampleRow.createCell(11).setCellValue("Kavali");
             exampleRow.createCell(12).setCellValue("Kavali");
-            exampleRow.createCell(13).setCellValue("Kavali");
-            exampleRow.createCell(14).setCellValue("ZPHS School");
-            exampleRow.createCell(15).setCellValue("6");
-            exampleRow.createCell(16).setCellValue("Kumar");
-            exampleRow.createCell(17).setCellValue("");
-            exampleRow.createCell(18).setCellValue("");
-            exampleRow.createCell(19).setCellValue("9876543210");
-            exampleRow.createCell(20).setCellValue("Father");
-            exampleRow.createCell(21).setCellValue("Farmer");
-            exampleRow.createCell(22).setCellValue("Kavali, Nellore");
-            exampleRow.createCell(23).setCellValue("None");
+            exampleRow.createCell(13).setCellValue("ZPHS School");
+            exampleRow.createCell(14).setCellValue("6");
+            exampleRow.createCell(15).setCellValue("Kumar");
+            exampleRow.createCell(16).setCellValue("");
+            exampleRow.createCell(17).setCellValue("9876543210");
+            exampleRow.createCell(18).setCellValue("Father");
+            exampleRow.createCell(19).setCellValue("Farmer");
+            exampleRow.createCell(20).setCellValue("Kavali, Nellore");
+            exampleRow.createCell(21).setCellValue("None");
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             workbook.write(bos);
@@ -294,29 +292,27 @@ public class StudentImportService {
                 int rowNum = i + 1;
 
                 String firstName = getCellStringValue(row.getCell(0));
-                String middleName = getCellStringValue(row.getCell(1));
-                String lastName = getCellStringValue(row.getCell(2));
-                String email = getCellStringValue(row.getCell(3));
-                String dob = getCellStringValue(row.getCell(4));
-                String gender = getCellStringValue(row.getCell(5));
-                String aadhaar = getCellStringValue(row.getCell(6));
-                String religion = getCellStringValue(row.getCell(7));
-                String bloodGroup = getCellStringValue(row.getCell(8));
-                String caste = getCellStringValue(row.getCell(9));
-                String state = getCellStringValue(row.getCell(10));
-                String district = getCellStringValue(row.getCell(11));
-                String mandal = getCellStringValue(row.getCell(12));
-                String village = getCellStringValue(row.getCell(13));
-                String school = getCellStringValue(row.getCell(14));
-                String className = getCellStringValue(row.getCell(15));
-                String guardianFirstName = getCellStringValue(row.getCell(16));
-                String guardianMiddleName = getCellStringValue(row.getCell(17));
-                String guardianLastName = getCellStringValue(row.getCell(18));
-                String guardianPhone = getCellStringValue(row.getCell(19));
-                String relationship = getCellStringValue(row.getCell(20));
-                String occupation = getCellStringValue(row.getCell(21));
-                String address = getCellStringValue(row.getCell(22));
-                String orphanStatus = getCellStringValue(row.getCell(23));
+                String lastName = getCellStringValue(row.getCell(1));
+                String email = getCellStringValue(row.getCell(2));
+                String dob = getCellStringValue(row.getCell(3));
+                String gender = getCellStringValue(row.getCell(4));
+                String aadhaar = getCellStringValue(row.getCell(5));
+                String religion = getCellStringValue(row.getCell(6));
+                String bloodGroup = getCellStringValue(row.getCell(7));
+                String caste = getCellStringValue(row.getCell(8));
+                String state = getCellStringValue(row.getCell(9));
+                String district = getCellStringValue(row.getCell(10));
+                String mandal = getCellStringValue(row.getCell(11));
+                String village = getCellStringValue(row.getCell(12));
+                String school = getCellStringValue(row.getCell(13));
+                String className = getCellStringValue(row.getCell(14));
+                String guardianFirstName = getCellStringValue(row.getCell(15));
+                String guardianLastName = getCellStringValue(row.getCell(16));
+                String guardianPhone = getCellStringValue(row.getCell(17));
+                String relationship = getCellStringValue(row.getCell(18));
+                String occupation = getCellStringValue(row.getCell(19));
+                String address = getCellStringValue(row.getCell(20));
+                String orphanStatus = getCellStringValue(row.getCell(21));
 
                 if (log.isDebugEnabled()) {
                     Cell dobCell = row.getCell(4);
@@ -330,7 +326,6 @@ public class StudentImportService {
                 StudentImportRow importRow = StudentImportRow.builder()
                         .rowNumber(rowNum)
                         .firstName(firstName)
-                        .middleName(middleName)
                         .lastName(lastName)
                         .email(email)
                         .dob(dob)
@@ -346,7 +341,6 @@ public class StudentImportService {
                         .school(school)
                         .className(className)
                         .guardianFirstName(guardianFirstName)
-                        .guardianMiddleName(guardianMiddleName)
                         .guardianLastName(guardianLastName)
                         .guardianPhone(guardianPhone)
                         .relationship(relationship)
@@ -464,7 +458,6 @@ public class StudentImportService {
                 if (guardian == null) {
                     guardian = Guardian.builder()
                             .firstName(row.getGuardianFirstName())
-                            .middleName(row.getGuardianMiddleName().isEmpty() ? null : row.getGuardianMiddleName())
                             .lastName(row.getGuardianLastName())
                             .phoneNumber(row.getGuardianPhone())
                             .relationshipId(relationshipId)
@@ -501,7 +494,6 @@ public class StudentImportService {
                 Student existingStudent = existingStudentOpt.get();
                 existingStudent.setIsDeleted(false);
                 existingStudent.setFirstName(row.getFirstName());
-                existingStudent.setMiddleName(row.getMiddleName().isEmpty() ? null : row.getMiddleName());
                 existingStudent.setLastName(row.getLastName());
                 existingStudent.setEmailId(email);
                 existingStudent.setDob(dob);
@@ -519,7 +511,6 @@ public class StudentImportService {
             } else {
                 Student student = Student.builder()
                         .firstName(row.getFirstName())
-                        .middleName(row.getMiddleName().isEmpty() ? null : row.getMiddleName())
                         .lastName(row.getLastName())
                         .emailId(email)
                         .dob(dob)
