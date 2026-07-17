@@ -366,7 +366,7 @@ export default function StudentListPage() {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'students.csv';
+    link.download = 'students.xlsx';
     document.body.appendChild(link);
     link.click();
     link.remove();

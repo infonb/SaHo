@@ -50,6 +50,7 @@ interface StudentSiblingResult {
   studentId: number;
   studentName: string;
   classId: number;
+  className?: string;
   schoolName: string;
 }
 interface StudentProfileSectionsProps {
@@ -59,9 +60,10 @@ interface StudentProfileSectionsProps {
   touch?: (key: keyof StudentFormState) => void;
   chooseImage?: (file: File | Blob) => void;
   clearImage?: () => void;
-  sibling?: StudentSiblingResult | null;
+  siblingsList?: StudentSiblingResult[];
   siblingChecked?: boolean;
   searchSibling?: () => void;
+  removeSibling?: (index: number) => void;
   schools?: [string, string][];
   states?: [string, string][];
   districts?: [string, string][];
@@ -125,7 +127,7 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
 }
 
 export default function StudentProfileSections(props: StudentProfileSectionsProps) {
-  const { mode, form, set, touch, chooseImage, clearImage, sibling, siblingChecked, searchSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
+  const { mode, form, set, touch, chooseImage, clearImage, siblingsList = [], siblingChecked, searchSibling, removeSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -182,18 +184,29 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
                 {!readOnly ? <Button className="gobtn" type="button" onClick={searchSibling}>Search</Button> : null}
               </div>
             </div >
-            {sibling ? (
-              <div className="foundCard ">
-                <Avatar name={sibling.studentName} size="lg" />
+            {siblingsList.map((sib, idx) => (
+              <div key={sib.studentId} className="foundCard">
+                <Avatar name={sib.studentName} size="lg" />
                 <div>
-                  <strong>{sibling.studentName}</strong>
-                  <Badge variant="success">Student ID: {sibling.studentId}</Badge>
-                  <div className="sub">Class: {sibling.classId}</div>
-                  <div className="sub">School: {sibling.schoolName}</div>
+                  <strong>{sib.studentName}</strong>
+                  <Badge variant="success">Student ID: {sib.studentId}</Badge>
+                  <div className="sub">Class: {sib.className || sib.classId}</div>
+                  <div className="sub">School: {sib.schoolName}</div>
                 </div>
+                {!readOnly ? (
+                  <button
+                    type="button"
+                    className="siblingRemoveBtn"
+                    onClick={() => removeSibling?.(idx)}
+                    aria-label={`Remove ${sib.studentName}`}
+                  >
+                    &times;
+                  </button>
+                ) : null}
               </div>
-            ) : siblingChecked ? (
-              <div className="foundCard muted">No existing student selected.</div>
+            ))}
+            {siblingsList.length === 0 && siblingChecked ? (
+              <div className="foundCard muted">No siblings added yet. Search above.</div>
             ) : null}
           </>
         )}

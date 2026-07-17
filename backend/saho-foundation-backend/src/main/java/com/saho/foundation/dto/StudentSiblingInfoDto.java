@@ -9,10 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StudentSiblingSearchResponseDto {
-
+public class StudentSiblingInfoDto {
     private Integer studentId;
-    private String studentName;
+    private String fullName;
     private Integer classId;
     private String className;
     private String schoolName;

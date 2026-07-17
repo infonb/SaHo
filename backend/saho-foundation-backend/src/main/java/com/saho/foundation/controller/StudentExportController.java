@@ -32,10 +32,10 @@ public class StudentExportController {
             @RequestParam(defaultValue = "DESC") String sortDirection,
             @RequestParam(required = false) String studentIds
     ) {
-        byte[] csv = studentService.exportStudentsCsv(search, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, sortColumn, sortDirection, studentIds);
+        byte[] excel = studentService.exportStudentsExcel(search, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, sortColumn, sortDirection, studentIds);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=students.csv")
-                .contentType(MediaType.parseMediaType("text/csv"))
-                .body(csv);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=students.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excel);
     }
 }

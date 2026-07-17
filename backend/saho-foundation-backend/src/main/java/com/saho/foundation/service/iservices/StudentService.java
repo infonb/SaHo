@@ -4,6 +4,7 @@ import com.saho.foundation.dto.StudentRequestDto;
 import com.saho.foundation.dto.StudentPaginationResponseDto;
 import com.saho.foundation.dto.StudentProfileResponseDto;
 import com.saho.foundation.dto.StudentResponseDto;
+import com.saho.foundation.dto.StudentSiblingInfoDto;
 import com.saho.foundation.dto.StudentSiblingSearchResponseDto;
 
 import java.util.List;
@@ -27,7 +28,7 @@ public interface StudentService {
             String sortDirection
     );
 
-    byte[] exportStudentsCsv(
+    byte[] exportStudentsExcel(
             String search,
             String gender,
             String classId,
@@ -47,6 +48,8 @@ public interface StudentService {
     StudentProfileResponseDto getStudentProfileByUserId(Integer userId);
 
     StudentSiblingSearchResponseDto getStudentByAadhaarNumber(String aadhaarNumber);
+
+    List<StudentSiblingInfoDto> getSiblingsByStudentId(Integer studentId);
 
     StudentResponseDto updateStudent(Integer studentId, StudentRequestDto requestDto);
 

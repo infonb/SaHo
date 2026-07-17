@@ -2,6 +2,8 @@ package com.saho.foundation.repository;
 
 import com.saho.foundation.dto.ReminderRequestDto;
 import com.saho.foundation.dto.ReminderResponseDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -17,6 +19,8 @@ import java.util.List;
 
 @Repository
 public class ReminderProcedureRepositoryImpl implements ReminderProcedureRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(ReminderProcedureRepositoryImpl.class);
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -224,7 +228,7 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
                    r.st_id_csv, r.dist_ids_csv, r.mndl_ids_csv, r.vil_ids_csv,
                    r.sch_ids_csv, r.class_ids_csv, r.status, r.created_by,
                    r.created_at, r.updated_at,
-                   COALESCE(r.image_url, r.banner_image) AS image_url,
+                   r.image_url,
                    0 AS total_count
             FROM student_reminders sr
             JOIN reminders r ON sr.rem_id = r.rem_id
@@ -233,7 +237,18 @@ public class ReminderProcedureRepositoryImpl implements ReminderProcedureReposit
               AND r.is_deleted = FALSE
             ORDER BY r.event_date DESC
             """;
-        return jdbcTemplate.query(sql, (rs, rowNum) -> mapReminder(rs), studentId);
+        log.debug("getStudentReminders query for studentId={}: {}", studentId, sql.replace("?", String.valueOf(studentId)));
+        try {
+            List<ReminderResponseDto> result = jdbcTemplate.query(sql, (rs, rowNum) -> mapReminder(rs), studentId);
+            log.debug("Repository returned {} reminders for studentId={}", result.size(), studentId);
+            for (ReminderResponseDto r : result) {
+                log.debug("  Reminder: remId={}, title='{}', eventDate={}", r.getRemId(), r.getTitle(), r.getEventDate());
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("Exception in getStudentReminders for studentId={}: {}", studentId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     private String getOptionalColumn(ResultSet rs, String columnName) {
