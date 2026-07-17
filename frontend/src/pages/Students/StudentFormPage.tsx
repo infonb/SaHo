@@ -12,8 +12,10 @@ import {
   getSchoolsByVillage,
   getStates,
   getStudentById,
+  getStudentSiblings,
   getVillagesByMandal,
   updateStudent,
+  type StudentSiblingInfo,
   type StudentSiblingSearchResponse,
 } from '../../api/studentService';
 import Button from '../../components/common/Button';
@@ -245,15 +247,22 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const [selectedImageFile, setSelectedImageFile] = useState<File | Blob | null>(null);
   const [aadhaarStatus, setAadhaarStatus] = useState<string>('');
   const [aadhaarValidating, setAadhaarValidating] = useState(false);
-  const [sibling, setSibling] = useState<StudentSiblingSearchResponse | null>(null);
+  const [siblingsList, setSiblingsList] = useState<StudentSiblingSearchResponse[]>([]);
   const [siblingChecked, setSiblingChecked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [metaLoading, setMetaLoading] = useState(true);
   const [studentStateList, setStudentStateList] = useState<{ stId: number; stName: string }[]>([]);
   const [editLoading, setEditLoading] = useState(false);
+  const [siblings, setSiblings] = useState<StudentSiblingInfo[]>([]);
   const [profileSchoolName, setProfileSchoolName] = useState('');
   const [profileImageFailed, setProfileImageFailed] = useState(false);
   const [profileImagePreviewOpen, setProfileImagePreviewOpen] = useState(false);
+  const [siblingConfirm, setSiblingConfirm] = useState<{
+    scenario: 1 | 2;
+    existingNames: string[];
+    mergedPreview: string;
+    resolve: (confirmed: boolean) => void;
+  } | null>(null);
   const [errors, setErrors] = useState<StudentFormErrors>({});
   const [validatedFields, setValidatedFields] = useState<Set<keyof StudentFormState>>(() => new Set());
   const [touchedFields, setTouchedFields] = useState<Set<keyof StudentFormState>>(() => new Set());
@@ -463,6 +472,9 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             classes: classEntries,
             snapshot: studentSnapshot,
           });
+          if (isView) {
+            getStudentSiblings(effectiveStudentId).then(setSiblings);
+          }
         }
       } catch (error) {
         const errorLabel = error instanceof Error ? error.message : 'Unknown';
@@ -507,7 +519,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     };
 
     void checkAadhaar();
-  }, [form.aadhaar_number, id, isEdit, isView, aadhaarValidating]);
+  }, [form.aadhaar_number, id, isEdit, isView]);
 
   const loadDistricts = async (stateId: number) => {
     setDistricts([]);
@@ -590,18 +602,39 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
 
   const searchSibling = async () => {
     setSiblingChecked(true);
-    setSibling(null);
     if (form.sibling_aadhaar.length !== 12) {
       toast('Enter a valid 12 digit Aadhaar number.', 'error');
       return;
     }
     const found = await findStudentByAadhaar(form.sibling_aadhaar);
     if (found) {
-      setSibling(found);
+      if (siblingsList.some(s => s.studentId === found.studentId)) {
+        toast('This student is already added as a sibling.', 'error');
+        return;
+      }
+      if (effectiveStudentId && found.studentId === effectiveStudentId) {
+        toast('A student cannot be their own sibling.', 'error');
+        return;
+      }
+      setSiblingsList(prev => [...prev, found]);
+      setForm(prev => ({ ...prev, sibling_aadhaar: '' }));
+      toast(`Found: ${found.studentName}`, 'success');
     } else {
-      setSibling(null);
       toast('No matching student found.', 'error');
     }
+  };
+
+  const removeSibling = (index: number) => {
+    setSiblingsList(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const navigateToSibling = async (siblingId: number) => {
+    await loadStudent(siblingId, studentStateList, {
+      castes: currentCastes,
+      relationships: currentRelationships,
+      classes: currentClasses,
+    });
+    getStudentSiblings(siblingId).then(setSiblings);
   };
 
   const loadStudent = async (
@@ -700,12 +733,28 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
 
       setForm(newForm);
       setSelectedImageFile(null);
-      setSibling(snapshot?.sibling_student_id ? {
-        studentId: snapshot.sibling_student_id,
-        studentName: snapshot.sibling_student_name || 'Sibling',
-        classId: Number(snapshot.class_id) || 0,
-        schoolName: snapshot.sch_name || '',
-      } : null);
+      if (effectiveStudentId && (student.siblingId || snapshot?.sibling_id || snapshot?.sibling_student_id)) {
+        getStudentSiblings(effectiveStudentId).then(sibList => {
+          setSiblingsList(sibList.map(s => ({
+            studentId: s.studentId,
+            studentName: s.fullName,
+            classId: s.classId ?? 0,
+            className: s.className ?? '',
+            schoolName: s.schoolName ?? '',
+          })));
+        }).catch(() => {
+          const ids = ((student.siblingId || snapshot?.sibling_id) ?? '').split(',').filter(Boolean);
+          setSiblingsList(ids.map((id: string) => ({
+            studentId: Number(id),
+            studentName: snapshot?.sibling_student_name || `ID: ${id}`,
+            classId: Number(snapshot?.class_id) || 0,
+            className: '',
+            schoolName: snapshot?.sch_name || '',
+          })));
+        });
+      } else {
+        setSiblingsList([]);
+      }
 
       let districtEntries: [string, string][] = [];
       let mandalEntries: [string, string][] = [];
@@ -771,30 +820,68 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     }
   };
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (isView) return;
-    if (loading) return;
-    if (activeStep !== 'guardian' || !finalSubmitRequested.current) return;
-    finalSubmitRequested.current = false;
+  const checkSiblingConfirmation = async (siblingIds: number[]): Promise<boolean> => {
+    if (siblingIds.length === 0 || form.has_sibling !== 'Yes') return true;
 
-    setSubmitAttempted(true);
-    if (activeStep === 'guardian') setGuardianSubmitAttempted(true);
-    const isValid = validateAndApply(steps.map(step => step.key));
-    if (!isValid) {
-      return;
+    const currentStudentId = effectiveStudentId;
+    const nameMap = new Map<number, string>();
+    if (currentStudentId) {
+      nameMap.set(currentStudentId, [form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ') || `Student #${currentStudentId}`);
+    }
+    siblingsList.forEach(s => nameMap.set(s.studentId, s.studentName));
+
+    let currentStudentSiblings: StudentSiblingInfo[] = [];
+    if (currentStudentId) {
+      try { currentStudentSiblings = await getStudentSiblings(currentStudentId); } catch { /* ignore */ }
+    }
+    currentStudentSiblings.forEach(s => nameMap.set(s.studentId, s.fullName));
+
+    const selectedSiblingGroups = new Map<number, StudentSiblingInfo[]>();
+    for (const id of siblingIds) {
+      try {
+        const grp = await getStudentSiblings(id);
+        selectedSiblingGroups.set(id, grp);
+        grp.forEach(s => nameMap.set(s.studentId, s.fullName));
+      } catch { selectedSiblingGroups.set(id, []); }
     }
 
-    if (aadhaarStatus === 'A student with this Aadhaar already exists.') {
-      const nextErrors: StudentFormErrors = { aadhaar_number: 'A student with this Aadhaar already exists.' };
-      setErrors(nextErrors);
-      setValidatedFields(new Set(['aadhaar_number']));
-      pendingFocusField.current = 'aadhaar_number';
-      if ((activeStep as StudentFormStep) !== 'personal') setActiveStep('personal');
-      else focusField('aadhaar_number');
-      return;
+    const currentHas = currentStudentSiblings.length > 0;
+    const anySelectedHas = Array.from(selectedSiblingGroups.values()).some(g => g.length > 0);
+    if (!currentHas && !anySelectedHas) return true;
+
+    const mergedIds = new Set<number>();
+    if (currentStudentId) mergedIds.add(currentStudentId);
+    siblingIds.forEach(id => mergedIds.add(id));
+    for (const [, grp] of selectedSiblingGroups) {
+      grp.forEach(s => mergedIds.add(s.studentId));
     }
 
+    const sortedIds = [...mergedIds];
+    const futureSiblings = new Map<number, number[]>();
+    for (const id of sortedIds) {
+      futureSiblings.set(id, sortedIds.filter(other => other !== id));
+    }
+
+    const previewLines = sortedIds.map(id => {
+      const name = nameMap.get(id) || `Student #${id}`;
+      const sibNames = futureSiblings.get(id)?.map(sid => nameMap.get(sid) || `Student #${sid}`) ?? [];
+      return `  ${name} → ${sibNames.join(', ')}`;
+    });
+    const mergedPreview = previewLines.join('\n');
+
+    const existingNames = [...currentStudentSiblings.map(s => s.fullName)];
+
+    return new Promise<boolean>(resolve => {
+      setSiblingConfirm({
+        scenario: currentHas && anySelectedHas ? 2 : 1,
+        existingNames,
+        mergedPreview,
+        resolve,
+      });
+    });
+  };
+
+  const doSave = async () => {
     setLoading(true);
     try {
       const imageUrl = selectedImageFile
@@ -818,7 +905,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         imageUrl: imageUrl || null,
         createdBy: user?.user_id || 1,
         hasSibling: form.has_sibling === 'Yes',
-        siblingIds: sibling?.studentId ? String(sibling.studentId) : null,
+        siblingIds: siblingsList.length > 0 ? siblingsList.map(s => s.studentId).join(',') : null,
         guardian: {
           firstName: form.guardian_first,
           middleName: form.guardian_middle || null,
@@ -866,18 +953,43 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         setErrors(nextErrors);
         const fieldsToValidate = Object.keys(nextErrors) as (keyof StudentFormState)[];
         setValidatedFields(new Set(fieldsToValidate));
-        const firstInvalid = fieldsToValidate[0];
-        const targetStep = fieldStepMap[firstInvalid] ?? activeStep;
-        pendingFocusField.current = firstInvalid;
-        if (targetStep !== activeStep) setActiveStep(targetStep);
-        else focusField(firstInvalid);
-        toast('Please fix the highlighted fields.', 'error');
       } else {
-        toast(serverMessage ? `Unable to save student: ${serverMessage}` : 'Unable to save student. Please try again.', 'error');
+        toast(serverMessage || 'Failed to save student record.', 'error');
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (isView) return;
+    if (loading) return;
+    if (activeStep !== 'guardian' || !finalSubmitRequested.current) return;
+    finalSubmitRequested.current = false;
+
+    setSubmitAttempted(true);
+    if (activeStep === 'guardian') setGuardianSubmitAttempted(true);
+    const isValid = validateAndApply(steps.map(step => step.key));
+    if (!isValid) {
+      return;
+    }
+
+    if (aadhaarStatus === 'A student with this Aadhaar already exists.') {
+      const nextErrors: StudentFormErrors = { aadhaar_number: 'A student with this Aadhaar already exists.' };
+      setErrors(nextErrors);
+      setValidatedFields(new Set(['aadhaar_number']));
+      pendingFocusField.current = 'aadhaar_number';
+      if ((activeStep as StudentFormStep) !== 'personal') setActiveStep('personal');
+      else focusField('aadhaar_number');
+      return;
+    }
+
+    const siblingIds = siblingsList.map(s => s.studentId);
+    const confirmed = await checkSiblingConfirmation(siblingIds);
+    if (!confirmed) return;
+
+    await doSave();
   };
 
   const submitFinalStep = () => {
@@ -945,9 +1057,9 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       if (formState.phone.trim() && !indianMobilePattern.test(formState.phone.trim())) {
         nextErrors.phone = indianMobileErrorMessage;
       }
-      if (formState.has_sibling === 'Yes') {
+      if (formState.has_sibling === 'Yes' && siblingsList.length === 0) {
         if (!formState.sibling_aadhaar.trim()) {
-          nextErrors.sibling_aadhaar = 'Search Existing Student by Aadhaar Number is required';
+          nextErrors.sibling_aadhaar = 'Search at least one sibling by Aadhaar Number';
         } else if (!/^\d{12}$/.test(formState.sibling_aadhaar)) {
           nextErrors.sibling_aadhaar = 'Aadhaar Number must contain exactly 12 digits.';
         }
@@ -960,11 +1072,11 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     const fieldsToValidate = stepKeys.flatMap(step => stepRequiredFields[step]);
     if (stepKeys.includes('personal')) {
       fieldsToValidate.push('email', 'aadhaar_number', 'dob');
-      if (formState.has_sibling === 'Yes') fieldsToValidate.push('sibling_aadhaar');
+      if (formState.has_sibling === 'Yes' && siblingsList.length === 0) fieldsToValidate.push('sibling_aadhaar');
     }
     if (stepKeys.includes('guardian')) {
       fieldsToValidate.push('phone');
-      if (formState.has_sibling === 'Yes') fieldsToValidate.push('sibling_aadhaar');
+      if (formState.has_sibling === 'Yes' && siblingsList.length === 0) fieldsToValidate.push('sibling_aadhaar');
     }
     return fieldsToValidate;
   };
@@ -1142,7 +1254,26 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             <ProfileViewItem label="Relation" value={optionLabel(form.relation, currentRelationships)} />
             <ProfileViewItem label="Phone" value={form.phone || '-'} />
             <ProfileViewItem label="Guardian Occupation" value={form.occ || '-'} />
-            <ProfileViewItem label="Sibling" value={form.has_sibling || '-'} />
+            <div className="studentProfileViewItem">
+              <div className="studentProfileViewLabel">Sibling</div>
+              <div className="studentProfileViewValue">
+                {siblings.length === 0 ? (
+                  <span>No siblings</span>
+                ) : (
+                  siblings.map((sib, idx) => (
+                    <button
+                      key={sib.studentId}
+                      type="button"
+                      className="siblingLinkBtn"
+                      onClick={() => navigateToSibling(sib.studentId)}
+                      title={`View ${sib.fullName}'s profile`}
+                    >
+                      {sib.fullName}{idx < siblings.length - 1 ? ', ' : ''}
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
           {profileImagePreviewOpen ? (
             <div className="studentImagePreviewOverlay" role="dialog" aria-modal="true" aria-label="Student photo preview" onClick={() => setProfileImagePreviewOpen(false)}>
@@ -1189,9 +1320,10 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             touch={touchField}
             chooseImage={chooseImage}
             clearImage={() => setSelectedImageFile(null)}
-            sibling={sibling}
+            siblingsList={siblingsList}
             siblingChecked={siblingChecked}
             searchSibling={searchSibling}
+            removeSibling={removeSibling}
             schools={schools}
             states={currentStates}
             districts={districts}
@@ -1222,6 +1354,49 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             )}
           </div>
         </>
+      )}
+      {siblingConfirm && (
+        <div className="studentImagePreviewOverlay" role="dialog" aria-modal="true" aria-label="Confirm sibling changes" onClick={() => {
+          siblingConfirm.resolve(false);
+          setSiblingConfirm(null);
+        }}>
+          <div className="studentImagePreviewFrame siblingConfirmModal" onClick={(event) => event.stopPropagation()}>
+            <div className="siblingConfirmHeader">
+              <span className="siblingConfirmIcon">&#9888;</span>
+              <span>Confirm Sibling Changes</span>
+            </div>
+            <div className="siblingConfirmBody">
+              {siblingConfirm.scenario === 2 ? (
+                <p>Both students already belong to different sibling groups. Continuing will merge the sibling groups into:</p>
+              ) : (
+                <p>This student already has sibling(s): <strong>{siblingConfirm.existingNames.join(', ')}</strong>. Adding more siblings will update the sibling group as shown below.</p>
+              )}
+              <pre className="siblingConfirmPreview">{siblingConfirm.mergedPreview}</pre>
+            </div>
+            <div className="siblingConfirmActions">
+              <button
+                type="button"
+                className="btn btnRed"
+                onClick={() => {
+                  siblingConfirm.resolve(false);
+                  setSiblingConfirm(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btnGreen"
+                onClick={() => {
+                  siblingConfirm.resolve(true);
+                  setSiblingConfirm(null);
+                }}
+              >
+                {siblingConfirm.scenario === 2 ? 'Merge Groups' : 'Continue'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </form>
   );

@@ -52,7 +52,16 @@ export interface StudentSiblingSearchResponse {
   studentId: number;
   studentName: string;
   classId: number;
+  className?: string;
   schoolName: string;
+}
+
+export interface StudentSiblingInfo {
+  studentId: number;
+  fullName: string;
+  classId?: number;
+  className?: string;
+  schoolName?: string;
 }
 
 export interface StudentProfileResponse {
@@ -211,6 +220,16 @@ export const findStudentByAadhaar = async (aadhaarNumber: string): Promise<Stude
     }
     logApiFailure('findStudentByAadhaar', error);
     throw error;
+  }
+};
+
+export const getStudentSiblings = async (studentId: number): Promise<StudentSiblingInfo[]> => {
+  try {
+    const response = await apiClient.get<StudentSiblingInfo[]>(`/students/${studentId}/siblings`);
+    return response.data;
+  } catch (error) {
+    logApiFailure('getStudentSiblings', error);
+    return [];
   }
 };
 

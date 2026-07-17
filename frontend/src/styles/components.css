@@ -8197,6 +8197,28 @@ td {
 .studentSiblingInline .foundCard {
   grid-column: 2 / -1;
   margin-top: -8px;
+  position: relative;
+}
+.siblingRemoveBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.siblingRemoveBtn:hover {
+  background: #dc2626;
 }
 .studentWizardForm .studentSearchRow {
   display: grid;
@@ -8507,6 +8529,21 @@ td {
   font-weight: 600;
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+.siblingLinkBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  display: inline;
+}
+.siblingLinkBtn:hover {
+  color: #1d4ed8;
 }
 .studentProfileViewBadge {
   display: inline-flex;
@@ -10154,4 +10191,48 @@ html::-webkit-scrollbar-thumb:hover {
 
 .import-error-msg {
   color: #7f1d1d;
+}
+
+.siblingConfirmModal {
+  max-width: 520px;
+  padding: 15px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+}
+.siblingConfirmHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.siblingConfirmIcon {
+  font-size: 22px;
+  color: #d97706;
+}
+.siblingConfirmBody p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+}
+.siblingConfirmPreview {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-family: 'Consolas', 'Menlo', monospace;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  color: #1f2937;
+  margin: 12px 0 0;
+}
+.siblingConfirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
 }

@@ -6,6 +6,7 @@ import com.saho.foundation.dto.StudentRequestDto;
 import com.saho.foundation.dto.StudentPaginationResponseDto;
 import com.saho.foundation.dto.StudentProfileResponseDto;
 import com.saho.foundation.dto.StudentResponseDto;
+import com.saho.foundation.dto.StudentSiblingInfoDto;
 import com.saho.foundation.dto.StudentSiblingSearchResponseDto;
 import com.saho.foundation.service.iservices.StudentService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -100,6 +102,11 @@ public class StudentController {
     @GetMapping("/aadhaar/{aadhaarNumber}")
     public StudentSiblingSearchResponseDto getStudentByAadhaarNumber(@PathVariable String aadhaarNumber) {
         return studentService.getStudentByAadhaarNumber(aadhaarNumber);
+    }
+
+    @GetMapping("/{studentId}/siblings")
+    public List<StudentSiblingInfoDto> getStudentSiblings(@PathVariable Integer studentId) {
+        return studentService.getSiblingsByStudentId(studentId);
     }
 
     @PutMapping(value = "/{studentId}", consumes = MediaType.APPLICATION_JSON_VALUE)

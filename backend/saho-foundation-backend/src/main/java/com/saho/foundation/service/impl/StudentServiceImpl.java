@@ -5,7 +5,9 @@ import com.saho.foundation.dto.StudentPaginationResponseDto;
 import com.saho.foundation.dto.StudentProfileResponseDto;
 import com.saho.foundation.dto.StudentRequestDto;
 import com.saho.foundation.dto.StudentResponseDto;
+import com.saho.foundation.dto.StudentSiblingInfoDto;
 import com.saho.foundation.dto.StudentSiblingSearchResponseDto;
+import com.saho.foundation.entity.ClassMaster;
 import com.saho.foundation.entity.Guardian;
 import com.saho.foundation.entity.SchoolMaster;
 import com.saho.foundation.entity.Student;
@@ -16,6 +18,7 @@ import com.saho.foundation.enums.Religion;
 import com.saho.foundation.exception.DuplicateResourceException;
 import com.saho.foundation.exception.ResourceNotFoundException;
 import com.saho.foundation.repository.GuardianRepository;
+import com.saho.foundation.repository.ClassRepository;
 import com.saho.foundation.repository.SchoolRepository;
 import com.saho.foundation.repository.StudentRepository;
 import com.saho.foundation.repository.UserRepository;
@@ -24,18 +27,26 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.http.MediaType;
-
-import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.HashSet;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +54,7 @@ public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
     private final GuardianRepository guardianRepository;
+    private final ClassRepository classRepository;
     private final SchoolRepository schoolRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -98,7 +110,7 @@ public class StudentServiceImpl implements StudentService {
                 requestDto.getCreatedBy()
         );
 
-        Student savedStudent = studentRepository.findByAadhaarNumber(requestDto.getAadhaarNumber())
+        Student savedStudent = studentRepository.findByAadhaarNumberAndIsDeletedFalse(requestDto.getAadhaarNumber())
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found after procedure call for aadhaarNumber: " + requestDto.getAadhaarNumber()));
 
         if (userRepository.findByStudentId(savedStudent.getStudentId()).isEmpty()) {
@@ -114,7 +126,7 @@ public class StudentServiceImpl implements StudentService {
             userRepository.save(user);
         }
 
-        syncSiblingPair(savedStudent.getStudentId(), requestDto.getSiblingIds(), Boolean.TRUE.equals(requestDto.getHasSibling()));
+        syncSiblingGroup(savedStudent.getStudentId(), Collections.emptySet(), requestDto.getSiblingIds(), Boolean.TRUE.equals(requestDto.getHasSibling()));
         return mapToResponseDto(savedStudent);
     }
 
@@ -182,7 +194,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] exportStudentsCsv(
+    public byte[] exportStudentsExcel(
             String search,
             String gender,
             String classId,
@@ -212,36 +224,181 @@ public class StudentServiceImpl implements StudentService {
                 sortDirection
         );
 
-        java.util.Set<Integer> selectedIds = parseStudentIds(studentIdsCsv);
+        Set<Integer> selectedIds = parseStudentIds(studentIdsCsv);
         if (!selectedIds.isEmpty()) {
             students = students.stream()
                     .filter(student -> selectedIds.contains(student.getStudentId()))
                     .toList();
         }
 
-        StringBuilder csv = new StringBuilder();
-        csv.append("Student ID,Student Name,Age,Class,School Name,Gender,Orphan Status,Sponsor\n");
+        Set<Integer> exportedIds = students.stream()
+                .map(StudentListResponseDto::getStudentId)
+                .collect(Collectors.toSet());
 
+        Map<Integer, IndexedColors> siblingColors = computeSiblingGroupColors(students, exportedIds);
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Students");
+
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerFont.setFontHeightInPoints((short) 11);
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderBottom(BorderStyle.THIN);
+            headerStyle.setBorderTop(BorderStyle.THIN);
+            headerStyle.setBorderLeft(BorderStyle.THIN);
+            headerStyle.setBorderRight(BorderStyle.THIN);
+
+            String[] headers = {
+                "Student ID", "Student Name", "Age", "Date of Birth", "Email", "Aadhaar Number",
+                "Gender", "Class", "School Name", "School Address",
+                "State", "District", "Mandal", "Village",
+                "Guardian Name", "Guardian Relation",
+                "Religion", "Blood Group", "Caste ID", "Orphan Status",
+                "Sponsor Name", "Created Date"
+            };
+
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            Map<IndexedColors, CellStyle> colorStyles = new HashMap<>();
+
+            int rowNum = 1;
+            for (StudentListResponseDto student : students) {
+                Row row = sheet.createRow(rowNum++);
+
+                row.createCell(0).setCellValue(student.getStudentId() != null ? student.getStudentId().doubleValue() : 0);
+                row.createCell(1).setCellValue(student.getName() != null ? student.getName() : "");
+                row.createCell(2).setCellValue(ageFromDob(student.getDob()) != null ? ageFromDob(student.getDob()).doubleValue() : 0);
+                row.createCell(3).setCellValue(student.getDob() != null ? student.getDob().toString() : "");
+                row.createCell(4).setCellValue(student.getEmailId() != null ? student.getEmailId() : "");
+                row.createCell(5).setCellValue(student.getAadhaarNumber() != null ? student.getAadhaarNumber() : "");
+                row.createCell(6).setCellValue(resolveGenderLabel(student.getGender()));
+                row.createCell(7).setCellValue(student.getClassName() != null ? student.getClassName() : (student.getClassId() != null ? student.getClassId().toString() : ""));
+                row.createCell(8).setCellValue(student.getSchName() != null ? student.getSchName() : "");
+                row.createCell(9).setCellValue(student.getSchAddress() != null ? student.getSchAddress() : "");
+                row.createCell(10).setCellValue(student.getStName() != null ? student.getStName() : "");
+                row.createCell(11).setCellValue(student.getDistName() != null ? student.getDistName() : "");
+                row.createCell(12).setCellValue(student.getMndlName() != null ? student.getMndlName() : "");
+                row.createCell(13).setCellValue(student.getVilName() != null ? student.getVilName() : "");
+                row.createCell(14).setCellValue(student.getGuardianName() != null ? student.getGuardianName() : "");
+                row.createCell(15).setCellValue(student.getGuardianRelationName() != null ? student.getGuardianRelationName() : "");
+                row.createCell(16).setCellValue(student.getReligion() != null ? student.getReligion() : "");
+                row.createCell(17).setCellValue(student.getBloodGroup() != null ? student.getBloodGroup() : "");
+                row.createCell(18).setCellValue(student.getCasteId() != null ? student.getCasteId().doubleValue() : 0);
+                row.createCell(19).setCellValue(resolveOrphanStatusLabel(student.getOrphanStatus()));
+                row.createCell(20).setCellValue(student.getSponsorName() != null ? student.getSponsorName() : "");
+                row.createCell(21).setCellValue(student.getCreatedAt() != null ? student.getCreatedAt().toString() : "");
+
+                IndexedColors color = siblingColors.get(student.getStudentId());
+                if (color != null) {
+                    CellStyle style = colorStyles.get(color);
+                    if (style == null) {
+                        style = workbook.createCellStyle();
+                        style.setFillForegroundColor(color.getIndex());
+                        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                        colorStyles.put(color, style);
+                    }
+                    for (int i = 0; i < headers.length; i++) {
+                        row.getCell(i).setCellStyle(style);
+                    }
+                }
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            workbook.write(outputStream);
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate Excel export", e);
+        }
+    }
+
+    private Map<Integer, IndexedColors> computeSiblingGroupColors(
+            List<StudentListResponseDto> students,
+            Set<Integer> exportedIds
+    ) {
+        Set<Integer> allReferencedSiblingIds = new HashSet<>();
         for (StudentListResponseDto student : students) {
-            csv.append(csvValue(student.getStudentId()))
-                    .append(',')
-                    .append(csvValue(student.getName()))
-                    .append(',')
-                    .append(csvValue(ageFromDob(student.getDob())))
-                    .append(',')
-                    .append(csvValue(student.getClassName() != null ? student.getClassName() : student.getClassId()))
-                    .append(',')
-                    .append(csvValue(student.getSchName()))
-                    .append(',')
-                    .append(csvValue(resolveGenderLabel(student.getGender())))
-                    .append(',')
-                    .append(csvValue(resolveOrphanStatusLabel(student.getOrphanStatus())))
-                    .append(',')
-                    .append(csvValue(""))
-                    .append('\n');
+            String siblingId = student.getSiblingId();
+            if (siblingId != null && !siblingId.isBlank()) {
+                allReferencedSiblingIds.addAll(parseStudentIds(siblingId));
+            }
         }
 
-        return csv.toString().getBytes(StandardCharsets.UTF_8);
+        Set<Integer> activeReferencedSiblingIds;
+        if (allReferencedSiblingIds.isEmpty()) {
+            activeReferencedSiblingIds = Collections.emptySet();
+        } else {
+            activeReferencedSiblingIds = studentRepository.findByStudentIdInAndIsDeletedFalse(allReferencedSiblingIds)
+                    .stream()
+                    .map(Student::getStudentId)
+                    .collect(Collectors.toSet());
+        }
+
+        Map<Integer, List<Integer>> completeGroups = new LinkedHashMap<>();
+
+        for (StudentListResponseDto student : students) {
+            String siblingId = student.getSiblingId();
+            if (siblingId == null || siblingId.isBlank()) continue;
+
+            Set<Integer> parsedIds = parseStudentIds(siblingId);
+            if (parsedIds.isEmpty()) continue;
+
+            Set<Integer> activeSiblingIds = parsedIds.stream()
+                    .filter(activeReferencedSiblingIds::contains)
+                    .collect(Collectors.toSet());
+
+            if (activeSiblingIds.isEmpty()) continue;
+
+            Set<Integer> presentSiblingIds = activeSiblingIds.stream()
+                    .filter(exportedIds::contains)
+                    .collect(Collectors.toSet());
+
+            if (presentSiblingIds.isEmpty()) continue;
+
+            Set<Integer> fullGroup = new HashSet<>(presentSiblingIds);
+            fullGroup.add(student.getStudentId());
+
+            if (fullGroup.size() < 2) continue;
+            Integer groupKey = Collections.min(fullGroup);
+
+            completeGroups.computeIfAbsent(groupKey, k -> new ArrayList<>()).add(student.getStudentId());
+        }
+
+        IndexedColors[] palette = {
+            IndexedColors.YELLOW,
+            IndexedColors.BRIGHT_GREEN,
+            IndexedColors.LIGHT_BLUE,
+            IndexedColors.ORANGE,
+            IndexedColors.ROSE,
+            IndexedColors.LAVENDER,
+            IndexedColors.TEAL,
+            IndexedColors.CORAL
+        };
+
+        Map<Integer, IndexedColors> studentColorMap = new HashMap<>();
+        int colorIndex = 0;
+        for (List<Integer> groupMembers : completeGroups.values()) {
+            IndexedColors color = palette[colorIndex % palette.length];
+            for (Integer studentId : groupMembers) {
+                studentColorMap.put(studentId, color);
+            }
+            colorIndex++;
+        }
+
+        return studentColorMap;
     }
 
     @Override
@@ -265,18 +422,51 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public StudentSiblingSearchResponseDto getStudentByAadhaarNumber(String aadhaarNumber) {
-        Student student = studentRepository.findByAadhaarNumber(aadhaarNumber)
+        Student student = studentRepository.findByAadhaarNumberAndIsDeletedFalse(aadhaarNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with aadhaarNumber: " + aadhaarNumber));
 
         SchoolMaster school = schoolRepository.findById(student.getSchId())
+                .orElse(null);
+        String className = classRepository.findById(student.getClassId())
+                .map(ClassMaster::getClassName)
                 .orElse(null);
 
         return StudentSiblingSearchResponseDto.builder()
                 .studentId(student.getStudentId())
                 .studentName(buildStudentName(student))
                 .classId(student.getClassId())
+                .className(className)
                 .schoolName(school != null ? school.getSchName() : null)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StudentSiblingInfoDto> getSiblingsByStudentId(Integer studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        Set<Integer> siblingIds = parseStudentIds(student.getSiblingId());
+        if (siblingIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Student> siblings = studentRepository.findByStudentIdInAndIsDeletedFalse(siblingIds);
+        return siblings.stream()
+                .map(s -> {
+                    SchoolMaster school = schoolRepository.findById(s.getSchId()).orElse(null);
+                    String className = classRepository.findById(s.getClassId())
+                            .map(ClassMaster::getClassName)
+                            .orElse(null);
+                    return StudentSiblingInfoDto.builder()
+                            .studentId(s.getStudentId())
+                            .fullName(buildStudentName(s))
+                            .classId(s.getClassId())
+                            .className(className)
+                            .schoolName(school != null ? school.getSchName() : null)
+                            .build();
+                })
+                .toList();
     }
 
     @Override
@@ -297,7 +487,7 @@ public class StudentServiceImpl implements StudentService {
             throw new DuplicateResourceException("aadhaarNumber already exists");
         }
 
-        Integer previousSiblingId = firstStudentId(existingStudent.getSiblingId());
+        Set<Integer> existingSiblingIds = parseStudentIds(existingStudent.getSiblingId());
         Integer guardianId = existingStudent.getGuardian() != null ? existingStudent.getGuardian().getGuardianId() : null;
 
         // Update guardian details also when guardian data is provided.
@@ -339,7 +529,7 @@ public class StudentServiceImpl implements StudentService {
 
         Student updatedStudent = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found after update with id: " + studentId));
-        syncSiblingOnUpdate(updatedStudent.getStudentId(), previousSiblingId, requestDto.getSiblingIds(), Boolean.TRUE.equals(requestDto.getHasSibling()));
+        syncSiblingGroup(updatedStudent.getStudentId(), existingSiblingIds, requestDto.getSiblingIds(), Boolean.TRUE.equals(requestDto.getHasSibling()));
 
         return mapToResponseDto(updatedStudent);
     }
@@ -517,55 +707,70 @@ public class StudentServiceImpl implements StudentService {
         return period.getYears();
     }
 
-    private String csvValue(Object value) {
-        String text = value == null ? "" : String.valueOf(value);
-        if (text.contains("\"") || text.contains(",") || text.contains("\n")) {
-            return "\"" + text.replace("\"", "\"\"") + "\"";
-        }
-        return text;
-    }
+    private void syncSiblingGroup(Integer currentStudentId, Set<Integer> oldSiblingIds, String newSiblingIdsCsv, boolean hasSibling) {
+        if (currentStudentId == null) return;
 
-    private void syncSiblingPair(Integer currentStudentId, String siblingIdsCsv, boolean hasSibling) {
-        if (currentStudentId == null || !hasSibling) {
+        if (!hasSibling) {
+            for (Integer siblingId : oldSiblingIds) {
+                studentRepository.findById(siblingId).ifPresent(sibling -> {
+                    if (!Boolean.TRUE.equals(sibling.getIsDeleted())) {
+                        Set<Integer> currentSiblings = parseStudentIds(sibling.getSiblingId());
+                        currentSiblings.remove(currentStudentId);
+                        sibling.setSiblingId(joinStudentIds(currentSiblings));
+                        studentRepository.save(sibling);
+                    }
+                });
+            }
+            studentRepository.findById(currentStudentId).ifPresent(s -> {
+                s.setSiblingId(null);
+                studentRepository.save(s);
+            });
             return;
         }
 
-        Integer siblingId = firstStudentId(siblingIdsCsv);
-        if (siblingId == null || siblingId.equals(currentStudentId)) {
-            return;
-        }
+        Set<Integer> newSiblingIds = parseStudentIds(newSiblingIdsCsv);
+        if (newSiblingIds.isEmpty()) return;
 
-        Student currentStudent = studentRepository.findById(currentStudentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + currentStudentId));
-        Student siblingStudent = studentRepository.findById(siblingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Sibling student not found with id: " + siblingId));
+        Set<Integer> removedFromGroup = new LinkedHashSet<>(oldSiblingIds);
+        removedFromGroup.removeAll(newSiblingIds);
 
-        currentStudent.setSiblingId(String.valueOf(siblingId));
-        siblingStudent.setSiblingId(String.valueOf(currentStudentId));
-        studentRepository.save(currentStudent);
-        studentRepository.flush();
-        studentRepository.saveAndFlush(siblingStudent);
-    }
+        Set<Integer> groupIds = new LinkedHashSet<>();
+        groupIds.add(currentStudentId);
+        groupIds.addAll(newSiblingIds);
 
-    private void syncSiblingOnUpdate(Integer currentStudentId, Integer previousSiblingId, String siblingIdsCsv, boolean hasSibling) {
-        // Remove the old sibling link first if the sibling changed.
-        if (previousSiblingId != null) {
-            try {
-                Student previousSibling = studentRepository.findById(previousSiblingId)
-                        .orElse(null);
-                if (previousSibling != null) {
-                    Set<Integer> previousIds = parseStudentIds(previousSibling.getSiblingId());
-                    previousIds.remove(currentStudentId);
-                    previousSibling.setSiblingId(joinStudentIds(previousIds));
-                    studentRepository.saveAndFlush(previousSibling);
-                }
-            } catch (Exception ignored) {
-                // Ignore cleanup failures here so the new relationship can still be applied.
+        for (Integer siblingId : newSiblingIds) {
+            Optional<Student> optSibling = studentRepository.findById(siblingId);
+            if (optSibling.isPresent() && !Boolean.TRUE.equals(optSibling.get().getIsDeleted())) {
+                Set<Integer> theirSiblings = parseStudentIds(optSibling.get().getSiblingId());
+                theirSiblings.removeAll(removedFromGroup);
+                groupIds.addAll(theirSiblings);
             }
         }
 
-        // Apply the new sibling relationship.
-        syncSiblingPair(currentStudentId, siblingIdsCsv, hasSibling);
+        List<Student> allCandidates = studentRepository.findAllById(groupIds);
+        Set<Integer> validActiveIds = allCandidates.stream()
+                .filter(s -> !Boolean.TRUE.equals(s.getIsDeleted()))
+                .map(Student::getStudentId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        Map<Integer, Student> activeStudentMap = allCandidates.stream()
+                .filter(s -> validActiveIds.contains(s.getStudentId()))
+                .collect(Collectors.toMap(Student::getStudentId, Function.identity()));
+
+        for (Integer id : validActiveIds) {
+            Student student = activeStudentMap.get(id);
+            Set<Integer> otherIds = new LinkedHashSet<>(validActiveIds);
+            otherIds.remove(id);
+            student.setSiblingId(joinStudentIds(otherIds));
+            studentRepository.save(student);
+        }
+
+        for (Integer removedId : removedFromGroup) {
+            studentRepository.findById(removedId).ifPresent(s -> {
+                s.setSiblingId(null);
+                studentRepository.save(s);
+            });
+        }
     }
 
     private Set<Integer> parseStudentIds(String studentIdsCsv) {

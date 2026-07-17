@@ -452,14 +452,18 @@ public class StudentImportService {
                     .map(RelationshipMaster::getRelationshipId)
                     .orElseThrow(() -> new IllegalStateException("Relationship not found: " + row.getRelationship()));
 
-            Guardian guardian = guardianCache.get(row.getGuardianPhone());
+            String guardianPhone = row.getGuardianPhone();
+            log.debug("Processing guardian phone: {}", guardianPhone);
+
+            Guardian guardian = guardianCache.get(guardianPhone);
             if (guardian == null) {
-                guardian = guardianRepository.findByPhoneNumber(row.getGuardianPhone()).orElse(null);
+                guardian = guardianRepository.findByPhoneNumber(guardianPhone).orElse(null);
                 if (guardian == null) {
+                    log.debug("No existing guardian found for phone: {}. Creating new guardian.", guardianPhone);
                     guardian = Guardian.builder()
                             .firstName(row.getGuardianFirstName())
                             .lastName(row.getGuardianLastName())
-                            .phoneNumber(row.getGuardianPhone())
+                            .phoneNumber(guardianPhone)
                             .relationshipId(relationshipId)
                             .occ(row.getOccupation().isEmpty() ? null : row.getOccupation())
                             .addr(row.getAddress().isEmpty() ? null : row.getAddress())
@@ -468,8 +472,13 @@ public class StudentImportService {
                             .build();
                     guardian = guardianRepository.save(guardian);
                     guardiansCreated++;
+                    log.debug("New guardian saved for phone: {}. guardiansCreated now: {}", guardianPhone, guardiansCreated);
+                } else {
+                    log.debug("Existing guardian found for phone: {}. guardianId={}. Not incrementing counter.", guardianPhone, guardian.getGuardianId());
                 }
-                guardianCache.put(row.getGuardianPhone(), guardian);
+                guardianCache.put(guardianPhone, guardian);
+            } else {
+                log.debug("Guardian found in cache for phone: {}. guardianId={}. Skipping DB lookup.", guardianPhone, guardian.getGuardianId());
             }
 
             String email = row.getEmail();
@@ -533,12 +542,15 @@ public class StudentImportService {
             studentsImported++;
         }
 
-        return BulkImportResponse.builder()
+        BulkImportResponse response = BulkImportResponse.builder()
                 .success(true)
                 .totalRows(rows.size())
                 .studentsImported(studentsImported)
                 .guardiansCreated(guardiansCreated)
                 .build();
+        log.debug("Final BulkImportResponse: totalRows={}, studentsImported={}, guardiansCreated={}",
+                rows.size(), studentsImported, guardiansCreated);
+        return response;
     }
 
     private void assignDefaultSponsor(Student student) {

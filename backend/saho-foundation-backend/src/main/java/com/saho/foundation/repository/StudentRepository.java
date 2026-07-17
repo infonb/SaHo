@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,6 +22,10 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
     boolean existsByAadhaarNumberAndStudentIdNot(String aadhaarNumber, Integer studentId);
 
     Optional<Student> findByAadhaarNumber(String aadhaarNumber);
+
+    Optional<Student> findByAadhaarNumberAndIsDeletedFalse(String aadhaarNumber);
+
+    List<Student> findByStudentIdInAndIsDeletedFalse(Collection<Integer> studentIds);
 
     boolean existsByAadhaarNumberAndIsDeletedFalse(String aadhaarNumber);
 

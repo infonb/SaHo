@@ -38,6 +38,12 @@ public class WebConfig {
                         .allowedHeaders("*")
                         .allowCredentials(true)
                         .maxAge(3600);
+                registry.addMapping("/students/**")
+                        .allowedOrigins("http://localhost:5173")
+                        .allowedMethods("GET", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true)
+                        .maxAge(3600);
             }
 
             @Override
@@ -47,7 +53,7 @@ public class WebConfig {
                 String backendUploadPath = Path.of("").toAbsolutePath().getFileName().toString().equals("saho-foundation-backend")
                         ? uploadPath
                         : repoUploadPath;
-                registry.addResourceHandler("/uploads/**")
+                registry.addResourceHandler("/uploads/**", "/students/**")
                         .addResourceLocations(uploadPath, backendUploadPath);
             }
         };
