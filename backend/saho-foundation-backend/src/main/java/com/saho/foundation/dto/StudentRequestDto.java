@@ -22,6 +22,15 @@ public class StudentRequestDto {
     private String bloodGroup;
     private Integer schId;
     private Integer classId;
+    private Integer academicYearId;
+    private Integer familyId;
+    private Integer guardianId;
+    private String fatherName;
+    private String fatherOccupation;
+    private String fatherStatus;
+    private String motherName;
+    private String motherOccupation;
+    private String motherStatus;
     private String orphanStatus;
     private String imageUrl;
     private Boolean isDeleted;

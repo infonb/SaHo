@@ -45,6 +45,8 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
             @Param("p_blood_group") String bloodGroup,
             @Param("p_sch_id") Integer schId,
             @Param("p_class_id") Integer classId,
+            @Param("p_academic_year_id") Integer academicYearId,
+            @Param("p_family_id") Integer familyId,
             @Param("p_guardian_id") Integer guardianId,
             @Param("p_sibling_id") String siblingId,
             @Param("p_orphan_status") String orphanStatus,

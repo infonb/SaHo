@@ -20,6 +20,7 @@ public interface StudentProcedureRepository {
             String mndlId,
             String vilId,
             String schId,
+            String academicYearId,
             String sortColumn,
             String sortDirection
     );

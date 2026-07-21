@@ -37,10 +37,11 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
             String mndlId,
             String vilId,
             String schId,
+            String academicYearId,
             String sortColumn,
             String sortDirection
     ) {
-        return getStudentsFromProcedure(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, sortColumn, sortDirection);
+        return getStudentsFromProcedure(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, academicYearId, sortColumn, sortDirection);
     }
 
     @Override
@@ -51,16 +52,22 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 s.student_id,
                 CONCAT_WS(' ', s.first_name, s.last_name) AS student_name,
                 s.email_id, s.dob, s.gender, s.aadhaar_number, s.caste_id, cm.caste_name, s.religion, s.blood_group,
-                s.class_id, clm.class_name, s.sibling_id, s.orphan_status, s.image_url,
+                s.class_id, clm.class_name, s.academic_year_id, ay.academic_year_name,
+                s.family_id, sf.father_name, sf.father_occupation, sf.father_status,
+                sf.mother_name, sf.mother_occupation, sf.mother_status,
+                s.sibling_id, s.orphan_status, s.image_url,
+                s.guardian_id,
             CONCAT_WS(' ', g.first_name, g.last_name) AS guardian_name,
                 g.first_name AS guardian_first_name,
                 g.last_name AS guardian_last_name,
-                g.phone_number, rm.relationship_name, g.occ, g.addr,
+                g.phone_number AS guardian_phone, rm.relationship_name, g.occ, g.addr,
                 sc.sch_name, sc.sch_address,
                 v.vil_name, v.vil_pincode, m.mndl_name, d.dist_name, st.st_name
             FROM students s
             LEFT JOIN class_master clm ON s.class_id = clm.class_id
+            LEFT JOIN academic_year ay ON s.academic_year_id = ay.academic_year_id
             LEFT JOIN caste_master cm ON s.caste_id = cm.caste_id
+            LEFT JOIN student_family sf ON s.family_id = sf.family_id
         LEFT JOIN guardians g ON s.guardian_id = g.guardian_id
             LEFT JOIN relationship_master rm ON g.relationship_id = rm.relationship_id
             LEFT JOIN school_master sc ON s.sch_id = sc.sch_id
@@ -94,14 +101,26 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 .bloodGroup(rs.getString("blood_group"))
                 .classId((Integer) rs.getObject("class_id"))
                 .className(rs.getString("class_name"))
+                .academicYearId((Integer) rs.getObject("academic_year_id"))
+                .academicYearName(rs.getString("academic_year_name"))
+                .familyId((Integer) rs.getObject("family_id"))
+                .fatherName(rs.getString("father_name"))
+                .fatherOccupation(rs.getString("father_occupation"))
+                .fatherStatus(rs.getString("father_status"))
+                .motherName(rs.getString("mother_name"))
+                .motherOccupation(rs.getString("mother_occupation"))
+                .motherStatus(rs.getString("mother_status"))
                 .siblingId(rs.getString("sibling_id"))
                 .orphanStatus(rs.getString("orphan_status"))
                 .imageUrl(rs.getString("image_url"))
+                .guardianId((Integer) rs.getObject("guardian_id"))
                 .guardianName(rs.getString("guardian_name"))
                 .guardianFirstName(rs.getString("guardian_first_name"))
                 .guardianLastName(rs.getString("guardian_last_name"))
-                .phoneNumber(rs.getString("phone_number"))
+                .guardianPhone(getOptionalColumn(rs, "guardian_phone", "phone_number"))
+                .phoneNumber(getOptionalColumn(rs, "guardian_phone", "phone_number"))
                 .guardianRelationName(rs.getString("relationship_name"))
+                .relationshipName(rs.getString("relationship_name"))
                 .occ(rs.getString("occ"))
                 .addr(rs.getString("addr"))
                 .schName(rs.getString("sch_name"))
@@ -127,12 +146,23 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 .bloodGroup(getOptionalColumn(rs, "blood_group"))
                 .schId((Integer) getOptionalObject(rs, "sch_id"))
                 .classId((Integer) getOptionalObject(rs, "class_id"))
+                .academicYearId((Integer) getOptionalObject(rs, "academic_year_id"))
+                .academicYearName(getOptionalColumn(rs, "academic_year_name"))
+                .familyId((Integer) getOptionalObject(rs, "family_id"))
+                .fatherName(getOptionalColumn(rs, "father_name"))
+                .fatherOccupation(getOptionalColumn(rs, "father_occupation"))
+                .fatherStatus(getOptionalColumn(rs, "father_status"))
+                .motherName(getOptionalColumn(rs, "mother_name"))
+                .motherOccupation(getOptionalColumn(rs, "mother_occupation"))
+                .motherStatus(getOptionalColumn(rs, "mother_status"))
                 .guardianId((Integer) getOptionalObject(rs, "guardian_id"))
                 .schName(getOptionalColumn(rs, "sch_name"))
                 .schAddress(getOptionalColumn(rs, "sch_address"))
                 .className(getOptionalColumn(rs, "class_name"))
                 .guardianName(getOptionalColumn(rs, "guardian_name"))
+                .guardianPhone(getOptionalColumn(rs, "guardian_phone", "phone_number"))
                 .guardianRelationName(getOptionalColumn(rs, "relationship_name"))
+                .relationshipName(getOptionalColumn(rs, "relationship_name"))
                 .vilName(getOptionalColumn(rs, "vil_name"))
                 .mndlName(getOptionalColumn(rs, "mndl_name"))
                 .distName(getOptionalColumn(rs, "dist_name"))
@@ -163,6 +193,14 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
         }
     }
 
+    private String getOptionalColumn(ResultSet rs, String primaryColumn, String fallbackColumn) {
+        String value = getOptionalColumn(rs, primaryColumn);
+        if (value != null) {
+            return value;
+        }
+        return getOptionalColumn(rs, fallbackColumn);
+    }
+
     private Object getOptionalObject(ResultSet rs, String columnName) {
         try {
             rs.findColumn(columnName);
@@ -184,6 +222,7 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
             String mndlId,
             String vilId,
             String schId,
+            String academicYearId,
             String sortColumn,
             String sortDirection
     ) {
@@ -194,10 +233,11 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
 
             try (PreparedStatement ps = con.prepareStatement(
                     """
-                    CALL public.getallstudents_v3(
+                    CALL public.getallstudents_v4(
                         CAST(? AS text),
                         CAST(? AS integer),
                         CAST(? AS integer),
+                        CAST(? AS text),
                         CAST(? AS text),
                         CAST(? AS text),
                         CAST(? AS text),
@@ -222,9 +262,10 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 ps.setString(9, emptyToNull(mndlId));
                 ps.setString(10, emptyToNull(vilId));
                 ps.setString(11, emptyToNull(schId));
-                ps.setString(12, emptyToNull(sortColumn));
-                ps.setString(13, emptyToNull(sortDirection));
-                ps.setString(14, cursorName);
+                ps.setString(12, emptyToNull(academicYearId));
+                ps.setString(13, emptyToNull(sortColumn));
+                ps.setString(14, emptyToNull(sortDirection));
+                ps.setString(15, cursorName);
                 ps.execute();
             }
 
