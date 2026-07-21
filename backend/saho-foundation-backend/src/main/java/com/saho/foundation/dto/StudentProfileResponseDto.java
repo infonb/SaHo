@@ -26,15 +26,27 @@ public class StudentProfileResponseDto {
     private String bloodGroup;
     private Integer classId;
     private String className;
+    private Integer academicYearId;
+    private String academicYearName;
+    private Integer familyId;
+    private String fatherName;
+    private String fatherOccupation;
+    private String fatherStatus;
+    private String motherName;
+    private String motherOccupation;
+    private String motherStatus;
     private String siblingId;
     private String orphanStatus;
     private String imageUrl;
 
+    private Integer guardianId;
     private String guardianName;
     private String guardianFirstName;
     private String guardianLastName;
+    private String guardianPhone;
     private String phoneNumber;
     private String guardianRelationName;
+    private String relationshipName;
     private String occ;
     private String addr;
 

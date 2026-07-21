@@ -2,12 +2,16 @@ import { type ComponentProps, type FormEvent, useEffect, useMemo, useRef, useSta
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
+  createOrUpdateGuardian,
+  createOrUpdateStudentFamily,
   createStudent,
   findStudentByAadhaar,
   getCastes,
   getClasses,
   getDistrictsByState,
   getMandalsByDistrict,
+  getParentOccupations,
+  getParentStatuses,
   getRelationships,
   getSchoolsByVillage,
   getStates,
@@ -15,6 +19,10 @@ import {
   getStudentSiblings,
   getVillagesByMandal,
   updateStudent,
+  type GuardianRequestPayload,
+  type LabelValueOption,
+  type StudentFamilyRequestPayload,
+  type StudentProfileResponse,
   type StudentSiblingInfo,
   type StudentSiblingSearchResponse,
 } from '../../api/studentService';
@@ -27,7 +35,6 @@ import { HiOutlineXMark } from 'react-icons/hi2';
 
 const init: StudentFormState = {
   first_name: '',
-  middle_name: '',
   last_name: '',
   email: '',
   dob: '',
@@ -45,15 +52,16 @@ const init: StudentFormState = {
   vil_id: '',
   sch_id: '',
   father_first: '',
-  father_middle: '',
   father_last: '',
   father_is_guardian: 'No',
+  father_occupation: '',
+  father_status: '',
   mother_first: '',
-  mother_middle: '',
   mother_last: '',
   mother_is_guardian: 'No',
+  mother_occupation: '',
+  mother_status: '',
   guardian_first: '',
-  guardian_middle: '',
   guardian_last: '',
   relation: '',
   phone: '',
@@ -89,7 +97,20 @@ const locationRequiredFields: (keyof StudentFormState)[] = [
 ];
 
 const guardianRequiredFields: (keyof StudentFormState)[] = [
-  'guardian_first', 'guardian_last', 'relation', 'phone'
+  'father_first',
+  'father_last',
+  'father_occupation',
+  'father_status',
+  'mother_first',
+  'mother_last',
+  'mother_occupation',
+  'mother_status',
+  'guardian_first',
+  'guardian_last',
+  'relation',
+  'occ',
+  'phone',
+  'addr',
 ];
 
 const requiredFieldLabels: Partial<Record<keyof StudentFormState, string>> = {
@@ -110,6 +131,16 @@ const requiredFieldLabels: Partial<Record<keyof StudentFormState, string>> = {
   sch_id: 'School',
   guardian_first: 'Guardian First Name',
   guardian_last: 'Guardian Last Name',
+  father_first: 'Father First Name',
+  father_last: 'Father Last Name',
+  father_occupation: 'Father Occupation',
+  father_status: 'Father Status',
+  mother_first: 'Mother First Name',
+  mother_last: 'Mother Last Name',
+  mother_occupation: 'Mother Occupation',
+  mother_status: 'Mother Status',
+  occ: 'Occupation',
+  addr: 'Address',
   relation: 'Relation',
   phone: 'Phone Number',
 };
@@ -148,10 +179,9 @@ const getAge = (dateValue: string) => {
 
 const splitName = (fullName: string | null | undefined) => {
   const parts = String(fullName ?? '').trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return { first: '', middle: '', last: '' };
-  if (parts.length === 1) return { first: parts[0], middle: '', last: '' };
-  if (parts.length === 2) return { first: parts[0], middle: '', last: parts[1] };
-  return { first: parts[0], middle: parts.slice(1, -1).join(' '), last: parts[parts.length - 1] };
+  if (parts.length === 0) return { first: '', last: '' };
+  if (parts.length === 1) return { first: parts[0], last: '' };
+  return { first: parts[0], last: parts.slice(1).join(' ') };
 };
 
 const firstString = (source: Record<string, any> | null | undefined, keys: string[]) => {
@@ -213,11 +243,10 @@ const firstBoolean = (source: Record<string, any> | null | undefined, keys: stri
   return undefined;
 };
 
-const sameName = (a: { first: string; middle: string; last: string }, b: { first: string; middle: string; last: string }) => {
+const sameName = (a: { first: string; last: string }, b: { first: string; last: string }) => {
   const normalize = (value: string) => value.trim().toLowerCase();
-  return Boolean(a.first || a.middle || a.last)
+  return Boolean(a.first || a.last)
     && normalize(a.first) === normalize(b.first)
-    && normalize(a.middle) === normalize(b.middle)
     && normalize(a.last) === normalize(b.last);
 };
 
@@ -244,6 +273,10 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const [castes, setCastes] = useState<[string, string][]>([]);
   const [classes, setClasses] = useState<[string, string][]>([]);
   const [relationships, setRelationships] = useState<[string, string][]>([]);
+  const [occupations, setOccupations] = useState<[string, string][]>([]);
+  const [parentStatuses, setParentStatuses] = useState<[string, string][]>([]);
+  const [familyId, setFamilyId] = useState<number | null>(null);
+  const [guardianRecordId, setGuardianRecordId] = useState<number | null>(null);
   const [selectedImageFile, setSelectedImageFile] = useState<File | Blob | null>(null);
   const [aadhaarStatus, setAadhaarStatus] = useState<string>('');
   const [aadhaarValidating, setAadhaarValidating] = useState(false);
@@ -305,6 +338,9 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       : key === 'dob'
       ? normalizeDateValue(value)
       : value;
+
+    const relationValue = (label: string) => relationships.find(([, optionLabel]) => optionLabel.trim().toLowerCase() === label.toLowerCase())?.[0] ?? '';
+
     setForm((current) => {
       const apply = (next: StudentFormState, extraSteps: StudentFormStep[] = []) => {
         const step = fieldStepMap[key];
@@ -313,73 +349,74 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         stepsToValidate.forEach(stepToValidate => updateStepErrors(stepToValidate, next));
         return next;
       };
+
       if (key === 'st_id') return apply({ ...current, st_id: nextValue, dist_id: '', mndl_id: '', vil_id: '', sch_id: '' });
       if (key === 'dist_id') return apply({ ...current, dist_id: nextValue, mndl_id: '', vil_id: '', sch_id: '' });
       if (key === 'mndl_id') return apply({ ...current, mndl_id: nextValue, vil_id: '', sch_id: '' });
       if (key === 'vil_id') return apply({ ...current, vil_id: nextValue, sch_id: '' });
-      const relationValue = (label: string) => relationships.find(([, optionLabel]) => optionLabel.trim().toLowerCase() === label.toLowerCase())?.[0] ?? current.relation;
+
       if (key === 'father_is_guardian') {
-        return nextValue === 'Yes'
-          ? apply({
-              ...current,
-              father_is_guardian: 'Yes',
-              mother_is_guardian: 'No',
-              guardian_first: current.father_first,
-              guardian_middle: current.father_middle,
-              guardian_last: current.father_last,
-              relation: relationValue('Father'),
-            }, ['guardian'])
-          : apply({
-              ...current,
-              father_is_guardian: 'No',
-              guardian_first: '',
-              guardian_middle: '',
-              guardian_last: '',
-              relation: '',
-            }, ['guardian']);
+        const next = {
+          ...current,
+          father_is_guardian: nextValue === 'Yes' ? 'Yes' : 'No',
+          mother_is_guardian: nextValue === 'Yes' ? 'No' : current.mother_is_guardian,
+        };
+        if (nextValue === 'Yes') {
+          next.guardian_first = current.father_first;
+          next.guardian_last = current.father_last;
+          next.occ = current.father_occupation;
+          next.relation = relationValue('Father') || current.relation;
+          next.phone = '';
+          next.addr = '';
+        }
+        return apply(next, ['guardian']);
       }
+
       if (key === 'mother_is_guardian') {
-        return nextValue === 'Yes'
-          ? apply({
-              ...current,
-              mother_is_guardian: 'Yes',
-              father_is_guardian: 'No',
-              guardian_first: current.mother_first,
-              guardian_middle: current.mother_middle,
-              guardian_last: current.mother_last,
-              relation: relationValue('Mother'),
-            }, ['guardian'])
-          : apply({
-              ...current,
-              mother_is_guardian: 'No',
-              guardian_first: '',
-              guardian_middle: '',
-              guardian_last: '',
-              relation: '',
-            }, ['guardian']);
+        const next = {
+          ...current,
+          mother_is_guardian: nextValue === 'Yes' ? 'Yes' : 'No',
+          father_is_guardian: nextValue === 'Yes' ? 'No' : current.father_is_guardian,
+        };
+        if (nextValue === 'Yes') {
+          next.guardian_first = current.mother_first;
+          next.guardian_last = current.mother_last;
+          next.occ = current.mother_occupation;
+          next.relation = relationValue('Mother') || current.relation;
+          next.phone = '';
+          next.addr = '';
+        }
+        return apply(next, ['guardian']);
       }
-      if (key === 'father_first' || key === 'father_middle' || key === 'father_last') {
+
+      if (key === 'father_first' || key === 'father_last' || key === 'father_occupation' || key === 'father_status') {
         const next = { ...current, [key]: nextValue };
         if (current.father_is_guardian === 'Yes') {
           next.guardian_first = key === 'father_first' ? nextValue : current.father_first;
-          next.guardian_middle = key === 'father_middle' ? nextValue : current.father_middle;
           next.guardian_last = key === 'father_last' ? nextValue : current.father_last;
-          next.relation = relationValue('Father');
+          next.occ = key === 'father_occupation' ? nextValue : current.father_occupation;
+          next.relation = relationValue('Father') || current.relation;
           return apply(next, ['guardian']);
         }
         return apply(next);
       }
-      if (key === 'mother_first' || key === 'mother_middle' || key === 'mother_last') {
+
+      if (key === 'mother_first' || key === 'mother_last' || key === 'mother_occupation' || key === 'mother_status') {
         const next = { ...current, [key]: nextValue };
         if (current.mother_is_guardian === 'Yes') {
           next.guardian_first = key === 'mother_first' ? nextValue : current.mother_first;
-          next.guardian_middle = key === 'mother_middle' ? nextValue : current.mother_middle;
           next.guardian_last = key === 'mother_last' ? nextValue : current.mother_last;
-          next.relation = relationValue('Mother');
+          next.occ = key === 'mother_occupation' ? nextValue : current.mother_occupation;
+          next.relation = relationValue('Mother') || current.relation;
           return apply(next, ['guardian']);
         }
         return apply(next);
       }
+
+      if (key === 'guardian_first' || key === 'guardian_last' || key === 'occ' || key === 'relation' || key === 'phone' || key === 'addr') {
+        return apply({ ...current, [key]: nextValue }, ['guardian']);
+      }
+
       return apply({ ...current, [key]: nextValue });
     });
   };
@@ -424,6 +461,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         let statesResponse = [];
         let castesResponse = [];
         let relationshipsResponse = [];
+        let occupationsResponse = [];
+        let parentStatusesResponse = [];
         let classesResponse = [];
 
         try {
@@ -448,6 +487,20 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         }
 
         try {
+          occupationsResponse = await getParentOccupations();
+        } catch (error) {
+          console.error('[StudentFormPage] getParentOccupations failed', error);
+          throw new Error('getParentOccupations');
+        }
+
+        try {
+          parentStatusesResponse = await getParentStatuses();
+        } catch (error) {
+          console.error('[StudentFormPage] getParentStatuses failed', error);
+          throw new Error('getParentStatuses');
+        }
+
+        try {
           classesResponse = await getClasses();
         } catch (error) {
           console.error('[StudentFormPage] getClasses failed', error);
@@ -458,17 +511,23 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         const stateEntries: [string, string][] = statesResponse.map((item): [string, string] => [String(item.stId), item.stName]).filter(([, label]) => !!label);
         const casteEntries: [string, string][] = castesResponse.map((item): [string, string] => [String(item.casteId), item.casteName]).filter(([value, label]) => !!value && !!label);
         const relationshipEntries: [string, string][] = relationshipsResponse.map((item): [string, string] => [String(item.relationship_id), item.relationship_name]).filter(([value, label]) => !!value && !!label);
+        const occupationEntries: [string, string][] = occupationsResponse.map((item: LabelValueOption): [string, string] => [String(item.value), item.label]).filter(([value, label]) => !!value && !!label);
+        const parentStatusEntries: [string, string][] = parentStatusesResponse.map((item: LabelValueOption): [string, string] => [String(item.value), item.label]).filter(([value, label]) => !!value && !!label);
         const classEntries: [string, string][] = classesResponse.map((item): [string, string] => [String(item.classId), item.className]).filter(([value, label]) => !!value && !!label);
 
         setStates(stateEntries);
         setCastes(casteEntries);
         setRelationships(relationshipEntries);
+        setOccupations(occupationEntries);
+        setParentStatuses(parentStatusEntries);
         setClasses(classEntries);
 
         if ((isEdit || isView) && effectiveStudentId) {
           await loadStudent(effectiveStudentId, statesResponse, {
             castes: casteEntries,
             relationships: relationshipEntries,
+            occupations: occupationEntries,
+            statuses: parentStatusEntries,
             classes: classEntries,
             snapshot: studentSnapshot,
           });
@@ -632,6 +691,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     await loadStudent(siblingId, studentStateList, {
       castes: currentCastes,
       relationships: currentRelationships,
+      occupations,
+      statuses: parentStatuses,
       classes: currentClasses,
     });
     getStudentSiblings(siblingId).then(setSiblings);
@@ -643,51 +704,41 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     viewFallback?: {
       castes: [string, string][];
       relationships: [string, string][];
+      occupations: [string, string][];
+      statuses: [string, string][];
       classes: [string, string][];
       snapshot?: StudentView | null;
     }
   ) => {
     setEditLoading(true);
     try {
-      const student = ((await getStudentById(studentId).catch(() => undefined)) ?? viewFallback?.snapshot) as unknown as (StudentView & Record<string, any>) | undefined;
+      const student = ((await getStudentById(studentId).catch(() => undefined)) ?? viewFallback?.snapshot) as unknown as (StudentProfileResponse & StudentView & Record<string, any>) | undefined;
       const snapshot = viewFallback?.snapshot ?? student;
       if (!student) {
         throw new Error('Student not found');
       }
-      const [firstName, ...restName] = (student.studentName || snapshot?.full_name || '').split(' ');
-      const fallbackGuardian = splitName(student.guardianName ?? snapshot?.guardian_full_name);
-      const fatherName = {
-        first: firstString(student, ['fatherFirstName', 'father_first_name', 'father_first', 'fatherNameFirst', 'father.firstName', 'father.first_name']),
-        middle: firstString(student, ['fatherMiddleName', 'father_middle_name', 'father_middle', 'fatherNameMiddle', 'father.middleName', 'father.middle_name']),
-        last: firstString(student, ['fatherLastName', 'father_last_name', 'father_last', 'fatherNameLast', 'father.lastName', 'father.last_name']),
-      };
-      const motherName = {
-        first: firstString(student, ['motherFirstName', 'mother_first_name', 'mother_first', 'motherNameFirst', 'mother.firstName', 'mother.first_name']),
-        middle: firstString(student, ['motherMiddleName', 'mother_middle_name', 'mother_middle', 'motherNameMiddle', 'mother.middleName', 'mother.middle_name']),
-        last: firstString(student, ['motherLastName', 'mother_last_name', 'mother_last', 'motherNameLast', 'mother.lastName', 'mother.last_name']),
-      };
-      const fallbackFather = splitName(firstString(student, ['fatherName', 'father_name', 'father.name']));
-      const fallbackMother = splitName(firstString(student, ['motherName', 'mother_name', 'mother.name']));
-      const guardianName = {
-        first: student.guardianFirstName ?? fallbackGuardian.first,
-        middle: student.guardianMiddleName ?? fallbackGuardian.middle,
-        last: student.guardianLastName ?? fallbackGuardian.last,
-      };
-      const guardianRelationLabel = String(student.guardianRelationName || snapshot?.guardian_relation_name || '').trim().toLowerCase();
-      const father = {
-        first: fatherName.first || fallbackFather.first || (guardianRelationLabel === 'father' ? guardianName.first : ''),
-        middle: fatherName.middle || fallbackFather.middle || (guardianRelationLabel === 'father' ? guardianName.middle : ''),
-        last: fatherName.last || fallbackFather.last || (guardianRelationLabel === 'father' ? guardianName.last : ''),
-      };
-      const mother = {
-        first: motherName.first || fallbackMother.first || (guardianRelationLabel === 'mother' ? guardianName.first : ''),
-        middle: motherName.middle || fallbackMother.middle || (guardianRelationLabel === 'mother' ? guardianName.middle : ''),
-        last: motherName.last || fallbackMother.last || (guardianRelationLabel === 'mother' ? guardianName.last : ''),
-      };
-      const explicitFatherGuardian = firstBoolean(student, ['fatherIsGuardian', 'father_is_guardian', 'isFatherGuardian', 'father.isGuardian', 'father.is_guardian']);
-      const explicitMotherGuardian = firstBoolean(student, ['motherIsGuardian', 'mother_is_guardian', 'isMotherGuardian', 'mother.isGuardian', 'mother.is_guardian']);
-      const fatherIsGuardian = explicitFatherGuardian ?? (guardianRelationLabel === 'father' && sameName(father, guardianName));
-      const motherIsGuardian = explicitMotherGuardian ?? (guardianRelationLabel === 'mother' && sameName(mother, guardianName));
+      const studentNameParts = (student.studentName || snapshot?.full_name || '').trim().split(/\s+/).filter(Boolean);
+      const firstName = studentNameParts[0] || '';
+      const lastName = studentNameParts.length > 1 ? studentNameParts.slice(1).join(' ') : '';
+      const fatherName = splitName(student.fatherName ?? firstString(student, ['father_name', 'father.name']));
+      const motherName = splitName(student.motherName ?? firstString(student, ['mother_name', 'mother.name']));
+      const guardianName = splitName(student.guardianName ?? snapshot?.guardian_full_name);
+      const guardianRelationLabel = String(student.guardianRelationName || student.relationshipName || snapshot?.guardian_relation_name || '').trim();
+      const guardianRelationValue = mapLabelToOptionValue(guardianRelationLabel, viewFallback?.relationships ?? []);
+      const fatherOccupation = mapLabelToOptionValue(student.fatherOccupation ?? firstString(student, ['father_occupation']), viewFallback?.occupations ?? []);
+      const motherOccupation = mapLabelToOptionValue(student.motherOccupation ?? firstString(student, ['mother_occupation']), viewFallback?.occupations ?? []);
+      const fatherStatus = mapLabelToOptionValue(student.fatherStatus ?? firstString(student, ['father_status']), viewFallback?.statuses ?? []);
+      const motherStatus = mapLabelToOptionValue(student.motherStatus ?? firstString(student, ['mother_status']), viewFallback?.statuses ?? []);
+      const fatherIsGuardian = firstBoolean(student, ['fatherIsGuardian', 'father_is_guardian', 'isFatherGuardian'])
+        ?? (guardianRelationLabel.toLowerCase() === 'father' || sameName(fatherName, guardianName));
+      const motherIsGuardian = firstBoolean(student, ['motherIsGuardian', 'mother_is_guardian', 'isMotherGuardian'])
+        ?? (guardianRelationLabel.toLowerCase() === 'mother' || sameName(motherName, guardianName));
+      const relationValue = guardianRelationValue || mapLabelToOptionValue(fatherIsGuardian ? 'Father' : motherIsGuardian ? 'Mother' : guardianRelationLabel, viewFallback?.relationships ?? []);
+      const guardianFirst = fatherIsGuardian ? fatherName.first : motherIsGuardian ? motherName.first : student.guardianFirstName ?? guardianName.first;
+      const guardianLast = fatherIsGuardian ? fatherName.last : motherIsGuardian ? motherName.last : student.guardianLastName ?? guardianName.last;
+      const guardianOccupation = fatherIsGuardian ? fatherOccupation : motherIsGuardian ? motherOccupation : firstString(student, ['occ']) || '';
+      const guardianPhone = student.phoneNumber ?? snapshot?.guardian_phone ?? '';
+      const guardianAddress = student.addr ?? '';
       const aadhaarNumber = firstString(student, ['aadhaarNumber', 'aadhaar_number', 'aadharNumber', 'aadhar_number']) || snapshot?.aadhaar_number || '';
       const religionValue = firstString(student, ['religion', 'religionName', 'religion_name', 'religionLabel', 'religion_label']) || snapshot?.religion || '';
       const casteValue = firstString(student, ['casteName', 'caste_name', 'caste', 'casteLabel', 'caste_label']) || snapshot?.caste || '';
@@ -695,8 +746,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       const newForm: StudentFormState = {
         ...init,
         first_name: firstName,
-        middle_name: restName.length > 1 ? restName.slice(0, -1).join(' ') : '',
-        last_name: restName.slice(-1).join(' '),
+        last_name: lastName,
         email: student.emailId ?? snapshot?.email ?? '',
         dob: student.dob ?? snapshot?.dob ?? '',
         gender: mapLabelToOptionValue(student.gender || snapshot?.gender, GENDER_OPTIONS),
@@ -706,23 +756,24 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         class_id: student.classId ? String(student.classId) : mapLabelToOptionValue(snapshot?.class_id, viewFallback?.classes ?? []),
         orphan_status: mapLabelToOptionValue(student.orphanStatus || snapshot?.orphan_status, ORPHAN_STATUS_OPTIONS),
         image_url: getStudentImageValue(student, snapshot),
-        father_first: father.first,
-        father_middle: father.middle,
-        father_last: father.last,
+        father_first: fatherName.first,
+        father_last: fatherName.last,
         father_is_guardian: fatherIsGuardian ? 'Yes' : 'No',
-        mother_first: mother.first,
-        mother_middle: mother.middle,
-        mother_last: mother.last,
+        father_occupation: fatherOccupation,
+        father_status: fatherStatus,
+        mother_first: motherName.first,
+        mother_last: motherName.last,
         mother_is_guardian: motherIsGuardian ? 'Yes' : 'No',
-        guardian_first: guardianName.first,
-        guardian_middle: guardianName.middle,
-        guardian_last: guardianName.last,
-        phone: student.phoneNumber ?? snapshot?.guardian_phone ?? '',
-        occ: student.occ ?? snapshot?.guardian_occ ?? '',
-        addr: student.addr ?? '',
+        mother_occupation: motherOccupation,
+        mother_status: motherStatus,
+        guardian_first: guardianFirst,
+        guardian_last: guardianLast,
+        phone: guardianPhone,
+        occ: guardianOccupation,
+        addr: guardianAddress,
         has_sibling: student.siblingId || snapshot?.sibling_id || snapshot?.sibling_student_id ? 'Yes' : 'No',
         sibling_aadhaar: '',
-        relation: mapLabelToOptionValue(student.guardianRelationName || snapshot?.guardian_relation_name, viewFallback?.relationships ?? []),
+        relation: relationValue,
         caste: casteId ? casteId : mapLabelToOptionValue(casteValue, viewFallback?.castes ?? []),
         st_id: '',
         dist_id: '',
@@ -732,6 +783,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       };
 
       setForm(newForm);
+      setFamilyId(student.familyId ?? null);
+      setGuardianRecordId((student.guardianId ?? (snapshot as StudentView | null)?.guardian_id) ?? null);
       setSelectedImageFile(null);
       if (effectiveStudentId && (student.siblingId || snapshot?.sibling_id || snapshot?.sibling_student_id)) {
         getStudentSiblings(effectiveStudentId).then(sibList => {
@@ -826,7 +879,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     const currentStudentId = effectiveStudentId;
     const nameMap = new Map<number, string>();
     if (currentStudentId) {
-      nameMap.set(currentStudentId, [form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ') || `Student #${currentStudentId}`);
+      nameMap.set(currentStudentId, [form.first_name, form.last_name].filter(Boolean).join(' ') || `Student #${currentStudentId}`);
     }
     siblingsList.forEach(s => nameMap.set(s.studentId, s.studentName));
 
@@ -887,10 +940,39 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       const imageUrl = selectedImageFile
         ? undefined
         : form.image_url;
+      const parentGuardianMode = form.father_is_guardian === 'Yes' ? 'father' : form.mother_is_guardian === 'Yes' ? 'mother' : null;
+      const relationId = Number(form.relation);
+      const familyPayload: StudentFamilyRequestPayload = {
+        fatherName: [form.father_first, form.father_last].filter(Boolean).join(' '),
+        fatherOccupation: form.father_occupation,
+        fatherStatus: form.father_status,
+        motherName: [form.mother_first, form.mother_last].filter(Boolean).join(' '),
+        motherOccupation: form.mother_occupation,
+        motherStatus: form.mother_status,
+        createdBy: user?.user_id || 1,
+      };
+      const guardianPayload: GuardianRequestPayload = {
+        guardianId: guardianRecordId ?? undefined,
+        firstName: parentGuardianMode === 'father' ? form.father_first : parentGuardianMode === 'mother' ? form.mother_first : form.guardian_first,
+        lastName: parentGuardianMode === 'father' ? form.father_last : parentGuardianMode === 'mother' ? form.mother_last : form.guardian_last,
+        phoneNumber: form.phone,
+        relationshipId: relationId,
+        occ: parentGuardianMode === 'father' ? form.father_occupation : parentGuardianMode === 'mother' ? form.mother_occupation : form.occ,
+        addr: form.addr || null,
+      };
+
+      const familyResult = await createOrUpdateStudentFamily(familyPayload, familyId);
+      const resolvedFamilyId = Number(familyResult?.familyId ?? familyResult?.family_id ?? familyId);
+      if (!resolvedFamilyId) throw new Error('Family id is missing after save.');
+      setFamilyId(resolvedFamilyId);
+
+      const guardianResult = await createOrUpdateGuardian(guardianPayload, guardianRecordId);
+      const resolvedGuardianId = Number(guardianResult?.guardianId ?? guardianResult?.guardian_id ?? guardianRecordId);
+      if (!resolvedGuardianId) throw new Error('Guardian id is missing after save.');
+      setGuardianRecordId(resolvedGuardianId);
 
       const payload = {
         firstName: form.first_name,
-        middleName: form.middle_name || null,
         lastName: form.last_name,
         emailId: form.email,
         dob: form.dob,
@@ -901,20 +983,14 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         bloodGroup: form.blood_group || null,
         schId: Number(form.sch_id),
         classId: Number(form.class_id),
+        academicYearId: null,
+        familyId: resolvedFamilyId,
+        guardianId: resolvedGuardianId,
         orphanStatus: form.orphan_status || null,
         imageUrl: imageUrl || null,
         createdBy: user?.user_id || 1,
         hasSibling: form.has_sibling === 'Yes',
         siblingIds: siblingsList.length > 0 ? siblingsList.map(s => s.studentId).join(',') : null,
-        guardian: {
-          firstName: form.guardian_first,
-          middleName: form.guardian_middle || null,
-          lastName: form.guardian_last,
-          phoneNumber: form.phone,
-          relationshipId: Number(form.relation),
-          occ: form.occ || null,
-          addr: form.addr || null,
-        },
       };
 
       const successMessage = isEdit ? 'Student updated successfully.' : 'Student added successfully.';
@@ -1074,10 +1150,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       fieldsToValidate.push('email', 'aadhaar_number', 'dob');
       if (formState.has_sibling === 'Yes' && siblingsList.length === 0) fieldsToValidate.push('sibling_aadhaar');
     }
-    if (stepKeys.includes('guardian')) {
-      fieldsToValidate.push('phone');
-      if (formState.has_sibling === 'Yes' && siblingsList.length === 0) fieldsToValidate.push('sibling_aadhaar');
-    }
+    if (stepKeys.includes('guardian') && formState.has_sibling === 'Yes' && siblingsList.length === 0) fieldsToValidate.push('sibling_aadhaar');
     return fieldsToValidate;
   };
   const clearStepValidation = (step: StudentFormStep) => {
@@ -1096,13 +1169,14 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       const next = { ...current };
       ([
         'father_first',
-        'father_middle',
         'father_last',
+        'father_occupation',
+        'father_status',
         'mother_first',
-        'mother_middle',
         'mother_last',
+        'mother_occupation',
+        'mother_status',
         'guardian_first',
-        'guardian_middle',
         'guardian_last',
         'relation',
         'phone',
@@ -1115,13 +1189,14 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     });
     setValidatedFields(current => new Set([...current].filter(field => !([
       'father_first',
-      'father_middle',
       'father_last',
+      'father_occupation',
+      'father_status',
       'mother_first',
-      'mother_middle',
       'mother_last',
+      'mother_occupation',
+      'mother_status',
       'guardian_first',
-      'guardian_middle',
       'guardian_last',
       'relation',
       'phone',
@@ -1175,8 +1250,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const optionLabel = (value: string, options: [string, string][]) => {
     return options.find(([optionValue]) => optionValue === value)?.[1] || value || '-';
   };
-  const fullName = [form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ') || studentSnapshot?.full_name || '-';
-  const guardianName = [form.guardian_first, form.guardian_middle, form.guardian_last].filter(Boolean).join(' ') || studentSnapshot?.guardian_full_name || '-';
+  const fullName = [form.first_name, form.last_name].filter(Boolean).join(' ') || studentSnapshot?.full_name || '-';
+  const guardianName = [form.guardian_first, form.guardian_last].filter(Boolean).join(' ') || studentSnapshot?.guardian_full_name || '-';
   const profileStudentId = String(effectiveStudentId ?? studentSnapshot?.student_id ?? '-');
   const profileInitials = fullName
     .split(/\s+/)
@@ -1253,7 +1328,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             <ProfileViewItem label="Guardian" value={guardianName} />
             <ProfileViewItem label="Relation" value={optionLabel(form.relation, currentRelationships)} />
             <ProfileViewItem label="Phone" value={form.phone || '-'} />
-            <ProfileViewItem label="Guardian Occupation" value={form.occ || '-'} />
+            <ProfileViewItem label="Guardian Occupation" value={optionLabel(form.occ, occupations)} />
             <div className="studentProfileViewItem">
               <div className="studentProfileViewLabel">Sibling</div>
               <div className="studentProfileViewValue">

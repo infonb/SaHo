@@ -2,6 +2,7 @@ package com.saho.foundation.controller;
 
 import com.saho.foundation.dto.CasteResponseDto;
 import com.saho.foundation.dto.ClassResponseDto;
+import com.saho.foundation.dto.LabelValueResponseDto;
 import com.saho.foundation.dto.RelationshipResponseDto;
 import com.saho.foundation.service.iservices.MasterService;
 import lombok.RequiredArgsConstructor;
@@ -31,5 +32,15 @@ public class MasterController {
     @GetMapping("/classes")
     public List<ClassResponseDto> getClasses() {
         return masterService.getAllClasses();
+    }
+
+    @GetMapping("/parent-statuses")
+    public List<LabelValueResponseDto> getParentStatuses() {
+        return masterService.getParentStatuses();
+    }
+
+    @GetMapping("/parent-occupations")
+    public List<LabelValueResponseDto> getParentOccupations() {
+        return masterService.getParentOccupations();
     }
 }

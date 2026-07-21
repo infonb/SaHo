@@ -18,7 +18,6 @@ const logApiFailure = (name: string, error: unknown) => {
 
 export interface StudentRequestGuardianDto {
   firstName: string;
-  middleName?: string | null;
   lastName: string;
   phoneNumber: string;
   relationshipId: number;
@@ -27,15 +26,35 @@ export interface StudentRequestGuardianDto {
   isDeleted?: boolean;
 }
 
+export interface StudentFamilyRequestPayload {
+  fatherName: string;
+  fatherOccupation: string;
+  fatherStatus: string;
+  motherName: string;
+  motherOccupation: string;
+  motherStatus: string;
+  createdBy?: number;
+}
+
+export interface GuardianRequestPayload {
+  guardianId?: number | null;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  relationshipId: number;
+  occ?: string | null;
+  addr?: string | null;
+}
+
 export interface StudentRequestPayload {
   firstName: string;
-  middleName?: string | null;
   lastName: string;
   emailId: string;
   dob: string;
   gender: string;
   aadhaarNumber: string;
   casteId: number;
+  academicYearId?: number | null;
   religion?: string | null;
   bloodGroup?: string | null;
   schId: number;
@@ -45,7 +64,15 @@ export interface StudentRequestPayload {
   createdBy: number;
   hasSibling?: boolean;
   siblingIds?: string | null;
-  guardian: StudentRequestGuardianDto;
+  familyId?: number | null;
+  guardianId?: number | null;
+  fatherName?: string | null;
+  fatherOccupation?: string | null;
+  fatherStatus?: string | null;
+  motherName?: string | null;
+  motherOccupation?: string | null;
+  motherStatus?: string | null;
+  guardian?: StudentRequestGuardianDto;
 }
 
 export interface StudentSiblingSearchResponse {
@@ -76,6 +103,14 @@ export interface StudentProfileResponse {
   religion?: string | null;
   bloodGroup?: string | null;
   classId?: number;
+  familyId?: number;
+  guardianId?: number;
+  fatherName?: string | null;
+  fatherOccupation?: string | null;
+  fatherStatus?: string | null;
+  motherName?: string | null;
+  motherOccupation?: string | null;
+  motherStatus?: string | null;
   siblingId?: string;
   orphanStatus?: string | null;
   imageUrl?: string | null;
@@ -94,6 +129,11 @@ export interface StudentProfileResponse {
   mndlName?: string;
   distName?: string;
   stName?: string;
+}
+
+export interface LabelValueOption {
+  value: string;
+  label: string;
 }
 
 export interface ClassResponse {
@@ -195,6 +235,26 @@ export const getRelationships = async (): Promise<RelationshipMaster[]> => {
   }
 };
 
+export const getParentStatuses = async (): Promise<LabelValueOption[]> => {
+  try {
+    const response = await apiClient.get<LabelValueOption[]>('/master/parent-statuses');
+    return response.data ?? [];
+  } catch (error) {
+    logApiFailure('getParentStatuses', error);
+    throw error;
+  }
+};
+
+export const getParentOccupations = async (): Promise<LabelValueOption[]> => {
+  try {
+    const response = await apiClient.get<LabelValueOption[]>('/master/parent-occupations');
+    return response.data ?? [];
+  } catch (error) {
+    logApiFailure('getParentOccupations', error);
+    throw error;
+  }
+};
+
 export const getClasses = async (): Promise<ClassResponse[]> => {
   try {
     const response = await apiClient.get<any[] | { data?: any[]; content?: any[]; items?: any[] }>('/master/classes');
@@ -257,6 +317,23 @@ const sendStudentForm = async (payload: StudentRequestPayload, url: string, meth
   }
   const response = await apiClient.request({ url, method, data: payload });
   return response.data;
+};
+
+const sendJson = async <T,>(url: string, method: 'post' | 'put', payload: T) => {
+  const response = await apiClient.request({ url, method, data: payload });
+  return response.data;
+};
+
+export const createOrUpdateStudentFamily = async (payload: StudentFamilyRequestPayload, familyId?: number | null) => {
+  const url = familyId ? `/student-families/${familyId}` : '/student-families';
+  const method = familyId ? 'put' : 'post';
+  return sendJson(url, method, payload);
+};
+
+export const createOrUpdateGuardian = async (payload: GuardianRequestPayload, guardianId?: number | null) => {
+  const url = guardianId ? `/guardians/${guardianId}` : '/guardians';
+  const method = guardianId ? 'put' : 'post';
+  return sendJson(url, method, payload);
 };
 
 export const createStudent = async (payload: StudentRequestPayload, imageFile?: File | Blob) => {

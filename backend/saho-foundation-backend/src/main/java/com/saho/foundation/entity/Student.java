@@ -52,6 +52,13 @@ public class Student {
     @Column(name = "class_id", nullable = false)
     private Integer classId;
 
+    @Column(name = "academic_year_id")
+    private Integer academicYearId;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "family_id", nullable = false)
+    private StudentFamily family;
+
     // Stores sibling student ids as CSV like "2,3,5". If no siblings, it stays null.
     @Column(name = "sibling_id")
     private String siblingId;

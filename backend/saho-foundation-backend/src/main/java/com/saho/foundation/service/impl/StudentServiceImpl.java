@@ -7,21 +7,27 @@ import com.saho.foundation.dto.StudentRequestDto;
 import com.saho.foundation.dto.StudentResponseDto;
 import com.saho.foundation.dto.StudentSiblingInfoDto;
 import com.saho.foundation.dto.StudentSiblingSearchResponseDto;
+import com.saho.foundation.entity.AcademicYear;
 import com.saho.foundation.entity.ClassMaster;
 import com.saho.foundation.entity.Guardian;
 import com.saho.foundation.entity.SchoolMaster;
+import com.saho.foundation.entity.StudentFamily;
 import com.saho.foundation.entity.Student;
 import com.saho.foundation.entity.User;
 import com.saho.foundation.enums.Gender;
+import com.saho.foundation.enums.ParentStatus;
 import com.saho.foundation.enums.OrphanStatus;
 import com.saho.foundation.enums.Religion;
 import com.saho.foundation.exception.DuplicateResourceException;
 import com.saho.foundation.exception.ResourceNotFoundException;
 import com.saho.foundation.repository.GuardianRepository;
+import com.saho.foundation.repository.AcademicYearRepository;
+import com.saho.foundation.repository.RelationshipRepository;
 import com.saho.foundation.repository.ClassRepository;
 import com.saho.foundation.repository.SchoolRepository;
 import com.saho.foundation.repository.StudentRepository;
 import com.saho.foundation.repository.UserRepository;
+import com.saho.foundation.service.iservices.StudentFamilyService;
 import com.saho.foundation.service.iservices.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -54,6 +60,9 @@ public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
     private final GuardianRepository guardianRepository;
+    private final AcademicYearRepository academicYearRepository;
+    private final StudentFamilyService studentFamilyService;
+    private final RelationshipRepository relationshipRepository;
     private final ClassRepository classRepository;
     private final SchoolRepository schoolRepository;
     private final UserRepository userRepository;
@@ -70,24 +79,8 @@ public class StudentServiceImpl implements StudentService {
             throw new DuplicateResourceException("aadhaarNumber already exists");
         }
 
-        // Call guardian procedure first, then read the generated guardian id.
-        guardianRepository.createOrUpdateGuardian(
-                null,
-                requestDto.getGuardian().getFirstName(),
-                requestDto.getGuardian().getLastName(),
-                requestDto.getGuardian().getPhoneNumber(),
-                requestDto.getGuardian().getRelationshipId(),
-                requestDto.getGuardian().getOcc(),
-                requestDto.getGuardian().getAddr()
-        );
-
-        Integer guardianId = guardianRepository.findTopByFirstNameAndLastNameAndPhoneNumberOrderByGuardianIdDesc(
-                        requestDto.getGuardian().getFirstName(),
-                        requestDto.getGuardian().getLastName(),
-                        requestDto.getGuardian().getPhoneNumber()
-                )
-                .map(Guardian::getGuardianId)
-                .orElseThrow(() -> new ResourceNotFoundException("Guardian not found after procedure call"));
+        StudentFamily family = persistStudentFamily(requestDto, null);
+        Integer guardianId = resolveGuardianId(requestDto, null);
 
         studentRepository.createOrUpdateStudent(
                 null,
@@ -102,6 +95,8 @@ public class StudentServiceImpl implements StudentService {
                 requestDto.getBloodGroup(),
                 requestDto.getSchId(),
                 requestDto.getClassId(),
+                resolveAcademicYearId(requestDto.getAcademicYearId(), null),
+                family.getFamilyId(),
                 guardianId,
                 // Store selected sibling student ids as CSV in students.sibling_id. If no sibling, save null.
                 Boolean.TRUE.equals(requestDto.getHasSibling()) ? requestDto.getSiblingIds() : null,
@@ -144,6 +139,7 @@ public class StudentServiceImpl implements StudentService {
             String mndlId,
             String vilId,
             String schId,
+            String academicYearId,
             String sortColumn,
             String sortDirection
         ) {
@@ -159,6 +155,7 @@ public class StudentServiceImpl implements StudentService {
                 mndlId,
                 vilId,
                 schId,
+                academicYearId,
                 sortColumn,
                 sortDirection
         )
@@ -204,6 +201,7 @@ public class StudentServiceImpl implements StudentService {
             String mndlId,
             String vilId,
             String schId,
+            String academicYearId,
             String sortColumn,
             String sortDirection,
             String studentIdsCsv
@@ -220,6 +218,7 @@ public class StudentServiceImpl implements StudentService {
                 mndlId,
                 vilId,
                 schId,
+                academicYearId,
                 sortColumn,
                 sortDirection
         );
@@ -489,19 +488,9 @@ public class StudentServiceImpl implements StudentService {
 
         Set<Integer> existingSiblingIds = parseStudentIds(existingStudent.getSiblingId());
         Integer guardianId = existingStudent.getGuardian() != null ? existingStudent.getGuardian().getGuardianId() : null;
-
-        // Update guardian details also when guardian data is provided.
-        if (requestDto.getGuardian() != null && guardianId != null) {
-            guardianRepository.createOrUpdateGuardian(
-                    guardianId,
-                    requestDto.getGuardian().getFirstName(),
-                    requestDto.getGuardian().getLastName(),
-                    requestDto.getGuardian().getPhoneNumber(),
-                    requestDto.getGuardian().getRelationshipId(),
-                    requestDto.getGuardian().getOcc(),
-                    requestDto.getGuardian().getAddr()
-            );
-        }
+        Integer academicYearId = resolveAcademicYearId(requestDto.getAcademicYearId(), existingStudent.getAcademicYearId());
+        StudentFamily family = persistStudentFamily(requestDto, existingStudent.getFamily());
+        guardianId = resolveGuardianId(requestDto, guardianId);
 
         String imageUrl = requestDto.getImageUrl() != null && !requestDto.getImageUrl().isBlank()
                 ? requestDto.getImageUrl()
@@ -520,6 +509,8 @@ public class StudentServiceImpl implements StudentService {
                 requestDto.getBloodGroup(),
                 requestDto.getSchId(),
                 requestDto.getClassId(),
+                academicYearId,
+                family.getFamilyId(),
                 guardianId,
                 Boolean.TRUE.equals(requestDto.getHasSibling()) ? requestDto.getSiblingIds() : null,
                 requestDto.getOrphanStatus(),
@@ -545,7 +536,8 @@ public class StudentServiceImpl implements StudentService {
             String distId,
             String mndlId,
             String vilId,
-            String schId
+            String schId,
+            String academicYearId
     ) {
         return studentRepository.getAllStudentsWithPagination(
                 search,
@@ -559,6 +551,7 @@ public class StudentServiceImpl implements StudentService {
                 mndlId,
                 vilId,
                 schId,
+                academicYearId,
                 "student_id",
                 "ASC"
         ).stream()
@@ -585,6 +578,7 @@ public class StudentServiceImpl implements StudentService {
 
     private StudentResponseDto mapToResponseDto(Student student) {
         Guardian guardian = student.getGuardian();
+        AcademicYear academicYear = resolveAcademicYear(student.getAcademicYearId());
 
         return StudentResponseDto.builder()
                 .studentId(student.getStudentId())
@@ -599,8 +593,20 @@ public class StudentServiceImpl implements StudentService {
                 .bloodGroup(student.getBloodGroup())
                 .schId(student.getSchId())
                 .classId(student.getClassId())
+                .academicYearId(student.getAcademicYearId())
+                .academicYearName(academicYear != null ? academicYear.getAcademicYearName() : null)
+                .familyId(student.getFamily() != null ? student.getFamily().getFamilyId() : null)
+                .fatherName(student.getFamily() != null ? student.getFamily().getFatherName() : null)
+                .fatherOccupation(student.getFamily() != null ? student.getFamily().getFatherOccupation() : null)
+                .fatherStatus(resolveParentStatusLabel(student.getFamily() != null ? student.getFamily().getFatherStatus() : null))
+                .motherName(student.getFamily() != null ? student.getFamily().getMotherName() : null)
+                .motherOccupation(student.getFamily() != null ? student.getFamily().getMotherOccupation() : null)
+                .motherStatus(resolveParentStatusLabel(student.getFamily() != null ? student.getFamily().getMotherStatus() : null))
                 .siblingId(student.getSiblingId())
                 .guardianId(guardian != null ? guardian.getGuardianId() : null)
+                .guardianName(buildGuardianName(guardian))
+                .guardianPhone(guardian != null ? guardian.getPhoneNumber() : null)
+                .relationshipName(resolveRelationshipName(guardian != null ? guardian.getRelationshipId() : null))
                 .orphanStatus(resolveOrphanStatusLabel(student.getOrphanStatus()))
                 .imageUrl(student.getImageUrl())
                 .isDeleted(student.getIsDeleted())
@@ -648,12 +654,23 @@ public class StudentServiceImpl implements StudentService {
                 .bloodGroup(student.getBloodGroup())
                 .schId(student.getSchId())
                 .classId(student.getClassId())
+                .academicYearId(student.getAcademicYearId())
+                .academicYearName(student.getAcademicYearName())
+                .familyId(student.getFamilyId())
+                .fatherName(student.getFatherName())
+                .fatherOccupation(student.getFatherOccupation())
+                .fatherStatus(resolveParentStatusLabel(student.getFatherStatus()))
+                .motherName(student.getMotherName())
+                .motherOccupation(student.getMotherOccupation())
+                .motherStatus(resolveParentStatusLabel(student.getMotherStatus()))
                 .schAddress(student.getSchAddress())
                 .schName(student.getSchName())
                 .className(student.getClassName())
                 .guardianName(student.getGuardianName())
                 .guardianId(student.getGuardianId())
+                .guardianPhone(student.getGuardianPhone())
                 .guardianRelationName(student.getGuardianRelationName())
+                .relationshipName(student.getRelationshipName())
                 .vilName(student.getVilName())
                 .mndlName(student.getMndlName())
                 .distName(student.getDistName())
@@ -675,11 +692,151 @@ public class StudentServiceImpl implements StudentService {
                 .build();
     }
 
+    private Integer resolveAcademicYearId(Integer requestedAcademicYearId, Integer fallbackAcademicYearId) {
+        if (requestedAcademicYearId != null) {
+            return academicYearRepository.findByAcademicYearIdAndIsDeletedFalse(requestedAcademicYearId)
+                    .map(AcademicYear::getAcademicYearId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Academic year not found with id: " + requestedAcademicYearId));
+        }
+
+        if (fallbackAcademicYearId != null) {
+            return fallbackAcademicYearId;
+        }
+
+        return academicYearRepository.findByIsCurrentTrueAndIsActiveTrueAndIsDeletedFalse()
+                .map(AcademicYear::getAcademicYearId)
+                .orElseThrow(() -> new ResourceNotFoundException("Current academic year not found"));
+    }
+
+    private AcademicYear resolveAcademicYear(Integer academicYearId) {
+        if (academicYearId == null) {
+            return null;
+        }
+        return academicYearRepository.findByAcademicYearIdAndIsDeletedFalse(academicYearId).orElse(null);
+    }
+
+    private StudentFamily persistStudentFamily(StudentRequestDto requestDto, StudentFamily fallbackFamily) {
+        Integer familyId = requestDto.getFamilyId() != null
+                ? requestDto.getFamilyId()
+                : (fallbackFamily != null ? fallbackFamily.getFamilyId() : null);
+
+        if (familyId != null && !hasFamilyPayload(requestDto)) {
+            return fallbackFamily != null && familyId.equals(fallbackFamily.getFamilyId())
+                    ? fallbackFamily
+                    : studentFamilyService.getStudentFamilyById(familyId);
+        }
+
+        return studentFamilyService.createOrUpdateStudentFamily(
+                familyId,
+                resolveText(requestDto.getFatherName(), fallbackFamily != null ? fallbackFamily.getFatherName() : null),
+                resolveText(requestDto.getFatherOccupation(), fallbackFamily != null ? fallbackFamily.getFatherOccupation() : null),
+                resolveParentStatusValue(requestDto.getFatherStatus(), fallbackFamily != null ? fallbackFamily.getFatherStatus() : null),
+                resolveText(requestDto.getMotherName(), fallbackFamily != null ? fallbackFamily.getMotherName() : null),
+                resolveText(requestDto.getMotherOccupation(), fallbackFamily != null ? fallbackFamily.getMotherOccupation() : null),
+                resolveParentStatusValue(requestDto.getMotherStatus(), fallbackFamily != null ? fallbackFamily.getMotherStatus() : null),
+                requestDto.getCreatedBy()
+        );
+    }
+
+    private Integer resolveGuardianId(StudentRequestDto requestDto, Integer fallbackGuardianId) {
+        if (requestDto.getGuardianId() != null && !hasGuardianPayload(requestDto)) {
+            return requestDto.getGuardianId();
+        }
+
+        if (requestDto.getGuardian() == null) {
+            if (fallbackGuardianId != null) {
+                return fallbackGuardianId;
+            }
+            if (requestDto.getGuardianId() != null) {
+                return requestDto.getGuardianId();
+            }
+            throw new ResourceNotFoundException("Guardian information is required");
+        }
+
+        Guardian guardian = requestDto.getGuardianId() != null
+                ? guardianRepository.findById(requestDto.getGuardianId()).orElse(null)
+                : null;
+
+        guardianRepository.createOrUpdateGuardian(
+                requestDto.getGuardianId(),
+                requestDto.getGuardian().getFirstName(),
+                requestDto.getGuardian().getLastName(),
+                requestDto.getGuardian().getPhoneNumber(),
+                requestDto.getGuardian().getRelationshipId(),
+                requestDto.getGuardian().getOcc(),
+                requestDto.getGuardian().getAddr()
+        );
+
+        if (requestDto.getGuardianId() != null) {
+            return requestDto.getGuardianId();
+        }
+
+        return guardianRepository.findTopByFirstNameAndLastNameAndPhoneNumberOrderByGuardianIdDesc(
+                        requestDto.getGuardian().getFirstName(),
+                        requestDto.getGuardian().getLastName(),
+                        requestDto.getGuardian().getPhoneNumber()
+                )
+                .map(Guardian::getGuardianId)
+                .orElseThrow(() -> new ResourceNotFoundException("Guardian not found after procedure call"));
+    }
+
+    private boolean hasFamilyPayload(StudentRequestDto requestDto) {
+        return hasText(requestDto.getFatherName())
+                || hasText(requestDto.getFatherOccupation())
+                || hasText(requestDto.getFatherStatus())
+                || hasText(requestDto.getMotherName())
+                || hasText(requestDto.getMotherOccupation())
+                || hasText(requestDto.getMotherStatus());
+    }
+
+    private boolean hasGuardianPayload(StudentRequestDto requestDto) {
+        if (requestDto.getGuardian() == null) {
+            return false;
+        }
+        StudentRequestDto.GuardianRequestDto guardian = requestDto.getGuardian();
+        return hasText(guardian.getFirstName())
+                || hasText(guardian.getLastName())
+                || hasText(guardian.getPhoneNumber())
+                || guardian.getRelationshipId() != null
+                || hasText(guardian.getOcc())
+                || hasText(guardian.getAddr());
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
     private String resolveGenderLabel(String value) {
         if (value == null) {
             return null;
         }
         String label = Gender.getLabelByValue(value);
+        return label != null ? label : value;
+    }
+
+    private String resolveParentStatusValue(String requestedValue, String fallbackValue) {
+        String candidate = resolveText(requestedValue, fallbackValue);
+        if (candidate == null) {
+            return ParentStatus.UNKNOWN.getValue();
+        }
+
+        ParentStatus byLabel = ParentStatus.fromLabel(candidate);
+        if (byLabel != null) {
+            return byLabel.getValue();
+        }
+
+        try {
+            return ParentStatus.fromValue(candidate).getValue();
+        } catch (IllegalArgumentException ex) {
+            return ParentStatus.UNKNOWN.getValue();
+        }
+    }
+
+    private String resolveParentStatusLabel(String value) {
+        if (value == null) {
+            return null;
+        }
+        String label = ParentStatus.getLabelByValue(value);
         return label != null ? label : value;
     }
 
@@ -689,6 +846,33 @@ public class StudentServiceImpl implements StudentService {
         }
         String label = Religion.getLabelByValue(value);
         return label != null ? label : value;
+    }
+
+    private String resolveText(String requestedValue, String fallbackValue) {
+        if (requestedValue != null && !requestedValue.isBlank()) {
+            return requestedValue.trim();
+        }
+        if (fallbackValue != null && !fallbackValue.isBlank()) {
+            return fallbackValue.trim();
+        }
+        return null;
+    }
+
+    private String buildGuardianName(Guardian guardian) {
+        if (guardian == null) {
+            return null;
+        }
+        return (guardian.getFirstName() != null ? guardian.getFirstName() : "")
+                + (guardian.getLastName() != null && !guardian.getLastName().isBlank() ? " " + guardian.getLastName() : "");
+    }
+
+    private String resolveRelationshipName(Integer relationshipId) {
+        if (relationshipId == null) {
+            return null;
+        }
+        return relationshipRepository.findById(relationshipId)
+                .map(com.saho.foundation.entity.RelationshipMaster::getRelationshipName)
+                .orElse(null);
     }
 
     private String resolveOrphanStatusLabel(String value) {

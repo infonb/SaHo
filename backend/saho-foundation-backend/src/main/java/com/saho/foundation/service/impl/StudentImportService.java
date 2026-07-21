@@ -3,11 +3,14 @@ package com.saho.foundation.service.impl;
 import com.saho.foundation.dto.imports.BulkImportResponse;
 import com.saho.foundation.dto.imports.ImportErrorDto;
 import com.saho.foundation.dto.imports.StudentImportRow;
+import com.saho.foundation.entity.AcademicYear;
 import com.saho.foundation.entity.*;
 import com.saho.foundation.enums.Gender;
+import com.saho.foundation.enums.ParentStatus;
 import com.saho.foundation.enums.OrphanStatus;
 import com.saho.foundation.enums.Religion;
 import com.saho.foundation.repository.*;
+import com.saho.foundation.service.iservices.StudentFamilyService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -53,11 +56,13 @@ public class StudentImportService {
     private final MandalRepository mandalRepository;
     private final VillageRepository villageRepository;
     private final SchoolRepository schoolRepository;
+    private final AcademicYearRepository academicYearRepository;
     private final CasteRepository casteRepository;
     private final RelationshipRepository relationshipRepository;
     private final ClassRepository classRepository;
     private final SponsorRepository sponsorRepository;
     private final StudentSponsorRepository studentSponsorRepository;
+    private final StudentFamilyService studentFamilyService;
 
     public byte[] generateTemplate() throws IOException {
         try (Workbook workbook = new XSSFWorkbook()) {
@@ -481,6 +486,8 @@ public class StudentImportService {
                 log.debug("Guardian found in cache for phone: {}. guardianId={}. Skipping DB lookup.", guardianPhone, guardian.getGuardianId());
             }
 
+            StudentFamily family = createImportStudentFamily(row);
+
             String email = row.getEmail();
             if (email.isEmpty()) {
                 email = row.getAadhaar() + "@saho-foundation.org";
@@ -513,6 +520,8 @@ public class StudentImportService {
                 existingStudent.setBloodGroup(row.getBloodGroup().isEmpty() ? null : row.getBloodGroup());
                 existingStudent.setSchId(school.getSchId());
                 existingStudent.setClassId(classId);
+                existingStudent.setAcademicYearId(resolveCurrentAcademicYearId());
+                existingStudent.setFamily(family);
                 existingStudent.setGuardian(guardian);
                 existingStudent.setOrphanStatus(orphanStatusValue);
                 existingStudent.setModifiedAt(LocalDateTime.now());
@@ -530,6 +539,8 @@ public class StudentImportService {
                         .bloodGroup(row.getBloodGroup().isEmpty() ? null : row.getBloodGroup())
                         .schId(school.getSchId())
                         .classId(classId)
+                        .academicYearId(resolveCurrentAcademicYearId())
+                        .family(family)
                         .guardian(guardian)
                         .orphanStatus(orphanStatusValue)
                         .isDeleted(false)
@@ -596,5 +607,53 @@ public class StudentImportService {
         if (orphanStatus == null || orphanStatus.isEmpty()) return null;
         OrphanStatus resolved = OrphanStatus.fromLabel(orphanStatus);
         return resolved != null ? resolved.getValue() : null;
+    }
+
+    private Integer resolveCurrentAcademicYearId() {
+        return academicYearRepository.findByIsCurrentTrueAndIsActiveTrueAndIsDeletedFalse()
+                .map(AcademicYear::getAcademicYearId)
+                .orElseThrow(() -> new IllegalStateException("Current academic year not found"));
+    }
+
+    private StudentFamily createImportStudentFamily(StudentImportRow row) {
+        String relationship = row.getRelationship();
+        String parentName = joinNames(row.getGuardianFirstName(), row.getGuardianLastName());
+        String parentOccupation = row.getOccupation().isEmpty() ? null : row.getOccupation();
+        String fatherName = null;
+        String fatherOccupation = null;
+        String fatherStatus = ParentStatus.UNKNOWN.getValue();
+        String motherName = null;
+        String motherOccupation = null;
+        String motherStatus = ParentStatus.UNKNOWN.getValue();
+
+        if ("Father".equalsIgnoreCase(relationship)) {
+            fatherName = parentName;
+            fatherOccupation = parentOccupation;
+            fatherStatus = ParentStatus.ALIVE.getValue();
+        } else if ("Mother".equalsIgnoreCase(relationship)) {
+            motherName = parentName;
+            motherOccupation = parentOccupation;
+            motherStatus = ParentStatus.ALIVE.getValue();
+        }
+
+        return studentFamilyService.createOrUpdateStudentFamily(
+                null,
+                fatherName,
+                fatherOccupation,
+                fatherStatus,
+                motherName,
+                motherOccupation,
+                motherStatus,
+                null
+        );
+    }
+
+    private String joinNames(String firstName, String lastName) {
+        String first = firstName == null ? "" : firstName.trim();
+        String last = lastName == null ? "" : lastName.trim();
+        if (first.isEmpty() && last.isEmpty()) {
+            return null;
+        }
+        return (first + " " + last).trim();
     }
 }

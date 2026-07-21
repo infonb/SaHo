@@ -68,10 +68,11 @@ public class StudentController {
             @RequestParam(required = false) String mndlId,
             @RequestParam(required = false) String vilId,
             @RequestParam(required = false) String schId,
+            @RequestParam(required = false) String academicYearId,
             @RequestParam(defaultValue = "student_id") String sortColumn,
             @RequestParam(defaultValue = "DESC") String sortDirection
     ) {
-        return studentService.getAllStudents(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, sortColumn, sortDirection);
+        return studentService.getAllStudents(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, academicYearId, sortColumn, sortDirection);
     }
 
     @GetMapping("/ids")
@@ -84,9 +85,10 @@ public class StudentController {
             @RequestParam(required = false) String distId,
             @RequestParam(required = false) String mndlId,
             @RequestParam(required = false) String vilId,
-            @RequestParam(required = false) String schId
+            @RequestParam(required = false) String schId,
+            @RequestParam(required = false) String academicYearId
     ) {
-        return studentService.getAllStudentIds(search, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId);
+        return studentService.getAllStudentIds(search, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, academicYearId);
     }
 
     @GetMapping("/me")

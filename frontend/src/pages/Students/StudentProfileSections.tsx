@@ -8,7 +8,6 @@ import { LuCamera, LuImage, LuUpload, LuUser } from 'react-icons/lu';
 
 export interface StudentFormState {
   first_name: string;
-  middle_name: string;
   last_name: string;
   email: string;
   dob: string;
@@ -26,15 +25,16 @@ export interface StudentFormState {
   vil_id: string;
   sch_id: string;
   father_first: string;
-  father_middle: string;
   father_last: string;
   father_is_guardian: string;
+  father_occupation: string;
+  father_status: string;
   mother_first: string;
-  mother_middle: string;
   mother_last: string;
   mother_is_guardian: string;
+  mother_occupation: string;
+  mother_status: string;
   guardian_first: string;
-  guardian_middle: string;
   guardian_last: string;
   relation: string;
   phone: string;
@@ -72,6 +72,8 @@ interface StudentProfileSectionsProps {
   relationships?: [string, string][];
   castes?: [string, string][];
   classes?: [string, string][];
+  occupations?: [string, string][];
+  statuses?: [string, string][];
   aadhaarStatus?: string;
   errors?: StudentFormErrors;
   validatedFields?: Set<keyof StudentFormState>;
@@ -127,7 +129,7 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
 }
 
 export default function StudentProfileSections(props: StudentProfileSectionsProps) {
-  const { mode, form, set, touch, chooseImage, clearImage, siblingsList = [], siblingChecked, searchSibling, removeSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
+  const { mode, form, set, touch, chooseImage, clearImage, siblingsList = [], siblingChecked, searchSibling, removeSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], occupations = [], statuses = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -138,12 +140,38 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   if (!form || !set) return null;
   const readOnly = isViewMode(mode);
   const isEdit = mode === 'edit';
-  const studentDisplayName = [form.first_name, form.middle_name, form.last_name].filter(Boolean).join(' ') || 'Student';
+  const studentDisplayName = [form.first_name, form.last_name].filter(Boolean).join(' ') || 'Student';
 
   const religionOptions = RELIGION_OPTIONS;
   const casteOptions = props.castes ?? ['SC', 'ST', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'OC', 'Other'];
   const classOptions = props.classes ?? [['1', '6TH CLASS'], ['2', '7TH CLASS'], ['3', '8TH CLASS'], ['4', '9TH CLASS'], ['5', '10TH CLASS']];
   const orphanStatusOptions = ORPHAN_STATUS_OPTIONS;
+  const occupationOptions: [string, string][] = occupations.length ? occupations : [
+    ['1', 'Farmer'],
+    ['2', 'Driver'],
+    ['3', 'Mason'],
+    ['4', 'Carpenter'],
+    ['5', 'Electrician'],
+    ['6', 'Teacher'],
+    ['7', 'Tailor'],
+    ['8', 'Homemaker'],
+    ['9', 'Business'],
+    ['10', 'Daily Wage Worker'],
+    ['11', 'Private Employee'],
+    ['12', 'Other'],
+  ];
+  const statusOptions: [string, string][] = statuses.length ? statuses : [
+    ['1', 'Alive'],
+    ['2', 'Deceased'],
+    ['3', 'Abandoned'],
+    ['4', 'Separated'],
+    ['5', 'Divorced'],
+    ['6', 'Missing'],
+  ];
+  const guardianMode = form.father_is_guardian === 'Yes' ? 'father' : form.mother_is_guardian === 'Yes' ? 'mother' : null;
+  const guardianOccupationDisplay = readOnly
+    ? occupationOptions.find(([value]) => value === form.occ)?.[1] ?? form.occ
+    : form.occ;
   const MIN_IMAGE_BYTES = 5 * 1024;
   const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
   const viewLabel = (label: string) => readOnly ? label.replace(/\*/g, '') : label;
@@ -385,7 +413,6 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
           <FormSection title="Personal Information" step="1" icon={<ProfileInfoIcon />}>
             <div className="formGrid studentStepGrid">
               <Field fieldKey="first_name" label="First Name*" value={form.first_name} onChange={v => set('first_name', v)} onBlur={() => touch?.('first_name')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} error={showMessage('first_name') ? errors.first_name : undefined} state={getFieldState('first_name')} />
-              <Field fieldKey="middle_name" label="Middle Name" value={form.middle_name} onChange={v => set('middle_name', v)} onBlur={() => touch?.('middle_name')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('middle_name')} />
               <Field fieldKey="last_name" label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} onBlur={() => touch?.('last_name')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} error={showMessage('last_name') ? errors.last_name : undefined} state={getFieldState('last_name')} />
               <Field fieldKey="email" label="Email ID*" type="email" value={form.email} onChange={v => set('email', v)} onBlur={() => touch?.('email')} readOnly={readOnly} error={showMessage('email') ? errors.email : undefined} state={getFieldState('email')} />
               <Field fieldKey="dob" label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} onBlur={() => touch?.('dob')} readOnly={readOnly} error={showMessage('dob') ? errors.dob : undefined} state={getFieldState('dob')} />
@@ -530,15 +557,23 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
 
           <div className="studentSiblingInline">
             <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><ParentInfoIcon /></span>Parent Information</h3>
-            <div className="formGrid studentStepGrid">
-              <Field fieldKey="father_first" label="Father First Name" value={form.father_first} onChange={v => set('father_first', v)} onBlur={() => touch?.('father_first')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('father_first')} />
-              <Field fieldKey="father_middle" label="Father Middle Name" value={form.father_middle} onChange={v => set('father_middle', v)} onBlur={() => touch?.('father_middle')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('father_middle')} />
-              <Field fieldKey="father_last" label="Father Last Name" value={form.father_last} onChange={v => set('father_last', v)} onBlur={() => touch?.('father_last')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('father_last')} />
-              <CheckboxField fieldKey="father_is_guardian" label="Is Guardian" checked={form.father_is_guardian === 'Yes'} onChange={checked => set('father_is_guardian', checked ? 'Yes' : 'No')} readOnly={readOnly} />
-              <Field fieldKey="mother_first" label="Mother First Name" value={form.mother_first} onChange={v => set('mother_first', v)} onBlur={() => touch?.('mother_first')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('mother_first')} />
-              <Field fieldKey="mother_middle" label="Mother Middle Name" value={form.mother_middle} onChange={v => set('mother_middle', v)} onBlur={() => touch?.('mother_middle')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('mother_middle')} />
-              <Field fieldKey="mother_last" label="Mother Last Name" value={form.mother_last} onChange={v => set('mother_last', v)} onBlur={() => touch?.('mother_last')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('mother_last')} />
-              <CheckboxField fieldKey="mother_is_guardian" label="Is Guardian" checked={form.mother_is_guardian === 'Yes'} onChange={checked => set('mother_is_guardian', checked ? 'Yes' : 'No')} readOnly={readOnly} />
+            <div className="studentParentRows">
+              <div className="formGrid studentStepGrid studentParentRow" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
+                <Field fieldKey="father_first" label="Father First Name" value={form.father_first} onChange={v => set('father_first', v)} onBlur={() => touch?.('father_first')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('father_first')} />
+                <Field fieldKey="father_last" label="Father Last Name" value={form.father_last} onChange={v => set('father_last', v)} onBlur={() => touch?.('father_last')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('father_last')} />
+                <Select fieldKey="father_occupation" label="Father Occupation*" value={form.father_occupation} onChange={v => set('father_occupation', v)} onBlur={() => touch?.('father_occupation')} options={occupationOptions} readOnly={readOnly} error={showMessage('father_occupation') ? errors.father_occupation : undefined} state={getFieldState('father_occupation')} />
+                <CheckboxField fieldKey="father_is_guardian" label="Is Guardian" checked={form.father_is_guardian === 'Yes'} onChange={checked => set('father_is_guardian', checked ? 'Yes' : 'No')} readOnly={readOnly} />
+              </div>
+              <div className="formGrid studentStepGrid studentParentRow" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
+                <Field fieldKey="mother_first" label="Mother First Name" value={form.mother_first} onChange={v => set('mother_first', v)} onBlur={() => touch?.('mother_first')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('mother_first')} />
+                <Field fieldKey="mother_last" label="Mother Last Name" value={form.mother_last} onChange={v => set('mother_last', v)} onBlur={() => touch?.('mother_last')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('mother_last')} />
+                <Select fieldKey="mother_occupation" label="Mother Occupation*" value={form.mother_occupation} onChange={v => set('mother_occupation', v)} onBlur={() => touch?.('mother_occupation')} options={occupationOptions} readOnly={readOnly} error={showMessage('mother_occupation') ? errors.mother_occupation : undefined} state={getFieldState('mother_occupation')} />
+                <CheckboxField fieldKey="mother_is_guardian" label="Is Guardian" checked={form.mother_is_guardian === 'Yes'} onChange={checked => set('mother_is_guardian', checked ? 'Yes' : 'No')} readOnly={readOnly} />
+              </div>
+              <div className="formGrid studentStepGrid studentParentRow" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+                <Select fieldKey="father_status" label="Father Status*" value={form.father_status} onChange={v => set('father_status', v)} onBlur={() => touch?.('father_status')} options={statusOptions} readOnly={readOnly} error={showMessage('father_status') ? errors.father_status : undefined} state={getFieldState('father_status')} />
+                <Select fieldKey="mother_status" label="Mother Status*" value={form.mother_status} onChange={v => set('mother_status', v)} onBlur={() => touch?.('mother_status')} options={statusOptions} readOnly={readOnly} error={showMessage('mother_status') ? errors.mother_status : undefined} state={getFieldState('mother_status')} />
+              </div>
             </div>
           </div>
 
@@ -546,12 +581,22 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
             <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><GuardianInfoIcon /></span>Guardian Information</h3>
             <div className="formGrid studentStepGrid">
               <Field fieldKey="guardian_first" label="Guardian First Name*" value={form.guardian_first} onChange={v => set('guardian_first', v)} onBlur={() => touch?.('guardian_first')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} error={showMessage('guardian_first') ? errors.guardian_first : undefined} state={getFieldState('guardian_first')} />
-              <Field fieldKey="guardian_middle" label="Guardian Middle Name" value={form.guardian_middle} onChange={v => set('guardian_middle', v)} onBlur={() => touch?.('guardian_middle')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} state={getFieldState('guardian_middle')} />
               <Field fieldKey="guardian_last" label="Guardian Last Name*" value={form.guardian_last} onChange={v => set('guardian_last', v)} onBlur={() => touch?.('guardian_last')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} error={showMessage('guardian_last') ? errors.guardian_last : undefined} state={getFieldState('guardian_last')} />
-              <Select fieldKey="relation" label="Relation*" value={form.relation} onChange={v => set('relation', v)} onBlur={() => touch?.('relation')} options={relationships} readOnly={readOnly} error={showMessage('relation') ? errors.relation : undefined} state={getFieldState('relation')} />
+              <Select
+                fieldKey="relation"
+                label="Relation*"
+                value={form.relation}
+                onChange={v => set('relation', v)}
+                onBlur={() => touch?.('relation')}
+                options={relationships}
+                readOnly={readOnly || guardianMode !== null}
+                lockedTooltip={guardianMode ? `Relationship is locked to ${guardianMode === 'father' ? 'Father' : 'Mother'}.` : undefined}
+                error={showMessage('relation') ? errors.relation : undefined}
+                state={getFieldState('relation')}
+              />
               <Field fieldKey="phone" label="Phone Number*" value={form.phone} onChange={v => set('phone', v)} onBlur={() => touch?.('phone')} maxLength={10} numericOnly readOnly={readOnly} error={showMessage('phone') ? errors.phone : undefined} state={getFieldState('phone')} />
-              <Field fieldKey="occ" label="Occupation" value={form.occ} onChange={v => set('occ', v)} readOnly={readOnly} state={getFieldState('occ')} />
-              <Field fieldKey="addr" label="Address" value={form.addr} onChange={v => set('addr', v)} readOnly={readOnly} state={getFieldState('addr')} />
+              <Field fieldKey="occ" label="Occupation*" value={guardianOccupationDisplay} onChange={v => set('occ', v)} readOnly={readOnly || guardianMode !== null} lockedTooltip={guardianMode ? `Occupation follows ${guardianMode === 'father' ? 'Father' : 'Mother'}.` : undefined} error={showMessage('occ') ? errors.occ : undefined} state={getFieldState('occ')} />
+              <Field fieldKey="addr" label="Address*" value={form.addr} onChange={v => set('addr', v)} readOnly={readOnly} error={showMessage('addr') ? errors.addr : undefined} state={getFieldState('addr')} />
             </div>
           </div>
 
