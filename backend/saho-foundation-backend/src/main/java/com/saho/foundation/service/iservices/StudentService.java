@@ -2,6 +2,7 @@ package com.saho.foundation.service.iservices;
 
 import com.saho.foundation.dto.StudentRequestDto;
 import com.saho.foundation.dto.StudentPaginationResponseDto;
+import com.saho.foundation.dto.StudentAcademicResponseDto;
 import com.saho.foundation.dto.StudentProfileResponseDto;
 import com.saho.foundation.dto.StudentResponseDto;
 import com.saho.foundation.dto.StudentSiblingInfoDto;
@@ -46,6 +47,8 @@ public interface StudentService {
     );
 
     StudentProfileResponseDto getStudentById(Integer studentId);
+
+    StudentAcademicResponseDto getStudentAcademicById(Integer studentId);
 
     StudentProfileResponseDto getStudentProfileByUserId(Integer userId);
 

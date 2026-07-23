@@ -23,10 +23,22 @@ public class StudentListResponseDto {
     private Integer casteId;
     private String religion;
     private String bloodGroup;
+    private Integer studentAcademicId;
     private Integer schId;
+    private Integer schoolId;
     private Integer classId;
     private Integer academicYearId;
     private String academicYearName;
+    private String rollNumber;
+    private String admissionType;
+    private String status;
+    private String remarks;
+    private Boolean academicIsActive;
+    private Boolean academicIsDeleted;
+    private LocalDateTime academicCreatedAt;
+    private Integer academicCreatedBy;
+    private LocalDateTime academicUpdatedAt;
+    private Integer academicUpdatedBy;
     private Integer familyId;
     private String fatherName;
     private String fatherOccupation;
@@ -60,4 +72,5 @@ public class StudentListResponseDto {
     private Integer createdBy;
     private LocalDateTime modifiedAt;
     private Integer modifiedBy;
+    private StudentAcademicResponseDto academicDetails;
 }

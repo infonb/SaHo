@@ -57,6 +57,7 @@ public class StudentImportService {
     private final VillageRepository villageRepository;
     private final SchoolRepository schoolRepository;
     private final AcademicYearRepository academicYearRepository;
+    private final StudentAcademicRepository studentAcademicRepository;
     private final CasteRepository casteRepository;
     private final RelationshipRepository relationshipRepository;
     private final ClassRepository classRepository;
@@ -518,9 +519,6 @@ public class StudentImportService {
                 existingStudent.setCasteId(casteId);
                 existingStudent.setReligion(religionValue);
                 existingStudent.setBloodGroup(row.getBloodGroup().isEmpty() ? null : row.getBloodGroup());
-                existingStudent.setSchId(school.getSchId());
-                existingStudent.setClassId(classId);
-                existingStudent.setAcademicYearId(resolveCurrentAcademicYearId());
                 existingStudent.setFamily(family);
                 existingStudent.setGuardian(guardian);
                 existingStudent.setOrphanStatus(orphanStatusValue);
@@ -537,9 +535,6 @@ public class StudentImportService {
                         .casteId(casteId)
                         .religion(religionValue)
                         .bloodGroup(row.getBloodGroup().isEmpty() ? null : row.getBloodGroup())
-                        .schId(school.getSchId())
-                        .classId(classId)
-                        .academicYearId(resolveCurrentAcademicYearId())
                         .family(family)
                         .guardian(guardian)
                         .orphanStatus(orphanStatusValue)
@@ -549,6 +544,7 @@ public class StudentImportService {
                 savedStudent = studentRepository.save(student);
             }
 
+            upsertStudentAcademic(savedStudent.getStudentId(), school.getSchId(), classId, resolveCurrentAcademicYearId(), null);
             assignDefaultSponsor(savedStudent);
             studentsImported++;
         }
@@ -613,6 +609,22 @@ public class StudentImportService {
         return academicYearRepository.findByIsCurrentTrueAndIsActiveTrueAndIsDeletedFalse()
                 .map(AcademicYear::getAcademicYearId)
                 .orElseThrow(() -> new IllegalStateException("Current academic year not found"));
+    }
+
+    private void upsertStudentAcademic(Integer studentId, Integer schoolId, Integer classId, Integer academicYearId, Integer createdBy) {
+        studentAcademicRepository.createOrUpdateStudentAcademic(
+                null,
+                studentId,
+                academicYearId,
+                schoolId,
+                classId,
+                null,
+                null,
+                null,
+                null,
+                true,
+                createdBy
+        );
     }
 
     private StudentFamily createImportStudentFamily(StudentImportRow row) {

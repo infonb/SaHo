@@ -24,10 +24,23 @@ public class StudentResponseDto {
     private Integer casteId;
     private String religion;
     private String bloodGroup;
+    private Integer studentAcademicId;
     private Integer schId;
     private Integer classId;
     private Integer academicYearId;
     private String academicYearName;
+    private Integer schoolId;
+    private String schoolName;
+    private String rollNumber;
+    private String admissionType;
+    private String status;
+    private String remarks;
+    private Boolean academicIsActive;
+    private Boolean academicIsDeleted;
+    private LocalDateTime academicCreatedAt;
+    private Integer academicCreatedBy;
+    private LocalDateTime academicUpdatedAt;
+    private Integer academicUpdatedBy;
     private Integer familyId;
     private String fatherName;
     private String fatherOccupation;
@@ -47,6 +60,7 @@ public class StudentResponseDto {
     private Integer createdBy;
     private LocalDateTime modifiedAt;
     private Integer modifiedBy;
+    private StudentAcademicResponseDto academicDetails;
     private GuardianDto guardian;
 
     @Data
