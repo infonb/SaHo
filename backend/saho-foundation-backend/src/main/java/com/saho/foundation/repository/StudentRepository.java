@@ -31,8 +31,8 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
 
     boolean existsByEmailIdAndIsDeletedFalse(String emailId);
 
-    @Procedure(procedureName = "createorupdatestudent")
-    void createOrUpdateStudent(
+    @Procedure(procedureName = "createorupdatestudent_v2")
+    void createOrUpdateStudentV2(
             @Param("p_student_id") Integer studentId,
             @Param("p_first_name") String firstName,
             @Param("p_last_name") String lastName,
@@ -43,9 +43,6 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
             @Param("p_caste_id") Integer casteId,
             @Param("p_religion") String religion,
             @Param("p_blood_group") String bloodGroup,
-            @Param("p_sch_id") Integer schId,
-            @Param("p_class_id") Integer classId,
-            @Param("p_academic_year_id") Integer academicYearId,
             @Param("p_family_id") Integer familyId,
             @Param("p_guardian_id") Integer guardianId,
             @Param("p_sibling_id") String siblingId,

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 import com.saho.foundation.dto.StudentRequestDto;
 import com.saho.foundation.dto.StudentPaginationResponseDto;
+import com.saho.foundation.dto.StudentAcademicResponseDto;
 import com.saho.foundation.dto.StudentProfileResponseDto;
 import com.saho.foundation.dto.StudentResponseDto;
 import com.saho.foundation.dto.StudentSiblingInfoDto;
@@ -99,6 +100,11 @@ public class StudentController {
     @GetMapping("/{studentId}")
     public StudentProfileResponseDto getStudentById(@PathVariable Integer studentId) {
         return studentService.getStudentById(studentId);
+    }
+
+    @GetMapping("/{studentId}/academic")
+    public StudentAcademicResponseDto getStudentAcademicById(@PathVariable Integer studentId) {
+        return studentService.getStudentAcademicById(studentId);
     }
 
     @GetMapping("/aadhaar/{aadhaarNumber}")

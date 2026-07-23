@@ -1,5 +1,7 @@
 package com.saho.foundation.service.impl;
 
+import com.saho.foundation.dto.StudentAcademicRequestDto;
+import com.saho.foundation.dto.StudentAcademicResponseDto;
 import com.saho.foundation.dto.StudentListResponseDto;
 import com.saho.foundation.dto.StudentPaginationResponseDto;
 import com.saho.foundation.dto.StudentProfileResponseDto;
@@ -11,54 +13,66 @@ import com.saho.foundation.entity.AcademicYear;
 import com.saho.foundation.entity.ClassMaster;
 import com.saho.foundation.entity.Guardian;
 import com.saho.foundation.entity.SchoolMaster;
-import com.saho.foundation.entity.StudentFamily;
 import com.saho.foundation.entity.Student;
+import com.saho.foundation.entity.StudentAcademic;
+import com.saho.foundation.entity.StudentFamily;
 import com.saho.foundation.entity.User;
 import com.saho.foundation.enums.Gender;
-import com.saho.foundation.enums.ParentStatus;
 import com.saho.foundation.enums.OrphanStatus;
+import com.saho.foundation.enums.ParentStatus;
 import com.saho.foundation.enums.Religion;
 import com.saho.foundation.exception.DuplicateResourceException;
 import com.saho.foundation.exception.ResourceNotFoundException;
-import com.saho.foundation.repository.GuardianRepository;
 import com.saho.foundation.repository.AcademicYearRepository;
-import com.saho.foundation.repository.RelationshipRepository;
 import com.saho.foundation.repository.ClassRepository;
+import com.saho.foundation.repository.GuardianRepository;
+import com.saho.foundation.repository.RelationshipRepository;
 import com.saho.foundation.repository.SchoolRepository;
+import com.saho.foundation.repository.StudentAcademicRepository;
 import com.saho.foundation.repository.StudentRepository;
 import com.saho.foundation.repository.UserRepository;
 import com.saho.foundation.service.iservices.StudentFamilyService;
 import com.saho.foundation.service.iservices.StudentService;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @Service
 @RequiredArgsConstructor
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
+    private final StudentAcademicRepository studentAcademicRepository;
     private final GuardianRepository guardianRepository;
     private final AcademicYearRepository academicYearRepository;
     private final StudentFamilyService studentFamilyService;
@@ -81,8 +95,9 @@ public class StudentServiceImpl implements StudentService {
 
         StudentFamily family = persistStudentFamily(requestDto, null);
         Integer guardianId = resolveGuardianId(requestDto, null);
+        StudentAcademicRequestDto academicRequest = resolveAcademicRequest(requestDto, null);
 
-        studentRepository.createOrUpdateStudent(
+        studentRepository.createOrUpdateStudentV2(
                 null,
                 requestDto.getFirstName(),
                 requestDto.getLastName(),
@@ -93,25 +108,20 @@ public class StudentServiceImpl implements StudentService {
                 requestDto.getCasteId(),
                 requestDto.getReligion(),
                 requestDto.getBloodGroup(),
-                requestDto.getSchId(),
-                requestDto.getClassId(),
-                resolveAcademicYearId(requestDto.getAcademicYearId(), null),
                 family.getFamilyId(),
                 guardianId,
-                // Store selected sibling student ids as CSV in students.sibling_id. If no sibling, save null.
                 Boolean.TRUE.equals(requestDto.getHasSibling()) ? requestDto.getSiblingIds() : null,
                 requestDto.getOrphanStatus(),
                 requestDto.getImageUrl(),
                 requestDto.getCreatedBy()
         );
 
-        Student savedStudent = studentRepository.findByAadhaarNumberAndIsDeletedFalse(requestDto.getAadhaarNumber())
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found after procedure call for aadhaarNumber: " + requestDto.getAadhaarNumber()));
+        Student savedStudent = findStudentByAadhaar(requestDto.getAadhaarNumber());
+        upsertStudentAcademic(savedStudent.getStudentId(), null, academicRequest, requestDto);
 
         if (userRepository.findByStudentId(savedStudent.getStudentId()).isEmpty()) {
             User user = User.builder()
                     .studentId(savedStudent.getStudentId())
-                    // Default password is the student's DOB in DDMMYYYY format (e.g., 10-Oct-2017 → 10102017)
                     .password(passwordEncoder.encode(savedStudent.getDob().format(DateTimeFormatter.ofPattern("ddMMyyyy"))))
                     .role("STUDENT")
                     .isActive(true)
@@ -142,26 +152,26 @@ public class StudentServiceImpl implements StudentService {
             String academicYearId,
             String sortColumn,
             String sortDirection
-        ) {
+    ) {
         List<StudentListResponseDto> students = studentRepository.getAllStudentsWithPagination(
-                search,
-                pageNumber,
-                pageSize,
-                gender,
-                classId,
-                orphanStatus,
-                stId,
-                distId,
-                mndlId,
-                vilId,
-                schId,
-                academicYearId,
-                sortColumn,
-                sortDirection
-        )
-            .stream()
-            .map(this::mapStudentListResponse)
-            .toList();
+                        search,
+                        pageNumber,
+                        pageSize,
+                        gender,
+                        classId,
+                        orphanStatus,
+                        stId,
+                        distId,
+                        mndlId,
+                        vilId,
+                        schId,
+                        academicYearId,
+                        sortColumn,
+                        sortDirection
+                )
+                .stream()
+                .map(this::mapStudentListResponse)
+                .toList();
 
         int resolvedTotalCount = 0;
         int resolvedBoysCount = 0;
@@ -178,16 +188,16 @@ public class StudentServiceImpl implements StudentService {
         }
 
         return StudentPaginationResponseDto.builder()
-            .pageNumber(pageNumber)
-            .pageSize(pageSize)
-            .totalCount(resolvedTotalCount)
-            .boysCount(resolvedBoysCount)
-            .girlsCount(resolvedGirlsCount)
-            .sponsoredCount(resolvedSponsoredCount)
-            .orphansCount(resolvedOrphansCount)
-            .students(students)
-            .build();
-        }
+                .pageNumber(pageNumber)
+                .pageSize(pageSize)
+                .totalCount(resolvedTotalCount)
+                .boysCount(resolvedBoysCount)
+                .girlsCount(resolvedGirlsCount)
+                .sponsoredCount(resolvedSponsoredCount)
+                .orphansCount(resolvedOrphansCount)
+                .students(students)
+                .build();
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -253,12 +263,12 @@ public class StudentServiceImpl implements StudentService {
             headerStyle.setBorderRight(BorderStyle.THIN);
 
             String[] headers = {
-                "Student ID", "Student Name", "Age", "Date of Birth", "Email", "Aadhaar Number",
-                "Gender", "Class", "School Name", "School Address",
-                "State", "District", "Mandal", "Village",
-                "Guardian Name", "Guardian Relation",
-                "Religion", "Blood Group", "Caste ID", "Orphan Status",
-                "Sponsor Name", "Created Date"
+                    "Student ID", "Student Name", "Age", "Date of Birth", "Email", "Aadhaar Number",
+                    "Gender", "Class", "School Name", "School Address",
+                    "State", "District", "Mandal", "Village",
+                    "Guardian Name", "Guardian Relation",
+                    "Religion", "Blood Group", "Caste ID", "Orphan Status",
+                    "Sponsor Name", "Created Date"
             };
 
             Row headerRow = sheet.createRow(0);
@@ -324,6 +334,456 @@ public class StudentServiceImpl implements StudentService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public StudentProfileResponseDto getStudentById(Integer studentId) {
+        return studentRepository.getStudentProfileById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentProfileResponseDto getStudentProfileByUserId(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        if (!"STUDENT".equals(user.getRole())) {
+            throw new IllegalArgumentException("User is not a student");
+        }
+        if (user.getStudentId() == null) {
+            throw new ResourceNotFoundException("Student profile not linked to user: " + userId);
+        }
+        return getStudentById(user.getStudentId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentSiblingSearchResponseDto getStudentByAadhaarNumber(String aadhaarNumber) {
+        Student student = studentRepository.findByAadhaarNumberAndIsDeletedFalse(aadhaarNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with aadhaarNumber: " + aadhaarNumber));
+
+        StudentAcademic academic = resolveStudentAcademic(student.getStudentId()).orElse(null);
+        SchoolMaster school = academic != null ? schoolRepository.findById(academic.getSchoolId()).orElse(null) : null;
+        String className = academic != null
+                ? classRepository.findById(academic.getClassId()).map(ClassMaster::getClassName).orElse(null)
+                : null;
+
+        return StudentSiblingSearchResponseDto.builder()
+                .studentId(student.getStudentId())
+                .studentName(buildStudentName(student))
+                .classId(academic != null ? academic.getClassId() : null)
+                .className(className)
+                .schoolName(school != null ? school.getSchName() : null)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StudentSiblingInfoDto> getSiblingsByStudentId(Integer studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        Set<Integer> siblingIds = parseStudentIds(student.getSiblingId());
+        if (siblingIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Student> siblings = studentRepository.findByStudentIdInAndIsDeletedFalse(siblingIds);
+        return siblings.stream()
+                .map((Student s) -> {
+                    StudentAcademic academic = resolveStudentAcademic(s.getStudentId()).orElse(null);
+                    SchoolMaster school = academic != null ? schoolRepository.findById(academic.getSchoolId()).orElse(null) : null;
+                    String className = academic != null
+                            ? classRepository.findById(academic.getClassId()).map(ClassMaster::getClassName).orElse(null)
+                            : null;
+                    return StudentSiblingInfoDto.builder()
+                            .studentId(s.getStudentId())
+                            .fullName(buildStudentName(s))
+                            .classId(academic != null ? academic.getClassId() : null)
+                            .className(className)
+                            .schoolName(school != null ? school.getSchName() : null)
+                            .build();
+                })
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public StudentResponseDto updateStudent(Integer studentId, StudentRequestDto requestDto) {
+        Student existingStudent = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        if (Boolean.TRUE.equals(existingStudent.getIsDeleted())) {
+            throw new ResourceNotFoundException("Student not found with id: " + studentId);
+        }
+
+        if (studentRepository.existsByEmailIdAndStudentIdNot(requestDto.getEmailId(), studentId)) {
+            throw new DuplicateResourceException("emailId already exists");
+        }
+
+        if (studentRepository.existsByAadhaarNumberAndStudentIdNot(requestDto.getAadhaarNumber(), studentId)) {
+            throw new DuplicateResourceException("aadhaarNumber already exists");
+        }
+
+        Set<Integer> existingSiblingIds = parseStudentIds(existingStudent.getSiblingId());
+        Integer guardianId = existingStudent.getGuardian() != null ? existingStudent.getGuardian().getGuardianId() : null;
+        StudentAcademic existingAcademic = resolveStudentAcademic(studentId).orElse(null);
+
+        StudentFamily family = persistStudentFamily(requestDto, existingStudent.getFamily());
+        guardianId = resolveGuardianId(requestDto, guardianId);
+
+        String imageUrl = requestDto.getImageUrl() != null && !requestDto.getImageUrl().isBlank()
+                ? requestDto.getImageUrl()
+                : existingStudent.getImageUrl();
+
+        studentRepository.createOrUpdateStudentV2(
+                existingStudent.getStudentId(),
+                requestDto.getFirstName(),
+                requestDto.getLastName(),
+                requestDto.getEmailId(),
+                requestDto.getDob(),
+                requestDto.getGender(),
+                requestDto.getAadhaarNumber(),
+                requestDto.getCasteId(),
+                requestDto.getReligion(),
+                requestDto.getBloodGroup(),
+                family.getFamilyId(),
+                guardianId,
+                Boolean.TRUE.equals(requestDto.getHasSibling()) ? requestDto.getSiblingIds() : null,
+                requestDto.getOrphanStatus(),
+                imageUrl,
+                requestDto.getCreatedBy()
+        );
+
+        StudentAcademicRequestDto academicRequest = resolveAcademicRequest(requestDto, existingAcademic);
+        Student updatedStudent = findStudentByAadhaar(requestDto.getAadhaarNumber());
+        upsertStudentAcademic(updatedStudent.getStudentId(), existingAcademic, academicRequest, requestDto);
+        syncSiblingGroup(updatedStudent.getStudentId(), existingSiblingIds, requestDto.getSiblingIds(), Boolean.TRUE.equals(requestDto.getHasSibling()));
+
+        return mapToResponseDto(updatedStudent);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Integer> getAllStudentIds(
+            String search,
+            String gender,
+            String classId,
+            String orphanStatus,
+            String stId,
+            String distId,
+            String mndlId,
+            String vilId,
+            String schId,
+            String academicYearId
+    ) {
+        return studentRepository.getAllStudentsWithPagination(
+                        search,
+                        1,
+                        Integer.MAX_VALUE,
+                        gender,
+                        classId,
+                        orphanStatus,
+                        stId,
+                        distId,
+                        mndlId,
+                        vilId,
+                        schId,
+                        academicYearId,
+                        "student_id",
+                        "ASC"
+                )
+                .stream()
+                .map(StudentListResponseDto::getStudentId)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void deleteStudent(Integer studentId) {
+        Student existingStudent = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        if (Boolean.TRUE.equals(existingStudent.getIsDeleted())) {
+            throw new ResourceNotFoundException("Student not found with id: " + studentId);
+        }
+
+        studentRepository.deleteStudent(new Integer[]{studentId}, existingStudent.getCreatedBy());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentAcademicResponseDto getStudentAcademicById(Integer studentId) {
+        StudentAcademic academic = resolveStudentAcademic(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student academic not found with student id: " + studentId));
+        return mapAcademicResponse(studentId, academic);
+    }
+
+    private StudentResponseDto mapToResponseDto(Student student) {
+        Guardian guardian = student.getGuardian();
+        StudentAcademic academic = resolveStudentAcademic(student.getStudentId()).orElse(null);
+        AcademicYear academicYear = resolveAcademicYear(academic != null ? academic.getAcademicYearId() : null);
+        SchoolMaster school = academic != null && academic.getSchoolId() != null
+                ? schoolRepository.findById(academic.getSchoolId()).orElse(null)
+                : null;
+        ClassMaster classMaster = academic != null && academic.getClassId() != null
+                ? classRepository.findById(academic.getClassId()).orElse(null)
+                : null;
+
+        return StudentResponseDto.builder()
+                .studentId(student.getStudentId())
+                .firstName(student.getFirstName())
+                .lastName(student.getLastName())
+                .emailId(student.getEmailId())
+                .dob(student.getDob())
+                .gender(resolveGenderLabel(student.getGender()))
+                .aadhaarNumber(student.getAadhaarNumber())
+                .casteId(student.getCasteId())
+                .religion(resolveReligionLabel(student.getReligion()))
+                .bloodGroup(student.getBloodGroup())
+                .studentAcademicId(academic != null ? academic.getStudentAcademicId() : null)
+                .schId(academic != null ? academic.getSchoolId() : null)
+                .classId(academic != null ? academic.getClassId() : null)
+                .academicYearId(academic != null ? academic.getAcademicYearId() : null)
+                .academicYearName(academicYear != null ? academicYear.getAcademicYearName() : null)
+                .schoolId(academic != null ? academic.getSchoolId() : null)
+                .schoolName(school != null ? school.getSchName() : null)
+                .rollNumber(academic != null ? academic.getRollNumber() : null)
+                .admissionType(academic != null ? academic.getAdmissionType() : null)
+                .status(academic != null ? academic.getStatus() : null)
+                .remarks(academic != null ? academic.getRemarks() : null)
+                .academicIsActive(academic != null ? academic.getIsActive() : null)
+                .academicIsDeleted(academic != null ? academic.getIsDeleted() : null)
+                .academicCreatedAt(academic != null ? academic.getCreatedAt() : null)
+                .academicCreatedBy(academic != null ? academic.getCreatedBy() : null)
+                .academicUpdatedAt(academic != null ? academic.getUpdatedAt() : null)
+                .academicUpdatedBy(academic != null ? academic.getUpdatedBy() : null)
+                .familyId(student.getFamily() != null ? student.getFamily().getFamilyId() : null)
+                .fatherName(student.getFamily() != null ? student.getFamily().getFatherName() : null)
+                .fatherOccupation(student.getFamily() != null ? student.getFamily().getFatherOccupation() : null)
+                .fatherStatus(resolveParentStatusLabel(student.getFamily() != null ? student.getFamily().getFatherStatus() : null))
+                .motherName(student.getFamily() != null ? student.getFamily().getMotherName() : null)
+                .motherOccupation(student.getFamily() != null ? student.getFamily().getMotherOccupation() : null)
+                .motherStatus(resolveParentStatusLabel(student.getFamily() != null ? student.getFamily().getMotherStatus() : null))
+                .siblingId(student.getSiblingId())
+                .guardianId(guardian != null ? guardian.getGuardianId() : null)
+                .guardianName(buildGuardianName(guardian))
+                .guardianPhone(guardian != null ? guardian.getPhoneNumber() : null)
+                .relationshipName(resolveRelationshipName(guardian != null ? guardian.getRelationshipId() : null))
+                .orphanStatus(resolveOrphanStatusLabel(student.getOrphanStatus()))
+                .imageUrl(student.getImageUrl())
+                .isDeleted(student.getIsDeleted())
+                .createdAt(student.getCreatedAt())
+                .createdBy(student.getCreatedBy())
+                .modifiedAt(student.getModifiedAt())
+                .modifiedBy(student.getModifiedBy())
+                .academicDetails(mapAcademicResponse(student.getStudentId(), academic))
+                .guardian(mapGuardianDto(guardian))
+                .build();
+    }
+
+    private String buildStudentName(Student student) {
+        if (student == null) {
+            return null;
+        }
+        return (student.getFirstName() != null ? student.getFirstName() : "")
+                + (student.getLastName() != null && !student.getLastName().isBlank() ? " " + student.getLastName() : "");
+    }
+
+    private StudentResponseDto.GuardianDto mapGuardianDto(Guardian guardian) {
+        if (guardian == null) {
+            return null;
+        }
+
+        return StudentResponseDto.GuardianDto.builder()
+                .guardianId(guardian.getGuardianId())
+                .firstName(guardian.getFirstName())
+                .lastName(guardian.getLastName())
+                .phoneNumber(guardian.getPhoneNumber())
+                .relationshipId(guardian.getRelationshipId())
+                .occ(guardian.getOcc())
+                .addr(guardian.getAddr())
+                .isDeleted(guardian.getIsDeleted())
+                .createdAt(guardian.getCreatedAt())
+                .updatedAt(guardian.getUpdatedAt())
+                .build();
+    }
+
+    private StudentAcademicResponseDto mapAcademicResponse(Integer studentId, StudentAcademic academic) {
+        if (academic == null) {
+            return null;
+        }
+
+        AcademicYear academicYear = resolveAcademicYear(academic.getAcademicYearId());
+        SchoolMaster school = academic.getSchoolId() != null ? schoolRepository.findById(academic.getSchoolId()).orElse(null) : null;
+        ClassMaster classMaster = academic.getClassId() != null ? classRepository.findById(academic.getClassId()).orElse(null) : null;
+
+        return StudentAcademicResponseDto.builder()
+                .studentAcademicId(academic.getStudentAcademicId())
+                .studentId(studentId)
+                .academicYearId(academic.getAcademicYearId())
+                .academicYearName(academicYear != null ? academicYear.getAcademicYearName() : null)
+                .schoolId(academic.getSchoolId())
+                .schoolName(school != null ? school.getSchName() : null)
+                .classId(academic.getClassId())
+                .className(classMaster != null ? classMaster.getClassName() : null)
+                .rollNumber(academic.getRollNumber())
+                .admissionType(academic.getAdmissionType())
+                .status(academic.getStatus())
+                .remarks(academic.getRemarks())
+                .isActive(academic.getIsActive())
+                .isDeleted(academic.getIsDeleted())
+                .createdAt(academic.getCreatedAt())
+                .createdBy(academic.getCreatedBy())
+                .updatedAt(academic.getUpdatedAt())
+                .updatedBy(academic.getUpdatedBy())
+                .build();
+    }
+
+    private StudentListResponseDto mapStudentListResponse(StudentListResponseDto student) {
+        return StudentListResponseDto.builder()
+                .studentId(student.getStudentId())
+                .name(student.getName())
+                .emailId(student.getEmailId())
+                .dob(student.getDob())
+                .gender(resolveGenderLabel(student.getGender()))
+                .aadhaarNumber(student.getAadhaarNumber())
+                .casteId(student.getCasteId())
+                .religion(resolveReligionLabel(student.getReligion()))
+                .bloodGroup(student.getBloodGroup())
+                .studentAcademicId(student.getStudentAcademicId())
+                .schId(student.getSchId())
+                .schoolId(student.getSchoolId())
+                .classId(student.getClassId())
+                .academicYearId(student.getAcademicYearId())
+                .academicYearName(student.getAcademicYearName())
+                .rollNumber(student.getRollNumber())
+                .admissionType(student.getAdmissionType())
+                .status(student.getStatus())
+                .remarks(student.getRemarks())
+                .academicIsActive(student.getAcademicIsActive())
+                .academicIsDeleted(student.getAcademicIsDeleted())
+                .academicCreatedAt(student.getAcademicCreatedAt())
+                .academicCreatedBy(student.getAcademicCreatedBy())
+                .academicUpdatedAt(student.getAcademicUpdatedAt())
+                .academicUpdatedBy(student.getAcademicUpdatedBy())
+                .familyId(student.getFamilyId())
+                .fatherName(student.getFatherName())
+                .fatherOccupation(student.getFatherOccupation())
+                .fatherStatus(resolveParentStatusLabel(student.getFatherStatus()))
+                .motherName(student.getMotherName())
+                .motherOccupation(student.getMotherOccupation())
+                .motherStatus(resolveParentStatusLabel(student.getMotherStatus()))
+                .schAddress(student.getSchAddress())
+                .schName(student.getSchName())
+                .className(student.getClassName())
+                .guardianName(student.getGuardianName())
+                .guardianId(student.getGuardianId())
+                .guardianPhone(student.getGuardianPhone())
+                .guardianRelationName(student.getGuardianRelationName())
+                .relationshipName(student.getRelationshipName())
+                .vilName(student.getVilName())
+                .mndlName(student.getMndlName())
+                .distName(student.getDistName())
+                .stName(student.getStName())
+                .siblingId(student.getSiblingId())
+                .orphanStatus(resolveOrphanStatusLabel(student.getOrphanStatus()))
+                .sponsorId(student.getSponsorId())
+                .sponsorName(student.getSponsorName())
+                .totalCount(student.getTotalCount())
+                .boysCount(student.getBoysCount())
+                .girlsCount(student.getGirlsCount())
+                .sponsoredCount(student.getSponsoredCount())
+                .orphansCount(student.getOrphansCount())
+                .imageUrl(student.getImageUrl())
+                .createdAt(student.getCreatedAt())
+                .createdBy(student.getCreatedBy())
+                .modifiedAt(student.getModifiedAt())
+                .modifiedBy(student.getModifiedBy())
+                .academicDetails(student.getAcademicDetails())
+                .build();
+    }
+
+    private void upsertStudentAcademic(
+            Integer studentId,
+            StudentAcademic existingAcademic,
+            StudentAcademicRequestDto academicRequest,
+            StudentRequestDto requestDto
+    ) {
+        Integer studentAcademicId = academicRequest.getStudentAcademicId();
+        if (studentAcademicId == null && existingAcademic != null) {
+            studentAcademicId = existingAcademic.getStudentAcademicId();
+        }
+
+        Integer academicYearId = resolveAcademicYearId(
+                academicRequest.getAcademicYearId(),
+                existingAcademic != null ? existingAcademic.getAcademicYearId() : null
+        );
+
+        Integer schoolId = academicRequest.getSchoolId() != null
+                ? academicRequest.getSchoolId()
+                : (existingAcademic != null ? existingAcademic.getSchoolId() : null);
+        Integer classId = academicRequest.getClassId() != null
+                ? academicRequest.getClassId()
+                : (existingAcademic != null ? existingAcademic.getClassId() : null);
+
+        if (schoolId == null || classId == null) {
+            throw new IllegalArgumentException("School and class are required for student academic details");
+        }
+
+        studentAcademicRepository.createOrUpdateStudentAcademic(
+                studentAcademicId,
+                studentId,
+                academicYearId,
+                schoolId,
+                classId,
+                resolveText(academicRequest.getRollNumber(), existingAcademic != null ? existingAcademic.getRollNumber() : null),
+                resolveText(academicRequest.getAdmissionType(), existingAcademic != null ? existingAcademic.getAdmissionType() : null),
+                resolveText(academicRequest.getStatus(), existingAcademic != null ? existingAcademic.getStatus() : null),
+                resolveText(academicRequest.getRemarks(), existingAcademic != null ? existingAcademic.getRemarks() : null),
+                academicRequest.getIsActive() != null ? academicRequest.getIsActive() : (existingAcademic != null ? existingAcademic.getIsActive() : Boolean.TRUE),
+                academicRequest.getCreatedBy() != null ? academicRequest.getCreatedBy() : requestDto.getCreatedBy()
+        );
+    }
+
+    private StudentAcademicRequestDto resolveAcademicRequest(StudentRequestDto requestDto, StudentAcademic existingAcademic) {
+        StudentAcademicRequestDto academic = requestDto.getAcademicDetails();
+        Integer schoolId = academic != null && academic.getSchoolId() != null ? academic.getSchoolId() : requestDto.getSchId();
+        Integer classId = academic != null && academic.getClassId() != null ? academic.getClassId() : requestDto.getClassId();
+        Integer academicYearId = academic != null && academic.getAcademicYearId() != null ? academic.getAcademicYearId() : requestDto.getAcademicYearId();
+
+        return StudentAcademicRequestDto.builder()
+                .studentAcademicId(academic != null ? academic.getStudentAcademicId() : null)
+                .schoolId(schoolId != null ? schoolId : (existingAcademic != null ? existingAcademic.getSchoolId() : null))
+                .classId(classId != null ? classId : (existingAcademic != null ? existingAcademic.getClassId() : null))
+                .academicYearId(academicYearId != null ? academicYearId : (existingAcademic != null ? existingAcademic.getAcademicYearId() : null))
+                .rollNumber(academic != null && academic.getRollNumber() != null ? academic.getRollNumber() : null)
+                .admissionType(academic != null && academic.getAdmissionType() != null ? academic.getAdmissionType() : null)
+                .status(academic != null && academic.getStatus() != null ? academic.getStatus() : null)
+                .remarks(academic != null && academic.getRemarks() != null ? academic.getRemarks() : null)
+                .isActive(academic != null ? academic.getIsActive() : null)
+                .isDeleted(academic != null ? academic.getIsDeleted() : null)
+                .createdBy(academic != null ? academic.getCreatedBy() : null)
+                .updatedBy(academic != null ? academic.getUpdatedBy() : null)
+                .build();
+    }
+
+    private Student findStudentByAadhaar(String aadhaarNumber) {
+        return studentRepository.findByAadhaarNumberAndIsDeletedFalse(aadhaarNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found after procedure call for aadhaarNumber: " + aadhaarNumber));
+    }
+
+    private Optional<StudentAcademic> resolveStudentAcademic(Integer studentId) {
+        if (studentId == null) {
+            return Optional.empty();
+        }
+
+        Optional<StudentAcademic> academic = studentRepository.getStudentAcademicById(studentId);
+        if (academic.isPresent()) {
+            return academic;
+        }
+        return studentAcademicRepository.findTopByStudentIdAndIsDeletedFalseOrderByStudentAcademicIdDesc(studentId);
+    }
+
     private Map<Integer, IndexedColors> computeSiblingGroupColors(
             List<StudentListResponseDto> students,
             Set<Integer> exportedIds
@@ -377,14 +837,14 @@ public class StudentServiceImpl implements StudentService {
         }
 
         IndexedColors[] palette = {
-            IndexedColors.YELLOW,
-            IndexedColors.BRIGHT_GREEN,
-            IndexedColors.LIGHT_BLUE,
-            IndexedColors.ORANGE,
-            IndexedColors.ROSE,
-            IndexedColors.LAVENDER,
-            IndexedColors.TEAL,
-            IndexedColors.CORAL
+                IndexedColors.YELLOW,
+                IndexedColors.BRIGHT_GREEN,
+                IndexedColors.LIGHT_BLUE,
+                IndexedColors.ORANGE,
+                IndexedColors.ROSE,
+                IndexedColors.LAVENDER,
+                IndexedColors.TEAL,
+                IndexedColors.CORAL
         };
 
         Map<Integer, IndexedColors> studentColorMap = new HashMap<>();
@@ -398,321 +858,6 @@ public class StudentServiceImpl implements StudentService {
         }
 
         return studentColorMap;
-    }
-
-    @Override
-    public StudentProfileResponseDto getStudentById(Integer studentId) {
-        return studentRepository.getStudentProfileById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
-    }
-
-    @Override
-    public StudentProfileResponseDto getStudentProfileByUserId(Integer userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        if (!"STUDENT".equals(user.getRole())) {
-            throw new IllegalArgumentException("User is not a student");
-        }
-        if (user.getStudentId() == null) {
-            throw new ResourceNotFoundException("Student profile not linked to user: " + userId);
-        }
-        return getStudentById(user.getStudentId());
-    }
-
-    @Override
-    public StudentSiblingSearchResponseDto getStudentByAadhaarNumber(String aadhaarNumber) {
-        Student student = studentRepository.findByAadhaarNumberAndIsDeletedFalse(aadhaarNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with aadhaarNumber: " + aadhaarNumber));
-
-        SchoolMaster school = schoolRepository.findById(student.getSchId())
-                .orElse(null);
-        String className = classRepository.findById(student.getClassId())
-                .map(ClassMaster::getClassName)
-                .orElse(null);
-
-        return StudentSiblingSearchResponseDto.builder()
-                .studentId(student.getStudentId())
-                .studentName(buildStudentName(student))
-                .classId(student.getClassId())
-                .className(className)
-                .schoolName(school != null ? school.getSchName() : null)
-                .build();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<StudentSiblingInfoDto> getSiblingsByStudentId(Integer studentId) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
-
-        Set<Integer> siblingIds = parseStudentIds(student.getSiblingId());
-        if (siblingIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<Student> siblings = studentRepository.findByStudentIdInAndIsDeletedFalse(siblingIds);
-        return siblings.stream()
-                .map(s -> {
-                    SchoolMaster school = schoolRepository.findById(s.getSchId()).orElse(null);
-                    String className = classRepository.findById(s.getClassId())
-                            .map(ClassMaster::getClassName)
-                            .orElse(null);
-                    return StudentSiblingInfoDto.builder()
-                            .studentId(s.getStudentId())
-                            .fullName(buildStudentName(s))
-                            .classId(s.getClassId())
-                            .className(className)
-                            .schoolName(school != null ? school.getSchName() : null)
-                            .build();
-                })
-                .toList();
-    }
-
-    @Override
-    @Transactional
-    public StudentResponseDto updateStudent(Integer studentId, StudentRequestDto requestDto) {
-        Student existingStudent = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
-
-        if (Boolean.TRUE.equals(existingStudent.getIsDeleted())) {
-            throw new ResourceNotFoundException("Student not found with id: " + studentId);
-        }
-
-        if (studentRepository.existsByEmailIdAndStudentIdNot(requestDto.getEmailId(), studentId)) {
-            throw new DuplicateResourceException("emailId already exists");
-        }
-
-        if (studentRepository.existsByAadhaarNumberAndStudentIdNot(requestDto.getAadhaarNumber(), studentId)) {
-            throw new DuplicateResourceException("aadhaarNumber already exists");
-        }
-
-        Set<Integer> existingSiblingIds = parseStudentIds(existingStudent.getSiblingId());
-        Integer guardianId = existingStudent.getGuardian() != null ? existingStudent.getGuardian().getGuardianId() : null;
-        Integer academicYearId = resolveAcademicYearId(requestDto.getAcademicYearId(), existingStudent.getAcademicYearId());
-        StudentFamily family = persistStudentFamily(requestDto, existingStudent.getFamily());
-        guardianId = resolveGuardianId(requestDto, guardianId);
-
-        String imageUrl = requestDto.getImageUrl() != null && !requestDto.getImageUrl().isBlank()
-                ? requestDto.getImageUrl()
-                : existingStudent.getImageUrl();
-
-        studentRepository.createOrUpdateStudent(
-                existingStudent.getStudentId(),
-                requestDto.getFirstName(),
-                requestDto.getLastName(),
-                requestDto.getEmailId(),
-                requestDto.getDob(),
-                requestDto.getGender(),
-                requestDto.getAadhaarNumber(),
-                requestDto.getCasteId(),
-                requestDto.getReligion(),
-                requestDto.getBloodGroup(),
-                requestDto.getSchId(),
-                requestDto.getClassId(),
-                academicYearId,
-                family.getFamilyId(),
-                guardianId,
-                Boolean.TRUE.equals(requestDto.getHasSibling()) ? requestDto.getSiblingIds() : null,
-                requestDto.getOrphanStatus(),
-                imageUrl,
-                requestDto.getCreatedBy()
-        );
-
-        Student updatedStudent = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found after update with id: " + studentId));
-        syncSiblingGroup(updatedStudent.getStudentId(), existingSiblingIds, requestDto.getSiblingIds(), Boolean.TRUE.equals(requestDto.getHasSibling()));
-
-        return mapToResponseDto(updatedStudent);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Integer> getAllStudentIds(
-            String search,
-            String gender,
-            String classId,
-            String orphanStatus,
-            String stId,
-            String distId,
-            String mndlId,
-            String vilId,
-            String schId,
-            String academicYearId
-    ) {
-        return studentRepository.getAllStudentsWithPagination(
-                search,
-                1,
-                Integer.MAX_VALUE,
-                gender,
-                classId,
-                orphanStatus,
-                stId,
-                distId,
-                mndlId,
-                vilId,
-                schId,
-                academicYearId,
-                "student_id",
-                "ASC"
-        ).stream()
-        .map(StudentListResponseDto::getStudentId)
-        .toList();
-    }
-
-    @Override
-    @Transactional
-    public void deleteStudent(Integer studentId) {
-        Student existingStudent = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
-
-        if (Boolean.TRUE.equals(existingStudent.getIsDeleted())) {
-            throw new ResourceNotFoundException("Student not found with id: " + studentId);
-        }
-
-        // Use the database soft-delete procedure so delete logic stays in PostgreSQL.
-        studentRepository.deleteStudent(
-                new Integer[]{studentId},
-                existingStudent.getCreatedBy()
-        );
-    }
-
-    private StudentResponseDto mapToResponseDto(Student student) {
-        Guardian guardian = student.getGuardian();
-        AcademicYear academicYear = resolveAcademicYear(student.getAcademicYearId());
-
-        return StudentResponseDto.builder()
-                .studentId(student.getStudentId())
-                .firstName(student.getFirstName())
-                .lastName(student.getLastName())
-                .emailId(student.getEmailId())
-                .dob(student.getDob())
-                .gender(resolveGenderLabel(student.getGender()))
-                .aadhaarNumber(student.getAadhaarNumber())
-                .casteId(student.getCasteId())
-                .religion(resolveReligionLabel(student.getReligion()))
-                .bloodGroup(student.getBloodGroup())
-                .schId(student.getSchId())
-                .classId(student.getClassId())
-                .academicYearId(student.getAcademicYearId())
-                .academicYearName(academicYear != null ? academicYear.getAcademicYearName() : null)
-                .familyId(student.getFamily() != null ? student.getFamily().getFamilyId() : null)
-                .fatherName(student.getFamily() != null ? student.getFamily().getFatherName() : null)
-                .fatherOccupation(student.getFamily() != null ? student.getFamily().getFatherOccupation() : null)
-                .fatherStatus(resolveParentStatusLabel(student.getFamily() != null ? student.getFamily().getFatherStatus() : null))
-                .motherName(student.getFamily() != null ? student.getFamily().getMotherName() : null)
-                .motherOccupation(student.getFamily() != null ? student.getFamily().getMotherOccupation() : null)
-                .motherStatus(resolveParentStatusLabel(student.getFamily() != null ? student.getFamily().getMotherStatus() : null))
-                .siblingId(student.getSiblingId())
-                .guardianId(guardian != null ? guardian.getGuardianId() : null)
-                .guardianName(buildGuardianName(guardian))
-                .guardianPhone(guardian != null ? guardian.getPhoneNumber() : null)
-                .relationshipName(resolveRelationshipName(guardian != null ? guardian.getRelationshipId() : null))
-                .orphanStatus(resolveOrphanStatusLabel(student.getOrphanStatus()))
-                .imageUrl(student.getImageUrl())
-                .isDeleted(student.getIsDeleted())
-                .createdAt(student.getCreatedAt())
-                .createdBy(student.getCreatedBy())
-                .modifiedAt(student.getModifiedAt())
-                .modifiedBy(student.getModifiedBy())
-                .guardian(mapGuardianDto(guardian))
-                .build();
-    }
-
-    private String buildStudentName(Student student) {
-        return student.getFirstName() + " " + student.getLastName();
-    }
-
-    private StudentResponseDto.GuardianDto mapGuardianDto(Guardian guardian) {
-        if (guardian == null) {
-            return null;
-        }
-
-        return StudentResponseDto.GuardianDto.builder()
-                .guardianId(guardian.getGuardianId())
-                .firstName(guardian.getFirstName())
-                .lastName(guardian.getLastName())
-                .phoneNumber(guardian.getPhoneNumber())
-                .relationshipId(guardian.getRelationshipId())
-                .occ(guardian.getOcc())
-                .addr(guardian.getAddr())
-                .isDeleted(guardian.getIsDeleted())
-                .createdAt(guardian.getCreatedAt())
-                .updatedAt(guardian.getUpdatedAt())
-                .build();
-    }
-
-    private StudentListResponseDto mapStudentListResponse(StudentListResponseDto student) {
-        return StudentListResponseDto.builder()
-                .studentId(student.getStudentId())
-                .name(student.getName())
-                .emailId(student.getEmailId())
-                .dob(student.getDob())
-                .gender(resolveGenderLabel(student.getGender()))
-                .aadhaarNumber(student.getAadhaarNumber())
-                .casteId(student.getCasteId())
-                .religion(resolveReligionLabel(student.getReligion()))
-                .bloodGroup(student.getBloodGroup())
-                .schId(student.getSchId())
-                .classId(student.getClassId())
-                .academicYearId(student.getAcademicYearId())
-                .academicYearName(student.getAcademicYearName())
-                .familyId(student.getFamilyId())
-                .fatherName(student.getFatherName())
-                .fatherOccupation(student.getFatherOccupation())
-                .fatherStatus(resolveParentStatusLabel(student.getFatherStatus()))
-                .motherName(student.getMotherName())
-                .motherOccupation(student.getMotherOccupation())
-                .motherStatus(resolveParentStatusLabel(student.getMotherStatus()))
-                .schAddress(student.getSchAddress())
-                .schName(student.getSchName())
-                .className(student.getClassName())
-                .guardianName(student.getGuardianName())
-                .guardianId(student.getGuardianId())
-                .guardianPhone(student.getGuardianPhone())
-                .guardianRelationName(student.getGuardianRelationName())
-                .relationshipName(student.getRelationshipName())
-                .vilName(student.getVilName())
-                .mndlName(student.getMndlName())
-                .distName(student.getDistName())
-                .stName(student.getStName())
-                .siblingId(student.getSiblingId())
-                .orphanStatus(resolveOrphanStatusLabel(student.getOrphanStatus()))
-                .sponsorId(student.getSponsorId())
-                .sponsorName(student.getSponsorName())
-                .totalCount(student.getTotalCount())
-                .boysCount(student.getBoysCount())
-                .girlsCount(student.getGirlsCount())
-                .sponsoredCount(student.getSponsoredCount())
-                .orphansCount(student.getOrphansCount())
-                .imageUrl(student.getImageUrl())
-                .createdAt(student.getCreatedAt())
-                .createdBy(student.getCreatedBy())
-                .modifiedAt(student.getModifiedAt())
-                .modifiedBy(student.getModifiedBy())
-                .build();
-    }
-
-    private Integer resolveAcademicYearId(Integer requestedAcademicYearId, Integer fallbackAcademicYearId) {
-        if (requestedAcademicYearId != null) {
-            return academicYearRepository.findByAcademicYearIdAndIsDeletedFalse(requestedAcademicYearId)
-                    .map(AcademicYear::getAcademicYearId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Academic year not found with id: " + requestedAcademicYearId));
-        }
-
-        if (fallbackAcademicYearId != null) {
-            return fallbackAcademicYearId;
-        }
-
-        return academicYearRepository.findByIsCurrentTrueAndIsActiveTrueAndIsDeletedFalse()
-                .map(AcademicYear::getAcademicYearId)
-                .orElseThrow(() -> new ResourceNotFoundException("Current academic year not found"));
-    }
-
-    private AcademicYear resolveAcademicYear(Integer academicYearId) {
-        if (academicYearId == null) {
-            return null;
-        }
-        return academicYearRepository.findByAcademicYearIdAndIsDeletedFalse(academicYearId).orElse(null);
     }
 
     private StudentFamily persistStudentFamily(StudentRequestDto requestDto, StudentFamily fallbackFamily) {
@@ -752,10 +897,6 @@ public class StudentServiceImpl implements StudentService {
             }
             throw new ResourceNotFoundException("Guardian information is required");
         }
-
-        Guardian guardian = requestDto.getGuardianId() != null
-                ? guardianRepository.findById(requestDto.getGuardianId()).orElse(null)
-                : null;
 
         guardianRepository.createOrUpdateGuardian(
                 requestDto.getGuardianId(),
@@ -883,12 +1024,52 @@ public class StudentServiceImpl implements StudentService {
         return label != null ? label : value;
     }
 
-    private Integer ageFromDob(java.time.LocalDate dob) {
+    private Integer ageFromDob(LocalDate dob) {
         if (dob == null) {
             return null;
         }
-        java.time.Period period = java.time.Period.between(dob, java.time.LocalDate.now());
+        java.time.Period period = java.time.Period.between(dob, LocalDate.now());
         return period.getYears();
+    }
+
+    private Set<Integer> parseStudentIds(String studentIdsCsv) {
+        if (studentIdsCsv == null || studentIdsCsv.isBlank()) {
+            return Collections.emptySet();
+        }
+
+        Set<Integer> ids = new LinkedHashSet<>();
+        for (String part : studentIdsCsv.split(",")) {
+            String trimmed = part == null ? "" : part.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            try {
+                Integer parsed = Integer.parseInt(trimmed);
+                if (parsed > 0) {
+                    ids.add(parsed);
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return ids;
+    }
+
+    private Integer firstStudentId(String studentIdsCsv) {
+        Set<Integer> ids = parseStudentIds(studentIdsCsv);
+        return ids.stream().findFirst().orElse(null);
+    }
+
+    private String joinStudentIds(Collection<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return null;
+        }
+
+        return ids.stream()
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .sorted()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
     }
 
     private void syncSiblingGroup(Integer currentStudentId, Set<Integer> oldSiblingIds, String newSiblingIdsCsv, boolean hasSibling) {
@@ -957,44 +1138,26 @@ public class StudentServiceImpl implements StudentService {
         }
     }
 
-    private Set<Integer> parseStudentIds(String studentIdsCsv) {
-        if (studentIdsCsv == null || studentIdsCsv.isBlank()) {
-            return Collections.emptySet();
-        }
-
-        Set<Integer> ids = new LinkedHashSet<>();
-        for (String part : studentIdsCsv.split(",")) {
-            String trimmed = part == null ? "" : part.trim();
-            if (trimmed.isEmpty()) {
-                continue;
-            }
-            try {
-                Integer parsed = Integer.parseInt(trimmed);
-                if (parsed > 0) {
-                    ids.add(parsed);
-                }
-            } catch (NumberFormatException ignored) {
-                // Ignore invalid ids and keep the rest of the group intact.
-            }
-        }
-        return ids;
-    }
-
-    private Integer firstStudentId(String studentIdsCsv) {
-        Set<Integer> ids = parseStudentIds(studentIdsCsv);
-        return ids.stream().findFirst().orElse(null);
-    }
-
-    private String joinStudentIds(Collection<Integer> ids) {
-        if (ids == null || ids.isEmpty()) {
+    private AcademicYear resolveAcademicYear(Integer academicYearId) {
+        if (academicYearId == null) {
             return null;
         }
+        return academicYearRepository.findByAcademicYearIdAndIsDeletedFalse(academicYearId).orElse(null);
+    }
 
-        return ids.stream()
-                .filter(id -> id != null && id > 0)
-                .distinct()
-                .sorted()
-                .map(String::valueOf)
-                .collect(Collectors.joining(","));
+    private Integer resolveAcademicYearId(Integer requestedAcademicYearId, Integer fallbackAcademicYearId) {
+        if (requestedAcademicYearId != null) {
+            return academicYearRepository.findByAcademicYearIdAndIsDeletedFalse(requestedAcademicYearId)
+                    .map(AcademicYear::getAcademicYearId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Academic year not found with id: " + requestedAcademicYearId));
+        }
+
+        if (fallbackAcademicYearId != null) {
+            return fallbackAcademicYearId;
+        }
+
+        return academicYearRepository.findByIsCurrentTrueAndIsActiveTrueAndIsDeletedFalse()
+                .map(AcademicYear::getAcademicYearId)
+                .orElseThrow(() -> new ResourceNotFoundException("Current academic year not found"));
     }
 }

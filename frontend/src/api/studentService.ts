@@ -46,6 +46,21 @@ export interface GuardianRequestPayload {
   addr?: string | null;
 }
 
+export interface StudentAcademicRequestPayload {
+  studentAcademicId?: number | null;
+  academicYearId: number;
+  schoolId: number;
+  classId: number;
+  rollNumber?: string | null;
+  admissionType?: string | null;
+  status?: string | null;
+  remarks?: string | null;
+  isActive?: boolean | null;
+  isDeleted?: boolean | null;
+  createdBy?: number | null;
+  updatedBy?: number | null;
+}
+
 export interface StudentRequestPayload {
   firstName: string;
   lastName: string;
@@ -57,8 +72,8 @@ export interface StudentRequestPayload {
   academicYearId?: number | null;
   religion?: string | null;
   bloodGroup?: string | null;
-  schId: number;
-  classId: number;
+  schId?: number | null;
+  classId?: number | null;
   orphanStatus?: string | null;
   imageUrl?: string | null;
   createdBy: number;
@@ -73,6 +88,7 @@ export interface StudentRequestPayload {
   motherOccupation?: string | null;
   motherStatus?: string | null;
   guardian?: StudentRequestGuardianDto;
+  academicDetails?: StudentAcademicRequestPayload;
 }
 
 export interface StudentSiblingSearchResponse {
@@ -102,7 +118,13 @@ export interface StudentProfileResponse {
   casteName?: string | null;
   religion?: string | null;
   bloodGroup?: string | null;
+  studentAcademicId?: number;
+  academicYearId?: number;
+  academicYearName?: string | null;
+  schoolId?: number;
+  schoolName?: string | null;
   classId?: number;
+  className?: string | null;
   familyId?: number;
   guardianId?: number;
   fatherName?: string | null;
@@ -114,6 +136,11 @@ export interface StudentProfileResponse {
   siblingId?: string;
   orphanStatus?: string | null;
   imageUrl?: string | null;
+  rollNumber?: string | null;
+  admissionType?: string | null;
+  status?: string | null;
+  remarks?: string | null;
+  academicDetails?: StudentAcademicRequestPayload | null;
   guardianName?: string;
   guardianFirstName?: string | null;
   guardianMiddleName?: string | null;
@@ -139,6 +166,11 @@ export interface LabelValueOption {
 export interface ClassResponse {
   classId: number;
   className: string;
+}
+
+export interface AcademicYearResponse {
+  academicYearId: number;
+  academicYearName: string;
 }
 
 interface CasteResponse {
@@ -251,6 +283,16 @@ export const getParentOccupations = async (): Promise<LabelValueOption[]> => {
     return response.data ?? [];
   } catch (error) {
     logApiFailure('getParentOccupations', error);
+    throw error;
+  }
+};
+
+export const getAcademicYears = async (): Promise<AcademicYearResponse[]> => {
+  try {
+    const response = await apiClient.get<AcademicYearResponse[]>('/master/academic-years');
+    return response.data ?? [];
+  } catch (error) {
+    logApiFailure('getAcademicYears', error);
     throw error;
   }
 };

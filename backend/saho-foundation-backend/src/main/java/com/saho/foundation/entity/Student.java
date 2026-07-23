@@ -46,15 +46,6 @@ public class Student {
     @Column(name = "blood_group", length = 5)
     private String bloodGroup;
 
-    @Column(name = "sch_id", nullable = false)
-    private Integer schId;
-
-    @Column(name = "class_id", nullable = false)
-    private Integer classId;
-
-    @Column(name = "academic_year_id")
-    private Integer academicYearId;
-
     @ManyToOne(optional = false)
     @JoinColumn(name = "family_id", nullable = false)
     private StudentFamily family;

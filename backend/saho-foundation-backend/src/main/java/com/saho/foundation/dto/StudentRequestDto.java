@@ -37,6 +37,7 @@ public class StudentRequestDto {
     private Integer createdBy;
     private Boolean hasSibling;
     private String siblingIds;
+    private StudentAcademicRequestDto academicDetails;
     private GuardianRequestDto guardian;
 
     @Data

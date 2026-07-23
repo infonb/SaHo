@@ -16,6 +16,7 @@ export interface StudentFormState {
   caste: string;
   religion: string;
   blood_group: string;
+  academic_year_id: string;
   class_id: string;
   orphan_status: string;
   image_url: string;
@@ -24,6 +25,10 @@ export interface StudentFormState {
   mndl_id: string;
   vil_id: string;
   sch_id: string;
+  roll_number: string;
+  admission_type: string;
+  status: string;
+  remarks: string;
   father_first: string;
   father_last: string;
   father_is_guardian: string;
@@ -64,6 +69,7 @@ interface StudentProfileSectionsProps {
   siblingChecked?: boolean;
   searchSibling?: () => void;
   removeSibling?: (index: number) => void;
+  academicYears?: [string, string][];
   schools?: [string, string][];
   states?: [string, string][];
   districts?: [string, string][];
@@ -129,7 +135,7 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
 }
 
 export default function StudentProfileSections(props: StudentProfileSectionsProps) {
-  const { mode, form, set, touch, chooseImage, clearImage, siblingsList = [], siblingChecked, searchSibling, removeSibling, schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], occupations = [], statuses = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
+  const { mode, form, set, touch, chooseImage, clearImage, siblingsList = [], siblingChecked, searchSibling, removeSibling, academicYears = [], schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], occupations = [], statuses = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -145,6 +151,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
   const religionOptions = RELIGION_OPTIONS;
   const casteOptions = props.castes ?? ['SC', 'ST', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'OC', 'Other'];
   const classOptions = props.classes ?? [['1', '6TH CLASS'], ['2', '7TH CLASS'], ['3', '8TH CLASS'], ['4', '9TH CLASS'], ['5', '10TH CLASS']];
+  const academicYearOptions = academicYears;
   const orphanStatusOptions = ORPHAN_STATUS_OPTIONS;
   const occupationOptions: [string, string][] = occupations.length ? occupations : [
     ['1', 'Farmer'],
@@ -410,11 +417,11 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
     <FormContainer>
       {activeStep === 'personal' ? (
         <>
-          <FormSection title="Personal Information" step="1" icon={<ProfileInfoIcon />}>
+          <FormSection title="Student Information" step="1" icon={<ProfileInfoIcon />}>
             <div className="formGrid studentStepGrid">
               <Field fieldKey="first_name" label="First Name*" value={form.first_name} onChange={v => set('first_name', v)} onBlur={() => touch?.('first_name')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} error={showMessage('first_name') ? errors.first_name : undefined} state={getFieldState('first_name')} />
               <Field fieldKey="last_name" label="Last Name*" value={form.last_name} onChange={v => set('last_name', v)} onBlur={() => touch?.('last_name')} readOnly={readOnly} alphabeticOnly maxLength={NAME_MAX_LENGTH} error={showMessage('last_name') ? errors.last_name : undefined} state={getFieldState('last_name')} />
-              <Field fieldKey="email" label="Email ID*" type="email" value={form.email} onChange={v => set('email', v)} onBlur={() => touch?.('email')} readOnly={readOnly} error={showMessage('email') ? errors.email : undefined} state={getFieldState('email')} />
+              <Field fieldKey="email" label="Email" type="email" value={form.email} onChange={v => set('email', v)} onBlur={() => touch?.('email')} readOnly={readOnly} error={showMessage('email') ? errors.email : undefined} state={getFieldState('email')} />
               <Field fieldKey="dob" label="Date of Birth*" type="date" value={form.dob} onChange={v => set('dob', v)} onBlur={() => touch?.('dob')} readOnly={readOnly} error={showMessage('dob') ? errors.dob : undefined} state={getFieldState('dob')} />
               <Select
                 fieldKey="gender"
@@ -431,7 +438,6 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
               <Select fieldKey="blood_group" label="Blood Group" value={form.blood_group} onChange={v => set('blood_group', v)} options={['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']} readOnly={readOnly} state={getFieldState('blood_group')} />
               <Select fieldKey="religion" label="Religion*" value={form.religion} onChange={v => set('religion', v)} onBlur={() => touch?.('religion')} options={religionOptions} readOnly={readOnly} error={showMessage('religion') ? errors.religion : undefined} state={getFieldState('religion')} />
               <Select fieldKey="caste" label="Caste*" value={form.caste} onChange={v => set('caste', v)} onBlur={() => touch?.('caste')} options={casteOptions} readOnly={readOnly} error={showMessage('caste') ? errors.caste : undefined} state={getFieldState('caste')} />
-              <Select fieldKey="class_id" label="Class*" value={form.class_id} onChange={v => set('class_id', v)} onBlur={() => touch?.('class_id')} options={classOptions} readOnly={readOnly} error={showMessage('class_id') ? errors.class_id : undefined} state={getFieldState('class_id')} />
               <Field
                 fieldKey="aadhaar_number"
                 label="Aadhaar Number*"
@@ -448,9 +454,12 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
                 state={getFieldState('aadhaar_number')}
               />
               <Select fieldKey="orphan_status" label="Orphan / Single Parent*" value={form.orphan_status} onChange={v => set('orphan_status', v)} onBlur={() => touch?.('orphan_status')} options={orphanStatusOptions} readOnly={readOnly} error={showMessage('orphan_status') ? errors.orphan_status : undefined} state={getFieldState('orphan_status')} />
-              <div className="field studentPhotoField">
+              
+            </div>
+             <div className="field studentPhotoField">
                 <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><PhotoImageIcon /></span>Student Photo</h3>
-                <div className="uploadBox studentModalUpload">
+              </div>
+             <div className="uploadBox studentModalUpload">
                   <div className="studentModalUploadPreview">
                     {form.image_url && !readOnly ? (
                       <Button
@@ -490,8 +499,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
                     </div>
                   ) : null}
                 </div>
-              </div>
-            </div>
+               
           </FormSection>
         </>
       ) : null}
@@ -540,20 +548,26 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
       </Modal>
 
       {activeStep === 'location' ? (
-        <FormSection title="School & Location" step="2">
+        <FormSection title="Academic Information" step="2">
           <div className="formGrid studentStepGrid">
+            <Select fieldKey="academic_year_id" label="Academic Year*" value={form.academic_year_id} onChange={v => set('academic_year_id', v)} onBlur={() => touch?.('academic_year_id')} options={academicYearOptions} readOnly={readOnly} error={showMessage('academic_year_id') ? errors.academic_year_id : undefined} state={getFieldState('academic_year_id')} />
             <Select fieldKey="st_id" label="State*" value={form.st_id} onChange={v => set('st_id', v)} onBlur={() => touch?.('st_id')} options={states} readOnly={readOnly} error={showMessage('st_id') ? errors.st_id : undefined} state={getFieldState('st_id')} />
             <Select fieldKey="dist_id" label="District*" value={form.dist_id} onChange={v => set('dist_id', v)} onBlur={() => touch?.('dist_id')} options={districts} readOnly={readOnly} error={showMessage('dist_id') ? errors.dist_id : undefined} state={getFieldState('dist_id')} />
             <Select fieldKey="mndl_id" label="Mandal*" value={form.mndl_id} onChange={v => set('mndl_id', v)} onBlur={() => touch?.('mndl_id')} options={mandals} readOnly={readOnly} error={showMessage('mndl_id') ? errors.mndl_id : undefined} state={getFieldState('mndl_id')} />
             <Select fieldKey="vil_id" label="Village*" value={form.vil_id} onChange={v => set('vil_id', v)} onBlur={() => touch?.('vil_id')} options={villages} readOnly={readOnly} error={showMessage('vil_id') ? errors.vil_id : undefined} state={getFieldState('vil_id')} />
             <Select fieldKey="sch_id" label="School*" value={form.sch_id} onChange={v => set('sch_id', v)} onBlur={() => touch?.('sch_id')} options={schools} readOnly={readOnly} error={showMessage('sch_id') ? errors.sch_id : undefined} state={getFieldState('sch_id')} />
+            {form.sch_id ? <Select fieldKey="class_id" label="Class*" value={form.class_id} onChange={v => set('class_id', v)} onBlur={() => touch?.('class_id')} options={classOptions} readOnly={readOnly} error={showMessage('class_id') ? errors.class_id : undefined} state={getFieldState('class_id')} /> : null}
+            <Field fieldKey="roll_number" label="Roll Number*" value={form.roll_number} onChange={v => set('roll_number', v)} onBlur={() => touch?.('roll_number')} readOnly={readOnly} error={showMessage('roll_number') ? errors.roll_number : undefined} state={getFieldState('roll_number')} />
+            <Field fieldKey="admission_type" label="Admission Type*" value={form.admission_type} onChange={v => set('admission_type', v)} onBlur={() => touch?.('admission_type')} readOnly={readOnly} error={showMessage('admission_type') ? errors.admission_type : undefined} state={getFieldState('admission_type')} />
+            <Field fieldKey="status" label="Status*" value={form.status} onChange={v => set('status', v)} onBlur={() => touch?.('status')} readOnly={readOnly} error={showMessage('status') ? errors.status : undefined} state={getFieldState('status')} />
+            <Field fieldKey="remarks" label="Remarks" value={form.remarks} onChange={v => set('remarks', v)} onBlur={() => touch?.('remarks')} readOnly={readOnly} state={getFieldState('remarks')} />
           </div>
         </FormSection>
       ) : null}
 
       {activeStep === 'guardian' ? (
-        <section className="studentFormSection" aria-labelledby="student-section-other-information">
-          <h3 id="student-section-other-information" className="studentStepTitle"><span className="studentStepIcon">3</span>Other Information</h3>
+        <section className="studentFormSection" aria-labelledby="student-section-family-guardian">
+          <h3 id="student-section-family-guardian" className="studentStepTitle"><span className="studentStepIcon">3</span>Family & Guardian</h3>
 
           <div className="studentSiblingInline">
             <h3 className="studentStepTitle isSubsection"><span className="studentStepIcon"><ParentInfoIcon /></span>Parent Information</h3>
@@ -570,7 +584,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
                 <Select fieldKey="mother_occupation" label="Mother Occupation*" value={form.mother_occupation} onChange={v => set('mother_occupation', v)} onBlur={() => touch?.('mother_occupation')} options={occupationOptions} readOnly={readOnly} error={showMessage('mother_occupation') ? errors.mother_occupation : undefined} state={getFieldState('mother_occupation')} />
                 <CheckboxField fieldKey="mother_is_guardian" label="Is Guardian" checked={form.mother_is_guardian === 'Yes'} onChange={checked => set('mother_is_guardian', checked ? 'Yes' : 'No')} readOnly={readOnly} />
               </div>
-              <div className="formGrid studentStepGrid studentParentRow" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+              <div className="formGrid studentStepGrid studentParentRow" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
                 <Select fieldKey="father_status" label="Father Status*" value={form.father_status} onChange={v => set('father_status', v)} onBlur={() => touch?.('father_status')} options={statusOptions} readOnly={readOnly} error={showMessage('father_status') ? errors.father_status : undefined} state={getFieldState('father_status')} />
                 <Select fieldKey="mother_status" label="Mother Status*" value={form.mother_status} onChange={v => set('mother_status', v)} onBlur={() => touch?.('mother_status')} options={statusOptions} readOnly={readOnly} error={showMessage('mother_status') ? errors.mother_status : undefined} state={getFieldState('mother_status')} />
               </div>
