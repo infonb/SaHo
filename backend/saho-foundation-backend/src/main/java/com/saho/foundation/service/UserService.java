@@ -33,13 +33,14 @@ public class UserService {
     }
 
     public AdminResponseDto createAdmin(AdminRequestDto request) {
-        Optional<User> existing = userRepository.findByEmailId(request.getEmailId());
+        String normalizedEmail = request.getEmailId().trim().toLowerCase();
+        Optional<User> existing = userRepository.findByEmailIdIgnoreCase(normalizedEmail);
         if (existing.isPresent()) {
             throw new DuplicateResourceException("An admin with this email already exists.");
         }
 
         User user = User.builder()
-                .emailId(request.getEmailId())
+                .emailId(normalizedEmail)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole().toUpperCase())
                 .isActive(true)
@@ -66,11 +67,12 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Admin not found with id: " + id));
 
         if (request.getEmailId() != null) {
-            Optional<User> existing = userRepository.findByEmailId(request.getEmailId());
+            String normalizedEmail = request.getEmailId().trim().toLowerCase();
+            Optional<User> existing = userRepository.findByEmailIdIgnoreCase(normalizedEmail);
             if (existing.isPresent() && !existing.get().getUserId().equals(id)) {
                 throw new DuplicateResourceException("An admin with this email already exists.");
             }
-            user.setEmailId(request.getEmailId());
+            user.setEmailId(normalizedEmail);
         }
 
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {

@@ -19,7 +19,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmailId(username).orElse(null);
+        String normalized = username.trim().toLowerCase();
+        User user = userRepository.findByEmailIdIgnoreCase(normalized).orElse(null);
         if (user == null) {
             try {
                 Integer studentId = Integer.parseInt(username);
@@ -41,7 +42,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private UserDetails buildUserDetails(User user) {
         return new org.springframework.security.core.userdetails.User(
-                user.getEmailId() != null ? user.getEmailId() : String.valueOf(user.getStudentId()),
+                user.getEmailId() != null ? user.getEmailId().toLowerCase() : String.valueOf(user.getStudentId()),
                 user.getPassword(),
                 true,
                 true, true, true,

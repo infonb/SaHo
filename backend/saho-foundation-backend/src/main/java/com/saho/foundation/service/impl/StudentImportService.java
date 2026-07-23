@@ -3,7 +3,6 @@ package com.saho.foundation.service.impl;
 import com.saho.foundation.dto.imports.BulkImportResponse;
 import com.saho.foundation.dto.imports.ImportErrorDto;
 import com.saho.foundation.dto.imports.StudentImportRow;
-import com.saho.foundation.entity.AcademicYear;
 import com.saho.foundation.entity.*;
 import com.saho.foundation.enums.Gender;
 import com.saho.foundation.enums.ParentStatus;
@@ -141,8 +140,9 @@ public class StudentImportService {
                 }
             }
 
+            String normalizedEmail = row.getEmail().toLowerCase();
             if (!row.getEmail().isEmpty() && EMAIL_PATTERN.matcher(row.getEmail()).matches()) {
-                if (studentRepository.existsByEmailIdAndIsDeletedFalse(row.getEmail())) {
+                if (studentRepository.existsByEmailIdIgnoreCaseAndIsDeletedFalse(normalizedEmail)) {
                     rowErrors.add("Student with email already exists");
                 }
             }
@@ -489,7 +489,7 @@ public class StudentImportService {
 
             StudentFamily family = createImportStudentFamily(row);
 
-            String email = row.getEmail();
+            String email = row.getEmail().toLowerCase();
             if (email.isEmpty()) {
                 email = row.getAadhaar() + "@saho-foundation.org";
             }

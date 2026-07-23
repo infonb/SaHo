@@ -12,6 +12,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Optional<User> findByEmailId(String emailId);
 
+    Optional<User> findByEmailIdIgnoreCase(String emailId);
+
     Optional<User> findByStudentId(Integer studentId);
 
     List<User> findByRoleAndIsDeleted(String role, Boolean isDeleted);

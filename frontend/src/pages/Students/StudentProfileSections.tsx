@@ -176,9 +176,7 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
     ['6', 'Missing'],
   ];
   const guardianMode = form.father_is_guardian === 'Yes' ? 'father' : form.mother_is_guardian === 'Yes' ? 'mother' : null;
-  const guardianOccupationDisplay = readOnly
-    ? occupationOptions.find(([value]) => value === form.occ)?.[1] ?? form.occ
-    : form.occ;
+  const guardianOccupationDisplay = occupationOptions.find(([value]) => String(value) === String(form.occ))?.[1] ?? form.occ;
   const MIN_IMAGE_BYTES = 5 * 1024;
   const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
   const viewLabel = (label: string) => readOnly ? label.replace(/\*/g, '') : label;
@@ -760,8 +758,8 @@ function Select({ fieldKey, label, value, onChange, onBlur, options, subText, lo
   const normalizedOptions = options.map(option => Array.isArray(option) ? { value: option[0], label: option[1] } : { value: option, label: option });
   const selectedLabel = options.reduce<string>((labelValue, option) => {
     if (labelValue) return labelValue;
-    if (Array.isArray(option)) return option[0] === value ? option[1] : '';
-    return option === value ? option : '';
+    if (Array.isArray(option)) return String(option[0]) === String(value) ? option[1] : '';
+    return String(option) === String(value) ? option : '';
   }, '');
 
   useEffect(() => {
@@ -808,7 +806,7 @@ function Select({ fieldKey, label, value, onChange, onBlur, options, subText, lo
               {normalizedOptions.length ? normalizedOptions.map(option => (
                 <button
                   type="button"
-                  className={`multiSelectOption${value === option.value ? ' isSelected' : ''}`}
+                  className={`multiSelectOption${String(value) === String(option.value) ? ' isSelected' : ''}`}
                   key={option.value}
                   onClick={() => {
                     onChange(option.value);

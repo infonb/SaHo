@@ -25,7 +25,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponseDto adminLogin(LoginRequestDto request) {
-        User user = userRepository.findByEmailId(request.getEmail())
+        String email = request.getEmail().trim().toLowerCase();
+        User user = userRepository.findByEmailIdIgnoreCase(email)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
 
         if (!"ADMIN".equalsIgnoreCase(user.getRole())) {
@@ -42,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
 
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(email, request.getPassword())
             );
         } catch (BadCredentialsException e) {
             if (!user.getPassword().startsWith("$2") && user.getPassword().equals(request.getPassword())) {

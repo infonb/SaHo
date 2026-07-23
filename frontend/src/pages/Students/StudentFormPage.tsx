@@ -321,7 +321,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const mapLabelToOptionValue = (input: string | null | undefined, options: [string, string][]) => {
     if (!input) return '';
     const normalizedInput = String(input).trim().toLowerCase();
-    const found = options.find(([value, label]) => value === input || label === input || label.trim().toLowerCase() === normalizedInput);
+    const found = options.find(([value, label]) => String(value) === String(input) || label === input || label.trim().toLowerCase() === normalizedInput);
     return found ? found[0] : '';
   };
   const nav = useNavigate();
@@ -749,10 +749,14 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       const guardianName = splitName(student.guardianName ?? snapshot?.guardian_full_name);
       const guardianRelationLabel = String(student.guardianRelationName || student.relationshipName || snapshot?.guardian_relation_name || '').trim();
       const guardianRelationValue = mapLabelToOptionValue(guardianRelationLabel, viewFallback?.relationships ?? []);
-      const fatherOccupation = mapLabelToOptionValue(student.fatherOccupation ?? firstString(student, ['father_occupation']), viewFallback?.occupations ?? []);
-      const motherOccupation = mapLabelToOptionValue(student.motherOccupation ?? firstString(student, ['mother_occupation']), viewFallback?.occupations ?? []);
-      const fatherStatus = mapLabelToOptionValue(student.fatherStatus ?? firstString(student, ['father_status']), viewFallback?.statuses ?? []);
-      const motherStatus = mapLabelToOptionValue(student.motherStatus ?? firstString(student, ['mother_status']), viewFallback?.statuses ?? []);
+      const fatherOccupationInput = student.fatherOccupation !== undefined && student.fatherOccupation !== null ? String(student.fatherOccupation) : firstString(student, ['father_occupation']);
+      const motherOccupationInput = student.motherOccupation !== undefined && student.motherOccupation !== null ? String(student.motherOccupation) : firstString(student, ['mother_occupation']);
+      const fatherStatusInput = student.fatherStatus !== undefined && student.fatherStatus !== null ? String(student.fatherStatus) : firstString(student, ['father_status']);
+      const motherStatusInput = student.motherStatus !== undefined && student.motherStatus !== null ? String(student.motherStatus) : firstString(student, ['mother_status']);
+      const fatherOccupation = mapLabelToOptionValue(fatherOccupationInput, viewFallback?.occupations ?? []);
+      const motherOccupation = mapLabelToOptionValue(motherOccupationInput, viewFallback?.occupations ?? []);
+      const fatherStatus = mapLabelToOptionValue(fatherStatusInput, viewFallback?.statuses ?? []);
+      const motherStatus = mapLabelToOptionValue(motherStatusInput, viewFallback?.statuses ?? []);
       const fatherIsGuardian = firstBoolean(student, ['fatherIsGuardian', 'father_is_guardian', 'isFatherGuardian'])
         ?? (guardianRelationLabel.toLowerCase() === 'father' || sameName(fatherName, guardianName));
       const motherIsGuardian = firstBoolean(student, ['motherIsGuardian', 'mother_is_guardian', 'isMotherGuardian'])
@@ -1294,7 +1298,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const title = isView ? 'View' : isEdit ? 'Edit' : 'Add';
   const eyebrow = isView ? '' : isEdit ? '' : '';
   const optionLabel = (value: string, options: [string, string][]) => {
-    return options.find(([optionValue]) => optionValue === value)?.[1] || value || '-';
+    return options.find(([optionValue]) => String(optionValue) === String(value))?.[1] || value || '-';
   };
   const fullName = [form.first_name, form.last_name].filter(Boolean).join(' ') || studentSnapshot?.full_name || '-';
   const guardianName = [form.guardian_first, form.guardian_last].filter(Boolean).join(' ') || studentSnapshot?.guardian_full_name || '-';
