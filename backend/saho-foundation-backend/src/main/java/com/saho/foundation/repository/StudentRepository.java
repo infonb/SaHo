@@ -15,9 +15,13 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
 
     boolean existsByEmailId(String emailId);
 
+    boolean existsByEmailIdIgnoreCase(String emailId);
+
     boolean existsByAadhaarNumber(String aadhaarNumber);
 
     boolean existsByEmailIdAndStudentIdNot(String emailId, Integer studentId);
+
+    boolean existsByEmailIdIgnoreCaseAndStudentIdNot(String emailId, Integer studentId);
 
     boolean existsByAadhaarNumberAndStudentIdNot(String aadhaarNumber, Integer studentId);
 
@@ -29,7 +33,7 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
 
     boolean existsByAadhaarNumberAndIsDeletedFalse(String aadhaarNumber);
 
-    boolean existsByEmailIdAndIsDeletedFalse(String emailId);
+    boolean existsByEmailIdIgnoreCaseAndIsDeletedFalse(String emailId);
 
     @Procedure(procedureName = "createorupdatestudent_v2")
     void createOrUpdateStudentV2(

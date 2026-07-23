@@ -85,7 +85,8 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public StudentResponseDto createStudent(StudentRequestDto requestDto) {
-        if (studentRepository.existsByEmailId(requestDto.getEmailId())) {
+        String normalizedEmail = requestDto.getEmailId().trim().toLowerCase();
+        if (studentRepository.existsByEmailIdIgnoreCase(normalizedEmail)) {
             throw new DuplicateResourceException("emailId already exists");
         }
 
@@ -101,7 +102,7 @@ public class StudentServiceImpl implements StudentService {
                 null,
                 requestDto.getFirstName(),
                 requestDto.getLastName(),
-                requestDto.getEmailId(),
+                normalizedEmail,
                 requestDto.getDob(),
                 requestDto.getGender(),
                 requestDto.getAadhaarNumber(),
@@ -416,7 +417,8 @@ public class StudentServiceImpl implements StudentService {
             throw new ResourceNotFoundException("Student not found with id: " + studentId);
         }
 
-        if (studentRepository.existsByEmailIdAndStudentIdNot(requestDto.getEmailId(), studentId)) {
+        String normalizedEmail = requestDto.getEmailId().trim().toLowerCase();
+        if (studentRepository.existsByEmailIdIgnoreCaseAndStudentIdNot(normalizedEmail, studentId)) {
             throw new DuplicateResourceException("emailId already exists");
         }
 
@@ -439,7 +441,7 @@ public class StudentServiceImpl implements StudentService {
                 existingStudent.getStudentId(),
                 requestDto.getFirstName(),
                 requestDto.getLastName(),
-                requestDto.getEmailId(),
+                normalizedEmail,
                 requestDto.getDob(),
                 requestDto.getGender(),
                 requestDto.getAadhaarNumber(),
