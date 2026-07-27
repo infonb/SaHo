@@ -73,6 +73,9 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                         cachedProfile.set(mapStudentProfileResponse(rs));
                     }
                 }
+                try (Statement closeStmt = con.createStatement()) {
+                    closeStmt.execute("CLOSE \"" + cursorName + "\"");
+                }
                 return null;
             });
             return Optional.ofNullable(cachedProfile.get());
@@ -104,6 +107,9 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                     if (rs.next()) {
                         cachedAcademic.set(mapStudentAcademic(rs));
                     }
+                }
+                try (Statement closeStmt = con.createStatement()) {
+                    closeStmt.execute("CLOSE \"" + cursorName + "\"");
                 }
                 return null;
             });
@@ -181,6 +187,11 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                     students.add(mapStudentListResponse(rs));
                 }
                 return students;
+            } finally {
+                try (Statement closeStmt = con.createStatement()) {
+                    closeStmt.execute("CLOSE \"" + cursorName + "\"");
+                } catch (Exception ignored) {
+                }
             }
         });
     }

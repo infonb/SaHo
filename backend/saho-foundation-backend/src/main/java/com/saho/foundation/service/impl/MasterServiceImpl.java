@@ -7,8 +7,10 @@ import com.saho.foundation.dto.RelationshipResponseDto;
 import com.saho.foundation.entity.CasteMaster;
 import com.saho.foundation.entity.ClassMaster;
 import com.saho.foundation.entity.RelationshipMaster;
+import com.saho.foundation.enums.AdmissionType;
 import com.saho.foundation.enums.ParentOccupation;
 import com.saho.foundation.enums.ParentStatus;
+import com.saho.foundation.enums.StudentAcademicStatus;
 import com.saho.foundation.repository.CasteRepository;
 import com.saho.foundation.repository.ClassRepository;
 import com.saho.foundation.repository.RelationshipRepository;
@@ -56,6 +58,26 @@ public class MasterServiceImpl implements MasterService {
                 .map(cls -> ClassResponseDto.builder()
                         .classId(cls.getClassId())
                         .className(cls.getClassName())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LabelValueResponseDto> getAdmissionTypes() {
+        return java.util.Arrays.stream(AdmissionType.values())
+                .map(type -> LabelValueResponseDto.builder()
+                        .value(type.getValue())
+                        .label(type.getLabel())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LabelValueResponseDto> getAcademicStatuses() {
+        return java.util.Arrays.stream(StudentAcademicStatus.values())
+                .map(status -> LabelValueResponseDto.builder()
+                        .value(status.getValue())
+                        .label(status.getLabel())
                         .build())
                 .collect(Collectors.toList());
     }

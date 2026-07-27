@@ -10191,6 +10191,8 @@ html::-webkit-scrollbar-thumb:hover {
 
 .import-error-msg {
   color: #7f1d1d;
+  padding-left: 12px;
+  margin-top: 2px;
 }
 
 .siblingConfirmModal {
