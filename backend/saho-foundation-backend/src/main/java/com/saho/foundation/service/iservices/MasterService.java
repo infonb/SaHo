@@ -18,4 +18,6 @@ public interface MasterService {
     List<LabelValueResponseDto> getParentStatuses();
 
     List<LabelValueResponseDto> getParentOccupations();
+    List<LabelValueResponseDto> getAdmissionTypes();
+    List<LabelValueResponseDto> getAcademicStatuses();
 }

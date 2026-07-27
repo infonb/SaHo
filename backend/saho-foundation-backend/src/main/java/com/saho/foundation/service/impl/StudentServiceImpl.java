@@ -17,10 +17,12 @@ import com.saho.foundation.entity.Student;
 import com.saho.foundation.entity.StudentAcademic;
 import com.saho.foundation.entity.StudentFamily;
 import com.saho.foundation.entity.User;
+import com.saho.foundation.enums.AdmissionType;
 import com.saho.foundation.enums.Gender;
 import com.saho.foundation.enums.OrphanStatus;
 import com.saho.foundation.enums.ParentStatus;
 import com.saho.foundation.enums.Religion;
+import com.saho.foundation.enums.StudentAcademicStatus;
 import com.saho.foundation.exception.DuplicateResourceException;
 import com.saho.foundation.exception.ResourceNotFoundException;
 import com.saho.foundation.repository.AcademicYearRepository;
@@ -759,8 +761,8 @@ public class StudentServiceImpl implements StudentService {
                 .classId(classId != null ? classId : (existingAcademic != null ? existingAcademic.getClassId() : null))
                 .academicYearId(academicYearId != null ? academicYearId : (existingAcademic != null ? existingAcademic.getAcademicYearId() : null))
                 .rollNumber(academic != null && academic.getRollNumber() != null ? academic.getRollNumber() : null)
-                .admissionType(academic != null && academic.getAdmissionType() != null ? academic.getAdmissionType() : null)
-                .status(academic != null && academic.getStatus() != null ? academic.getStatus() : null)
+                .admissionType(resolveAdmissionTypeCode(academic != null ? academic.getAdmissionType() : null))
+                .status(resolveAcademicStatusCode(academic != null ? academic.getStatus() : null))
                 .remarks(academic != null && academic.getRemarks() != null ? academic.getRemarks() : null)
                 .isActive(academic != null ? academic.getIsActive() : null)
                 .isDeleted(academic != null ? academic.getIsDeleted() : null)
@@ -989,6 +991,28 @@ public class StudentServiceImpl implements StudentService {
         }
         String label = Religion.getLabelByValue(value);
         return label != null ? label : value;
+    }
+
+    private String resolveAdmissionTypeCode(String input) {
+        if (input == null || input.isBlank()) return null;
+        AdmissionType resolved = AdmissionType.fromLabel(input);
+        if (resolved != null) return resolved.getValue();
+        try {
+            return AdmissionType.fromValue(input).getValue();
+        } catch (IllegalArgumentException e) {
+            return input.trim();
+        }
+    }
+
+    private String resolveAcademicStatusCode(String input) {
+        if (input == null || input.isBlank()) return null;
+        StudentAcademicStatus resolved = StudentAcademicStatus.fromLabel(input);
+        if (resolved != null) return resolved.getValue();
+        try {
+            return StudentAcademicStatus.fromValue(input).getValue();
+        } catch (IllegalArgumentException e) {
+            return input.trim();
+        }
     }
 
     private String resolveText(String requestedValue, String fallbackValue) {

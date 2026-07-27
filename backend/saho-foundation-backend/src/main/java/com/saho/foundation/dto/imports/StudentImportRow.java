@@ -33,4 +33,14 @@ public class StudentImportRow {
     private String relationship;
     private String occupation;
     private String address;
+    private String rollNumber;
+    private String admissionType;
+    private String status;
+    private String remarks;
+    private String fatherName;
+    private String fatherOccupation;
+    private String fatherStatus;
+    private String motherName;
+    private String motherOccupation;
+    private String motherStatus;
 }

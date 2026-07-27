@@ -43,4 +43,14 @@ public class MasterController {
     public List<LabelValueResponseDto> getParentOccupations() {
         return masterService.getParentOccupations();
     }
+
+    @GetMapping("/admission-types")
+    public List<LabelValueResponseDto> getAdmissionTypes() {
+        return masterService.getAdmissionTypes();
+    }
+
+    @GetMapping("/academic-statuses")
+    public List<LabelValueResponseDto> getAcademicStatuses() {
+        return masterService.getAcademicStatuses();
+    }
 }

@@ -80,6 +80,8 @@ interface StudentProfileSectionsProps {
   classes?: [string, string][];
   occupations?: [string, string][];
   statuses?: [string, string][];
+  admissionTypes?: [string, string][];
+  academicStatuses?: [string, string][];
   aadhaarStatus?: string;
   errors?: StudentFormErrors;
   validatedFields?: Set<keyof StudentFormState>;
@@ -114,6 +116,20 @@ export const ORPHAN_STATUS_OPTIONS: [string, string][] = [
   ['3', 'Orphan'],
 ];
 
+export const ADMISSION_TYPE_OPTIONS: [string, string][] = [
+  ['1', 'New'],
+  ['2', 'Promoted'],
+  ['3', 'Transfer'],
+  ['4', 'Readmission'],
+];
+
+export const ACADEMIC_STATUS_OPTIONS: [string, string][] = [
+  ['1', 'Active'],
+  ['2', 'Completed'],
+  ['3', 'Transferred'],
+  ['4', 'Dropped'],
+];
+
 const NAME_MAX_LENGTH = 15;
 
 function FormContainer({ children }: { children: ReactNode }) {
@@ -135,7 +151,7 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
 }
 
 export default function StudentProfileSections(props: StudentProfileSectionsProps) {
-  const { mode, form, set, touch, chooseImage, clearImage, siblingsList = [], siblingChecked, searchSibling, removeSibling, academicYears = [], schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], occupations = [], statuses = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
+  const { mode, form, set, touch, chooseImage, clearImage, siblingsList = [], siblingChecked, searchSibling, removeSibling, academicYears = [], schools = [], states = [], districts = [], mandals = [], villages = [], relationships = [], occupations = [], statuses = [], admissionTypes = [], academicStatuses = [], activeStep = 'personal', errors = {}, validatedFields, touchedFields, guardianSubmitAttempted = false } = props;
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -555,9 +571,9 @@ export default function StudentProfileSections(props: StudentProfileSectionsProp
             <Select fieldKey="vil_id" label="Village*" value={form.vil_id} onChange={v => set('vil_id', v)} onBlur={() => touch?.('vil_id')} options={villages} readOnly={readOnly} error={showMessage('vil_id') ? errors.vil_id : undefined} state={getFieldState('vil_id')} />
             <Select fieldKey="sch_id" label="School*" value={form.sch_id} onChange={v => set('sch_id', v)} onBlur={() => touch?.('sch_id')} options={schools} readOnly={readOnly} error={showMessage('sch_id') ? errors.sch_id : undefined} state={getFieldState('sch_id')} />
             {form.sch_id ? <Select fieldKey="class_id" label="Class*" value={form.class_id} onChange={v => set('class_id', v)} onBlur={() => touch?.('class_id')} options={classOptions} readOnly={readOnly} error={showMessage('class_id') ? errors.class_id : undefined} state={getFieldState('class_id')} /> : null}
-            <Field fieldKey="roll_number" label="Roll Number*" value={form.roll_number} onChange={v => set('roll_number', v)} onBlur={() => touch?.('roll_number')} readOnly={readOnly} error={showMessage('roll_number') ? errors.roll_number : undefined} state={getFieldState('roll_number')} />
-            <Field fieldKey="admission_type" label="Admission Type*" value={form.admission_type} onChange={v => set('admission_type', v)} onBlur={() => touch?.('admission_type')} readOnly={readOnly} error={showMessage('admission_type') ? errors.admission_type : undefined} state={getFieldState('admission_type')} />
-            <Field fieldKey="status" label="Status*" value={form.status} onChange={v => set('status', v)} onBlur={() => touch?.('status')} readOnly={readOnly} error={showMessage('status') ? errors.status : undefined} state={getFieldState('status')} />
+            <Field fieldKey="roll_number" label="Roll Number" value={form.roll_number} onChange={v => set('roll_number', v)} onBlur={() => touch?.('roll_number')} readOnly={readOnly} error={showMessage('roll_number') ? errors.roll_number : undefined} state={getFieldState('roll_number')} />
+            <Select fieldKey="admission_type" label="Admission Type*" value={form.admission_type} onChange={v => set('admission_type', v)} onBlur={() => touch?.('admission_type')} options={admissionTypes.length ? admissionTypes : ADMISSION_TYPE_OPTIONS} readOnly={readOnly} error={showMessage('admission_type') ? errors.admission_type : undefined} state={getFieldState('admission_type')} />
+            <Select fieldKey="status" label="Status*" value={form.status} onChange={v => set('status', v)} onBlur={() => touch?.('status')} options={academicStatuses.length ? academicStatuses : ACADEMIC_STATUS_OPTIONS} readOnly={readOnly} error={showMessage('status') ? errors.status : undefined} state={getFieldState('status')} />
             <Field fieldKey="remarks" label="Remarks" value={form.remarks} onChange={v => set('remarks', v)} onBlur={() => touch?.('remarks')} readOnly={readOnly} state={getFieldState('remarks')} />
           </div>
         </FormSection>

@@ -5,6 +5,8 @@ import {
   createStudent,
   getAcademicYears,
   findStudentByAadhaar,
+  getAcademicStatuses,
+  getAdmissionTypes,
   getCastes,
   getClasses,
   getDistrictsByState,
@@ -51,8 +53,8 @@ const init: StudentFormState = {
   vil_id: '',
   sch_id: '',
   roll_number: '',
-  admission_type: '',
-  status: '',
+  admission_type: '1',
+  status: '1',
   remarks: '',
   father_first: '',
   father_last: '',
@@ -96,7 +98,7 @@ const personalRequiredFields: (keyof StudentFormState)[] = [
 ];
 
 const locationRequiredFields: (keyof StudentFormState)[] = [
-  'academic_year_id', 'st_id', 'dist_id', 'mndl_id', 'vil_id', 'sch_id', 'class_id', 'roll_number', 'admission_type', 'status'
+  'academic_year_id', 'st_id', 'dist_id', 'mndl_id', 'vil_id', 'sch_id', 'class_id', 'admission_type', 'status'
 ];
 
 const guardianRequiredFields: (keyof StudentFormState)[] = [
@@ -285,6 +287,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const [relationships, setRelationships] = useState<[string, string][]>([]);
   const [occupations, setOccupations] = useState<[string, string][]>([]);
   const [parentStatuses, setParentStatuses] = useState<[string, string][]>([]);
+  const [admissionTypes, setAdmissionTypes] = useState<[string, string][]>([]);
+  const [academicStatuses, setAcademicStatuses] = useState<[string, string][]>([]);
   const [familyId, setFamilyId] = useState<number | null>(null);
   const [guardianRecordId, setGuardianRecordId] = useState<number | null>(null);
   const [studentAcademicId, setStudentAcademicId] = useState<number | null>(null);
@@ -526,6 +530,21 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
           throw new Error('getClasses');
         }
 
+        let admissionTypesResponse: LabelValueOption[] = [];
+        let academicStatusesResponse: LabelValueOption[] = [];
+
+        try {
+          admissionTypesResponse = await getAdmissionTypes();
+        } catch (error) {
+          console.error('[StudentFormPage] getAdmissionTypes failed', error);
+        }
+
+        try {
+          academicStatusesResponse = await getAcademicStatuses();
+        } catch (error) {
+          console.error('[StudentFormPage] getAcademicStatuses failed', error);
+        }
+
         setStudentStateList(statesResponse);
         const stateEntries: [string, string][] = statesResponse.map((item): [string, string] => [String(item.stId), item.stName]).filter(([, label]) => !!label);
         const academicYearEntries: [string, string][] = academicYearsResponse.map((item): [string, string] => [String(item.academicYearId), item.academicYearName]).filter(([value, label]) => !!value && !!label);
@@ -542,6 +561,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         setOccupations(occupationEntries);
         setParentStatuses(parentStatusEntries);
         setClasses(classEntries);
+        setAdmissionTypes(admissionTypesResponse.map((item: LabelValueOption): [string, string] => [String(item.value), item.label]).filter(([value, label]) => !!value && !!label));
+        setAcademicStatuses(academicStatusesResponse.map((item: LabelValueOption): [string, string] => [String(item.value), item.label]).filter(([value, label]) => !!value && !!label));
 
         if ((isEdit || isView) && effectiveStudentId) {
           await loadStudent(effectiveStudentId, statesResponse, {
@@ -1458,6 +1479,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             relationships={currentRelationships}
             castes={currentCastes}
             classes={currentClasses}
+            admissionTypes={admissionTypes}
+            academicStatuses={academicStatuses}
             aadhaarStatus={aadhaarMessage}
             errors={errors}
             validatedFields={validatedFields}

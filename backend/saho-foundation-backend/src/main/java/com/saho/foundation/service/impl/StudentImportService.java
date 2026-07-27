@@ -1,28 +1,32 @@
 package com.saho.foundation.service.impl;
 
+import com.saho.foundation.dto.StudentAcademicRequestDto;
+import com.saho.foundation.dto.StudentRequestDto;
+import com.saho.foundation.dto.StudentResponseDto;
 import com.saho.foundation.dto.imports.BulkImportResponse;
 import com.saho.foundation.dto.imports.ImportErrorDto;
 import com.saho.foundation.dto.imports.StudentImportRow;
 import com.saho.foundation.entity.*;
+import com.saho.foundation.enums.AdmissionType;
 import com.saho.foundation.enums.Gender;
+import com.saho.foundation.enums.ParentOccupation;
 import com.saho.foundation.enums.ParentStatus;
 import com.saho.foundation.enums.OrphanStatus;
 import com.saho.foundation.enums.Religion;
+import com.saho.foundation.enums.StudentAcademicStatus;
 import com.saho.foundation.repository.*;
-import com.saho.foundation.service.iservices.StudentFamilyService;
+import com.saho.foundation.service.iservices.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -45,9 +49,13 @@ public class StudentImportService {
             "State", "District", "Mandal", "Village", "School", "Class",
             "Guardian First Name", "Guardian Last Name",
             "Guardian Phone", "Relationship", "Occupation", "Address",
-            "Orphan Status"
+            "Orphan Status",
+            "Roll Number", "Admission Type", "Status", "Remarks",
+            "Father Name", "Father Occupation", "Father Status",
+            "Mother Name", "Mother Occupation", "Mother Status"
     );
 
+    private final StudentService studentService;
     private final StudentRepository studentRepository;
     private final GuardianRepository guardianRepository;
     private final StateRepository stateRepository;
@@ -56,13 +64,11 @@ public class StudentImportService {
     private final VillageRepository villageRepository;
     private final SchoolRepository schoolRepository;
     private final AcademicYearRepository academicYearRepository;
-    private final StudentAcademicRepository studentAcademicRepository;
     private final CasteRepository casteRepository;
     private final RelationshipRepository relationshipRepository;
     private final ClassRepository classRepository;
     private final SponsorRepository sponsorRepository;
     private final StudentSponsorRepository studentSponsorRepository;
-    private final StudentFamilyService studentFamilyService;
 
     public byte[] generateTemplate() throws IOException {
         try (Workbook workbook = new XSSFWorkbook()) {
@@ -112,6 +118,16 @@ public class StudentImportService {
             exampleRow.createCell(19).setCellValue("Farmer");
             exampleRow.createCell(20).setCellValue("Kavali, Nellore");
             exampleRow.createCell(21).setCellValue("None");
+            exampleRow.createCell(22).setCellValue("101");
+            exampleRow.createCell(23).setCellValue("NEW");
+            exampleRow.createCell(24).setCellValue("ACTIVE");
+            exampleRow.createCell(25).setCellValue("");
+            exampleRow.createCell(26).setCellValue("Raj Kumar");
+            exampleRow.createCell(27).setCellValue("Farmer");
+            exampleRow.createCell(28).setCellValue("Alive");
+            exampleRow.createCell(29).setCellValue("Lakshmi Kumari");
+            exampleRow.createCell(30).setCellValue("Homemaker");
+            exampleRow.createCell(31).setCellValue("Alive");
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             workbook.write(bos);
@@ -119,7 +135,6 @@ public class StudentImportService {
         }
     }
 
-    @Transactional
     public BulkImportResponse importStudents(MultipartFile file) {
         List<StudentImportRow> rows = parseExcel(file);
         List<ImportErrorDto> allErrors = new ArrayList<>();
@@ -161,17 +176,28 @@ public class StudentImportService {
             invalidRowNumbers.add(error.getRow());
         }
 
-        if (!allErrors.isEmpty()) {
-            return BulkImportResponse.builder()
-                    .success(false)
-                    .totalRows(rows.size())
-                    .validRows(rows.size() - invalidRowNumbers.size())
-                    .invalidRows(invalidRowNumbers.size())
-                    .errors(allErrors)
-                    .build();
-        }
+        List<StudentImportRow> validRows = rows.stream()
+                .filter(r -> !invalidRowNumbers.contains(r.getRowNumber()))
+                .toList();
 
-        return saveStudents(rows);
+        BulkImportResponse saveResult = saveStudents(validRows);
+
+        List<ImportErrorDto> combinedErrors = new ArrayList<>(allErrors);
+        if (saveResult.getErrors() != null) {
+            combinedErrors.addAll(saveResult.getErrors());
+        }
+        int totalInvalid = invalidRowNumbers.size()
+                + (saveResult.getErrors() != null ? saveResult.getErrors().size() : 0);
+
+        return BulkImportResponse.builder()
+                .success(saveResult.getStudentsImported() > 0)
+                .totalRows(rows.size())
+                .validRows(rows.size() - totalInvalid)
+                .invalidRows(totalInvalid)
+                .studentsImported(saveResult.getStudentsImported())
+                .guardiansCreated(saveResult.getGuardiansCreated() != null ? saveResult.getGuardiansCreated() : 0)
+                .errors(combinedErrors.isEmpty() ? null : combinedErrors)
+                .build();
     }
 
     private void validateRequiredFields(StudentImportRow row, List<String> errors) {
@@ -319,6 +345,16 @@ public class StudentImportService {
                 String occupation = getCellStringValue(row.getCell(19));
                 String address = getCellStringValue(row.getCell(20));
                 String orphanStatus = getCellStringValue(row.getCell(21));
+                String rollNumber = getCellStringValue(row.getCell(22));
+                String admissionType = getCellStringValue(row.getCell(23));
+                String status = getCellStringValue(row.getCell(24));
+                String remarks = getCellStringValue(row.getCell(25));
+                String fatherName = getCellStringValue(row.getCell(26));
+                String fatherOccupation = getCellStringValue(row.getCell(27));
+                String fatherStatus = getCellStringValue(row.getCell(28));
+                String motherName = getCellStringValue(row.getCell(29));
+                String motherOccupation = getCellStringValue(row.getCell(30));
+                String motherStatus = getCellStringValue(row.getCell(31));
 
                 if (log.isDebugEnabled()) {
                     Cell dobCell = row.getCell(4);
@@ -353,6 +389,16 @@ public class StudentImportService {
                         .occupation(occupation)
                         .address(address)
                         .orphanStatus(orphanStatus)
+                        .rollNumber(rollNumber)
+                        .admissionType(admissionType)
+                        .status(status)
+                        .remarks(remarks)
+                        .fatherName(fatherName)
+                        .fatherOccupation(fatherOccupation)
+                        .fatherStatus(fatherStatus)
+                        .motherName(motherName)
+                        .motherOccupation(motherOccupation)
+                        .motherStatus(motherStatus)
                         .build();
 
                 if (isEmptyRow(importRow)) continue;
@@ -418,169 +464,209 @@ public class StudentImportService {
     }
 
     public BulkImportResponse saveStudents(List<StudentImportRow> rows) {
-        int guardiansCreated = 0;
         int studentsImported = 0;
-
-        Map<String, Guardian> guardianCache = new HashMap<>();
+        int guardiansCreated = 0;
+        List<ImportErrorDto> saveErrors = new ArrayList<>();
+        Map<String, Integer> guardianIdCache = new HashMap<>();
+        Set<String> createdGuardianPhones = new HashSet<>();
 
         for (StudentImportRow row : rows) {
-            StateMaster state = stateRepository.findByStNameIgnoreCase(row.getState())
-                    .orElseThrow(() -> new IllegalStateException("State not found: " + row.getState()));
+            try {
+                StateMaster state = stateRepository.findByStNameIgnoreCase(row.getState())
+                        .orElseThrow(() -> new IllegalStateException("State not found: " + row.getState()));
 
-            DistrictMaster district = districtRepository.findByDistNameIgnoreCaseAndStId(row.getDistrict(), state.getStId())
-                    .orElseThrow(() -> new IllegalStateException("District not found: " + row.getDistrict()));
+                DistrictMaster district = districtRepository.findByDistNameIgnoreCaseAndStId(row.getDistrict(), state.getStId())
+                        .orElseThrow(() -> new IllegalStateException("District not found: " + row.getDistrict()));
 
-            MandalMaster mandal = mandalRepository.findByMndlNameIgnoreCaseAndDistId(row.getMandal(), district.getDistId())
-                    .orElseThrow(() -> new IllegalStateException("Mandal not found: " + row.getMandal()));
+                MandalMaster mandal = mandalRepository.findByMndlNameIgnoreCaseAndDistId(row.getMandal(), district.getDistId())
+                        .orElseThrow(() -> new IllegalStateException("Mandal not found: " + row.getMandal()));
 
-            VillageMaster village = villageRepository.findByVilNameIgnoreCase(row.getVillage())
-                    .orElseThrow(() -> new IllegalStateException("Village not found: " + row.getVillage()));
+                VillageMaster village = villageRepository.findByVilNameIgnoreCase(row.getVillage())
+                        .orElseThrow(() -> new IllegalStateException("Village not found: " + row.getVillage()));
 
-            SchoolMaster school = schoolRepository.findBySchNameIgnoreCase(row.getSchool())
-                    .orElseThrow(() -> new IllegalStateException("School not found: " + row.getSchool()));
+                SchoolMaster school = schoolRepository.findBySchNameIgnoreCase(row.getSchool())
+                        .orElseThrow(() -> new IllegalStateException("School not found: " + row.getSchool()));
 
-            if (!school.getVilId().equals(village.getVilId())) {
-                throw new IllegalStateException("School does not belong to selected Village: " + row.getSchool());
-            }
-
-            Integer casteId = null;
-            if (!row.getCaste().isEmpty()) {
-                casteId = casteRepository.findByCasteNameIgnoreCase(row.getCaste())
-                        .map(CasteMaster::getCasteId)
-                        .orElse(null);
-            }
-
-            Integer classId = classRepository.findByClassNameIgnoreCase(row.getClassName())
-                    .map(ClassMaster::getClassId)
-                    .orElseThrow(() -> new IllegalStateException("Class not found: " + row.getClassName()));
-
-            Integer relationshipId = relationshipRepository.findByRelationshipNameIgnoreCase(row.getRelationship())
-                    .map(RelationshipMaster::getRelationshipId)
-                    .orElseThrow(() -> new IllegalStateException("Relationship not found: " + row.getRelationship()));
-
-            String guardianPhone = row.getGuardianPhone();
-            log.debug("Processing guardian phone: {}", guardianPhone);
-
-            Guardian guardian = guardianCache.get(guardianPhone);
-            if (guardian == null) {
-                guardian = guardianRepository.findByPhoneNumber(guardianPhone).orElse(null);
-                if (guardian == null) {
-                    log.debug("No existing guardian found for phone: {}. Creating new guardian.", guardianPhone);
-                    guardian = Guardian.builder()
-                            .firstName(row.getGuardianFirstName())
-                            .lastName(row.getGuardianLastName())
-                            .phoneNumber(guardianPhone)
-                            .relationshipId(relationshipId)
-                            .occ(row.getOccupation().isEmpty() ? null : row.getOccupation())
-                            .addr(row.getAddress().isEmpty() ? null : row.getAddress())
-                            .isDeleted(false)
-                            .createdAt(LocalDateTime.now())
-                            .build();
-                    guardian = guardianRepository.save(guardian);
-                    guardiansCreated++;
-                    log.debug("New guardian saved for phone: {}. guardiansCreated now: {}", guardianPhone, guardiansCreated);
-                } else {
-                    log.debug("Existing guardian found for phone: {}. guardianId={}. Not incrementing counter.", guardianPhone, guardian.getGuardianId());
+                if (!school.getVilId().equals(village.getVilId())) {
+                    throw new IllegalStateException("School does not belong to selected Village: " + row.getSchool());
                 }
-                guardianCache.put(guardianPhone, guardian);
-            } else {
-                log.debug("Guardian found in cache for phone: {}. guardianId={}. Skipping DB lookup.", guardianPhone, guardian.getGuardianId());
-            }
 
-            StudentFamily family = createImportStudentFamily(row);
+                Integer castleId = null;
+                if (!row.getCaste().isEmpty()) {
+                    castleId = casteRepository.findByCasteNameIgnoreCase(row.getCaste())
+                            .map(CasteMaster::getCasteId)
+                            .orElse(null);
+                }
 
-            String email = row.getEmail().toLowerCase();
-            if (email.isEmpty()) {
-                email = row.getAadhaar() + "@saho-foundation.org";
-            }
+                Integer classId = classRepository.findByClassNameIgnoreCase(row.getClassName())
+                        .map(ClassMaster::getClassId)
+                        .orElseThrow(() -> new IllegalStateException("Class not found: " + row.getClassName()));
 
-            String religionValue = resolveReligionValue(row.getReligion());
-            String orphanStatusValue = resolveOrphanStatusValue(row.getOrphanStatus());
-            String genderValue = resolveGenderValue(row.getGender());
+                Integer relationshipId = relationshipRepository.findByRelationshipNameIgnoreCase(row.getRelationship())
+                        .map(RelationshipMaster::getRelationshipId)
+                        .orElseThrow(() -> new IllegalStateException("Relationship not found: " + row.getRelationship()));
 
-            if (genderValue == null) {
-                throw new IllegalStateException("Invalid gender: " + row.getGender());
-            }
+                String email = row.getEmail().toLowerCase();
+                if (email.isEmpty()) {
+                    email = row.getAadhaar() + "@saho-foundation.org";
+                }
 
-            LocalDate dob = LocalDate.parse(row.getDob(), DATE_FORMATTER);
+                // Build StudentRequestDto
+                StudentRequestDto dto = new StudentRequestDto();
+                dto.setFirstName(row.getFirstName());
+                dto.setLastName(row.getLastName());
+                dto.setEmailId(email);
+                dto.setDob(LocalDate.parse(row.getDob(), DATE_FORMATTER));
+                dto.setGender(resolveGenderValue(row.getGender()));
+                dto.setAadhaarNumber(row.getAadhaar());
+                dto.setCasteId(castleId);
+                dto.setReligion(resolveReligionValue(row.getReligion()));
+                dto.setBloodGroup(row.getBloodGroup().isEmpty() ? null : row.getBloodGroup());
+                dto.setOrphanStatus(resolveOrphanStatusValue(row.getOrphanStatus()));
+                dto.setSchId(school.getSchId());
+                dto.setClassId(classId);
+                dto.setImageUrl(null);
+                dto.setCreatedBy(1);
+                dto.setHasSibling(false);
+                dto.setSiblingIds(null);
 
-            Optional<Student> existingStudentOpt = studentRepository.findByAadhaarNumber(row.getAadhaar());
+                // Parent mapping from explicit father/mother columns
+                dto.setFatherName(row.getFatherName().isEmpty() ? null : row.getFatherName());
+                dto.setFatherOccupation(row.getFatherOccupation().isEmpty() ? null : resolveParentOccupationValue(row.getFatherOccupation()));
+                dto.setFatherStatus(row.getFatherStatus().isEmpty() ? null : resolveParentStatusValue(row.getFatherStatus()));
+                dto.setMotherName(row.getMotherName().isEmpty() ? null : row.getMotherName());
+                dto.setMotherOccupation(row.getMotherOccupation().isEmpty() ? null : resolveParentOccupationValue(row.getMotherOccupation()));
+                dto.setMotherStatus(row.getMotherStatus().isEmpty() ? null : resolveParentStatusValue(row.getMotherStatus()));
 
-            Student savedStudent;
-            if (existingStudentOpt.isPresent() && Boolean.TRUE.equals(existingStudentOpt.get().getIsDeleted())) {
-                Student existingStudent = existingStudentOpt.get();
-                existingStudent.setIsDeleted(false);
-                existingStudent.setFirstName(row.getFirstName());
-                existingStudent.setLastName(row.getLastName());
-                existingStudent.setEmailId(email);
-                existingStudent.setDob(dob);
-                existingStudent.setGender(genderValue);
-                existingStudent.setAadhaarNumber(row.getAadhaar());
-                existingStudent.setCasteId(casteId);
-                existingStudent.setReligion(religionValue);
-                existingStudent.setBloodGroup(row.getBloodGroup().isEmpty() ? null : row.getBloodGroup());
-                existingStudent.setFamily(family);
-                existingStudent.setGuardian(guardian);
-                existingStudent.setOrphanStatus(orphanStatusValue);
-                existingStudent.setModifiedAt(LocalDateTime.now());
-                savedStudent = studentRepository.save(existingStudent);
-            } else {
-                Student student = Student.builder()
-                        .firstName(row.getFirstName())
-                        .lastName(row.getLastName())
-                        .emailId(email)
-                        .dob(dob)
-                        .gender(genderValue)
-                        .aadhaarNumber(row.getAadhaar())
-                        .casteId(casteId)
-                        .religion(religionValue)
-                        .bloodGroup(row.getBloodGroup().isEmpty() ? null : row.getBloodGroup())
-                        .family(family)
-                        .guardian(guardian)
-                        .orphanStatus(orphanStatusValue)
-                        .isDeleted(false)
-                        .createdAt(LocalDateTime.now())
+                // Guardian: check if already resolved for this phone (reuse existing)
+                String guardianPhone = row.getGuardianPhone();
+                Integer existingGuardianId = guardianIdCache.get(guardianPhone);
+                if (existingGuardianId == null) {
+                    Guardian existingGuardian = guardianRepository.findByPhoneNumber(guardianPhone).orElse(null);
+                    if (existingGuardian != null) {
+                        existingGuardianId = existingGuardian.getGuardianId();
+                    }
+                    guardianIdCache.put(guardianPhone, existingGuardianId);
+                }
+
+                if (existingGuardianId != null) {
+                    dto.setGuardianId(existingGuardianId);
+                } else {
+                    if (createdGuardianPhones.add(guardianPhone)) {
+                        guardiansCreated++;
+                    }
+                    StudentRequestDto.GuardianRequestDto guardianDto = new StudentRequestDto.GuardianRequestDto();
+                    guardianDto.setFirstName(row.getGuardianFirstName());
+                    guardianDto.setLastName(row.getGuardianLastName());
+                    guardianDto.setPhoneNumber(guardianPhone);
+                    guardianDto.setRelationshipId(relationshipId);
+                    guardianDto.setOcc(row.getOccupation().isEmpty() ? null : row.getOccupation());
+                    guardianDto.setAddr(row.getAddress().isEmpty() ? null : row.getAddress());
+                    dto.setGuardian(guardianDto);
+                }
+
+                // Academic details - resolve labels to enum codes
+                String admissionType = resolveAdmissionTypeValue(row.getAdmissionType());
+                String academicStatus = resolveAcademicStatusValue(row.getStatus());
+
+                StudentAcademicRequestDto academicDetails = StudentAcademicRequestDto.builder()
+                        .studentAcademicId(null)
+                        .schoolId(school.getSchId())
+                        .classId(classId)
+                        .rollNumber(row.getRollNumber().isEmpty() ? null : row.getRollNumber())
+                        .admissionType(admissionType)
+                        .status(academicStatus)
+                        .remarks(row.getRemarks().isEmpty() ? null : row.getRemarks())
+                        .isActive(true)
+                        .createdBy(1)
                         .build();
-                savedStudent = studentRepository.save(student);
-            }
+                dto.setAcademicDetails(academicDetails);
 
-            upsertStudentAcademic(savedStudent.getStudentId(), school.getSchId(), classId, resolveCurrentAcademicYearId(), null);
-            assignDefaultSponsor(savedStudent);
-            studentsImported++;
+                // Handle soft-deleted student reactivation
+                Optional<Student> existingSoftDeleted = studentRepository
+                        .findByAadhaarNumber(row.getAadhaar())
+                        .filter(s -> Boolean.TRUE.equals(s.getIsDeleted()));
+                if (existingSoftDeleted.isPresent()) {
+                    Student student = existingSoftDeleted.get();
+                    student.setIsDeleted(false);
+                    student.setFirstName(row.getFirstName());
+                    student.setLastName(row.getLastName());
+                    student.setEmailId(email);
+                    student.setDob(LocalDate.parse(row.getDob(), DATE_FORMATTER));
+                    student.setGender(resolveGenderValue(row.getGender()));
+                    student.setAadhaarNumber(row.getAadhaar());
+                    student.setCasteId(castleId);
+                    student.setReligion(resolveReligionValue(row.getReligion()));
+                    student.setBloodGroup(row.getBloodGroup().isEmpty() ? null : row.getBloodGroup());
+                    student.setOrphanStatus(resolveOrphanStatusValue(row.getOrphanStatus()));
+                    student = studentRepository.save(student);
+                    assignDefaultSponsorByStudentId(student.getStudentId());
+                    studentsImported++;
+                    continue;
+                }
+
+                // Delegate to the Add Student service
+                StudentResponseDto response = studentService.createStudent(dto);
+                assignDefaultSponsorByStudentId(response.getStudentId());
+                studentsImported++;
+
+            } catch (Exception e) {
+                log.error("Failed to import row {}: {}", row.getRowNumber(), e.getMessage(), e);
+                saveErrors.add(ImportErrorDto.builder()
+                        .row(row.getRowNumber())
+                        .message("Failed to import: " + e.getMessage())
+                        .build());
+            }
         }
 
-        BulkImportResponse response = BulkImportResponse.builder()
-                .success(true)
-                .totalRows(rows.size())
+        return BulkImportResponse.builder()
+                .success(studentsImported > 0)
                 .studentsImported(studentsImported)
                 .guardiansCreated(guardiansCreated)
+                .errors(saveErrors.isEmpty() ? null : saveErrors)
                 .build();
-        log.debug("Final BulkImportResponse: totalRows={}, studentsImported={}, guardiansCreated={}",
-                rows.size(), studentsImported, guardiansCreated);
-        return response;
     }
 
-    private void assignDefaultSponsor(Student student) {
+    private void assignDefaultSponsorByStudentId(Integer studentId) {
         Sponsor defaultSponsor = sponsorRepository.findBySponsorNameIgnoreCase("SaHo Foundation")
                 .orElse(null);
         if (defaultSponsor == null) {
             log.warn("Default sponsor 'SaHo Foundation' not found. Skipping sponsor assignment.");
             return;
         }
-
         Optional<StudentSponsor> existingMapping = studentSponsorRepository
-                .findByStudentIdAndSponsorIdAndIsActiveTrue(student.getStudentId(), defaultSponsor.getSponsorId());
-
+                .findByStudentIdAndSponsorIdAndIsActiveTrue(studentId, defaultSponsor.getSponsorId());
         if (existingMapping.isEmpty()) {
             StudentSponsor studentSponsor = StudentSponsor.builder()
-                    .studentId(student.getStudentId())
+                    .studentId(studentId)
                     .sponsorId(defaultSponsor.getSponsorId())
                     .isActive(true)
                     .isDeleted(false)
-                    .createdAt(LocalDate.now())
+                    .createdAt(java.time.LocalDate.now())
                     .build();
             studentSponsorRepository.save(studentSponsor);
         }
+    }
+
+    private String resolveParentStatusValue(String input) {
+        if (input == null || input.isEmpty()) return null;
+        ParentStatus resolved = ParentStatus.fromLabel(input);
+        if (resolved != null) return resolved.getValue();
+        try {
+            return ParentStatus.fromValue(input).getValue();
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private String resolveParentOccupationValue(String input) {
+        if (input == null || input.isEmpty()) return null;
+        for (ParentOccupation occ : ParentOccupation.values()) {
+            if (occ.getLabel().equalsIgnoreCase(input) || occ.getValue().equals(input)) {
+                return occ.getValue();
+            }
+        }
+        return input;
     }
 
     private String resolveGenderValue(String gender) {
@@ -605,67 +691,25 @@ public class StudentImportService {
         return resolved != null ? resolved.getValue() : null;
     }
 
-    private Integer resolveCurrentAcademicYearId() {
-        return academicYearRepository.findByIsCurrentTrueAndIsActiveTrueAndIsDeletedFalse()
-                .map(AcademicYear::getAcademicYearId)
-                .orElseThrow(() -> new IllegalStateException("Current academic year not found"));
-    }
-
-    private void upsertStudentAcademic(Integer studentId, Integer schoolId, Integer classId, Integer academicYearId, Integer createdBy) {
-        studentAcademicRepository.createOrUpdateStudentAcademic(
-                null,
-                studentId,
-                academicYearId,
-                schoolId,
-                classId,
-                null,
-                null,
-                null,
-                null,
-                true,
-                createdBy
-        );
-    }
-
-    private StudentFamily createImportStudentFamily(StudentImportRow row) {
-        String relationship = row.getRelationship();
-        String parentName = joinNames(row.getGuardianFirstName(), row.getGuardianLastName());
-        String parentOccupation = row.getOccupation().isEmpty() ? null : row.getOccupation();
-        String fatherName = null;
-        String fatherOccupation = null;
-        String fatherStatus = ParentStatus.UNKNOWN.getValue();
-        String motherName = null;
-        String motherOccupation = null;
-        String motherStatus = ParentStatus.UNKNOWN.getValue();
-
-        if ("Father".equalsIgnoreCase(relationship)) {
-            fatherName = parentName;
-            fatherOccupation = parentOccupation;
-            fatherStatus = ParentStatus.ALIVE.getValue();
-        } else if ("Mother".equalsIgnoreCase(relationship)) {
-            motherName = parentName;
-            motherOccupation = parentOccupation;
-            motherStatus = ParentStatus.ALIVE.getValue();
+    private String resolveAdmissionTypeValue(String input) {
+        if (input == null || input.isEmpty()) return "1";
+        AdmissionType resolved = AdmissionType.fromLabel(input);
+        if (resolved != null) return resolved.getValue();
+        try {
+            return AdmissionType.fromValue(input).getValue();
+        } catch (IllegalArgumentException e) {
+            return "1";
         }
-
-        return studentFamilyService.createOrUpdateStudentFamily(
-                null,
-                fatherName,
-                fatherOccupation,
-                fatherStatus,
-                motherName,
-                motherOccupation,
-                motherStatus,
-                null
-        );
     }
 
-    private String joinNames(String firstName, String lastName) {
-        String first = firstName == null ? "" : firstName.trim();
-        String last = lastName == null ? "" : lastName.trim();
-        if (first.isEmpty() && last.isEmpty()) {
-            return null;
+    private String resolveAcademicStatusValue(String input) {
+        if (input == null || input.isEmpty()) return "1";
+        StudentAcademicStatus resolved = StudentAcademicStatus.fromLabel(input);
+        if (resolved != null) return resolved.getValue();
+        try {
+            return StudentAcademicStatus.fromValue(input).getValue();
+        } catch (IllegalArgumentException e) {
+            return "1";
         }
-        return (first + " " + last).trim();
     }
 }

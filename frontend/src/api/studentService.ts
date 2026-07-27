@@ -287,6 +287,26 @@ export const getParentOccupations = async (): Promise<LabelValueOption[]> => {
   }
 };
 
+export const getAdmissionTypes = async (): Promise<LabelValueOption[]> => {
+  try {
+    const response = await apiClient.get<LabelValueOption[]>('/master/admission-types');
+    return response.data ?? [];
+  } catch (error) {
+    logApiFailure('getAdmissionTypes', error);
+    throw error;
+  }
+};
+
+export const getAcademicStatuses = async (): Promise<LabelValueOption[]> => {
+  try {
+    const response = await apiClient.get<LabelValueOption[]>('/master/academic-statuses');
+    return response.data ?? [];
+  } catch (error) {
+    logApiFailure('getAcademicStatuses', error);
+    throw error;
+  }
+};
+
 export const getAcademicYears = async (): Promise<AcademicYearResponse[]> => {
   try {
     const response = await apiClient.get<AcademicYearResponse[]>('/master/academic-years');

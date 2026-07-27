@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { FiUpload, FiDownload, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { useState, useRef, useMemo } from 'react';
+import { FiUpload, FiDownload, FiCheckCircle } from 'react-icons/fi';
 import Modal from './Modal';
 import { downloadTemplate, importStudents } from '../../api/importApi';
 import type { BulkImportResponse } from '../../types';
@@ -71,7 +71,19 @@ export default function ImportModal({ open, onClose }: ImportModalProps) {
     onClose();
   };
 
-  const hasErrors = result && !result.success && result.errors && result.errors.length > 0;
+  const hasErrors = result?.errors != null && result.errors.length > 0;
+
+  const groupedErrors = useMemo(() => {
+    if (!hasErrors) return [];
+    const map: Record<number, string[]> = {};
+    for (const err of result.errors!) {
+      if (!map[err.row]) map[err.row] = [];
+      map[err.row].push(err.message);
+    }
+    return Object.entries(map)
+      .map(([row, messages]) => ({ row: Number(row), messages }))
+      .sort((a, b) => a.row - b.row);
+  }, [result?.errors, hasErrors]);
 
   const footer = result?.success ? (
     <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
@@ -145,39 +157,29 @@ export default function ImportModal({ open, onClose }: ImportModalProps) {
         )}
 
         {result && (
-          <div className={`import-result ${result.success ? 'success' : 'error'}`}>
-            {result.success ? (
-              <>
-                <FiCheckCircle size={24} />
-                <div className="import-result-text">
-                  <h3>Import Successful</h3>
-                  <p>Total Rows: {result.totalRows}</p>
-                  <p>Students Imported: {result.studentsImported}</p>
-                  <p>Guardians Created: {result.guardiansCreated}</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <FiAlertCircle size={24} />
-                <div className="import-result-text">
-                  <h3>Import Failed</h3>
-                  <p>Total Rows: {result.totalRows}</p>
-                  <p>Valid Rows: {result.validRows}</p>
-                  <p>Invalid Rows: {result.invalidRows}</p>
-                </div>
-              </>
-            )}
+          <div className="import-result success">
+            <FiCheckCircle size={24} />
+            <div className="import-result-text">
+              <h3>Import Summary</h3>
+              <p>Total Rows: {result.totalRows}</p>
+              <p>Valid Rows: {result.validRows}</p>
+              <p>Invalid Rows: {result.invalidRows}</p>
+              <p>Students Imported: {result.studentsImported ?? 0}</p>
+              <p>Guardians Created: {result.guardiansCreated ?? 0}</p>
+            </div>
           </div>
         )}
 
         {hasErrors && (
           <div className="import-errors">
-            <h4>Errors ({result.errors!.length})</h4>
+            <h4>Failed Rows</h4>
             <div className="import-errors-list">
-              {result.errors!.map((err, idx) => (
-                <div key={idx} className="import-error-item">
-                  <span className="import-error-row">Row {err.row}:</span>
-                  <span className="import-error-msg">{err.message}</span>
+              {groupedErrors.map(({ row, messages }) => (
+                <div key={row} className="import-error-item">
+                  <div className="import-error-row">Row {row}</div>
+                  {messages.map((msg, i) => (
+                    <div key={i} className="import-error-msg">&bull; {msg}</div>
+                  ))}
                 </div>
               ))}
             </div>
