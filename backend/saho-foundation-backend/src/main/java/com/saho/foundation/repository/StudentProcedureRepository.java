@@ -22,6 +22,8 @@ public interface StudentProcedureRepository {
             String vilId,
             String schId,
             String academicYearId,
+            String parentType,
+            String parentOccupation,
             String sortColumn,
             String sortDirection
     );

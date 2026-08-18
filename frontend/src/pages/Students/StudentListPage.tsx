@@ -4,6 +4,7 @@ import { FaSort, FaSortUp, FaSortDown, FaUserGraduate } from 'react-icons/fa';
 import { deactivateStudents, exportStudentsCsv,getStudentIds, getStudents } from '../../api/studentApi';
 import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
+import { getParentOccupations, getAcademicYears } from '../../api/studentService';
 import { getSponsorById } from '../../api/sponsorApi';
 import Button from '../../components/common/Button';
 import ConfirmModal from '../../components/common/ConfirmModal';
@@ -27,7 +28,7 @@ import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { LuSearch } from 'react-icons/lu';
 import { downloadTemplate } from '../../api/importApi';
 import ImportModal from '../../components/common/ImportModal';
-const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', sponsor_status: '', is_active: '' };
+const defaults: StudentFilters = { search: '', gender: '', class_id: '', academic_year_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', parent_type: '', parent_occupation: '', sponsor_status: '', is_active: '' };
 const truncateText = (value?: string | null, maxLength = 15) => {
   const text = value?.trim() || 'N/A';
   if (text.length <= maxLength) return text;
@@ -64,6 +65,8 @@ export default function StudentListPage() {
   const [villages, setVillages] = useState<any[]>([]);
   const [schools, setSchools] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
+  const [academicYears, setAcademicYears] = useState<any[]>([]);
+  const [parentOccupationOptions, setParentOccupationOptions] = useState<FilterOption[]>([]);
   const [selected, setSelected] = useState<StudentView | null>(null);
   const [checked, setChecked] = useState<number[]>([]);
   const [globalSelection, setGlobalSelection] = useState(false);
@@ -231,10 +234,46 @@ export default function StudentListPage() {
       mounted = false;
     };
   }, []);
-  const showDistrictFilter = csvValues(pending.st_id).length > 0;
-  const showMandalFilter = csvValues(pending.dist_id).length > 0;
-  const showVillageFilter = csvValues(pending.mndl_id).length > 0;
-  const showSchoolFilter = csvValues(pending.vil_id).length > 0;
+
+  useEffect(() => {
+    let mounted = true;
+    getAcademicYears()
+      .then((data) => {
+        if (mounted) setAcademicYears(data);
+      })
+      .catch(() => {
+        if (mounted) setAcademicYears([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    getParentOccupations()
+      .then((data) => {
+        if (mounted) setParentOccupationOptions(data.map((o) => ({ value: o.value, label: o.label })));
+      })
+      .catch(() => {
+        if (mounted) setParentOccupationOptions([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const districtDisabled = csvValues(pending.st_id).length === 0;
+  const mandalDisabled = csvValues(pending.dist_id).length === 0;
+  const villageDisabled = csvValues(pending.mndl_id).length === 0;
+  const schoolDisabled = csvValues(pending.vil_id).length === 0;
+  const parentOccupationDisabled = pending.parent_type === '' || pending.parent_type === 'orphan';
+  const stateHasSelection = csvValues(pending.st_id).length > 0;
+  const districtHasSelection = csvValues(pending.dist_id).length > 0;
+  const mandalHasSelection = csvValues(pending.mndl_id).length > 0;
+  const villageHasSelection = csvValues(pending.vil_id).length > 0;
+  const parentTypeHasSelection = csvValues(pending.parent_type).length > 0;
+  const showParentOccupation = parentTypeHasSelection && !csvValues(pending.parent_type).includes('orphan');
   const filteredStates = states;
   const stateOptions = filteredStates.map((s) => ({
     value: String(s.stId ?? s.st_id),
@@ -260,6 +299,10 @@ export default function StudentListPage() {
     value: String(c.classId ?? c.class_id),
     label: c.className ?? c.class_name,
   }));
+  const academicYearOptions = academicYears.map((y) => ({
+    value: String(y.academicYearId ?? y.academic_year_id),
+    label: y.academicYearName ?? y.academic_year_name,
+  }));
   const genderOptions = [
     { value: "1", label: "Male" },
     { value: "2", label: "Female" },
@@ -268,6 +311,12 @@ export default function StudentListPage() {
   const orphanOptions = [
     { value: "3", label: "Orphan" },
     { value: "2", label: "Single Parent" },
+  ];
+  const parentTypeOptions = [
+    { value: "single_mother", label: "Single Mother" },
+    { value: "single_father", label: "Single Father" },
+    { value: "both_alive", label: "Both Parents Alive" },
+    { value: "orphan", label: "Orphan" },
   ];
   const pageIds = students.map((s) => s.student_id);
   const allSelected = globalSelection || checked.length >= total;
@@ -602,7 +651,7 @@ export default function StudentListPage() {
   <div className="container-fluid">
 
     {/* Row 1 */}
-    <div className="row g-2">
+    <div className="row g-2 align-items-center">
 
       {/* Gender */}
       <div className="col-2">
@@ -637,6 +686,24 @@ export default function StudentListPage() {
         />
       </div>
 
+      {/* Academic Year */}
+      <div className="col-2">
+        <MultiSelectFilter
+          filterKey="academicYear"
+          label="All Academic Years"
+          value={pending.academic_year_id}
+          options={academicYearOptions}
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
+          onChange={(value) =>
+            setPending({
+              ...pending,
+              academic_year_id: value,
+            })
+          }
+        />
+      </div>
+
       {/* Class */}
       <div className="col-2">
         <MultiSelectFilter
@@ -650,28 +717,6 @@ export default function StudentListPage() {
             setPending({
               ...pending,
               class_id: value,
-            })
-          }
-        />
-      </div>
-
-      {/* State */}
-      <div className="col-2">
-        <MultiSelectFilter
-          filterKey="state"
-          label="All States"
-          value={pending.st_id}
-          options={stateOptions}
-          openFilter={openFilter}
-          setOpenFilter={setOpenFilter}
-          onChange={(value) =>
-            setPending({
-              ...pending,
-              st_id: value,
-              dist_id: "",
-              mndl_id: "",
-              vil_id: "",
-              sch_id: "",
             })
           }
         />
@@ -698,121 +743,185 @@ export default function StudentListPage() {
 
     </div>
 
-    {/* Row 2 */}
-<div className="row g-2 mt-1">
+    {/* Row 2 - Location */}
+    <div className="row g-2 mt-1 align-items-center">
 
-  {showDistrictFilter ? (
-    <div className="col-2">
-      <MultiSelectFilter
-        filterKey="district"
-        label="All Districts"
-        value={pending.dist_id}
-        options={districtOptions}
-        openFilter={openFilter}
-        setOpenFilter={setOpenFilter}
-        onChange={(value) =>
-          setPending({
-            ...pending,
-            dist_id: value,
-            mndl_id: "",
-            vil_id: "",
-            sch_id: "",
-          })
-        }
-      />
+      {/* State */}
+      <div className="col-2">
+        <MultiSelectFilter
+          filterKey="state"
+          label="All States"
+          value={pending.st_id}
+          options={stateOptions}
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
+          onChange={(value) =>
+            setPending({
+              ...pending,
+              st_id: value,
+              dist_id: "",
+              mndl_id: "",
+              vil_id: "",
+              sch_id: "",
+            })
+          }
+        />
+      </div>
+
+      {/* District */}
+      {stateHasSelection && (
+        <div className="col-2 filter-reveal">
+          <MultiSelectFilter
+            filterKey="district"
+            label="All Districts"
+            value={pending.dist_id}
+            options={districtOptions}
+            openFilter={openFilter}
+            setOpenFilter={setOpenFilter}
+            disabled={districtDisabled}
+            onChange={(value) =>
+              setPending({
+                ...pending,
+                dist_id: value,
+                mndl_id: "",
+                vil_id: "",
+                sch_id: "",
+              })
+            }
+          />
+        </div>
+      )}
+
+      {/* Mandal */}
+      {districtHasSelection && (
+        <div className="col-2 filter-reveal">
+          <MultiSelectFilter
+            filterKey="mandal"
+            label="All Mandals"
+            value={pending.mndl_id}
+            options={mandalOptions}
+            openFilter={openFilter}
+            setOpenFilter={setOpenFilter}
+            disabled={mandalDisabled}
+            onChange={(value) =>
+              setPending({
+                ...pending,
+                mndl_id: value,
+                vil_id: "",
+                sch_id: "",
+              })
+            }
+          />
+        </div>
+      )}
+
+      {/* Village */}
+      {mandalHasSelection && (
+        <div className="col-2 filter-reveal">
+          <MultiSelectFilter
+            filterKey="village"
+            label="All Villages"
+            value={pending.vil_id}
+            options={villageOptions}
+            openFilter={openFilter}
+            setOpenFilter={setOpenFilter}
+            disabled={villageDisabled}
+            onChange={(value) =>
+              setPending({
+                ...pending,
+                vil_id: value,
+                sch_id: "",
+              })
+            }
+          />
+        </div>
+      )}
+
+      {/* School */}
+      {villageHasSelection && (
+        <div className="col-2 filter-reveal">
+          <MultiSelectFilter
+            filterKey="school"
+            label="All Schools"
+            value={pending.sch_id}
+            options={schoolOptions}
+            openFilter={openFilter}
+            setOpenFilter={setOpenFilter}
+            disabled={schoolDisabled}
+            onChange={(value) =>
+              setPending({
+                ...pending,
+                sch_id: value,
+              })
+            }
+          />
+        </div>
+      )}
+
     </div>
-  ) : (
-    <div className="col-2" />
-  )}
 
-  {showMandalFilter ? (
-    <div className="col-2">
-      <MultiSelectFilter
-        filterKey="mandal"
-        label="All Mandals"
-        value={pending.mndl_id}
-        options={mandalOptions}
-        openFilter={openFilter}
-        setOpenFilter={setOpenFilter}
-        onChange={(value) =>
-          setPending({
-            ...pending,
-            mndl_id: value,
-            vil_id: "",
-            sch_id: "",
-          })
-        }
-      />
-    </div>
-  ) : (
-    <div className="col-2" />
-  )}
+    {/* Row 3 - Parent filters & Buttons */}
+    <div className="row g-2 mt-1 align-items-center">
 
-  {showVillageFilter ? (
-    <div className="col-2">
-      <MultiSelectFilter
-        filterKey="village"
-        label="All Villages"
-        value={pending.vil_id}
-        options={villageOptions}
-        openFilter={openFilter}
-        setOpenFilter={setOpenFilter}
-        onChange={(value) =>
-          setPending({
-            ...pending,
-            vil_id: value,
-            sch_id: "",
-          })
-        }
-      />
-    </div>
-  ) : (
-    <div className="col-2" />
-  )}
+      {/* Parent Type */}
+      <div className="col-2">
+        <MultiSelectFilter
+          filterKey="parentType"
+          label="Parent Type"
+          value={pending.parent_type}
+          options={parentTypeOptions}
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
+          onChange={(value) =>
+            setPending({
+              ...pending,
+              parent_type: value,
+              parent_occupation: value === '' || value === 'orphan' ? '' : pending.parent_occupation,
+            })
+          }
+        />
+      </div>
 
-  {showSchoolFilter ? (
-    <div className="col-2">
-      <MultiSelectFilter
-        filterKey="school"
-        label="All Schools"
-        value={pending.sch_id}
-        options={schoolOptions}
-        openFilter={openFilter}
-        setOpenFilter={setOpenFilter}
-        onChange={(value) =>
-          setPending({
-            ...pending,
-            sch_id: value,
-          })
-        }
-      />
-    </div>
-  ) : (
-    <div className="col-2" />
-  )}
-
-      {/* Empty Space */}
-      <div className="col-2 "></div>
+      {/* Parent Occupation */}
+      {showParentOccupation && (
+        <div className="col-2 filter-reveal">
+          <MultiSelectFilter
+            filterKey="parentOccupation"
+            label="Parent Occupation"
+            value={pending.parent_occupation}
+            options={parentOccupationOptions}
+            openFilter={openFilter}
+            setOpenFilter={setOpenFilter}
+            disabled={parentOccupationDisabled}
+            onChange={(value) =>
+              setPending({ ...pending, parent_occupation: value })
+            }
+          />
+        </div>
+      )}
 
       {/* Buttons */}
-      <div className="filter-actions-group col-2 d-flex  justify-content-end   gap-2">
-          
-          <button
-            className="clearbtn"
-            onClick={() => {
-              setPending(defaults);
-              setApplied(defaults);
-              setPage(1);
-              setOpenFilter(null);
-            }}
-          >
+      <div className="filter-actions-group col-auto ms-auto d-flex justify-content-end gap-2 align-items-center">
+
+        <button
+          className="clearbtn"
+          onClick={() => {
+            setPending(defaults);
+            setApplied(defaults);
+            setPage(1);
+            setOpenFilter(null);
+          }}
+        >
           <HiOutlineXMark className="filterBtnIcon" />
-            Clear
-          </button>
-        <button className="gobtn" onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}>  
+          Clear
+        </button>
+        <button
+          className="gobtn"
+          onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}
+        >
           <FiArrowRight className="filterBtnIcon" />
-            Go
-            </button>
+          Go
+        </button>
       </div>
 
     </div>

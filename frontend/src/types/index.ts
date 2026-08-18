@@ -190,12 +190,15 @@ export interface StudentFilters {
   search: string;
   gender: string;
   class_id: string;
+  academic_year_id: string;
   dist_id: string;
   st_id: string;
   mndl_id: string;
   vil_id: string;
   sch_id: string;
   orphan_status: string;
+  parent_type: string;
+  parent_occupation: string;
   sponsor_status: "" | "assigned" | "unassigned";
   is_active: string;
 }
