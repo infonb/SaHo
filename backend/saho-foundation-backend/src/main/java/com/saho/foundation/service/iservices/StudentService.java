@@ -26,6 +26,8 @@ public interface StudentService {
             String vilId,
             String schId,
             String academicYearId,
+            String parentType,
+            String parentOccupation,
             String sortColumn,
             String sortDirection
     );
@@ -41,6 +43,8 @@ public interface StudentService {
             String vilId,
             String schId,
             String academicYearId,
+            String parentType,
+            String parentOccupation,
             String sortColumn,
             String sortDirection,
             String studentIdsCsv
@@ -70,6 +74,8 @@ public interface StudentService {
             String mndlId,
             String vilId,
             String schId,
-            String academicYearId
+            String academicYearId,
+            String parentType,
+            String parentOccupation
     );
 }

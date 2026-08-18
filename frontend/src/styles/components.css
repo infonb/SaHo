@@ -7244,6 +7244,23 @@ td {
   background: #f8fffd;
 }
 
+.multiSelectFilter.isDisabled .multiSelectTrigger {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.multiSelectFilter.isDisabled:hover .multiSelectTrigger {
+  border-color: #e2e8f0;
+  background: #f1f5f9;
+}
+
+.multiSelectFilter.isDisabled .multiSelectTrigger svg {
+  color: #cbd5e1;
+}
+
 .multiSelectMenu {
   position: absolute;
   z-index: 30;
@@ -7338,6 +7355,31 @@ td {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Dependent filter reveal */
+.student-filters-section .row {
+  align-items: center;
+}
+
+.student-filters-section .filter-reveal {
+  animation: filterReveal 0.22s ease both;
+}
+
+@keyframes filterReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.student-filters-section .filter-actions-group {
+  align-self: center;
 }
 
 /* Student form wizard */

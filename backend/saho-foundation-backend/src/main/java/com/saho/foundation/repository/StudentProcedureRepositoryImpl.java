@@ -43,10 +43,12 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
             String vilId,
             String schId,
             String academicYearId,
+            String parentType,
+            String parentOccupation,
             String sortColumn,
             String sortDirection
     ) {
-        return getStudentsFromProcedure(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, academicYearId, sortColumn, sortDirection);
+        return getStudentsFromProcedure(search, pageNumber, pageSize, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, academicYearId, parentType, parentOccupation, sortColumn, sortDirection);
     }
 
     @Override
@@ -135,6 +137,8 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
             String vilId,
             String schId,
             String academicYearId,
+            String parentType,
+            String parentOccupation,
             String sortColumn,
             String sortDirection
     ) {
@@ -148,6 +152,8 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                         CAST(? AS text),
                         CAST(? AS integer),
                         CAST(? AS integer),
+                        CAST(? AS text),
+                        CAST(? AS text),
                         CAST(? AS text),
                         CAST(? AS text),
                         CAST(? AS text),
@@ -174,9 +180,11 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 ps.setString(10, emptyToNull(vilId));
                 ps.setString(11, emptyToNull(schId));
                 ps.setString(12, emptyToNull(academicYearId));
-                ps.setString(13, emptyToNull(sortColumn));
-                ps.setString(14, emptyToNull(sortDirection));
-                ps.setString(15, cursorName);
+                ps.setString(13, emptyToNull(parentType));
+                ps.setString(14, emptyToNull(parentOccupation));
+                ps.setString(15, emptyToNull(sortColumn));
+                ps.setString(16, emptyToNull(sortDirection));
+                ps.setString(17, cursorName);
                 ps.execute();
             }
 

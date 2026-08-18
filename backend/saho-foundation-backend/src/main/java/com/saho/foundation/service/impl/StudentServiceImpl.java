@@ -153,6 +153,8 @@ public class StudentServiceImpl implements StudentService {
             String vilId,
             String schId,
             String academicYearId,
+            String parentType,
+            String parentOccupation,
             String sortColumn,
             String sortDirection
     ) {
@@ -169,6 +171,8 @@ public class StudentServiceImpl implements StudentService {
                         vilId,
                         schId,
                         academicYearId,
+                        parentType,
+                        parentOccupation,
                         sortColumn,
                         sortDirection
                 )
@@ -215,6 +219,8 @@ public class StudentServiceImpl implements StudentService {
             String vilId,
             String schId,
             String academicYearId,
+            String parentType,
+            String parentOccupation,
             String sortColumn,
             String sortDirection,
             String studentIdsCsv
@@ -232,6 +238,8 @@ public class StudentServiceImpl implements StudentService {
                 vilId,
                 schId,
                 academicYearId,
+                parentType,
+                parentOccupation,
                 sortColumn,
                 sortDirection
         );
@@ -478,7 +486,9 @@ public class StudentServiceImpl implements StudentService {
             String mndlId,
             String vilId,
             String schId,
-            String academicYearId
+            String academicYearId,
+            String parentType,
+            String parentOccupation
     ) {
         return studentRepository.getAllStudentsWithPagination(
                         search,
@@ -493,6 +503,8 @@ public class StudentServiceImpl implements StudentService {
                         vilId,
                         schId,
                         academicYearId,
+                        parentType,
+                        parentOccupation,
                         "student_id",
                         "ASC"
                 )
