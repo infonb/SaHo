@@ -19,6 +19,7 @@ public class StudentAcademicResponseDto {
     private String academicYearName;
     private Integer schoolId;
     private String schoolName;
+    private Integer courseId;
     private Integer classId;
     private String className;
     private String rollNumber;

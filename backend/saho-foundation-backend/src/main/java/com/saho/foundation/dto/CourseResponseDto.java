@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ClassResponseDto {
+public class CourseResponseDto {
 
-    private Integer classId;
-    private String className;
-    private Integer classOrder;
+    private Integer courseId;
+    private String courseName;
+    private String boardType;
 }

@@ -12,5 +12,7 @@ public interface ClassRepository extends JpaRepository<ClassMaster, Integer> {
 
     List<ClassMaster> findByIsDeletedFalseOrderByClassOrderAsc();
 
+    List<ClassMaster> findByCourseIdAndIsDeletedFalseOrderByClassOrderAsc(Integer courseId);
+
     Optional<ClassMaster> findByClassNameIgnoreCase(String className);
 }

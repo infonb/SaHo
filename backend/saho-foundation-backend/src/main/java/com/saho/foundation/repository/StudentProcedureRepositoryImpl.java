@@ -222,6 +222,7 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 sc.sch_name AS school_name,
                 sa.class_id,
                 clm.class_name,
+                clm.course_id,
                 sa.academic_year_id,
                 ay.academic_year_name,
                 sa.roll_number,
@@ -320,6 +321,7 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 .studentAcademicId(getInteger(rs, "student_academic_id"))
                 .schoolId(getInteger(rs, "school_id", "sch_id"))
                 .schoolName(getString(rs, "school_name", "sch_name"))
+                .courseId(getInteger(rs, "course_id"))
                 .classId(getInteger(rs, "class_id"))
                 .className(getString(rs, "class_name"))
                 .academicYearId(getInteger(rs, "academic_year_id"))
@@ -443,6 +445,7 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 .academicYearName(getString(rs, "academic_year_name"))
                 .schoolId(getInteger(rs, "school_id", "sch_id"))
                 .schoolName(getString(rs, "school_name", "sch_name"))
+                .courseId(getInteger(rs, "course_id"))
                 .classId(getInteger(rs, "class_id"))
                 .className(getString(rs, "class_name"))
                 .rollNumber(getString(rs, "roll_number"))

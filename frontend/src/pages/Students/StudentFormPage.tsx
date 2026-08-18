@@ -8,7 +8,8 @@ import {
   getAcademicStatuses,
   getAdmissionTypes,
   getCastes,
-  getClasses,
+  getClassesByCourse,
+  getCourses,
   getDistrictsByState,
   getMandalsByDistrict,
   getParentOccupations,
@@ -44,6 +45,7 @@ const init: StudentFormState = {
   religion: '',
   blood_group: '',
   academic_year_id: '',
+  course_id: '',
   class_id: '',
   orphan_status: '',
   image_url: '',
@@ -98,7 +100,7 @@ const personalRequiredFields: (keyof StudentFormState)[] = [
 ];
 
 const locationRequiredFields: (keyof StudentFormState)[] = [
-  'academic_year_id', 'st_id', 'dist_id', 'mndl_id', 'vil_id', 'sch_id', 'class_id', 'admission_type', 'status'
+  'academic_year_id', 'course_id', 'st_id', 'dist_id', 'mndl_id', 'vil_id', 'sch_id', 'class_id', 'admission_type', 'status'
 ];
 
 const guardianRequiredFields: (keyof StudentFormState)[] = [
@@ -127,6 +129,7 @@ const requiredFieldLabels: Partial<Record<keyof StudentFormState, string>> = {
   religion: 'Religion',
   caste: 'Caste',
   academic_year_id: 'Academic Year',
+  course_id: 'Course Name',
   class_id: 'Class',
   roll_number: 'Roll Number',
   admission_type: 'Admission Type',
@@ -282,6 +285,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
   const [villages, setVillages] = useState<[string, string][]>([]);
   const [schools, setSchools] = useState<[string, string][]>([]);
   const [academicYears, setAcademicYears] = useState<[string, string][]>([]);
+  const [courses, setCourses] = useState<[string, string][]>([]);
   const [castes, setCastes] = useState<[string, string][]>([]);
   const [classes, setClasses] = useState<[string, string][]>([]);
   const [relationships, setRelationships] = useState<[string, string][]>([]);
@@ -366,6 +370,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       };
 
       if (key === 'st_id') return apply({ ...current, st_id: nextValue, dist_id: '', mndl_id: '', vil_id: '', sch_id: '' });
+      if (key === 'course_id') return apply({ ...current, course_id: nextValue, class_id: '' });
       if (key === 'dist_id') return apply({ ...current, dist_id: nextValue, mndl_id: '', vil_id: '', sch_id: '' });
       if (key === 'mndl_id') return apply({ ...current, mndl_id: nextValue, vil_id: '', sch_id: '' });
       if (key === 'vil_id') return apply({ ...current, vil_id: nextValue, sch_id: '' });
@@ -479,7 +484,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         let relationshipsResponse = [];
         let occupationsResponse = [];
         let parentStatusesResponse = [];
-        let classesResponse = [];
+        let coursesResponse = [];
 
         try {
           statesResponse = await getStates();
@@ -524,10 +529,10 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         }
 
         try {
-          classesResponse = await getClasses();
+          coursesResponse = await getCourses();
         } catch (error) {
-          console.error('[StudentFormPage] getClasses failed', error);
-          throw new Error('getClasses');
+          console.error('[StudentFormPage] getCourses failed', error);
+          throw new Error('getCourses');
         }
 
         let admissionTypesResponse: LabelValueOption[] = [];
@@ -552,15 +557,15 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         const relationshipEntries: [string, string][] = relationshipsResponse.map((item): [string, string] => [String(item.relationship_id), item.relationship_name]).filter(([value, label]) => !!value && !!label);
         const occupationEntries: [string, string][] = occupationsResponse.map((item: LabelValueOption): [string, string] => [String(item.value), item.label]).filter(([value, label]) => !!value && !!label);
         const parentStatusEntries: [string, string][] = parentStatusesResponse.map((item: LabelValueOption): [string, string] => [String(item.value), item.label]).filter(([value, label]) => !!value && !!label);
-        const classEntries: [string, string][] = classesResponse.map((item): [string, string] => [String(item.classId), item.className]).filter(([value, label]) => !!value && !!label);
+        const courseEntries: [string, string][] = coursesResponse.map((item): [string, string] => [String(item.courseId), item.courseName]).filter(([value, label]) => !!value && !!label);
 
         setStates(stateEntries);
         setAcademicYears(academicYearEntries);
+        setCourses(courseEntries);
         setCastes(casteEntries);
         setRelationships(relationshipEntries);
         setOccupations(occupationEntries);
         setParentStatuses(parentStatusEntries);
-        setClasses(classEntries);
         setAdmissionTypes(admissionTypesResponse.map((item: LabelValueOption): [string, string] => [String(item.value), item.label]).filter(([value, label]) => !!value && !!label));
         setAcademicStatuses(academicStatusesResponse.map((item: LabelValueOption): [string, string] => [String(item.value), item.label]).filter(([value, label]) => !!value && !!label));
 
@@ -571,7 +576,8 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             occupations: occupationEntries,
             statuses: parentStatusEntries,
             academicYears: academicYearEntries,
-            classes: classEntries,
+            courses: courseEntries,
+            classes: [],
             snapshot: studentSnapshot,
           });
           if (isView) {
@@ -673,6 +679,25 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
     }
   };
 
+  const loadClassesByCourse = async (courseId: number) => {
+    setClasses([]);
+    if (!courseId) return;
+    try {
+      const response = await getClassesByCourse(courseId);
+      setClasses(response.map((item) => [String(item.classId), item.className]));
+    } catch {
+      toast('Unable to load classes.', 'error');
+    }
+  };
+
+  useEffect(() => {
+    if (form.course_id) {
+      void loadClassesByCourse(Number(form.course_id));
+    } else {
+      setClasses([]);
+    }
+  }, [form.course_id]);
+
   useEffect(() => {
     if (form.st_id) {
       void loadDistricts(Number(form.st_id));
@@ -737,6 +762,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       occupations,
       statuses: parentStatuses,
       academicYears,
+      courses: currentCourses,
       classes: currentClasses,
     });
     getStudentSiblings(siblingId).then(setSiblings);
@@ -751,6 +777,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
       occupations: [string, string][];
       statuses: [string, string][];
       academicYears: [string, string][];
+      courses: [string, string][];
       classes: [string, string][];
       snapshot?: StudentView | null;
     }
@@ -808,6 +835,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
         religion: mapLabelToOptionValue(religionValue, RELIGION_OPTIONS),
         blood_group: student.bloodGroup ?? snapshot?.blood_group ?? '',
         academic_year_id: academicYearValue ? String(academicYearValue) : mapLabelToOptionValue(firstString(student, ['academicYearName', 'academic_year_name', 'academicDetails.academicYearName', 'academicDetails.academic_year_name']) || firstString(snapshot as Record<string, any>, ['academicYearName', 'academic_year_name']), viewFallback?.academicYears ?? []),
+        course_id: firstString(student, ['courseId', 'course_id', 'academicDetails.courseId', 'academicDetails.course_id']) || '',
         class_id: student.classId ? String(student.classId) : mapLabelToOptionValue(snapshot?.class_id, viewFallback?.classes ?? []),
         orphan_status: mapLabelToOptionValue(student.orphanStatus || snapshot?.orphan_status, ORPHAN_STATUS_OPTIONS),
         image_url: getStudentImageValue(student, snapshot),
@@ -1146,6 +1174,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
 
   const currentCastes = useMemo(() => castes, [castes]);
   const currentClasses = useMemo(() => classes, [classes]);
+  const currentCourses = useMemo(() => courses, [courses]);
   const currentRelationships = useMemo(() => relationships, [relationships]);
   const currentStates = useMemo(() => states, [states]);
   const aadhaarMessage = form.aadhaar_number && form.aadhaar_number.length !== 12
@@ -1390,6 +1419,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             <ProfileViewItem label="Gender" value={optionLabel(form.gender, GENDER_OPTIONS)} badge />
             <ProfileViewItem label="Aadhaar Number" value={formatProfileAadhaar(form.aadhaar_number)} />
             <ProfileViewItem label="Class" value={optionLabel(form.class_id, currentClasses)} />
+            <ProfileViewItem label="Course" value={optionLabel(form.course_id, currentCourses)} />
             <ProfileViewItem label="Religion" value={optionLabel(form.religion, RELIGION_OPTIONS)} />
             <ProfileViewItem label="Caste" value={optionLabel(form.caste, currentCastes)} />
             <ProfileViewItem label="Blood Group" value={form.blood_group || '-'} />
@@ -1471,6 +1501,7 @@ export default function StudentFormPage({ embedded = false, mode, studentId, stu
             searchSibling={searchSibling}
             removeSibling={removeSibling}
             academicYears={academicYears}
+            courses={currentCourses}
             schools={schools}
             states={currentStates}
             districts={districts}

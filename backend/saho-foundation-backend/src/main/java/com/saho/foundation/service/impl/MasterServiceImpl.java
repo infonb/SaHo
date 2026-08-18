@@ -58,6 +58,19 @@ public class MasterServiceImpl implements MasterService {
                 .map(cls -> ClassResponseDto.builder()
                         .classId(cls.getClassId())
                         .className(cls.getClassName())
+                        .classOrder(cls.getClassOrder())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ClassResponseDto> getClassesByCourse(Integer courseId) {
+        return classRepository.findByCourseIdAndIsDeletedFalseOrderByClassOrderAsc(courseId)
+                .stream()
+                .map(cls -> ClassResponseDto.builder()
+                        .classId(cls.getClassId())
+                        .className(cls.getClassName())
+                        .classOrder(cls.getClassOrder())
                         .build())
                 .collect(Collectors.toList());
     }

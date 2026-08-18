@@ -23,6 +23,9 @@ public class ClassMaster {
     @Column(name = "class_id")
     private Integer classId;
 
+     @Column(name = "course_id")
+    private Integer courseId;
+
     @Column(name = "class_name")
     private String className;
 
