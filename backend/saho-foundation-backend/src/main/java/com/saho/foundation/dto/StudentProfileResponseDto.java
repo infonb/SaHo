@@ -27,6 +27,7 @@ public class StudentProfileResponseDto {
     private Integer studentAcademicId;
     private Integer schoolId;
     private String schoolName;
+    private Integer courseId;
     private Integer classId;
     private String className;
     private Integer academicYearId;

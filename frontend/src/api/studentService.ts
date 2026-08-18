@@ -123,6 +123,7 @@ export interface StudentProfileResponse {
   academicYearName?: string | null;
   schoolId?: number;
   schoolName?: string | null;
+  courseId?: number;
   classId?: number;
   className?: string | null;
   familyId?: number;
@@ -166,6 +167,12 @@ export interface LabelValueOption {
 export interface ClassResponse {
   classId: number;
   className: string;
+}
+
+export interface CourseResponse {
+  courseId: number;
+  courseName: string;
+  boardType?: string;
 }
 
 export interface AcademicYearResponse {
@@ -328,6 +335,37 @@ export const getClasses = async (): Promise<ClassResponse[]> => {
       .filter((c) => Number.isFinite(c.classId) && c.className.trim() !== '');
   } catch (error) {
     logApiFailure('getClasses', error);
+    throw error;
+  }
+};
+
+export const getCourses = async (): Promise<CourseResponse[]> => {
+  try {
+    const response = await apiClient.get<any[] | { data?: any[]; content?: any[]; items?: any[] }>('/course-master');
+    return asArray(response.data)
+      .map((c) => ({
+        courseId: Number(c.courseId ?? c.course_id ?? c.id),
+        courseName: String(c.courseName ?? c.course_name ?? c.name ?? ''),
+        boardType: c.boardType ?? c.board_type ?? undefined,
+      }))
+      .filter((c) => Number.isFinite(c.courseId) && c.courseName.trim() !== '');
+  } catch (error) {
+    logApiFailure('getCourses', error);
+    throw error;
+  }
+};
+
+export const getClassesByCourse = async (courseId: number): Promise<ClassResponse[]> => {
+  try {
+    const response = await apiClient.get<any[] | { data?: any[]; content?: any[]; items?: any[] }>(`/class-master/by-course/${courseId}`);
+    return asArray(response.data)
+      .map((c) => ({
+        classId: Number(c.classId ?? c.class_id ?? c.id),
+        className: String(c.className ?? c.class_name ?? c.name ?? ''),
+      }))
+      .filter((c) => Number.isFinite(c.classId) && c.className.trim() !== '');
+  } catch (error) {
+    logApiFailure('getClassesByCourse', error);
     throw error;
   }
 };

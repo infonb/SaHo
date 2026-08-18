@@ -348,8 +348,14 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional(readOnly = true)
     public StudentProfileResponseDto getStudentById(Integer studentId) {
-        return studentRepository.getStudentProfileById(studentId)
+        StudentProfileResponseDto profile = studentRepository.getStudentProfileById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        if (profile.getCourseId() == null && profile.getClassId() != null) {
+            classRepository.findById(profile.getClassId())
+                    .ifPresent(classMaster -> profile.setCourseId(classMaster.getCourseId()));
+        }
+        return profile;
     }
 
     @Override
@@ -640,6 +646,7 @@ public class StudentServiceImpl implements StudentService {
                 .academicYearName(academicYear != null ? academicYear.getAcademicYearName() : null)
                 .schoolId(academic.getSchoolId())
                 .schoolName(school != null ? school.getSchName() : null)
+                .courseId(classMaster != null ? classMaster.getCourseId() : null)
                 .classId(academic.getClassId())
                 .className(classMaster != null ? classMaster.getClassName() : null)
                 .rollNumber(academic.getRollNumber())

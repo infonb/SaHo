@@ -15,6 +15,8 @@ public interface MasterService {
 
     List<ClassResponseDto> getAllClasses();
 
+    List<ClassResponseDto> getClassesByCourse(Integer courseId);
+
     List<LabelValueResponseDto> getParentStatuses();
 
     List<LabelValueResponseDto> getParentOccupations();
