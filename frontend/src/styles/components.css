@@ -10280,3 +10280,87 @@ html::-webkit-scrollbar-thumb:hover {
   gap: 10px;
   margin-top: 20px;
 }
+
+/* ===== Masters nested sidebar navigation ===== */
+.sidebar .nav-item .navParent .navChevron {
+  display: block;
+}
+
+.sidebar .nav-link.navParent {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sidebar .navMastersBody {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 4px;
+}
+
+.sidebar .navMasterGroup {
+  width: 100%;
+}
+
+.sidebar .navMasterGroupHead.navParent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 18px);
+  margin: 3px 9px;
+  padding: 6px 10px;
+  min-height: 30px;
+  border-radius: 10px;
+  color: #8492a6;
+  background: transparent;
+}
+
+.sidebar .navMasterGroupHead.navParent:hover {
+  background: rgba(255, 255, 255, 0.055);
+  color: #ffffff;
+}
+
+.sidebar .navMasterGroupHead.navParent.active {
+  color: #8ddfd2;
+  font-weight: 750;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sidebar .navMasterGroupHead .navSection {
+  margin: 0;
+  height: auto;
+  line-height: 1;
+  font-size: 10px;
+  letter-spacing: 1.35px;
+  text-transform: uppercase;
+  color: inherit;
+  visibility: visible;
+  opacity: 1;
+}
+
+.sidebar .navMasterItems {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar .navMasterItem.navItem {
+  width: calc(100% - 18px);
+  margin: 3px 9px;
+  padding: 7px 10px;
+  min-height: 36px;
+}
+
+.sidebar .navMasterItem.navItem .navIcon {
+  width: 26px;
+  height: 26px;
+  font-size: 10px;
+}
+
+.sidebar .navMasterItem.navItem .navLabel {
+  font-size: 13px;
+}
+
+.sidebar[data-sidebar-state="collapsed"] .navMastersBody,
+.sidebar[data-sidebar-state="collapsed"] .navMasterGroupHead .navSection {
+  display: none;
+}
