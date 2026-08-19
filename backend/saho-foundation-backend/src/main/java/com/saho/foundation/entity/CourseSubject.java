@@ -14,33 +14,43 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "village_master")
+@Table(name = "course_subject")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class VillageMaster {
+public class CourseSubject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "vil_id")
-    private Integer vilId;
+    @Column(name = "course_subject_id")
+    private Integer courseSubjectId;
 
-    @Column(name = "vil_name")
-    private String vilName;
+    @Column(name = "course_id", nullable = false)
+    private Integer courseId;
 
-    @Column(name = "vil_pincode")
-    private Integer vilPincode;
+    @Column(name = "class_id", nullable = false)
+    private Integer classId;
 
-    @Column(name = "mndl_id")
-    private Integer mndlId;
+    @Column(name = "subject_id", nullable = false)
+    private Integer subjectId;
 
+    @Column(name = "subject_code", length = 50)
+    private String subjectCode;
+
+    @Builder.Default
     @Column(name = "is_deleted")
-    private Boolean isDeleted;
+    private Boolean isDeleted = false;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "created_by")
+    private Integer createdBy;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "updated_by")
+    private Integer updatedBy;
 }

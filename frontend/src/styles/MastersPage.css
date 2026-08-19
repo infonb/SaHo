@@ -1,0 +1,102 @@
+.masterSearchRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 18px 0;
+  max-width: 460px;
+}
+
+.masterSearchBox {
+  flex: 1;
+}
+
+.masterSearchRow .gobtn {
+  white-space: nowrap;
+  padding: 9px 20px;
+}
+
+.masterLocationGrid {
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .masterLocationGrid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .masterLocationGrid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.masterTextarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.masterCheckboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.masterCheckbox {
+  width: auto;
+  height: 18px;
+  width: 18px;
+}
+
+.masterViewBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.masterViewRow {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.masterViewRow:last-child {
+  border-bottom: none;
+}
+
+.masterViewLabel {
+  width: 160px;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.masterViewValue {
+  flex: 1;
+  font-size: 14px;
+  color: #111827;
+  word-break: break-word;
+}
+
+.masterDependencyList {
+  margin: 10px 0 6px;
+  padding-left: 20px;
+}
+
+.masterDependencyList li {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.masterDepChecking {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #6b7280;
+}

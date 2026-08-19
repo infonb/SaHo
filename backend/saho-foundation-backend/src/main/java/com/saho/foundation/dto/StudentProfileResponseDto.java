@@ -69,7 +69,7 @@ public class StudentProfileResponseDto {
     private String schAddress;
 
     private String vilName;
-    private String vilPincode;
+    private Integer vilPincode;
     private String mndlName;
     private String distName;
     private String stName;

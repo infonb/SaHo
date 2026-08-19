@@ -359,7 +359,7 @@ public class StudentProcedureRepositoryImpl implements StudentProcedureRepositor
                 .schName(getString(rs, "sch_name", "school_name"))
                 .schAddress(getString(rs, "sch_address"))
                 .vilName(getString(rs, "vil_name"))
-                .vilPincode(getString(rs, "vil_pincode"))
+                .vilPincode(getInteger(rs, "vil_pincode"))
                 .mndlName(getString(rs, "mndl_name"))
                 .distName(getString(rs, "dist_name"))
                 .stName(getString(rs, "st_name"))

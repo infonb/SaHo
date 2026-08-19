@@ -12,6 +12,7 @@ import AssignSponsorPage from './pages/Sponsors/AssignSponsorPage';
 import VolunteerListPage from './pages/Volunteers/VolunteerListPage';
 import VolunteerFormPage from './pages/Volunteers/VolunteerFormPage';
 import AdminsPage from './pages/Admins/AdminsPage';
+import MasterManagementPage from './pages/Masters/MasterManagementPage';
 import ToastContainer from './components/common/ToastContainer';
 import ViewEvents from './pages/Reminders/ViewEvents';
 import EventFormPage from './pages/Reminders/EventFormPage';
@@ -78,6 +79,7 @@ export default function App() {
             <Route path="volunteers/add" element={<VolunteerFormPage />} />
             <Route path="volunteers/edit/:id" element={<VolunteerFormPage />} />
             <Route path="admins" element={<AdminsPage />} />
+            <Route path="masters/:type" element={<MasterManagementPage />} />
           </Route>
           <Route path="student/dashboard" element={<StudentGuard><StudentLayout /></StudentGuard>}>
             <Route index element={<StudentDashboard />} />
