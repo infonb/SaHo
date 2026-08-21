@@ -117,6 +117,7 @@ getSponsorById(@PathVariable Integer sponsorId) {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String nationality,
+            @RequestParam(required = false) String createdMonth,
             @RequestParam(defaultValue = "sponsor_id") String sortColumn,
             @RequestParam(defaultValue = "DESC") String sortDirection
     ) {
@@ -129,7 +130,8 @@ getSponsorById(@PathVariable Integer sponsorId) {
                         type,
                         nationality,
                         sortColumn,
-                        sortDirection
+                        sortDirection,
+                        createdMonth
                 );
 
         return ResponseEntity.ok(

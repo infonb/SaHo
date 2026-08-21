@@ -216,6 +216,9 @@ export const getSponsors = async (
     if (statusFilter) {
       params.append('isActive', statusFilter);
     }
+    if (filters?.createdMonth?.trim()) {
+      params.append('createdMonth', filters.createdMonth.trim());
+    }
     if (options?.sortColumn) {
       params.append('sortColumn', options.sortColumn);
     }
@@ -262,9 +265,35 @@ export const getSponsorIds = async (filters?: Partial<SponsorFilters>): Promise<
   if (nationalityFilter) params.append('nationality', nationalityFilter);
   const statusFilter = normalizeStatusFilter(filters?.is_active);
   if (statusFilter) params.append('isActive', statusFilter);
+  if (filters?.createdMonth?.trim()) params.append('createdMonth', filters.createdMonth.trim());
 
   const response = await apiClient.get<ApiResponse<number[]>>('/sponsors/ids', { params });
   return response.data?.data ?? [];
+};
+
+export const exportSponsorsCsv = async (filters?: Partial<SponsorFilters>): Promise<Blob> => {
+  const sponsors = await getSponsors(filters, {
+    pageNumber: 1,
+    pageSize: 10000,
+    sortColumn: 'sponsor_id',
+    sortDirection: 'ASC',
+  });
+
+  const headers = ['Sponsor ID', 'Name', 'Email', 'Phone', 'Type', 'Nationality', 'Contribution', 'Students Sponsored', 'Location'];
+  const csvRows = sponsors.map((s) => [
+    s.sponsor_id,
+    s.sponsorName,
+    s.email,
+    s.ph_no,
+    s.type,
+    s.nationality,
+    s.contrib,
+    s.students_count ?? 0,
+    s.loc ?? '',
+  ]);
+  const escapeCsvValue = (value: string | number | undefined) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+  const csv = [headers, ...csvRows].map((row) => row.map(escapeCsvValue).join(',')).join('\n');
+  return new Blob([csv], { type: 'text/csv;charset=utf-8;' });
 };
 
 // ===============================

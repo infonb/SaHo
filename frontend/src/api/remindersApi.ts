@@ -85,6 +85,55 @@ export const getReminders = async (filters?: ReminderFilterParams): Promise<Remi
   return (res.data ?? []).map(normalizeReminder);
 };
 
+const escapeCsvValue = (value: string | number | null | undefined): string =>
+  `"${String(value ?? '').replace(/"/g, '""')}"`;
+
+const formatReminderDate = (value: string): string => {
+  if (!value) {
+    return '';
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).replace(/ /g, '-');
+};
+
+const inferReminderStatus = (reminder: ReminderDto): string => {
+  if (reminder.status === false) {
+    return 'Cancelled';
+  }
+
+  if (!reminder.eventDate) {
+    return 'Upcoming';
+  }
+
+  const eventDate = new Date(reminder.eventDate);
+  if (Number.isNaN(eventDate.getTime())) {
+    return 'Upcoming';
+  }
+
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const eventStart = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+
+  if (eventStart > todayStart) {
+    return 'Upcoming';
+  }
+
+  if (eventStart.getTime() === todayStart.getTime()) {
+    return 'Ongoing';
+  }
+
+  return 'Completed';
+};
+
 export const getStudentReminders = async (studentId: number): Promise<ReminderDto[]> => {
   const res = await apiClient.get(`/reminders/student/${studentId}`);
   return res.data ?? [];
@@ -121,4 +170,25 @@ export const deleteReminder = async (remId: number): Promise<void> => {
 
 export const cancelReminder = async (remId: number, updatedBy?: number): Promise<void> => {
   await apiClient.put(`/reminders/${remId}/cancel`, { updatedBy: updatedBy ?? 1 });
+};
+
+export const exportRemindersCsv = async (filters?: ReminderFilterParams): Promise<Blob> => {
+  const reminders = await getReminders({
+    ...filters,
+    pageNumber: 1,
+    pageSize: 10000,
+  });
+
+  const headers = ['Reminder ID', 'Title', 'Date', 'Status', 'Venue', 'Description'];
+  const rows = reminders.map((reminder) => [
+    reminder.remId,
+    reminder.title,
+    formatReminderDate(reminder.eventDate),
+    inferReminderStatus(reminder),
+    reminder.venue,
+    reminder.description ?? '',
+  ]);
+
+  const csv = [headers, ...rows].map((row) => row.map(escapeCsvValue).join(',')).join('\n');
+  return new Blob([csv], { type: 'text/csv;charset=utf-8;' });
 };

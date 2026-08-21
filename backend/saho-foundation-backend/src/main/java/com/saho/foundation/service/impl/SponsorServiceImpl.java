@@ -18,6 +18,8 @@ import java.sql.Date;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
+import java.time.LocalDateTime;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,7 +108,8 @@ public class SponsorServiceImpl
             String sponsorType,
             String nationality,
             String sortColumn,
-            String sortDirection) {
+            String sortDirection,
+            String createdMonth) {
 
         return entityManager.unwrap(Session.class).doReturningWork(connection -> {
             try (CallableStatement statement =
@@ -144,6 +147,12 @@ public class SponsorServiceImpl
                 response.setItemCount(sponsors.size());
                 response.setTotalCount(totalCount);
                 response.setSponsors(sponsors);
+
+                if (createdMonth != null && !createdMonth.trim().isEmpty()) {
+                    response.setSponsors(filterSponsorsByCreatedMonth(sponsors, createdMonth));
+                    response.setItemCount(response.getSponsors() != null ? response.getSponsors().size() : 0);
+                    response.setTotalCount(response.getItemCount());
+                }
 
                 return response;
             }
@@ -211,6 +220,7 @@ public class SponsorServiceImpl
         response.setContrib(resultSet.getString("contrib"));
         response.setImageUrl(getOptionalColumn(resultSet, "image_url"));
         response.setStudentsCount(resultSet.getInt("students_count"));
+        response.setCreatedAt(getOptionalTimestamp(resultSet, "created_at"));
 
         return response;
     }
@@ -219,6 +229,16 @@ public class SponsorServiceImpl
         try {
             resultSet.findColumn(columnName);
             return resultSet.getString(columnName);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private LocalDateTime getOptionalTimestamp(ResultSet resultSet, String columnName) {
+        try {
+            resultSet.findColumn(columnName);
+            java.sql.Timestamp timestamp = resultSet.getTimestamp(columnName);
+            return timestamp != null ? timestamp.toLocalDateTime() : null;
         } catch (Exception ex) {
             return null;
         }
@@ -264,6 +284,62 @@ public class SponsorServiceImpl
             return !active;
         }
         return true;
+    }
+
+    private List<SponsorResponseDto> filterSponsorsByCreatedMonth(List<SponsorResponseDto> sponsors, String createdMonth) {
+        java.time.YearMonth targetMonth = parseCreatedMonth(createdMonth);
+        if (targetMonth == null) {
+            return sponsors;
+        }
+
+        return sponsors.stream()
+            .filter(sponsor -> {
+                LocalDateTime createdAt = resolveCreatedAt(sponsor);
+                return createdAt != null && java.time.YearMonth.from(createdAt).equals(targetMonth);
+            })
+            .toList();
+    }
+
+    private java.time.YearMonth parseCreatedMonth(String createdMonth) {
+        if (createdMonth == null || createdMonth.trim().isEmpty()) {
+            return null;
+        }
+
+        String normalized = createdMonth.trim();
+        java.util.List<java.time.format.DateTimeFormatter> formatters = java.util.List.of(
+            java.time.format.DateTimeFormatter.ofPattern("MMM-yyyy", java.util.Locale.ENGLISH),
+            java.time.format.DateTimeFormatter.ofPattern("MMM yyyy", java.util.Locale.ENGLISH),
+            java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.ENGLISH),
+            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM", java.util.Locale.ENGLISH)
+        );
+
+        for (java.time.format.DateTimeFormatter formatter : formatters) {
+            try {
+                return java.time.YearMonth.parse(normalized, formatter);
+            } catch (Exception ignored) {
+                // try the next supported format
+            }
+        }
+
+        return null;
+    }
+
+    private LocalDateTime resolveCreatedAt(SponsorResponseDto sponsor) {
+        if (sponsor == null) {
+            return null;
+        }
+
+        try {
+            Method getter = sponsor.getClass().getMethod("getCreatedAt");
+            Object value = getter.invoke(sponsor);
+            if (value instanceof LocalDateTime localDateTime) {
+                return localDateTime;
+            }
+        } catch (Exception ignored) {
+            // Gracefully skip month filtering if the runtime DTO is older than the source.
+        }
+
+        return null;
     }
 
     private boolean contains(String value, String needle) {

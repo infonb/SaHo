@@ -10,7 +10,7 @@ public interface ISponsorService {
 
     void createOrUpdateSponsor(SponsorRequestDto request);
     SponsorResponseDto getSponsorById(Integer sponsorId);
-    SponsorListResponseDto getAllSponsors(
+    default SponsorListResponseDto getAllSponsors(
             Integer pageNumber,
             Integer pageSize,
             String search,
@@ -18,6 +18,27 @@ public interface ISponsorService {
             String nationality,
             String sortColumn,
             String sortDirection
+    ) {
+        return getAllSponsors(
+            pageNumber,
+            pageSize,
+            search,
+            sponsorType,
+            nationality,
+            sortColumn,
+            sortDirection,
+            null
+        );
+    }
+    SponsorListResponseDto getAllSponsors(
+            Integer pageNumber,
+            Integer pageSize,
+            String search,
+            String sponsorType,
+            String nationality,
+            String sortColumn,
+            String sortDirection,
+            String createdMonth
     );
     List<Integer> getSponsorIds(
             String search,

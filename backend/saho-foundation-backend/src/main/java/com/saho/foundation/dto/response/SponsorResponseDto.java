@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class SponsorResponseDto {
@@ -27,4 +28,5 @@ public class SponsorResponseDto {
     private String contrib;
     private String imageUrl;
     private Integer studentsCount;
+    private LocalDateTime createdAt;
 }

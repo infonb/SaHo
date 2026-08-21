@@ -15,5 +15,7 @@ public interface SchoolRepository extends JpaRepository<SchoolMaster, Integer>, 
 
     List<SchoolMaster> findByIsDeletedFalse();
 
+    List<SchoolMaster> findByIsDeletedFalseAndSchNameContainingIgnoreCase(String schName);
+
     Optional<SchoolMaster> findBySchNameIgnoreCase(String schName);
 }

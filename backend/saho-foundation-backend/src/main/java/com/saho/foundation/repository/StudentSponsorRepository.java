@@ -31,6 +31,8 @@ public interface StudentSponsorRepository extends JpaRepository<StudentSponsor, 
 
     List<StudentSponsor> findByStudentIdAndIsActiveTrue(Integer studentId);
 
+    List<StudentSponsor> findByStudentIdInAndIsActiveTrue(List<Integer> studentIds);
+
     List<StudentSponsor> findBySponsorIdAndIsActiveTrue(Integer sponsorId);
 
     List<StudentSponsor> findByIsActiveTrue();

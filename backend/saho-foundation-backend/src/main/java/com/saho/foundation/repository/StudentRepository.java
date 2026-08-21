@@ -31,9 +31,16 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
 
     List<Student> findByStudentIdInAndIsDeletedFalse(Collection<Integer> studentIds);
 
+    List<Student> findByIsDeletedFalseAndFirstNameContainingIgnoreCase(String firstName);
+
+
+    List<Student> findByIsDeletedFalseAndLastNameContainingIgnoreCase(String lastName);
+
     boolean existsByAadhaarNumberAndIsDeletedFalse(String aadhaarNumber);
 
     boolean existsByEmailIdIgnoreCaseAndIsDeletedFalse(String emailId);
+
+    long countByOrphanStatusAndIsDeletedFalse(String orphanStatus);
 
     @Procedure(procedureName = "createorupdatestudent_v2")
     void createOrUpdateStudentV2(

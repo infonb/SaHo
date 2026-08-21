@@ -1,5 +1,7 @@
 package com.saho.foundation.service.iservices;
 
+import com.saho.foundation.dto.StudentListResponseDto;
+import com.saho.foundation.dto.StudentDetailsResponseDto;
 import com.saho.foundation.dto.StudentRequestDto;
 import com.saho.foundation.dto.StudentPaginationResponseDto;
 import com.saho.foundation.dto.StudentAcademicResponseDto;
@@ -32,6 +34,73 @@ public interface StudentService {
             String sortDirection
     );
 
+    List<StudentListResponseDto> searchStudents(
+            String studentName,
+            String schoolName,
+            String districtName,
+            String stateName,
+            String gender,
+            String classId,
+            String orphanStatus,
+            boolean sponsored
+    );
+
+    default List<StudentListResponseDto> searchStudents(
+            String studentName,
+            String schoolName,
+            String gender,
+            String classId,
+            String orphanStatus,
+            boolean sponsored
+    ) {
+        return searchStudents(
+            studentName,
+            schoolName,
+            null,
+            null,
+            gender,
+            classId,
+            orphanStatus,
+            sponsored
+        );
+    }
+
+    List<StudentListResponseDto> searchStudentsBySponsorName(
+            String sponsorName,
+            String studentName,
+            String schoolName,
+            String districtName,
+            String stateName,
+            String gender,
+            String classId,
+            String orphanStatus,
+            boolean sponsored
+    );
+
+    default List<StudentListResponseDto> searchStudentsBySponsorName(
+            String sponsorName,
+            String studentName,
+            String schoolName,
+            String gender,
+            String classId,
+            String orphanStatus,
+            boolean sponsored
+    ) {
+        return searchStudentsBySponsorName(
+            sponsorName,
+            studentName,
+            schoolName,
+            null,
+            null,
+            gender,
+            classId,
+            orphanStatus,
+            sponsored
+        );
+    }
+
+    java.util.Optional<StudentDetailsResponseDto> getStudentDetailsByName(String studentName);
+
     byte[] exportStudentsExcel(
             String search,
             String gender,
@@ -59,6 +128,8 @@ public interface StudentService {
     StudentSiblingSearchResponseDto getStudentByAadhaarNumber(String aadhaarNumber);
 
     List<StudentSiblingInfoDto> getSiblingsByStudentId(Integer studentId);
+
+    long countStudentsByOrphanStatus(String orphanStatus);
 
     StudentResponseDto updateStudent(Integer studentId, StudentRequestDto requestDto);
 

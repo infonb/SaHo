@@ -210,6 +210,7 @@ export interface SponsorFilters {
   studentCount: string;
   studentCountMin: string;
   studentCountMax: string;
+  createdMonth?: string;
 }
 export interface VolunteerFilters {
   search: string;

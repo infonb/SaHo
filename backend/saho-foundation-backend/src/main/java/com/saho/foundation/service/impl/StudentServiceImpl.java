@@ -3,6 +3,7 @@ package com.saho.foundation.service.impl;
 import com.saho.foundation.dto.StudentAcademicRequestDto;
 import com.saho.foundation.dto.StudentAcademicResponseDto;
 import com.saho.foundation.dto.StudentListResponseDto;
+import com.saho.foundation.dto.StudentDetailsResponseDto;
 import com.saho.foundation.dto.StudentPaginationResponseDto;
 import com.saho.foundation.dto.StudentProfileResponseDto;
 import com.saho.foundation.dto.StudentRequestDto;
@@ -31,13 +32,17 @@ import com.saho.foundation.repository.ClassRepository;
 import com.saho.foundation.repository.GuardianRepository;
 import com.saho.foundation.repository.RelationshipRepository;
 import com.saho.foundation.repository.SchoolRepository;
+import com.saho.foundation.repository.SponsorRepository;
 import com.saho.foundation.repository.StudentAcademicRepository;
 import com.saho.foundation.repository.StudentMarksRepository;
 import com.saho.foundation.repository.StudentRepository;
+import com.saho.foundation.repository.StudentSponsorRepository;
 import com.saho.foundation.repository.UserRepository;
 import com.saho.foundation.service.iservices.StudentFamilyService;
 import com.saho.foundation.service.iservices.StudentService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -51,6 +56,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -67,10 +73,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StudentServiceImpl implements StudentService {
@@ -83,6 +91,8 @@ public class StudentServiceImpl implements StudentService {
     private final RelationshipRepository relationshipRepository;
     private final ClassRepository classRepository;
     private final SchoolRepository schoolRepository;
+    private final SponsorRepository sponsorRepository;
+    private final StudentSponsorRepository studentSponsorRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final StudentMarksRepository studentMarksRepository;
@@ -364,7 +374,6 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public StudentProfileResponseDto getStudentProfileByUserId(Integer userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
@@ -545,6 +554,140 @@ public class StudentServiceImpl implements StudentService {
         return mapAcademicResponse(studentId, academic);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<StudentListResponseDto> searchStudents(
+            String studentName,
+            String schoolName,
+            String districtName,
+            String stateName,
+            String gender,
+            String classId,
+            String orphanStatus,
+            boolean sponsored
+    ) {
+        return searchStudentsBySponsorName(
+                null,
+                studentName,
+                schoolName,
+                districtName,
+                stateName,
+                gender,
+                classId,
+                orphanStatus,
+                sponsored
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StudentListResponseDto> searchStudentsBySponsorName(
+            String sponsorName,
+            String studentName,
+            String schoolName,
+            String districtName,
+            String stateName,
+            String gender,
+            String classId,
+            String orphanStatus,
+            boolean sponsored
+    ) {
+        List<StudentListResponseDto> students = studentRepository.getAllStudentsWithPagination(
+                studentName,
+                1,
+                Integer.MAX_VALUE,
+                gender,
+                classId,
+                orphanStatus,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                "student_id",
+                "ASC"
+        );
+
+        String sponsorNeedle = StringUtils.hasText(sponsorName)
+                ? sponsorName.trim().toLowerCase(Locale.ROOT)
+                : null;
+
+        return students.stream()
+                .filter(student -> !StringUtils.hasText(schoolName)
+                        || (student.getSchName() != null && student.getSchName().toLowerCase(Locale.ROOT).contains(schoolName.trim().toLowerCase(Locale.ROOT))))
+                .filter(student -> !StringUtils.hasText(districtName)
+                        || (student.getDistName() != null && student.getDistName().toLowerCase(Locale.ROOT).contains(districtName.trim().toLowerCase(Locale.ROOT))))
+                .filter(student -> !StringUtils.hasText(stateName)
+                        || (student.getStName() != null && student.getStName().toLowerCase(Locale.ROOT).contains(stateName.trim().toLowerCase(Locale.ROOT))))
+                .filter(student -> !StringUtils.hasText(sponsorNeedle)
+                        || (student.getSponsorName() != null && student.getSponsorName().toLowerCase(Locale.ROOT).contains(sponsorNeedle)))
+                .filter(student -> !sponsored || StringUtils.hasText(student.getSponsorName()))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Optional<StudentDetailsResponseDto> getStudentDetailsByName(String studentName) {
+        if (!StringUtils.hasText(studentName)) {
+            return java.util.Optional.empty();
+        }
+
+        List<StudentListResponseDto> matches = studentRepository.getAllStudentsWithPagination(
+                studentName,
+                1,
+                1,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                "student_id",
+                "ASC"
+        );
+
+        if (matches.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+
+        StudentProfileResponseDto profile = getStudentById(matches.get(0).getStudentId());
+        if (profile == null) {
+            return java.util.Optional.empty();
+        }
+
+        return java.util.Optional.of(
+                StudentDetailsResponseDto.builder()
+                        .studentId(profile.getStudentId())
+                        .studentName(profile.getStudentName())
+                        .gender(profile.getGender())
+                        .dob(profile.getDob())
+                        .className(profile.getClassName())
+                        .schoolName(profile.getSchoolName())
+                        .guardianName(profile.getGuardianName())
+                        .phone(profile.getGuardianPhone() != null ? profile.getGuardianPhone() : profile.getPhoneNumber())
+                        .email(profile.getEmailId())
+                        .bloodGroup(profile.getBloodGroup())
+                        .religion(profile.getReligion())
+                        .caste(profile.getCasteName())
+                        .orphanStatus(profile.getOrphanStatus())
+                        .sponsor(null)
+                        .build()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countStudentsByOrphanStatus(String orphanStatus) {
+        if (orphanStatus == null || orphanStatus.isBlank()) {
+            return 0L;
+        }
+        return studentRepository.countByOrphanStatusAndIsDeletedFalse(orphanStatus);
+    }
+
     private StudentResponseDto mapToResponseDto(Student student) {
         Guardian guardian = student.getGuardian();
         StudentAcademic academic = resolveStudentAcademic(student.getStudentId()).orElse(null);
@@ -609,7 +752,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     private String buildStudentName(Student student) {
-        if (student == null) {
+         if (student == null) {
             return null;
         }
         return (student.getFirstName() != null ? student.getFirstName() : "")
