@@ -9778,6 +9778,30 @@ td {
   border-color: #e2e8f0;
 }
 
+.orphanStatusBadge.active {
+  color: #15803d;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.orphanStatusBadge.completed {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.orphanStatusBadge.transferred {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.orphanStatusBadge.dropped {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
 
 
 .student-table-section

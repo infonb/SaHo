@@ -221,6 +221,9 @@ export const getStudents = async ({
       mndl_name: s.mndlName ?? '',
       dist_name: s.distName ?? '',
       st_name: s.stName ?? '',
+      status: s.status ?? null,
+      admissionType: s.admissionType ?? null,
+      annualResult: s.annualResult ?? null,
     } as unknown as StudentView));
 
     const inferredTotal = Number(res.data?.total ?? res.data?.totalCount ?? (res.data?.students?.[0]?.totalCount ?? res.data?.students?.[0]?.total_count));

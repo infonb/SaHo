@@ -44,6 +44,10 @@ const orphanStatusClass = (value?: string | null) => {
       : "default";
 };
 const getSponsorDisplayName = (student: StudentView) => student.sponsorName ?? null;
+const academicStatusLabel = (value?: string | null) =>
+  value === '1' ? 'Active' : value === '2' ? 'Completed' : value === '3' ? 'Transferred' : value === '4' ? 'Dropped' : value || 'N/A';
+const academicStatusClass = (value?: string | null) =>
+  value === '3' ? 'transferred' : value === '4' ? 'dropped' : value === '2' ? 'completed' : 'active';
 
 export default function StudentListPage() {
   const [students, setStudents] = useState<StudentView[]>([]);
@@ -513,6 +517,20 @@ export default function StudentListPage() {
         >
           {orphanStatusLabel(s.orphan_status)}
         </span>
+      </div>,
+      <div className="orphanStatusCell">
+        <span className={`orphanStatusBadge ${academicStatusClass(s.status)}`}>
+          {academicStatusLabel(s.status)}
+        </span>
+      </div>,
+      <div>
+        {s.annualResult ? (
+          <span className={`orphanStatusBadge ${s.annualResult === 'PASS' ? 'completed' : 'dropped'}`}>
+            {s.annualResult}
+          </span>
+        ) : (
+          <span className="cellSubText">-</span>
+        )}
       </div>,
       <div>
         {s.sponsor_id ? (
@@ -1040,6 +1058,8 @@ export default function StudentListPage() {
               { key: 'school', label: 'SCHOOL', width: '235px' },
               { key: 'guardian', label: 'GUARDIAN', width: '210px' },
               { key: 'orphan', label: 'STATUS', width: '150px' },
+              { key: 'acadStatus', label: 'ACAD STATUS', width: '140px' },
+              { key: 'result', label: 'RESULT', width: '110px' },
               { key: 'sponsor', label: 'SPONSOR', width: '120px' },
               { key: 'actions', label: '', width: '100px' }
             ]}

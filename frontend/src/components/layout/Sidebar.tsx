@@ -28,6 +28,7 @@ const StudentsIcon = () => <LuGraduationCap size={18} />;
 const SponsorsIcon = () => <LuHandHeart size={18} />;
 const RemindersIcon = () => <LuBell size={18} />;
 const AdminIcon = () => <LuShieldCheck size={18} />;
+const StudentMarksIcon = () => <LuClipboardList size={18} />;
 
 type SidebarItem = {
   icon: JSX.Element;
@@ -83,6 +84,7 @@ export default function Sidebar({ open, onMobileNavigate }: { open: boolean; onM
     if (item.label === 'My Dashboard') return pathname.startsWith('/student/dashboard');
     if (item.label === 'Dashboard') return pathname === '/dashboard';
     if (item.label === 'Students') return pathname === '/view-students' || pathname.startsWith('/students');
+    if (item.label === 'Student Marks') return pathname === '/marks' || pathname.startsWith('/marks');
     return pathname === item.to || (item.to !== '/dashboard' && pathname.startsWith(`${item.to}/`));
   };
 
@@ -112,6 +114,7 @@ export default function Sidebar({ open, onMobileNavigate }: { open: boolean; onM
     : [
         { icon: <DashboardIcon />, label: 'Dashboard', to: '/dashboard' },
         { icon: <StudentsIcon />, label: 'Students', to: '/view-students' },
+        { icon: <StudentMarksIcon />, label: 'Student Marks', to: '/marks' },
         { icon: <SponsorsIcon />, label: 'Sponsors', to: '/sponsors' },
         { icon: <RemindersIcon />, label: 'Reminders', to: '/reminders' },
       ];

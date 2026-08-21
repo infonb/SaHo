@@ -17,6 +17,8 @@ import ToastContainer from './components/common/ToastContainer';
 import ViewEvents from './pages/Reminders/ViewEvents';
 import EventFormPage from './pages/Reminders/EventFormPage';
 import StudentDashboard from './pages/StudentDashboard/StudentDashboard';
+import StudentMarksPage from './pages/Marks/StudentMarksPage';
+import AddStudentMarksPage from './pages/Marks/AddStudentMarksPage';
 
 function isTokenValid(): boolean {
   const token = localStorage.getItem('saho_token');
@@ -79,6 +81,8 @@ export default function App() {
             <Route path="volunteers/add" element={<VolunteerFormPage />} />
             <Route path="volunteers/edit/:id" element={<VolunteerFormPage />} />
             <Route path="admins" element={<AdminsPage />} />
+            <Route path="marks" element={<StudentMarksPage />} />
+            <Route path="marks/add" element={<AddStudentMarksPage />} />
             <Route path="masters/:type" element={<MasterManagementPage />} />
           </Route>
           <Route path="student/dashboard" element={<StudentGuard><StudentLayout /></StudentGuard>}>

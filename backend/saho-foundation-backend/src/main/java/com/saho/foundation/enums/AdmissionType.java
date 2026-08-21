@@ -5,7 +5,8 @@ public enum AdmissionType {
     NEW("1", "New"),
     PROMOTED("2", "Promoted"),
     TRANSFER("3", "Transfer"),
-    READMISSION("4", "Readmission");
+    READMISSION("4", "Readmission"),
+    RETAINED("5", "Retained");
 
     private final String value;
     private final String label;
