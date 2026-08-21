@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 export type FilterOption = { value: string; label: string };
 
 export const csvValues = (value: string) =>
@@ -21,6 +23,7 @@ export default function MultiSelectFilter({
   openFilter,
   setOpenFilter,
   onChange,
+  disabled = false,
 }: {
   filterKey: string;
   label: string;
@@ -29,7 +32,9 @@ export default function MultiSelectFilter({
   openFilter: string | null;
   setOpenFilter: (value: string | null) => void;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }) {
+  const filterRef = useRef<HTMLDetailsElement>(null);
   const selected = csvValues(value);
   const selectedLabels = options
     .filter((option) => selected.includes(option.value))
@@ -40,17 +45,32 @@ export default function MultiSelectFilter({
       : selectedLabels.length === 1
         ? selectedLabels[0]
         : `${selectedLabels.length} selected`;
-  const isOpen = openFilter === filterKey;
+  const isOpen = !disabled && openFilter === filterKey;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (filterRef.current?.contains(event.target as Node)) return;
+      setOpenFilter(null);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isOpen, setOpenFilter]);
 
   return (
     <details
-      className={`multiSelectFilter${selected.length ? " hasValue" : ""}`}
+      ref={filterRef}
+      className={`multiSelectFilter${selected.length ? " hasValue" : ""}${disabled ? " isDisabled" : ""}`}
       open={isOpen}
     >
       <summary
         className="multiSelectTrigger"
+        aria-disabled={disabled}
         onClick={(event) => {
           event.preventDefault();
+          if (disabled) return;
           setOpenFilter(isOpen ? null : filterKey);
         }}
       >

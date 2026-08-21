@@ -28,14 +28,17 @@ public class StudentExportController {
             @RequestParam(required = false) String mndlId,
             @RequestParam(required = false) String vilId,
             @RequestParam(required = false) String schId,
+            @RequestParam(required = false) String academicYearId,
+            @RequestParam(required = false) String parentType,
+            @RequestParam(required = false) String parentOccupation,
             @RequestParam(defaultValue = "student_id") String sortColumn,
             @RequestParam(defaultValue = "DESC") String sortDirection,
             @RequestParam(required = false) String studentIds
     ) {
-        byte[] csv = studentService.exportStudentsCsv(search, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, sortColumn, sortDirection, studentIds);
+        byte[] excel = studentService.exportStudentsExcel(search, gender, classId, orphanStatus, stId, distId, mndlId, vilId, schId, academicYearId, parentType, parentOccupation, sortColumn, sortDirection, studentIds);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=students.csv")
-                .contentType(MediaType.parseMediaType("text/csv"))
-                .body(csv);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=students.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excel);
     }
 }

@@ -15,7 +15,6 @@ public interface GuardianRepository extends JpaRepository<Guardian, Integer> {
     void createOrUpdateGuardian(
             @Param("p_guardian_id") Integer guardianId,
             @Param("p_first_name") String firstName,
-            @Param("p_middle_name") String middleName,
             @Param("p_last_name") String lastName,
             @Param("p_phone_number") String phoneNumber,
             @Param("p_relationship_id") Integer relationshipId,
@@ -28,4 +27,6 @@ public interface GuardianRepository extends JpaRepository<Guardian, Integer> {
             String lastName,
             String phoneNumber
     );
+
+    Optional<Guardian> findByPhoneNumber(String phoneNumber);
 }

@@ -8,6 +8,8 @@ import PageHeader from '../../components/common/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import type { SponsorView } from '../../types';
+import { HiOutlineXMark } from 'react-icons/hi2';
+import { LuCamera, LuImage, LuUpload, LuUser } from 'react-icons/lu';
 
 type SponsorFormMode = 'create' | 'edit' | 'view';
 
@@ -53,6 +55,7 @@ const emailPattern = /^[^\s@]+@(gmail\.com|nichebit\.com)$/i;
 const phonePattern = /^\d{10}$/;
 const MIN_IMAGE_BYTES = 5 * 1024;
 const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
+const NAME_MAX_LENGTH = 15;
 
 const mapSponsorToForm = (sponsor: SponsorView): SponsorFormState => ({
   name: sponsor.sponsorName ?? '',
@@ -158,12 +161,15 @@ export default function SponsorFormPage() {
   const [form, setForm] = useState<SponsorFormState>(init);
   const [errors, setErrors] = useState<SponsorFormErrors>({});
   const [touchedFields, setTouchedFields] = useState<Set<keyof SponsorFormState>>(() => new Set());
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [loadingSponsor, setLoadingSponsor] = useState(false);
   const [saving, setSaving] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null);
+  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | Blob | null>(null);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [cropUrl, setCropUrl] = useState<string | null>(null);
   const [cropScale, setCropScale] = useState(1);
@@ -250,22 +256,17 @@ export default function SponsorFormPage() {
   const handleFieldBlur = (key: keyof SponsorFormState) => {
     if (isView) return;
     touchField(key);
-    const nextError = validateSponsorField(key, form);
-    setErrors((current) => {
-      const next = { ...current };
-      if (nextError) next[key] = nextError;
-      else delete next[key];
-      return next;
-    });
   };
 
   const fieldState = (key: keyof SponsorFormState) => {
     if (isView) return 'default' as const;
     const touched = touchedFields.has(key);
-    if (errors[key] && touched) return 'error' as const;
+    if (errors[key] && submitAttempted) return 'error' as const;
     if (!errors[key] && touched && String(form[key] ?? '').trim()) return 'success' as const;
     return 'default' as const;
   };
+
+  const showError = (key: keyof SponsorFormState) => submitAttempted ? errors[key] : undefined;
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -339,6 +340,7 @@ export default function SponsorFormPage() {
     }
 
     setUploadError(null);
+    setSelectedImageFile(file);
     if (form.image_url?.startsWith('blob:')) {
       try {
         URL.revokeObjectURL(form.image_url);
@@ -357,6 +359,7 @@ export default function SponsorFormPage() {
       URL.revokeObjectURL(capturedUrl);
       setCapturedUrl(null);
     }
+    setCapturedBlob(null);
     setUploadError(null);
     setCameraError(null);
     setCameraOpen(true);
@@ -368,14 +371,17 @@ export default function SponsorFormPage() {
       URL.revokeObjectURL(capturedUrl);
       setCapturedUrl(null);
     }
+    setCapturedBlob(null);
     setCameraOpen(false);
   };
 
   const useCapturedPhoto = () => {
     if (isView || !capturedUrl) return;
     setUploadError(null);
+    if (capturedBlob) setSelectedImageFile(capturedBlob);
     setField('image_url', capturedUrl);
     setCapturedUrl(null);
+    setCapturedBlob(null);
     setCameraOpen(false);
   };
 
@@ -385,6 +391,7 @@ export default function SponsorFormPage() {
       URL.revokeObjectURL(capturedUrl);
       setCapturedUrl(null);
     }
+    setCapturedBlob(null);
     setUploadError(null);
     setCameraError(null);
   };
@@ -400,6 +407,7 @@ export default function SponsorFormPage() {
       }
     }
     setField('image_url', '');
+    setSelectedImageFile(null);
   };
 
   const openCrop = () => {
@@ -476,6 +484,7 @@ export default function SponsorFormPage() {
             // ignore
           }
         }
+        setSelectedImageFile(blob);
         setField('image_url', URL.createObjectURL(blob));
         closeCrop();
       }, 'image/jpeg', 0.88);
@@ -520,6 +529,7 @@ export default function SponsorFormPage() {
 
     stopCamera();
     if (capturedUrl) URL.revokeObjectURL(capturedUrl);
+    setCapturedBlob(blob);
     setCapturedUrl(URL.createObjectURL(blob));
   };
 
@@ -527,6 +537,7 @@ export default function SponsorFormPage() {
     event.preventDefault();
     if (isView) return;
 
+    setSubmitAttempted(true);
     const nextErrors = validateSponsorForm(form);
     setErrors(nextErrors);
     setTouchedFields(new Set(formFieldKeys));
@@ -556,12 +567,12 @@ export default function SponsorFormPage() {
         await updateSponsor(Number(id), {
           ...payload,
           modified_by: user?.user_id ?? 1,
-        });
+        }, selectedImageFile ?? undefined);
       } else {
         await createSponsor({
           ...payload,
           created_by: user?.user_id ?? 1,
-        });
+        }, selectedImageFile ?? undefined);
       }
 
       toast(isEdit ? 'Sponsor updated.' : 'Sponsor added.', 'success');
@@ -585,16 +596,13 @@ export default function SponsorFormPage() {
   const sponsorLoading = loadingSponsor && (mode === 'edit' || mode === 'view');
 
   return (
-    <form className="studentWizardForm" onSubmit={handleSubmit} noValidate>
+    <form className="studentWizardForm sponsorWizardForm" onSubmit={handleSubmit} noValidate>
       <PageHeader
         title={pageTitle}
         subtitle={pageSubtitle}
         actions={
           <button type="button" className="studentWizardClose" onClick={() => nav('/sponsors')} aria-label="Close">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <HiOutlineXMark/>
           </button>
         }
       />
@@ -614,7 +622,8 @@ export default function SponsorFormPage() {
                 value={form.name}
                 onChange={(value) => setField('name', value)}
                 onBlur={() => handleFieldBlur('name')}
-                error={touchedFields.has('name') ? errors.name : undefined}
+                maxLength={NAME_MAX_LENGTH}
+                error={showError('name')}
                 state={fieldState('name')}
                 readOnly={isView}
               />
@@ -626,7 +635,7 @@ export default function SponsorFormPage() {
                 value={form.email}
                 onChange={(value) => setField('email', value)}
                 onBlur={() => handleFieldBlur('email')}
-                error={touchedFields.has('email') ? errors.email : undefined}
+                error={showError('email')}
                 state={fieldState('email')}
                 readOnly={isView}
               />
@@ -638,7 +647,7 @@ export default function SponsorFormPage() {
                 value={form.dob}
                 onChange={(value) => setField('dob', value)}
                 onBlur={() => handleFieldBlur('dob')}
-                error={touchedFields.has('dob') ? errors.dob : undefined}
+                error={showError('dob')}
                 state={fieldState('dob')}
                 readOnly={isView}
               />
@@ -649,7 +658,7 @@ export default function SponsorFormPage() {
                 value={form.ph_no}
                 onChange={(value) => setField('ph_no', value)}
                 onBlur={() => handleFieldBlur('ph_no')}
-                error={touchedFields.has('ph_no') ? errors.ph_no : undefined}
+                error={showError('ph_no')}
                 state={fieldState('ph_no')}
                 readOnly={isView}
                 numericOnly
@@ -663,7 +672,7 @@ export default function SponsorFormPage() {
                 onChange={(value) => setField('nationality', value)}
                 onBlur={() => handleFieldBlur('nationality')}
                 options={nationalityOptions}
-                error={touchedFields.has('nationality') ? errors.nationality : undefined}
+                error={showError('nationality')}
                 state={fieldState('nationality')}
                 readOnly={isView}
               />
@@ -674,7 +683,7 @@ export default function SponsorFormPage() {
                 value={form.contrib}
                 onChange={(value) => setField('contrib', value)}
                 onBlur={() => handleFieldBlur('contrib')}
-                error={touchedFields.has('contrib') ? errors.contrib : undefined}
+                error={showError('contrib')}
                 state={fieldState('contrib')}
                 readOnly={isView}
               />
@@ -686,7 +695,7 @@ export default function SponsorFormPage() {
                 onChange={(value) => setField('type', value as SponsorFormState['type'])}
                 onBlur={() => handleFieldBlur('type')}
                 options={['Individual', 'Organisation']}
-                error={touchedFields.has('type') ? errors.type : undefined}
+                error={showError('type')}
                 state={fieldState('type')}
                 readOnly={isView}
               />
@@ -739,10 +748,10 @@ export default function SponsorFormPage() {
                   <>
                     <div className="rowFlex studentModalUploadActions">
                       <Button type="button" variant="outline" onClick={openCamera}>
-                        Take Photo
+                        <PhotoCameraIcon /> Take Photo
                       </Button>
                       <label className="btn outline md" style={{ cursor: 'pointer' }}>
-                        Upload Photo
+                        <PhotoUploadIcon /> Upload Photo
                         <input
                           ref={fileInputRef}
                           accept="image/*"
@@ -911,22 +920,19 @@ function ValidationMessage({ id, message }: { id: string; message?: string }) {
 }
 
 function ProfileInfoIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="currentColor" />
-      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="currentColor" />
-    </svg>
-  );
+  return <LuUser size={20} />;
 }
 
+function PhotoCameraIcon() {
+  return <LuCamera size={20} />;
+}
 function PhotoImageIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M5 5.5h14A1.5 1.5 0 0 1 20.5 7v10A1.5 1.5 0 0 1 19 18.5H5A1.5 1.5 0 0 1 3.5 17V7A1.5 1.5 0 0 1 5 5.5Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="m5.5 16 4-4 3 3 2-2 4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15.5 10a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" fill="currentColor" />
-    </svg>
+    <LuImage size={20} />
   );
+}
+function PhotoUploadIcon() {
+  return <LuUpload size={20} />;
 }
 
 function SponsorField({
@@ -938,6 +944,7 @@ function SponsorField({
   onBlur,
   type = 'text',
   maxLength,
+  subText,
   error,
   readOnly = false,
   numericOnly = false,
@@ -951,6 +958,7 @@ function SponsorField({
   onBlur?: () => void;
   type?: string;
   maxLength?: number;
+  subText?: string;
   error?: string;
   readOnly?: boolean;
   numericOnly?: boolean;
@@ -970,33 +978,36 @@ function SponsorField({
 
   return (
     <div className={`field formField has-${state}`}>
-      {readOnly ? <span>{label.replace(/\*/g, '')}</span> : null}
-      <input
-        id={inputId}
-        data-field={fieldKey}
-        required={!readOnly && label.includes('*')}
-        readOnly={readOnly}
-        aria-label={!readOnly ? label.replace(/\*/g, '') : undefined}
-        aria-readonly={readOnly || undefined}
-        aria-invalid={state === 'error' || undefined}
-        aria-describedby={error ? messageId : undefined}
-        tabIndex={readOnly ? -1 : undefined}
-        maxLength={maxLength}
-        type={readOnly || numericOnly ? 'text' : type}
-        inputMode={numericOnly ? 'numeric' : undefined}
-        pattern={numericOnly ? '\\d*' : undefined}
-        className={readOnly ? 'input readonlyField' : 'input'}
-        placeholder={readOnly ? undefined : placeholder ?? label.replace(/\*/g, '')}
-        value={readOnly ? (value || '-') : value}
-        onChange={(event) => handleChange(event.target.value)}
-        onBlur={onBlur}
-      />
-      <ValidationMessage id={messageId} message={error} />
+      <label htmlFor={inputId}>{label.replace(/\*/g, '')}</label>
+      <div className="studentFieldControl">
+        <input
+          id={inputId}
+          data-field={fieldKey}
+          required={!readOnly && label.includes('*')}
+          readOnly={readOnly}
+          aria-label={!readOnly ? label.replace(/\*/g, '') : undefined}
+          aria-readonly={readOnly || undefined}
+          aria-invalid={state === 'error' || undefined}
+          aria-describedby={error || subText ? messageId : undefined}
+          tabIndex={readOnly ? -1 : undefined}
+          maxLength={maxLength}
+          type={readOnly || numericOnly ? 'text' : type}
+          inputMode={numericOnly ? 'numeric' : undefined}
+          pattern={numericOnly ? '\\d*' : undefined}
+          className={readOnly ? 'input readonlyField' : 'input'}
+          placeholder=""
+          value={readOnly ? (value || '-') : value}
+          onChange={(event) => handleChange(event.target.value)}
+          onBlur={onBlur}
+        />
+        <ValidationMessage id={messageId} message={error} />
+      </div>
+      {!error && subText ? <div id={messageId} className="formHelperText">{subText}</div> : null}
     </div>
   );
 }
 
-function SponsorSelect({
+export function SponsorSelect({
   fieldKey,
   label,
   placeholder,
@@ -1036,64 +1047,66 @@ function SponsorSelect({
 
   return (
     <div className={`field formField has-${state}`}>
-      {readOnly ? <span>{label.replace(/\*/g, '')}</span> : null}
-      {readOnly ? (
-        <input
-          id={inputId}
-          data-field={fieldKey}
-          className="input readonlyField"
-          value={value || '-'}
-          readOnly
-          aria-readonly="true"
-          tabIndex={-1}
-        />
-      ) : (
-        <details
-          ref={detailsRef}
-          className={`multiSelectFilter studentFormSelect sponsorFormSelect${value ? ' hasValue' : ''}`}
-        >
-          <summary
+      <label htmlFor={inputId}>{label.replace(/\*/g, '')}</label>
+      <div className="studentFieldControl">
+        {readOnly ? (
+          <input
             id={inputId}
             data-field={fieldKey}
-            className="multiSelectTrigger"
-            aria-label={label.replace(/\*/g, '')}
-            aria-invalid={state === 'error' || undefined}
-            aria-describedby={error ? messageId : undefined}
-            onClick={(event) => {
-              event.preventDefault();
-              const shouldOpen = !detailsRef.current?.open;
-              document.querySelectorAll<HTMLDetailsElement>('.sponsorFormSelect[open]').forEach((details) => {
-                if (details !== detailsRef.current) details.removeAttribute('open');
-              });
-              if (shouldOpen) detailsRef.current?.setAttribute('open', '');
-              else detailsRef.current?.removeAttribute('open');
-            }}
+            className="input readonlyField"
+            value={value || '-'}
+            readOnly
+            aria-readonly="true"
+            tabIndex={-1}
+          />
+        ) : (
+          <details
+            ref={detailsRef}
+            className={`multiSelectFilter studentFormSelect sponsorFormSelect${value ? ' hasValue' : ''}`}
           >
-            <span>{selectedLabel || placeholder || label.replace(/\*/g, '')}</span>
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </summary>
-          <div className="multiSelectMenu">
-            <div className="multiSelectOptions">
-              {options.map((option) => (
-                <button
-                  type="button"
-                  className={`multiSelectOption${value === option ? ' isSelected' : ''}`}
-                  key={option}
-                  onClick={() => {
-                    onChange(option);
-                    detailsRef.current?.removeAttribute('open');
-                  }}
-                >
-                  <span>{option}</span>
-                </button>
-              ))}
+            <summary
+              id={inputId}
+              data-field={fieldKey}
+              className="multiSelectTrigger"
+              aria-label={label.replace(/\*/g, '')}
+              aria-invalid={state === 'error' || undefined}
+              aria-describedby={error ? messageId : undefined}
+              onClick={(event) => {
+                event.preventDefault();
+                const shouldOpen = !detailsRef.current?.open;
+                document.querySelectorAll<HTMLDetailsElement>('.sponsorFormSelect[open]').forEach((details) => {
+                  if (details !== detailsRef.current) details.removeAttribute('open');
+                });
+                if (shouldOpen) detailsRef.current?.setAttribute('open', '');
+                else detailsRef.current?.removeAttribute('open');
+              }}
+            >
+              <span>{selectedLabel}</span>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </summary>
+            <div className="multiSelectMenu">
+              <div className="multiSelectOptions">
+                {options.map((option) => (
+                  <button
+                    type="button"
+                    className={`multiSelectOption${value === option ? ' isSelected' : ''}`}
+                    key={option}
+                    onClick={() => {
+                      onChange(option);
+                      detailsRef.current?.removeAttribute('open');
+                    }}
+                  >
+                    <span>{option}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        </details>
-      )}
-      <ValidationMessage id={messageId} message={error} />
+          </details>
+        )}
+        <ValidationMessage id={messageId} message={error} />
+      </div>
     </div>
   );
 }

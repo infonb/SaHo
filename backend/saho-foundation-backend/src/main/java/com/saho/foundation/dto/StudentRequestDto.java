@@ -12,7 +12,6 @@ import java.time.LocalDate;
 public class StudentRequestDto {
 
     private String firstName;
-    private String middleName;
     private String lastName;
     private String emailId;
     private LocalDate dob;
@@ -23,12 +22,22 @@ public class StudentRequestDto {
     private String bloodGroup;
     private Integer schId;
     private Integer classId;
+    private Integer academicYearId;
+    private Integer familyId;
+    private Integer guardianId;
+    private String fatherName;
+    private String fatherOccupation;
+    private String fatherStatus;
+    private String motherName;
+    private String motherOccupation;
+    private String motherStatus;
     private String orphanStatus;
     private String imageUrl;
     private Boolean isDeleted;
     private Integer createdBy;
     private Boolean hasSibling;
     private String siblingIds;
+    private StudentAcademicRequestDto academicDetails;
     private GuardianRequestDto guardian;
 
     @Data
@@ -36,7 +45,6 @@ public class StudentRequestDto {
     @AllArgsConstructor
     public static class GuardianRequestDto {
         private String firstName;
-        private String middleName;
         private String lastName;
         private String phoneNumber;
         private Integer relationshipId;

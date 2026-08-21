@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
 import Button from '../../components/common/Button';
+import { FiPlus } from 'react-icons/fi';
 
 export default function RemindersPage() {
   return (
@@ -10,7 +11,10 @@ export default function RemindersPage() {
         subtitle="Manage events and student reminders"
         actions={
           <Link to="/reminders/create">
-            <Button size="sm">Create Event</Button>
+            <Button size="sm">
+              <FiPlus size={18} />
+              &nbsp;Create Event
+            </Button>
           </Link>
         }
       />

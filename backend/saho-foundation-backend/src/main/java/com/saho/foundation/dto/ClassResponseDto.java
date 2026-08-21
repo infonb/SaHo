@@ -13,4 +13,5 @@ public class ClassResponseDto {
 
     private Integer classId;
     private String className;
+    private Integer classOrder;
 }

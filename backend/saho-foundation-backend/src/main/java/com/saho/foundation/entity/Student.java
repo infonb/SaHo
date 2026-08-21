@@ -22,9 +22,6 @@ public class Student {
     @Column(name = "first_name", nullable = false, length = 20)
     private String firstName;
 
-    @Column(name = "middle_name", length = 20)
-    private String middleName;
-
     @Column(name = "last_name", nullable = false, length = 20)
     private String lastName;
 
@@ -49,11 +46,9 @@ public class Student {
     @Column(name = "blood_group", length = 5)
     private String bloodGroup;
 
-    @Column(name = "sch_id", nullable = false)
-    private Integer schId;
-
-    @Column(name = "class_id", nullable = false)
-    private Integer classId;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "family_id", nullable = false)
+    private StudentFamily family;
 
     // Stores sibling student ids as CSV like "2,3,5". If no siblings, it stays null.
     @Column(name = "sibling_id")

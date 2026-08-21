@@ -16,7 +16,6 @@ public class StudentResponseDto {
 
     private Integer studentId;
     private String firstName;
-    private String middleName;
     private String lastName;
     private String emailId;
     private LocalDate dob;
@@ -25,10 +24,35 @@ public class StudentResponseDto {
     private Integer casteId;
     private String religion;
     private String bloodGroup;
+    private Integer studentAcademicId;
     private Integer schId;
     private Integer classId;
+    private Integer academicYearId;
+    private String academicYearName;
+    private Integer schoolId;
+    private String schoolName;
+    private String rollNumber;
+    private String admissionType;
+    private String status;
+    private String remarks;
+    private Boolean academicIsActive;
+    private Boolean academicIsDeleted;
+    private LocalDateTime academicCreatedAt;
+    private Integer academicCreatedBy;
+    private LocalDateTime academicUpdatedAt;
+    private Integer academicUpdatedBy;
+    private Integer familyId;
+    private String fatherName;
+    private String fatherOccupation;
+    private String fatherStatus;
+    private String motherName;
+    private String motherOccupation;
+    private String motherStatus;
     private String siblingId;
     private Integer guardianId;
+    private String guardianName;
+    private String guardianPhone;
+    private String relationshipName;
     private String orphanStatus;
     private String imageUrl;
     private Boolean isDeleted;
@@ -36,6 +60,7 @@ public class StudentResponseDto {
     private Integer createdBy;
     private LocalDateTime modifiedAt;
     private Integer modifiedBy;
+    private StudentAcademicResponseDto academicDetails;
     private GuardianDto guardian;
 
     @Data
@@ -45,7 +70,6 @@ public class StudentResponseDto {
     public static class GuardianDto {
         private Integer guardianId;
         private String firstName;
-        private String middleName;
         private String lastName;
         private String phoneNumber;
         private Integer relationshipId;

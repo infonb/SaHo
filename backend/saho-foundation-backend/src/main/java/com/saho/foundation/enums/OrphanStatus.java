@@ -39,4 +39,13 @@ public enum OrphanStatus {
         }
         return null;
     }
+
+    public static OrphanStatus fromLabel(String label) {
+        for (OrphanStatus orphanStatus : values()) {
+            if (orphanStatus.label.equalsIgnoreCase(label)) {
+                return orphanStatus;
+            }
+        }
+        return null;
+    }
 }

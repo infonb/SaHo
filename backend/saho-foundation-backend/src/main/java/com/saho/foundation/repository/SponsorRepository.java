@@ -4,15 +4,27 @@ import com.saho.foundation.entity.Sponsor;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Repository
 public interface SponsorRepository extends JpaRepository<Sponsor, Integer> {
+
+    Sponsor findTopByEmailOrderBySponsorIdDesc(String email);
+
+    @Modifying
+    @Transactional
+    @Query("update Sponsor s set s.imageUrl = :imageUrl where s.sponsorId = :sponsorId")
+    void updateImageUrl(@Param("sponsorId") Integer sponsorId, @Param("imageUrl") String imageUrl);
+
+    Optional<Sponsor> findBySponsorNameIgnoreCase(String sponsorName);
 
     @Transactional
     @Procedure(procedureName = "createorupdatesponsor")

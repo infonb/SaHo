@@ -43,4 +43,13 @@ public enum Religion {
         }
         return null;
     }
+
+    public static Religion fromLabel(String label) {
+        for (Religion religion : values()) {
+            if (religion.label.equalsIgnoreCase(label)) {
+                return religion;
+            }
+        }
+        return null;
+    }
 }

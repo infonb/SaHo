@@ -20,36 +20,19 @@
   justify-content: flex-start;
 }
 
-.sponsor-list-page th .sortArrow {
-  width: 14px;
-  height: 14px;
-  position: relative;
+.sponsor-list-page th .sortIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
   color: #94a3b8;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1;
-  font-weight: 900;
+  transition: color 0.15s ease;
 }
 
-.sponsor-list-page th .sortArrow.inactive::before {
-  content: "\2195";
-}
-
-.sponsor-list-page th .sortArrow.asc::before {
-  content: "\2191";
-  color: #0f766e;
-}
-
-.sponsor-list-page th .sortArrow.desc::before {
-  content: "\2193";
-  color: #0f766e;
-}
-
-.sponsor-list-page th .sortArrow::after {
-  content: none;
+.sponsor-list-page th .sortableHeader:hover .sortIcon {
+  color: #64748b;
 }
 
 .sponsorTypeBadge {
@@ -67,15 +50,15 @@
 }
 
 .sponsorTypeBadge.individual {
-  color: #0f8b8d;
-  background: #dff8fb;
+  color: #0284C7;
+  background: #F8FCFF;
   border: 1px solid #c5eef3;
 }
 
 .sponsorTypeBadge.organisation {
-  color: #b7791f;
+ color: #b76227;
   background: #fff7dc;
-  border: 1px solid #fdecc0;
+  border-color: #fdecc0;
 }
 
 .sponsorMetaLine {
@@ -194,4 +177,351 @@
   width: 90px;
   min-width: 90px;
   max-width: 90px;
+}
+
+.sponsor-list-page .sponsorTableOuter {
+  padding: 14px;
+}
+
+.sponsor-list-page .studentRecordsPanel.sponsorRecordsPanel {
+  overflow: hidden;
+}
+
+.sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 0;
+  max-width: 100%;
+  overflow: visible;
+  padding: 0;
+}
+
+.sponsor-list-page .sponsorCardsOuter {
+  padding: 14px;
+}
+
+.sponsor-list-page .sponsorRecordCard {
+  min-height: 148px;
+  padding: 22px 20px 18px;
+  gap: 12px;
+  grid-template-rows: 62px auto;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorCardTop {
+  align-items: start;
+  gap: 8px;
+  padding-right: 0;
+  padding-bottom: 0;
+  grid-template-columns: 36px minmax(0, 1fr);
+}
+
+.sponsor-list-page .sponsorRecordCard .avatar,
+.sponsor-list-page .sponsorRecordCard [class*="avatar"] {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  font-size: 14px;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorCardIdentity {
+  padding-top: 0;
+  gap: 2px;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorCardIdentity .sponsorNameCell {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  line-height: 1.18;
+  font-weight: 900;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorPhone {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorMetaLine {
+  display: flex;
+  align-items: center;
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  gap: 4px;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  flex-wrap: nowrap;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorMetaLine > span:last-child {
+  min-width: auto;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorTypeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-height: 18px;
+  height: 18px;
+  padding: 2px 7px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorNationalityBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-height: 18px;
+  height: 18px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #334155;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.sponsor-list-page .sponsorMetricsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: 10px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 10px;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorCardMetric,
+.sponsor-list-page .sponsorRecordCard .sponsorCountCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(84px, auto);
+  align-items: center;
+  gap: 10px;
+  min-height: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorCardMetric span,
+.sponsor-list-page .sponsorRecordCard .sponsorCountCard span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorCountCard {
+  text-align: left;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorCardMetric strong {
+  display: block;
+  min-height: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #182033;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: right;
+}
+
+.sponsor-list-page .sponsorRecordCard .sponsorCountCard strong {
+  display: block;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
+  justify-self: end;
+}
+
+.sponsor-list-page .sponsorRecordCard .actions.student-actions {
+  top: 14px;
+  right: 12px;
+}
+
+@media (max-width: 1400px) {
+  .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .sponsor-list-page .sponsorRecordsPanel .sponsorCardGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .sponsor-list-page .sponsorRecordCard {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 18px 16px 16px;
+    grid-template-rows: auto;
+    overflow: hidden;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardTop {
+    box-sizing: border-box;
+    padding-right: 70px;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardTop,
+  .sponsor-list-page .sponsorRecordCard .sponsorCardIdentity,
+  .sponsor-list-page .sponsorMetricsGrid,
+  .sponsor-list-page .sponsorRecordCard .sponsorCardMetric,
+  .sponsor-list-page .sponsorRecordCard .sponsorCountCard {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorMetaLine {
+    flex-wrap: wrap;
+    white-space: normal;
+    overflow: hidden;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardMetric,
+  .sponsor-list-page .sponsorRecordCard .sponsorCountCard {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardMetric span,
+  .sponsor-list-page .sponsorRecordCard .sponsorCountCard span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardMetric strong,
+  .sponsor-list-page .sponsorRecordCard .sponsorCountCard strong {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .actions.student-actions {
+    position: absolute;
+    top: 18px;
+    right: 16px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .sponsor-list-page .sponsorRecordCard {
+    padding: 16px 14px 14px;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardTop {
+    gap: 7px;
+    padding-right: 64px;
+  }
+
+  .sponsor-list-page .sponsorRecordCard .sponsorCardMetric,
+  .sponsor-list-page .sponsorRecordCard .sponsorCountCard {
+    gap: 8px;
+  }
+}
+.assignSponsorButtonIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  filter: brightness(0) invert(1);
+}
+
+.btnGreen:hover .assignSponsorButtonIcon {
+  filter: invert(28%) sepia(17%) saturate(1628%) hue-rotate(88deg) brightness(91%) contrast(88%);
+}
+
+.custom-range-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+
+.custom-range-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.custom-range-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text2, #475569);
+  white-space: nowrap;
+}
+
+.custom-range-input {
+  width: 70px;
+  box-sizing: border-box;
+}
+
+.custom-range-input:focus {
+  outline: none;
+}
+
+.custom-range-input::placeholder {
+  color: #94a3b8;
 }

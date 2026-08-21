@@ -9,6 +9,7 @@
   grid-template-columns: minmax(0, 1fr) 360px;
   gap: 16px;
   align-items: start;
+  padding-top: 20px;
 }
 
 .assign-page .assignStack {
@@ -16,34 +17,6 @@
   gap: 16px;
   min-width: 0;
 }
-
-@media (min-width: 1101px) {
-  .assign-page .assignStack {
-    max-height: calc(100vh - var(--topbar-h) - 120px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    padding-right: 6px;
-  }
-
-  .assign-page .assignStack::-webkit-scrollbar {
-    width: 7px;
-  }
-
-  .assign-page .assignStack::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .assign-page .assignStack::-webkit-scrollbar-thumb {
-    background: rgba(100, 116, 139, 0.45);
-    border-radius: 999px;
-  }
-
-  .assign-page .assignStack::-webkit-scrollbar-thumb:hover {
-    background: rgba(71, 85, 105, 0.7);
-  }
-}
-
 /* --- Selection Bar --- */
 .assign-page .between {
   display: flex;
@@ -63,23 +36,20 @@
 .assign-page .sponsorRecordsPanel .tableWrap table {
   table-layout: fixed;
   width: 100%;
+  min-width: 0;
 }
 
 /* ID column: checkbox + ID, left-aligned */
 .assign-page .sponsorRecordsPanel th:nth-child(1),
 .assign-page .sponsorRecordsPanel td:nth-child(1) {
-  width: 92px !important;
-  min-width: 92px !important;
-  max-width: 92px !important;
+  width: 10%;
   text-align: left !important;
 }
 
 /* Sponsor column: left-aligned */
 .assign-page .sponsorRecordsPanel th:nth-child(2),
 .assign-page .sponsorRecordsPanel td:nth-child(2) {
-  width: 420px !important;
-  min-width: 420px !important;
-  max-width: 420px !important;
+  width: 44%;
   text-align: left !important;
 }
 .assign-page .sponsorRecordsPanel td:nth-child(2) .rowFlex.sponsorCell {
@@ -105,27 +75,21 @@
 /* Type column: center-aligned */
 .assign-page .sponsorRecordsPanel th:nth-child(3),
 .assign-page .sponsorRecordsPanel td:nth-child(3) {
-  width: 140px !important;
-  min-width: 140px !important;
-  max-width: 140px !important;
+  width: 15%;
   text-align: center !important;
 }
 
 /* Contribution column: left-aligned */
 .assign-page .sponsorRecordsPanel th:nth-child(4),
 .assign-page .sponsorRecordsPanel td:nth-child(4) {
-  width: 180px !important;
-  min-width: 180px !important;
-  max-width: 180px !important;
+  width: 18%;
   text-align: left !important;
 }
 
 /* Students Sponsored column: left-aligned */
 .assign-page .sponsorRecordsPanel th:nth-child(5),
 .assign-page .sponsorRecordsPanel td:nth-child(5) {
-  width: 180px !important;
-  min-width: 180px !important;
-  max-width: 180px !important;
+  width: 13%;
   text-align: left !important;
 }
 
@@ -253,10 +217,19 @@
 /* --- Summary Panel --- */
 .assign-summary-sticky {
   position: sticky;
-  top: 88px;
+  top: 112px;
   align-self: start;
   height: fit-content;
   z-index: 2;
+}
+
+.assign-page > .pageHeader {
+  position: sticky;
+  top: var(--topbar-h, 60px);
+  margin-top: -50px;
+  z-index: 4;
+  background: var(--color-bg);
+  padding: 20px 0 10px;
 }
 
 .assign-summary-panel {
@@ -326,7 +299,7 @@
   max-height: 300px;
   overflow-y: auto;
   display: grid;
-  gap: 8px;
+  gap: 2px;
   padding-right: 4px;
   scrollbar-width: thin;
   scrollbar-color: rgba(100, 116, 139, 0.55) transparent;
@@ -353,7 +326,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px;
+  padding: 3px 10px;
   border-radius: 8px;
   transition: background 0.15s;
 }
@@ -361,9 +334,9 @@
 .assignSelectedStudentRow:hover {
   background: var(--color-bg);
 }
-.assignSelectedStudentRow:not(:last-child) {
+/* .assignSelectedStudentRow:not(:last-child) {
   border-bottom: 2px solid #e2e8f0;
-}
+} */
 .assignSummaryStudentId {
   flex: 0 0 auto;
   font-weight: 600;
@@ -376,15 +349,15 @@
 .assignSummaryStudentName {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* overflow: hidden;
+  text-overflow: ellipsis; */
   white-space: nowrap;
   font-weight: 800;
   font-size: 13px;
   color: var(--color-text);
 }
 
-.assignSummaryRemoveBtn {
+/* .assignSummaryRemoveBtn {
   flex: 0 0 28px;
   width: 28px;
   height: 28px;
@@ -397,16 +370,16 @@
   cursor: pointer;
   transition: all 0.15s;
   padding: 0;
-}
+} */
 
-.assignSummaryRemoveBtn:hover {
+/* .assignSummaryRemoveBtn:hover {
   background: var(--red-bg);
   color: var(--red);
 }
 
 .assignSummaryRemoveBtn svg {
   display: block;
-}
+} */
 
 .assignSummaryToast {
   margin-top: 12px;
@@ -420,17 +393,19 @@
 /* --- Student Table Column Overrides (assign-specific columns) --- */
 .assign-page .student-table-section th:nth-child(1),
 .assign-page .student-table-section td:nth-child(1) {
-  width: 92px !important;
-  min-width: 92px !important;
-  max-width: 92px !important;
+  /* width: 92px !important; */
+  /* min-width: 92px !important;
+  max-width: 92px !important; */
   text-align: left !important;
 }
 
 .assign-page .student-table-section th:nth-child(2),
 .assign-page .student-table-section td:nth-child(2) {
-  width: 260px !important;
-  min-width: 260px !important;
-  max-width: 260px !important;
+  width:200px !important;
+  /* text-align: left !important; */
+
+  /* min-width: 260px !important;
+  max-width: 260px !important; */
 }
 
 .assign-page .student-table-section th:nth-child(3),
@@ -443,9 +418,9 @@
 .assign-page .student-table-section th:nth-child(4),
 .assign-page .student-table-section td:nth-child(4) {
   width: 235px !important;
-  min-width: 235px !important;
-  max-width: 235px !important;
-  text-align: left !important;
+  /* min-width: 235px !important;
+  max-width: 235px !important; */
+  /* text-align: left !important; */
 }
 
 .assign-page .student-table-section th:nth-child(5),
@@ -459,7 +434,7 @@
 .assign-page .student-table-section th:nth-child(6),
 .assign-page .student-table-section td:nth-child(6) {
   width: 120px !important;
-  min-width: 120px !important;
+  min-width:80px !important;
   max-width: 120px !important;
   text-align: center !important;
 }

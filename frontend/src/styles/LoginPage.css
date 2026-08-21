@@ -1,0 +1,333 @@
+/* ==========================================================================
+   Login Page
+   Two-column card with welcome panel and login form
+   ========================================================================== */
+
+.loginShell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #F8F6F2;
+}
+
+/* --- Card --- */
+.loginCard {
+  width: min(1024px, 100%);
+  display: flex;
+ 
+  overflow: hidden;
+  /* box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12), 0 8px 24px rgba(15, 23, 42, 0.06); */
+  background: #FFFFFF;
+  
+  min-height: 250px;
+  border-radius: 22px !important;
+}
+
+/* --- Left Welcome Panel --- */
+.loginLeft {
+  
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+  background: linear-gradient(160deg, #152033 0%, #0f766e 120%);
+  /* background: linear-gradient(135deg, #0F3137 0%, #0F766E 50%, #115E59 100%); */
+  /* background-color: #F0FAF0 !important; */
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+
+}
+
+.loginLeft::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* background: radial-gradient(ellipse at 20% 80%, rgba(255, 255, 255, 0.06) 0%, transparent 60%); */
+  /* background-color: #F0FAF0 !important; */
+  background: linear-gradient(160deg, #152033 0%, #0f766e 120%);
+}
+
+.loginLeftText {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  /* align-items: center; */
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+  max-width: 380px;
+   color: #ffffff !important;
+}
+
+.loginLeftText h2 {
+  /* font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif); */
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0;
+  text-align: left;
+  /* color: #111827; */
+}
+
+.loginLeftText p {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  margin: 0;
+  opacity: 0.85;
+  text-align: left;
+  /* color: #111827; */
+}
+
+/* --- Right Form Panel --- */
+.loginRight {
+   display: flex;
+  flex: 1;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  padding: 32px 44px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* --- Role Toggle --- */
+.segmentedControl {
+  display: inline-flex;
+  margin-left: auto;
+  margin-bottom: 32px;
+  background: #d5f8ea;
+  border-radius: 50px;
+  padding: 4px;
+}
+
+.segOption {
+  padding: 7px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.segOption:hover {
+  color: #0F766E;
+}
+
+.segOption.active {
+  background: #FFFFFF;
+  color: #0F766E;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Welcome Heading --- */
+.loginRight h1 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 24px;
+  color: #111827;
+}
+
+/* --- Form Fields --- */
+.loginRight .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.loginRight label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.loginRight .input {
+  height: 50px;
+  border-radius: 12px;
+  border: 1.5px solid #E5E7EB;
+  background: #FFFFFF;
+  padding: 0 16px;
+  font-size: 15px;
+  color: #111827;
+  width: 100%;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+}
+
+.loginRight .input::placeholder {
+  color: #9CA3AF;
+  font-size: 14px;
+}
+
+.loginRight .input:focus {
+  border-color: #0F766E;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+/* --- Sign In Button (login-specific sizing; shared styles come from .btnGreen) --- */
+.loginSignInBtn {
+  width: 140px !important;
+  height: 42px !important;
+  min-width: 0 !important;
+  font-size: 12px !important;
+  border-radius: 999px !important;
+  padding: 0 !important;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+.btnGreen.loginSignInBtn {
+  border-radius: 999px !important;
+  
+}
+
+.loginSignInBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.loginSignInBtn .spinner {
+  border-color: #ffffff;
+  border-right-color: transparent;
+  flex-shrink: 0;
+}
+
+.loginSignInBtn .spinnerHidden {
+  visibility: hidden;
+  flex-shrink: 0;
+}
+
+/* --- Error Container (fixed height to prevent layout shift) --- */
+.errorContainer {
+  min-height: 44px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.errorMessage {
+  width: 100%;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* --- Password Field with Toggle --- */
+.passwordField {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInput {
+  padding-right: 40px !important;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9CA3AF;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  line-height: 0;
+}
+
+.passwordToggle:hover {
+  color: #374151;
+}
+
+/* --- Password Hint --- */
+.passwordHint {
+  font-size: 12px;
+  color: #6B7280;
+  margin: 4px 0 0;
+  line-height: 1.5;
+  min-height: 22px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  .loginCard {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .loginLeft,
+  .loginRight {
+    flex: none;
+    width: 100%;
+  }
+
+  .loginLeft {
+    padding: 36px 28px;
+    min-height: 240px;
+  }
+
+  .loginLeftText h2 {
+    font-size: 26px;
+  }
+
+  .loginLeftText p {
+    font-size: 15px;
+  }
+
+  .loginRight {
+    padding: 32px 28px;
+  }
+}
+
+@media (max-width: 520px) {
+  .loginShell {
+    padding: 16px;
+  }
+
+  .loginLeft {
+    padding: 28px 20px;
+    min-height: 200px;
+  }
+
+  .loginRight {
+    padding: 24px 20px;
+  }
+
+  .loginRight h1 {
+    font-size: 20px;
+  }
+
+  .loginLeftText h2 {
+    font-size: 22px;
+  }
+
+  .loginLeftText p {
+    font-size: 14px;
+  }
+
+  .loginRight .input {
+    height: 48px;
+    font-size: 14px;
+  }
+
+  .loginSignInBtn {
+    height: 48px !important;
+    font-size: 14px !important;
+  }
+}

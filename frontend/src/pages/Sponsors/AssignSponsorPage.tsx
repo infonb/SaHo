@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSponsors } from '../../api/sponsorApi';
-import { getStudents } from '../../api/studentApi';
+import { getStudentIds, getStudents } from '../../api/studentApi';
 import { assignSponsor } from '../../api/studentSponsorApi';
 import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
@@ -20,6 +20,9 @@ import type { SponsorView, StudentView } from '../../types';
 import closeIcon from "../../assets/clera cross favicon.png"
 import arrowIcon from "../../assets/Go arrow favicon.png"
 import "../../styles/Sponsors/AssignSponsorPage.css";
+import { HiOutlineArrowLeft, HiOutlineXMark } from 'react-icons/hi2';
+import { FiArrowRight } from 'react-icons/fi';
+import { LuSearch } from 'react-icons/lu';
 
 const contribution = (value?: string | null) => {
   if (!value) return '-';
@@ -60,6 +63,7 @@ export default function AssignSponsorPage() {
   const [sponsorSearch, setSponsorSearch] = useState('');
   const [sponsorType, setSponsorType] = useState('');
   const [checkedStudents, setCheckedStudents] = useState<number[]>([]);
+  const [globalSelection, setGlobalSelection] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [openFilter, setOpenFilter] = useState<string | null>(null);
@@ -176,7 +180,6 @@ export default function AssignSponsorPage() {
     { value: 'Individual', label: 'Individual' },
     { value: 'Organisation', label: 'Organisation' }
   ];
-
   const genderOptions: FilterOption[] = [
     { value: 'Male', label: 'Male' },
     { value: 'Female', label: 'Female' }
@@ -218,20 +221,40 @@ export default function AssignSponsorPage() {
   const showVillageFilter = csvValues(pending.mndl_id).length > 0;
   const showSchoolFilter = csvValues(pending.vil_id).length > 0;
 
+  const pageIds = pageStudents.map(s => s.student_id);
+  const allSelected = globalSelection || checkedStudents.length >= total;
+  const allPageChecked = allSelected || (pageIds.length > 0 && pageIds.every(id => checkedStudents.includes(id)));
+  const showSelectAllLink = allPageChecked && !allSelected;
+
   const toggleStudent = (id: number) => {
-    setCheckedStudents(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+    if (globalSelection) {
+      setGlobalSelection(false);
+      setCheckedStudents(prev => prev.filter(x => x !== id));
+    } else {
+      setCheckedStudents(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+    }
   };
 
-  const pageIds = pageStudents.map(s => s.student_id);
-  const allPageChecked = pageIds.length > 0 && pageIds.every(id => checkedStudents.includes(id));
-
   const togglePage = () => {
-    const pageIds = pageStudents.map(s => s.student_id);
-    const allChecked = pageIds.length > 0 && pageIds.every(id => checkedStudents.includes(id));
+    if (allSelected) {
+      setCheckedStudents([]);
+      setGlobalSelection(false);
+    } else if (allPageChecked) {
+      setCheckedStudents(ids => ids.filter(id => !pageIds.includes(id)));
+    } else {
+      setCheckedStudents(ids => [...new Set([...ids, ...pageIds])]);
+    }
+  };
 
-    setCheckedStudents(ids =>
-      allChecked ? ids.filter(id => !pageIds.includes(id)) : [...new Set([...ids, ...pageIds])]
-    );
+  const selectAllMatchingStudents = async () => {
+    try {
+      const ids = await getStudentIds(applied);
+      setCheckedStudents(ids);
+      setGlobalSelection(true);
+      toast(`All ${ids.length} students matching this search are selected.`, "success");
+    } catch {
+      toast("Failed to select all students.", "error");
+    }
   };
 
   const selectedStudentsPreview = useMemo(() => {
@@ -322,6 +345,7 @@ export default function AssignSponsorPage() {
       toast('Sponsor assigned successfully.', 'success');
       setConfirmOpen(false);
       setCheckedStudents([]);
+      setGlobalSelection(false);
       setSelectedSponsor(null);
       loadSponsors();
       loadStudents(page, pageSize);
@@ -334,9 +358,9 @@ export default function AssignSponsorPage() {
     <div className="assign-page">
       <PageHeader
         title="Assign Sponsor to Students"
-        actions={<Button variant="outline" className="clearbtn" onClick={() => nav(-1)}>Back</Button>}
+        actions={<Button variant="outline" className="clearbtn" onClick={() => nav(-1)}>  <HiOutlineArrowLeft size={15} style={{ marginRight: "6px" }} />Back</Button>}
       />
-
+      
       <div className="assignGrid">
         <div className="assignStack">
           <div className="student-table-section sponsorRecordsPanel sponsorTableSection">
@@ -355,10 +379,11 @@ export default function AssignSponsorPage() {
                   />
                 </div>
                 <div className="filter-search-wrapper" style={{ width: 320 }}>
-                  <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {/* <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <path d="M21 21l-4.35-4.35"></path>
-                  </svg>
+                  </svg> */}
+                  <LuSearch className="search-icon" size={18} />
                   <input
                     className="filter-search-input"
                     placeholder="Search sponsors..."
@@ -373,13 +398,13 @@ export default function AssignSponsorPage() {
                 loading={loading}
                 columns={[
                   
-                  { key: 'id', label: (<div className="idSelectCell header"><div style={{ width: '13px', height: '13px' }} aria-hidden="true" /><span>ID</span></div>), width: '92px' },
+                  { key: 'id', label: (<div className="idSelectCell header"><div style={{ width: '13px', height: '13px' }} aria-hidden="true" /><span>ID</span></div>)},
                     
 
-                  { key: 's', label: 'Sponsor', width: '420px' },
-                  { key: 't', label: 'Type', width: '140px' },
-                  { key: 'c', label: 'Contribution', width: '180px' },
-                  { key: 'st', label: 'Students Sponsored', width: '180px' }
+                  { key: 's', label: 'Sponsor' },
+                  { key: 't', label: 'Type' },
+                  { key: 'c', label: 'Contribution' },
+                  { key: 'st', label: 'Students Sponsored' }
                 ]}
               rows={sponsorRows}
               onRowClick={(index) => setSelectedSponsor(pageSponsors[index] ?? null)}
@@ -469,10 +494,7 @@ export default function AssignSponsorPage() {
                   </div>
                   <div className="col-4">
                     <div className="filter-search-wrapper">
-                      <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="M21 21l-4.35-4.35"></path>
-                      </svg>
+                      <LuSearch className="search-icon" size={18} />
                       <input
                         className="filter-search-input"
                         placeholder="Search students by name, ID..."
@@ -569,27 +591,28 @@ export default function AssignSponsorPage() {
                   ) : (
                     <div className="col-2" />
                   )}
+                   <div className="col-2" />
                   <div className="col-2" style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                     <button
-                      className="btnRed"
+                      className="clearbtn"
                       onClick={() => {
                         setPending(filtersDefault);
                         setApplied(filtersDefault);
                         setOpenFilter(null);
                         setPage(1);
                       }}>
-                      <img src={closeIcon} alt="Clear" className="filterBtnIcon" />
+                      <HiOutlineXMark className="filterBtnIcon" />
                       Clear
                     </button>
                     <button
-                      className="btnGreen"
+                      className="gobtn"
                       onClick={() => {
                         setApplied({ ...pending });
                         setPage(1);
                         setOpenFilter(null);
                       }}
                     >
-                      <img src={arrowIcon} alt="Go" className="filterBtnIcon" />
+                      <FiArrowRight className="filterBtnIcon" />
                       Go
                     </button>
                   </div>
@@ -597,13 +620,30 @@ export default function AssignSponsorPage() {
               </div>
             </div>
 
-            <div className={`bulkToolbarShell ${checkedStudents.length > 0 ? 'isActive' : ''}`} aria-hidden={checkedStudents.length === 0}>
+            <div className={`bulkToolbarShell ${checkedStudents.length > 0 || globalSelection ? 'isActive' : ''}`} aria-hidden={checkedStudents.length === 0 && !globalSelection}>
               <div className="selectHeaderRow studentBulkToolbar">
                 <div className="bulkToolbarInfo">
-                  <span className="bulkSelectAllText">Select all on this page</span>
-                  <span className="selected-count">
-                    Selected {checkedStudents.length} of {total}
-                  </span>
+                  {allSelected ? (
+                    <>
+                      <span className="selected-count">
+                        All {total} students matching this search are selected.
+                      </span>
+                      <button className="clearSelectionLink" onClick={() => { setCheckedStudents([]); setGlobalSelection(false); }}>
+                        Clear selection
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="selected-count">
+                        Selected {checkedStudents.length} of {total}
+                      </span>
+                      {showSelectAllLink ? (
+                        <button className="selectAllLink" onClick={selectAllMatchingStudents}>
+                          Select all {total} students matching this search
+                        </button>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -611,7 +651,7 @@ export default function AssignSponsorPage() {
             <DataTable
               loading={loading}
               columns={[
-                { key: 'id', label: <div className="idSelectCell header"><input type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span>ID</span></div>, width: '92px' },
+                { key: 'id', label: <div className={`idSelectCell header${allPageChecked ? ' isSelectedHeader' : ''}`}><input type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span>ID</span></div>, width: '92px' },
                 { key: 's', label: 'Student', width: '260px' },
                 { key: 'class', label: 'Class', width: '88px' },
                 { key: 'sch', label: 'School',  width: '235px' },
@@ -642,16 +682,13 @@ export default function AssignSponsorPage() {
         <div className="assign-summary-sticky">
           <div className="panel assign-summary-panel">
             <div className="assignStepHead" style={{ marginBottom: 10 }}>
-            {/* <div className="assignStepNum" style={{ background: 'var(--color-primary)' }}>✓</div> */}
-            {/* <h3 className="panelTitle" style={{ margin: 0 }}>Assignment Summary</h3> */}
           </div>
 
           <div className="assignSummarySection">
-            {/* <div className="sub assignSummaryLabel">Selected Sponsor</div> */}
             
-             <h3 className="panelTitle" style={{ margin: 0, position: 'relative', bottom: '10px' }}>
+            <h3 className="panelTitle" style={{ margin: 0, position: 'relative', bottom: '10px' }}>
               Selected Sponsor
-             </h3>
+            </h3>
             {selectedSponsor ? (
               <div className="assignSummaryCard">
                 <div className="assignSummaryPill">
@@ -674,9 +711,9 @@ export default function AssignSponsorPage() {
 
           <div className="assignSummarySection assignSelectedStudentsSection">
             {/* <div className="sub assignSummaryLabel">Selected Students</div> */}
-             <h3 className="panelTitle" style={{ margin: 0, position: 'relative', bottom: '5px' }}>
+            <h3 className="panelTitle" style={{ margin: 0, position: 'relative', bottom: '5px' }}>
               Selected Students
-             </h3>
+            </h3>
             <div className="rowFlex" style={{ gap: 10 }}>
               <div style={{ fontWeight: 800, fontSize: 13,color:'grey'}}>{checkedStudents.length} Selected</div>
             </div>
@@ -702,17 +739,12 @@ export default function AssignSponsorPage() {
                     <div key={s.id} className="assignSelectedStudentRow">
                       <span className="studentIdPlain">{s.id}</span>
                       <span className="assignSummaryStudentName" title={s.name}>{s.name}</span>
-                      <button
-                        type="button"
-                        className="assignSummaryRemoveBtn"
-                        onClick={() => toggleStudent(s.id)}
+                      <button type="button" className="studentWizardClose" onClick={() => toggleStudent(s.id)}
                         aria-label={`Remove student ${s.id}`}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                          <path d="M18 6 6 18" />
-                          <path d="M6 6l12 12" />
-                        </svg>
-                      </button>
+            
+            <HiOutlineXMark/>
+          </button>
                     </div>
                   ))}
                 </div>
@@ -730,10 +762,8 @@ export default function AssignSponsorPage() {
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%' }}>
               <span>Assign Now</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <path d="M5 12h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <path d="m13 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              
+              <FiArrowRight className="filterBtnIcon" />
             </span>
           </Button>
 
@@ -744,16 +774,19 @@ export default function AssignSponsorPage() {
         </div>
       </div>
 
-      <ConfirmModal
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={confirmAssign}
-        title="Confirm Assignment"
-        icon="Assign"
-        confirmLabel="Yes, Assign"
-        danger={false}
-        message={`Assign ${checkedStudents.length} students to ${selectedSponsor?.sponsorName}?`}
-      />
+     <ConfirmModal
+  open={confirmOpen}
+  onClose={() => setConfirmOpen(false)}
+  onConfirm={confirmAssign}
+  title="Confirm Assignment"
+  icon="Assign"
+  confirmLabel="Yes, Assign"
+  danger={false}
+  cancelDanger={true}
+   message={`Assign ${allSelected ? total : checkedStudents.length} students to ${selectedSponsor?.sponsorName}?`}
+/>
     </div>
   );
 }
+
+

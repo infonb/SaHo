@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -13,19 +15,30 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
 
     boolean existsByEmailId(String emailId);
 
+    boolean existsByEmailIdIgnoreCase(String emailId);
+
     boolean existsByAadhaarNumber(String aadhaarNumber);
 
     boolean existsByEmailIdAndStudentIdNot(String emailId, Integer studentId);
+
+    boolean existsByEmailIdIgnoreCaseAndStudentIdNot(String emailId, Integer studentId);
 
     boolean existsByAadhaarNumberAndStudentIdNot(String aadhaarNumber, Integer studentId);
 
     Optional<Student> findByAadhaarNumber(String aadhaarNumber);
 
-    @Procedure(procedureName = "createorupdatestudent")
-    void createOrUpdateStudent(
+    Optional<Student> findByAadhaarNumberAndIsDeletedFalse(String aadhaarNumber);
+
+    List<Student> findByStudentIdInAndIsDeletedFalse(Collection<Integer> studentIds);
+
+    boolean existsByAadhaarNumberAndIsDeletedFalse(String aadhaarNumber);
+
+    boolean existsByEmailIdIgnoreCaseAndIsDeletedFalse(String emailId);
+
+    @Procedure(procedureName = "createorupdatestudent_v2")
+    void createOrUpdateStudentV2(
             @Param("p_student_id") Integer studentId,
             @Param("p_first_name") String firstName,
-            @Param("p_middle_name") String middleName,
             @Param("p_last_name") String lastName,
             @Param("p_email_id") String emailId,
             @Param("p_dob") java.time.LocalDate dob,
@@ -34,8 +47,7 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
             @Param("p_caste_id") Integer casteId,
             @Param("p_religion") String religion,
             @Param("p_blood_group") String bloodGroup,
-            @Param("p_sch_id") Integer schId,
-            @Param("p_class_id") Integer classId,
+            @Param("p_family_id") Integer familyId,
             @Param("p_guardian_id") Integer guardianId,
             @Param("p_sibling_id") String siblingId,
             @Param("p_orphan_status") String orphanStatus,

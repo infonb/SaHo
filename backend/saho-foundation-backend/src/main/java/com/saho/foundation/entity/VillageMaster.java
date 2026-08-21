@@ -2,6 +2,8 @@ package com.saho.foundation.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,7 @@ import java.time.LocalDateTime;
 public class VillageMaster {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "vil_id")
     private Integer vilId;
 
@@ -27,7 +30,7 @@ public class VillageMaster {
     private String vilName;
 
     @Column(name = "vil_pincode")
-    private String vilPincode;
+    private Integer vilPincode;
 
     @Column(name = "mndl_id")
     private Integer mndlId;

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Avatar from '../common/Avatar';
-import Badge from '../common/Badge';
-import Button from '../common/Button';
+import StudentPhoto from '../common/StudentPhoto';
 import { useAuth } from '../../context/AuthContext';
-import sahoImg from '../../assets/saho_Img.png';
+import { getMyProfile } from '../../api/studentApi';
+import type { StudentView } from '../../types';
 import logo from '../../assets/logo.png';
+import '../../styles/Topbar.css';
+import { LuSparkles, LuX,LuLogOut } from "react-icons/lu";
+
 
 export const LeafLogo = () => (
   <svg className="brandMark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -16,19 +18,55 @@ export const LeafLogo = () => (
   </svg>
 );
 
-export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: boolean; onSidebarToggle: () => void }) {
+type TopbarProps = {
+  sidebarOpen?: boolean;
+  onSidebarToggle?: () => void;
+  onAiOpen?: () => void;
+  title?: string;
+  dashboardPath?: string;
+  headerClassName?: string;
+};
+
+export default function Topbar({
+  sidebarOpen,
+  onSidebarToggle,
+  onAiOpen,
+  title = 'Admin Dashboard',
+  dashboardPath = '/dashboard',
+  headerClassName = '',
+}: TopbarProps) {
   const { user, logout } = useAuth();
+  const [studentProfile, setStudentProfile] = useState<StudentView | null>(null);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const userRole = user?.role?.toLowerCase();
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    const handler = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
     };
+
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  useEffect(() => {
+    if (!user?.student_id || userRole !== 'student') {
+      setStudentProfile(null);
+      return;
+    }
+
+    getMyProfile(user.user_id)
+      .then((data) => {
+        if (data) {
+          setStudentProfile(data);
+        }
+      })
+      .catch(() => {});
+  }, [user?.user_id, userRole, user?.student_id]);
 
   const signOut = () => {
     logout();
@@ -36,55 +74,93 @@ export default function Topbar({ sidebarOpen, onSidebarToggle }: { sidebarOpen: 
   };
 
   const goDashboard = () => {
-    window.location.href = '/dashboard';
+    window.location.href = dashboardPath;
   };
 
+  const displayName =
+    studentProfile?.studentName ||
+    studentProfile?.full_name ||
+    user?.username ||
+    (userRole === 'student' ? `Student ${user?.student_id}` : 'Admin');
+
   return (
-    <header className="dashboard-header topbar">
+    <header className={`dashboard-header topbar${headerClassName ? ` ${headerClassName}` : ''}`}>
       <div className="topbarLeft">
-        <button className={`sidebarToggle headerSidebarToggle ${sidebarOpen ? 'closeIcon' : 'menuIcon'}`} type="button" aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} aria-expanded={sidebarOpen} title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'} onClick={onSidebarToggle}>
-          {sidebarOpen ? (
-            <svg className="sidebarCancelIcon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          ) : (
-            <>
-              <span />
-              <span />
-              <span />
-            </>
-          )}
-        </button>
+        {typeof sidebarOpen === 'boolean' && onSidebarToggle ? (
+          <button
+            className={`sidebarToggle headerSidebarToggle ${sidebarOpen ? 'closeIcon' : 'menuIcon'}`}
+            type="button"
+            aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+            aria-expanded={sidebarOpen}
+            title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+            onClick={onSidebarToggle}
+          >
+            {sidebarOpen ? (
+              <LuX className="sidebarCancelIcon" size={22} />
+            ) : (
+              <>
+                <span />
+                <span />
+                <span />
+              </>
+            )}
+          </button>
+        ) : null}
+
         <div className="topbarBrand">
           <button type="button" className="brandLogoButton" aria-label="Go to dashboard" onClick={goDashboard}>
             <img className="brandLogo" src={logo} alt="SaHo" />
           </button>
         </div>
-        <div className="divider">
-        </div>
-        <div className="topbarTitle">Admin Dashboard</div>
+
+        <div className="divider" />
+        <div className="topbarTitle">{title}</div>
       </div>
 
-      <div ref={ref} style={{ position: 'relative' }}>
-        <button className="userIconButton" aria-label="User menu" onClick={() => setOpen(value => !value)}>
-          <Avatar name={user?.username ?? 'Admin'} size="md" />
-        </button>
-        {open && (
-          <div className="dropdown">
-            <div className="rowFlex">
-              <Avatar name={user?.username ?? 'Admin'} />
-              <div>
-                <div className="strong">{user?.username}</div>
-                <div className="sub">{user?.email_id}</div>
+      <div className="topbarActions">
+        {onAiOpen ? (
+          <button className="topbarAiButton" type="button" aria-label="Open AI assistant" onClick={onAiOpen}>
+            <LuSparkles size={18} />
+            <span>Ask AI</span>
+          </button>
+        ) : null}
+
+        <div ref={ref} className="userTooltipWrapper">
+          <button
+            className="userIconButton"
+            aria-label="User menu"
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+          >
+            <StudentPhoto name={displayName} src={studentProfile?.image_url} size="md" />
+          </button>
+
+          <div
+            className="sdProfileDropdown"
+            style={
+              open
+                ? { opacity: 1, visibility: 'visible', transform: 'translateY(0)' }
+                : { pointerEvents: 'none' }
+            }
+          >
+            <div className="sdDropdownHeader">
+              {/* <Avatar name={displayName} size="sm" /> */}
+              <div className="sdDropdownInfo">
+                <div className="sdDropdownName">{displayName}</div>
+                <div className="sdDropdownId">
+                  {user?.role === 'student'
+                    ? `Student ID: ${studentProfile?.student_id ?? user?.student_id}`
+                    : user?.email_id}
+                </div>
               </div>
             </div>
-            <div style={{ margin: '12px 0' }}>
-              <Badge variant="admin">{user?.role}</Badge>
-            </div>
-            <hr style={{ border: 0, borderTop: '1px solid var(--color-border)' }} />
-            <Button variant="ghost" onClick={signOut}>Sign Out</Button>
+            <div className="sdDropdownDivider" />
+            <button className="sdDropdownSignOut" type="button" onClick={signOut}>
+              <LuLogOut size={16} />
+              Sign Out
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </header>
   );

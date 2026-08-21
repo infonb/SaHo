@@ -50,4 +50,9 @@ public class LocationServiceImpl implements LocationService {
     public List<SchoolMaster> getSchoolsByVillageId(Integer villageId) {
         return schoolRepository.findByVilId(villageId);
     }
+
+    @Override
+    public List<SchoolMaster> getAllSchools() {
+        return schoolRepository.findByIsDeletedFalse();
+    }
 }

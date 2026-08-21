@@ -1,30 +1,93 @@
-import { delay, MOCK_USERS } from './mockData';
-import type { AuthUser, User } from '../types';
+import apiClient from './client';
+import type { AuthUser, User, LoginResponse } from '../types';
+import { getStudentById } from './studentApi';
 
 const initials = (name: string) => name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-export const loginUser = async (email_id: string, _password: string): Promise<{ user: AuthUser; token: string }> => {
-  await delay(600);
-  const found = MOCK_USERS.find(u => u.email_id === email_id && u.is_active && u.role === 'Admin');
-  if (!found) throw new Error('Invalid email or password.');
-  return { user: { user_id: found.user_id, username: found.username, email_id: found.email_id, role: found.role, initials: initials(found.username) }, token: `mock-jwt-token-${found.user_id}` };
+
+export const loginUser = async (email: string, password: string): Promise<AuthUser> => {
+  const { data } = await apiClient.post<LoginResponse>('/auth/login', { email, password });
+  if (data.token) {
+    localStorage.setItem('saho_token', data.token);
+  }
+  const username = email.split('@')[0] || 'Admin';
+  return {
+    user_id: data.userId,
+    username: username,
+    email_id: data.email || '',
+    role: data.role.toLowerCase() as User['role'],
+    initials: initials(username),
+  };
 };
-export const getAdmins = async (): Promise<User[]> => { await delay(); return MOCK_USERS.filter(u => u.role === 'Admin' && u.is_active); };
-export const createAdmin = async (payload: Omit<User, 'user_id' | 'is_active' | 'created_at' | 'modified_at' | 'modified_by'>): Promise<User> => {
-  await delay();
-  const user: User = { ...payload, user_id: Math.max(0, ...MOCK_USERS.map(u => u.user_id)) + 1, is_active: true, created_at: new Date().toISOString(), modified_at: null, modified_by: null };
-  MOCK_USERS.push(user);
-  return user;
+
+export const studentLogin = async (studentId: number, password: string): Promise<AuthUser> => {
+  const { data } = await apiClient.post<LoginResponse>('/auth/student-login', { studentId, password });
+  if (data.token) {
+    localStorage.setItem('saho_token', data.token);
+  }
+  let studentName = `Student ${data.studentId}`;
+  const studentData = await getStudentById(data.studentId!);
+  if (studentData) {
+    studentName = studentData.studentName || studentData.full_name || studentName;
+  }
+  return {
+    user_id: data.userId,
+    username: studentName,
+    email_id: '',
+    role: data.role.toLowerCase() as User['role'],
+    initials: initials(studentName),
+    student_id: data.studentId,
+  };
 };
-export const updateAdmin = async (id: number, payload: Partial<User>): Promise<User> => {
-  await delay();
-  const idx = MOCK_USERS.findIndex(u => u.user_id === id);
-  if (idx < 0) throw new Error('User not found');
-  MOCK_USERS[idx] = { ...MOCK_USERS[idx], ...payload, modified_at: new Date().toISOString() };
-  return MOCK_USERS[idx];
+
+export const getAdmins = async (): Promise<User[]> => {
+  const { data } = await apiClient.get<any[]>('/admins');
+  return data.map((a: any) => ({
+    user_id: a.user_id,
+    username: a.email_id || '',
+    email_id: a.email_id,
+    password: '',
+    role: a.role,
+    is_active: a.is_active,
+    created_at: a.created_at,
+    created_by: a.created_by || '',
+    modified_at: null,
+    modified_by: null,
+  }));
+};
+export const getAdminCount = async (): Promise<number> => {
+  const { data } = await apiClient.get<{ count: number }>('/admins/count');
+  return data.count;
+};
+export const createAdmin = async (payload: { email_id: string; password: string; role: string; created_by: string }): Promise<User> => {
+  const { data } = await apiClient.post<any>('/admins', payload);
+  return {
+    user_id: data.user_id,
+    username: data.email_id || '',
+    email_id: data.email_id,
+    password: '',
+    role: data.role,
+    is_active: data.is_active,
+    created_at: data.created_at,
+    created_by: data.created_by || '',
+    modified_at: null,
+    modified_by: null,
+  };
+};
+export const updateAdmin = async (id: number, payload: { email_id?: string; password?: string; role?: string; created_by?: string }): Promise<User> => {
+  const { data } = await apiClient.put<any>(`/admins/${id}`, payload);
+  return {
+    user_id: data.user_id,
+    username: data.email_id || '',
+    email_id: data.email_id,
+    password: '',
+    role: data.role,
+    is_active: data.is_active,
+    created_at: data.created_at,
+    created_by: data.created_by || '',
+    modified_at: null,
+    modified_by: null,
+  };
 };
 export const deactivateAdmin = async (id: number): Promise<void> => {
-  await delay();
-  const idx = MOCK_USERS.findIndex(u => u.user_id === id);
-  if (idx < 0) throw new Error('User not found');
-  MOCK_USERS[idx].is_active = false;
+  await apiClient.delete(`/admins/${id}`);
 };

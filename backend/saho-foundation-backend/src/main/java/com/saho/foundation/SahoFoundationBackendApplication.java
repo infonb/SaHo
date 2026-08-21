@@ -9,6 +9,7 @@ public class SahoFoundationBackendApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(SahoFoundationBackendApplication.class, args);
 	}
+	
 
 }
 

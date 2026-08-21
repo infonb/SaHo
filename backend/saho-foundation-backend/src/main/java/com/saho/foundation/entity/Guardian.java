@@ -21,9 +21,6 @@ public class Guardian {
     @Column(name = "first_name", nullable = false, length = 20)
     private String firstName;
 
-    @Column(name = "middle_name", length = 20)
-    private String middleName;
-
     @Column(name = "last_name", nullable = false, length = 20)
     private String lastName;
 

@@ -16,6 +16,8 @@ export interface ReminderDto {
   createdBy?: number | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  imageUrl?: string | null;
+  bannerImage?: string | null;
   totalCount?: number | null;
 }
 
@@ -30,6 +32,8 @@ export interface ReminderCreatePayload {
   vilIdsCsv?: string | null;
   schIdsCsv?: string | null;
   classIdsCsv?: string | null;
+  imageUrl?: string | null;
+  bannerImage?: string | null;
   updatedBy: number;
 }
 
@@ -45,6 +49,27 @@ export interface ReminderFilterParams {
   status?: string;
 }
 
+const normalizeReminder = (r: any): ReminderDto => ({
+  remId: Number(r?.remId ?? r?.rem_id ?? r?.id),
+  title: r?.title ?? '',
+  description: r?.description ?? null,
+  eventDate: r?.eventDate ?? r?.event_date ?? '',
+  venue: r?.venue ?? '',
+  stIdCsv: r?.stIdCsv ?? r?.st_id_csv ?? null,
+  distIdsCsv: r?.distIdsCsv ?? r?.dist_ids_csv ?? null,
+  mndlIdsCsv: r?.mndlIdsCsv ?? r?.mndl_ids_csv ?? null,
+  vilIdsCsv: r?.vilIdsCsv ?? r?.vil_ids_csv ?? null,
+  schIdsCsv: r?.schIdsCsv ?? r?.sch_ids_csv ?? null,
+  classIdsCsv: r?.classIdsCsv ?? r?.class_ids_csv ?? null,
+  status: r?.status ?? null,
+  createdBy: r?.createdBy ?? r?.created_by ?? null,
+  createdAt: r?.createdAt ?? r?.created_at ?? null,
+  updatedAt: r?.updatedAt ?? r?.updated_at ?? null,
+  imageUrl: r?.imageUrl ?? r?.image_url ?? r?.bannerImage ?? r?.banner_image ?? null,
+  bannerImage: r?.bannerImage ?? r?.banner_image ?? r?.imageUrl ?? r?.image_url ?? null,
+  totalCount: r?.totalCount ?? r?.total_count ?? null,
+});
+
 export const getReminders = async (filters?: ReminderFilterParams): Promise<ReminderDto[]> => {
   const params: Record<string, string> = {};
   if (filters?.search) params.search = filters.search;
@@ -57,22 +82,37 @@ export const getReminders = async (filters?: ReminderFilterParams): Promise<Remi
   if (filters?.schIdsCsv) params.schIdsCsv = filters.schIdsCsv;
   if (filters?.status) params.status = filters.status;
   const res = await apiClient.get('/reminders', { params });
+  return (res.data ?? []).map(normalizeReminder);
+};
+
+export const getStudentReminders = async (studentId: number): Promise<ReminderDto[]> => {
+  const res = await apiClient.get(`/reminders/student/${studentId}`);
   return res.data ?? [];
 };
 
 export const getReminderById = async (remId: number): Promise<ReminderDto | undefined> => {
   const res = await apiClient.get(`/reminders/${remId}`);
-  return res.data ?? undefined;
+  return res.data ? normalizeReminder(res.data) : undefined;
 };
 
-export const createReminder = async (payload: ReminderCreatePayload): Promise<number> => {
-  const res = await apiClient.post('/reminders', payload);
+const sendReminderForm = async (url: string, method: 'post' | 'put', payload: ReminderCreatePayload, imageFile?: File | Blob) => {
+  if (imageFile) {
+    const formData = new FormData();
+    formData.append('request', JSON.stringify(payload));
+    formData.append('image', imageFile);
+    const res = await apiClient.request({ url, method, data: formData });
+    return Number(res.data);
+  }
+  const res = await apiClient.request({ url, method, data: payload });
   return Number(res.data);
 };
 
-export const updateReminder = async (remId: number, payload: ReminderCreatePayload): Promise<number> => {
-  const res = await apiClient.put(`/reminders/${remId}`, payload);
-  return Number(res.data);
+export const createReminder = async (payload: ReminderCreatePayload, imageFile?: File | Blob): Promise<number> => {
+  return sendReminderForm('/reminders', 'post', payload, imageFile);
+};
+
+export const updateReminder = async (remId: number, payload: ReminderCreatePayload, imageFile?: File | Blob): Promise<number> => {
+  return sendReminderForm(`/reminders/${remId}`, 'put', payload, imageFile);
 };
 
 export const deleteReminder = async (remId: number): Promise<void> => {

@@ -18,7 +18,6 @@ const logApiFailure = (name: string, error: unknown) => {
 
 export interface StudentRequestGuardianDto {
   firstName: string;
-  middleName?: string | null;
   lastName: string;
   phoneNumber: string;
   relationshipId: number;
@@ -27,32 +26,85 @@ export interface StudentRequestGuardianDto {
   isDeleted?: boolean;
 }
 
+export interface StudentFamilyRequestPayload {
+  fatherName: string;
+  fatherOccupation: string;
+  fatherStatus: string;
+  motherName: string;
+  motherOccupation: string;
+  motherStatus: string;
+  createdBy?: number;
+}
+
+export interface GuardianRequestPayload {
+  guardianId?: number | null;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  relationshipId: number;
+  occ?: string | null;
+  addr?: string | null;
+}
+
+export interface StudentAcademicRequestPayload {
+  studentAcademicId?: number | null;
+  academicYearId: number;
+  schoolId: number;
+  classId: number;
+  rollNumber?: string | null;
+  admissionType?: string | null;
+  status?: string | null;
+  remarks?: string | null;
+  isActive?: boolean | null;
+  isDeleted?: boolean | null;
+  createdBy?: number | null;
+  updatedBy?: number | null;
+}
+
 export interface StudentRequestPayload {
   firstName: string;
-  middleName?: string | null;
   lastName: string;
   emailId: string;
   dob: string;
   gender: string;
   aadhaarNumber: string;
   casteId: number;
+  academicYearId?: number | null;
   religion?: string | null;
   bloodGroup?: string | null;
-  schId: number;
-  classId: number;
+  schId?: number | null;
+  classId?: number | null;
   orphanStatus?: string | null;
   imageUrl?: string | null;
   createdBy: number;
   hasSibling?: boolean;
   siblingIds?: string | null;
-  guardian: StudentRequestGuardianDto;
+  familyId?: number | null;
+  guardianId?: number | null;
+  fatherName?: string | null;
+  fatherOccupation?: string | null;
+  fatherStatus?: string | null;
+  motherName?: string | null;
+  motherOccupation?: string | null;
+  motherStatus?: string | null;
+  guardian?: StudentRequestGuardianDto;
+  academicDetails?: StudentAcademicRequestPayload;
 }
 
 export interface StudentSiblingSearchResponse {
   studentId: number;
   studentName: string;
   classId: number;
+  className?: string;
   schoolName: string;
+}
+
+export interface StudentSiblingInfo {
+  studentId: number;
+  fullName: string;
+  classId?: number;
+  className?: string;
+  schoolName?: string;
 }
 
 export interface StudentProfileResponse {
@@ -66,10 +118,30 @@ export interface StudentProfileResponse {
   casteName?: string | null;
   religion?: string | null;
   bloodGroup?: string | null;
+  studentAcademicId?: number;
+  academicYearId?: number;
+  academicYearName?: string | null;
+  schoolId?: number;
+  schoolName?: string | null;
+  courseId?: number;
   classId?: number;
+  className?: string | null;
+  familyId?: number;
+  guardianId?: number;
+  fatherName?: string | null;
+  fatherOccupation?: string | null;
+  fatherStatus?: string | null;
+  motherName?: string | null;
+  motherOccupation?: string | null;
+  motherStatus?: string | null;
   siblingId?: string;
   orphanStatus?: string | null;
   imageUrl?: string | null;
+  rollNumber?: string | null;
+  admissionType?: string | null;
+  status?: string | null;
+  remarks?: string | null;
+  academicDetails?: StudentAcademicRequestPayload | null;
   guardianName?: string;
   guardianFirstName?: string | null;
   guardianMiddleName?: string | null;
@@ -87,9 +159,25 @@ export interface StudentProfileResponse {
   stName?: string;
 }
 
+export interface LabelValueOption {
+  value: string;
+  label: string;
+}
+
 export interface ClassResponse {
   classId: number;
   className: string;
+}
+
+export interface CourseResponse {
+  courseId: number;
+  courseName: string;
+  boardType?: string;
+}
+
+export interface AcademicYearResponse {
+  academicYearId: number;
+  academicYearName: string;
 }
 
 interface CasteResponse {
@@ -186,6 +274,56 @@ export const getRelationships = async (): Promise<RelationshipMaster[]> => {
   }
 };
 
+export const getParentStatuses = async (): Promise<LabelValueOption[]> => {
+  try {
+    const response = await apiClient.get<LabelValueOption[]>('/master/parent-statuses');
+    return response.data ?? [];
+  } catch (error) {
+    logApiFailure('getParentStatuses', error);
+    throw error;
+  }
+};
+
+export const getParentOccupations = async (): Promise<LabelValueOption[]> => {
+  try {
+    const response = await apiClient.get<LabelValueOption[]>('/master/parent-occupations');
+    return response.data ?? [];
+  } catch (error) {
+    logApiFailure('getParentOccupations', error);
+    throw error;
+  }
+};
+
+export const getAdmissionTypes = async (): Promise<LabelValueOption[]> => {
+  try {
+    const response = await apiClient.get<LabelValueOption[]>('/master/admission-types');
+    return response.data ?? [];
+  } catch (error) {
+    logApiFailure('getAdmissionTypes', error);
+    throw error;
+  }
+};
+
+export const getAcademicStatuses = async (): Promise<LabelValueOption[]> => {
+  try {
+    const response = await apiClient.get<LabelValueOption[]>('/master/academic-statuses');
+    return response.data ?? [];
+  } catch (error) {
+    logApiFailure('getAcademicStatuses', error);
+    throw error;
+  }
+};
+
+export const getAcademicYears = async (): Promise<AcademicYearResponse[]> => {
+  try {
+    const response = await apiClient.get<AcademicYearResponse[]>('/master/academic-years');
+    return response.data ?? [];
+  } catch (error) {
+    logApiFailure('getAcademicYears', error);
+    throw error;
+  }
+};
+
 export const getClasses = async (): Promise<ClassResponse[]> => {
   try {
     const response = await apiClient.get<any[] | { data?: any[]; content?: any[]; items?: any[] }>('/master/classes');
@@ -197,6 +335,37 @@ export const getClasses = async (): Promise<ClassResponse[]> => {
       .filter((c) => Number.isFinite(c.classId) && c.className.trim() !== '');
   } catch (error) {
     logApiFailure('getClasses', error);
+    throw error;
+  }
+};
+
+export const getCourses = async (): Promise<CourseResponse[]> => {
+  try {
+    const response = await apiClient.get<any[] | { data?: any[]; content?: any[]; items?: any[] }>('/course-master');
+    return asArray(response.data)
+      .map((c) => ({
+        courseId: Number(c.courseId ?? c.course_id ?? c.id),
+        courseName: String(c.courseName ?? c.course_name ?? c.name ?? ''),
+        boardType: c.boardType ?? c.board_type ?? undefined,
+      }))
+      .filter((c) => Number.isFinite(c.courseId) && c.courseName.trim() !== '');
+  } catch (error) {
+    logApiFailure('getCourses', error);
+    throw error;
+  }
+};
+
+export const getClassesByCourse = async (courseId: number): Promise<ClassResponse[]> => {
+  try {
+    const response = await apiClient.get<any[] | { data?: any[]; content?: any[]; items?: any[] }>(`/class-master/by-course/${courseId}`);
+    return asArray(response.data)
+      .map((c) => ({
+        classId: Number(c.classId ?? c.class_id ?? c.id),
+        className: String(c.className ?? c.class_name ?? c.name ?? ''),
+      }))
+      .filter((c) => Number.isFinite(c.classId) && c.className.trim() !== '');
+  } catch (error) {
+    logApiFailure('getClassesByCourse', error);
     throw error;
   }
 };
@@ -214,6 +383,16 @@ export const findStudentByAadhaar = async (aadhaarNumber: string): Promise<Stude
   }
 };
 
+export const getStudentSiblings = async (studentId: number): Promise<StudentSiblingInfo[]> => {
+  try {
+    const response = await apiClient.get<StudentSiblingInfo[]>(`/students/${studentId}/siblings`);
+    return response.data;
+  } catch (error) {
+    logApiFailure('getStudentSiblings', error);
+    return [];
+  }
+};
+
 export const getStudentById = async (studentId: number): Promise<StudentProfileResponse> => {
   try {
     const response = await apiClient.get<StudentProfileResponse>(`/students/${studentId}`);
@@ -228,17 +407,33 @@ const sendStudentForm = async (payload: StudentRequestPayload, url: string, meth
   if (file) {
     const formData = new FormData();
     formData.append('request', JSON.stringify(payload));
-    formData.append('image', file, 'student-image.jpg');
+    formData.append('image', file);
     const response = await apiClient.request({
       url,
       method,
       data: formData,
-      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   }
   const response = await apiClient.request({ url, method, data: payload });
   return response.data;
+};
+
+const sendJson = async <T,>(url: string, method: 'post' | 'put', payload: T) => {
+  const response = await apiClient.request({ url, method, data: payload });
+  return response.data;
+};
+
+export const createOrUpdateStudentFamily = async (payload: StudentFamilyRequestPayload, familyId?: number | null) => {
+  const url = familyId ? `/student-families/${familyId}` : '/student-families';
+  const method = familyId ? 'put' : 'post';
+  return sendJson(url, method, payload);
+};
+
+export const createOrUpdateGuardian = async (payload: GuardianRequestPayload, guardianId?: number | null) => {
+  const url = guardianId ? `/guardians/${guardianId}` : '/guardians';
+  const method = guardianId ? 'put' : 'post';
+  return sendJson(url, method, payload);
 };
 
 export const createStudent = async (payload: StudentRequestPayload, imageFile?: File | Blob) => {

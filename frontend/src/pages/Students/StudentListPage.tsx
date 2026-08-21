@@ -1,24 +1,34 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deactivateStudents, exportStudentsCsv, getStudents } from '../../api/studentApi';
+import { FaSort, FaSortUp, FaSortDown, FaUserGraduate } from 'react-icons/fa';
+import { deactivateStudents, exportStudentsCsv,getStudentIds, getStudents } from '../../api/studentApi';
 import { getClasses } from '../../api/masterApi';
 import { getStates, getDistricts, getMandals, getVillages, getSchools } from '../../api/locationApi';
+import { getParentOccupations, getAcademicYears } from '../../api/studentService';
 import { getSponsorById } from '../../api/sponsorApi';
 import Button from '../../components/common/Button';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import DataTable from '../../components/common/DataTable';
 import Pagination from '../../components/common/Pagination';
 import Avatar from '../../components/common/Avatar';
+import StudentPhoto from '../../components/common/StudentPhoto';
+import SponsorDetailsModal from '../../components/common/SponsorDetailsModal';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import type { StudentFilters, StudentView, SponsorView } from '../../types';
 import StudentDetailModal from './StudentDetailModal';
-import Modal from '../../components/common/Modal';
 import MultiSelectFilter, { csvValues, toggleCsvValue } from '../../components/common/MultiSelectFilter';
 import type { FilterOption } from '../../components/common/MultiSelectFilter';
-import closeIcon from "../../assets/clera cross favicon.png"
-import arrowIcon from "../../assets/Go arrow favicon.png"
-const defaults: StudentFilters = { search: '', gender: '', class_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', sponsor_status: '', is_active: '' };
+import { FiUpload, FiPlus, FiUsers, FiUser, FiDownload } from "react-icons/fi";
+import { FaMars, FaVenus } from "react-icons/fa";
+import { MdVolunteerActivism } from "react-icons/md";
+import { FiArrowRight } from "react-icons/fi";
+import { HiOutlineXMark } from "react-icons/hi2";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import { LuSearch } from 'react-icons/lu';
+import { downloadTemplate } from '../../api/importApi';
+import ImportModal from '../../components/common/ImportModal';
+const defaults: StudentFilters = { search: '', gender: '', class_id: '', academic_year_id: '', dist_id: '', st_id: '', mndl_id: '', vil_id: '', sch_id: '', orphan_status: '', parent_type: '', parent_occupation: '', sponsor_status: '', is_active: '' };
 const truncateText = (value?: string | null, maxLength = 15) => {
   const text = value?.trim() || 'N/A';
   if (text.length <= maxLength) return text;
@@ -34,6 +44,10 @@ const orphanStatusClass = (value?: string | null) => {
       : "default";
 };
 const getSponsorDisplayName = (student: StudentView) => student.sponsorName ?? null;
+const academicStatusLabel = (value?: string | null) =>
+  value === '1' ? 'Active' : value === '2' ? 'Completed' : value === '3' ? 'Transferred' : value === '4' ? 'Dropped' : value || 'N/A';
+const academicStatusClass = (value?: string | null) =>
+  value === '3' ? 'transferred' : value === '4' ? 'dropped' : value === '2' ? 'completed' : 'active';
 
 export default function StudentListPage() {
   const [students, setStudents] = useState<StudentView[]>([]);
@@ -43,6 +57,10 @@ export default function StudentListPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [boysCount, setBoysCount] = useState(0);
+  const [girlsCount, setGirlsCount] = useState(0);
+  const [sponsoredCount, setSponsoredCount] = useState(0);
+  const [orphansCount, setOrphansCount] = useState(0);
   const [pending, setPending] = useState(defaults);
   const [applied, setApplied] = useState(defaults);
   const [states, setStates] = useState<any[]>([]);
@@ -51,8 +69,11 @@ export default function StudentListPage() {
   const [villages, setVillages] = useState<any[]>([]);
   const [schools, setSchools] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
+  const [academicYears, setAcademicYears] = useState<any[]>([]);
+  const [parentOccupationOptions, setParentOccupationOptions] = useState<FilterOption[]>([]);
   const [selected, setSelected] = useState<StudentView | null>(null);
   const [checked, setChecked] = useState<number[]>([]);
+  const [globalSelection, setGlobalSelection] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [singleDelete, setSingleDelete] = useState<number | null>(null);
   const [sponsorOpen, setSponsorOpen] = useState(false);
@@ -62,15 +83,16 @@ export default function StudentListPage() {
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC' | null>(null);
+  const [showImport, setShowImport] = useState(false);
   const nav = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
 
   const totalStudents = total;
-  const totalBoys = students.filter((s) => s.gender === "Male").length;
-  const totalGirls = students.filter((s) => s.gender === "Female").length;
-  const totalSponsored = students.filter((s) => s.sponsor_id).length;
-  const totalOrphans = students.filter((s) => s.orphan_status === "3").length;
+  const totalBoys = boysCount;
+  const totalGirls = girlsCount;
+  const totalSponsored = sponsoredCount;
+  const totalOrphans = orphansCount;
 
   const load = async (nextPage = page, nextPageSize = pageSize) => {
     const scrollY = window.scrollY;
@@ -88,10 +110,19 @@ export default function StudentListPage() {
       });
       setStudents(data.students);
       setTotal(data.total);
+      setBoysCount(data.boysCount);
+      setGirlsCount(data.girlsCount);
+      setSponsoredCount(data.sponsoredCount);
+      setOrphansCount(data.orphansCount);
     } catch {
       setStudents([]);
       setTotal(0);
+      setBoysCount(0);
+      setGirlsCount(0);
+      setSponsoredCount(0);
+      setOrphansCount(0);
       setChecked([]);
+      setGlobalSelection(false);
       setError("Unable to load students from the database.");
     } finally {
       setLoading(false);
@@ -207,10 +238,46 @@ export default function StudentListPage() {
       mounted = false;
     };
   }, []);
-  const showDistrictFilter = csvValues(pending.st_id).length > 0;
-  const showMandalFilter = csvValues(pending.dist_id).length > 0;
-  const showVillageFilter = csvValues(pending.mndl_id).length > 0;
-  const showSchoolFilter = csvValues(pending.vil_id).length > 0;
+
+  useEffect(() => {
+    let mounted = true;
+    getAcademicYears()
+      .then((data) => {
+        if (mounted) setAcademicYears(data);
+      })
+      .catch(() => {
+        if (mounted) setAcademicYears([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    getParentOccupations()
+      .then((data) => {
+        if (mounted) setParentOccupationOptions(data.map((o) => ({ value: o.value, label: o.label })));
+      })
+      .catch(() => {
+        if (mounted) setParentOccupationOptions([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const districtDisabled = csvValues(pending.st_id).length === 0;
+  const mandalDisabled = csvValues(pending.dist_id).length === 0;
+  const villageDisabled = csvValues(pending.mndl_id).length === 0;
+  const schoolDisabled = csvValues(pending.vil_id).length === 0;
+  const parentOccupationDisabled = pending.parent_type === '' || pending.parent_type === 'orphan';
+  const stateHasSelection = csvValues(pending.st_id).length > 0;
+  const districtHasSelection = csvValues(pending.dist_id).length > 0;
+  const mandalHasSelection = csvValues(pending.mndl_id).length > 0;
+  const villageHasSelection = csvValues(pending.vil_id).length > 0;
+  const parentTypeHasSelection = csvValues(pending.parent_type).length > 0;
+  const showParentOccupation = parentTypeHasSelection && !csvValues(pending.parent_type).includes('orphan');
   const filteredStates = states;
   const stateOptions = filteredStates.map((s) => ({
     value: String(s.stId ?? s.st_id),
@@ -236,6 +303,10 @@ export default function StudentListPage() {
     value: String(c.classId ?? c.class_id),
     label: c.className ?? c.class_name,
   }));
+  const academicYearOptions = academicYears.map((y) => ({
+    value: String(y.academicYearId ?? y.academic_year_id),
+    label: y.academicYearName ?? y.academic_year_name,
+  }));
   const genderOptions = [
     { value: "1", label: "Male" },
     { value: "2", label: "Female" },
@@ -245,25 +316,61 @@ export default function StudentListPage() {
     { value: "3", label: "Orphan" },
     { value: "2", label: "Single Parent" },
   ];
+  const parentTypeOptions = [
+    { value: "single_mother", label: "Single Mother" },
+    { value: "single_father", label: "Single Father" },
+    { value: "both_alive", label: "Both Parents Alive" },
+    { value: "orphan", label: "Orphan" },
+  ];
   const pageIds = students.map((s) => s.student_id);
-  const hasSelection = checked.length > 0;
-  const allPageChecked =
-    pageIds.length > 0 && pageIds.every((id) => checked.includes(id));
-  const toggle = (id: number) =>
-    setChecked((ids) =>
-      ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
-    );
-  const togglePage = () =>
-    setChecked((ids) =>
-      allPageChecked
-        ? ids.filter((id) => !pageIds.includes(id))
-        : [...new Set([...ids, ...pageIds])],
-    );
+  const allSelected = globalSelection || checked.length >= total;
+  const hasSelection = globalSelection || checked.length > 0;
+  const allPageChecked = allSelected || (pageIds.length > 0 && pageIds.every((id) => checked.includes(id)));
+  const showSelectAllLink = allPageChecked && !allSelected;
+
+  const toggle = (id: number) => {
+    if (globalSelection) {
+      setGlobalSelection(false);
+      getStudentIds(applied).then(allIds => {
+        setChecked(allIds.filter(x => x !== id));
+      }).catch(() => setChecked([]));
+    } else {
+      setChecked((ids) =>
+        ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+      );
+    }
+  };
+  const togglePage = () => {
+    if (globalSelection) {
+      setChecked([]);
+      setGlobalSelection(false);
+    } else if (allPageChecked) {
+      setChecked((ids) => ids.filter((id) => !pageIds.includes(id)));
+    } else {
+      setChecked((ids) => [...new Set([...ids, ...pageIds])]);
+    }
+  };
+
+  const selectAllMatchingStudents = async () => {
+    try {
+      const ids = await getStudentIds(applied);
+      setChecked(ids);
+      setGlobalSelection(true);
+      toast(`All ${ids.length} students matching this search are selected.`, "success");
+    } catch {
+      toast("Failed to select all students.", "error");
+    }
+  };
 
   const confirmBulkDelete = async () => {
-    await deactivateStudents(checked, user?.username ?? "admin");
-    const removedCount = checked.length;
+    let ids = checked;
+    if (globalSelection && ids.length === 0) {
+      ids = await getStudentIds(applied);
+    }
+    await deactivateStudents(ids, user?.username ?? "admin");
+    const removedCount = ids.length;
     setChecked([]);
+    setGlobalSelection(false);
     setBulkOpen(false);
     toast(`${removedCount} students removed.`, "success");
     load(page, pageSize);
@@ -278,6 +385,7 @@ export default function StudentListPage() {
   };
 
   const openSponsor = async (id: number) => {
+    setSponsorDetails(null);
     const sp = await getSponsorById(id);
     if (sp) setSponsorDetails(sp);
     setSponsorOpen(true);
@@ -306,16 +414,23 @@ export default function StudentListPage() {
       filters: applied,
       sortColumn: sortColumn ?? undefined,
       sortDirection: sortDirection ?? undefined,
-      studentIds: checked.length ? checked : undefined,
+      studentIds: allSelected ? undefined : (checked.length ? checked : undefined),
     });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'students.csv';
+    link.download = 'students.xlsx';
     document.body.appendChild(link);
     link.click();
     link.remove();
     window.URL.revokeObjectURL(url);
+  };
+
+  const renderSortIcon = (field: string) => {
+    if (sortColumn === field && sortDirection !== null) {
+      return sortDirection === 'ASC' ? <FaSortUp /> : <FaSortDown />;
+    }
+    return <FaSort />;
   };
 
   const sortHeader = (label: string, column: string) => (
@@ -327,16 +442,9 @@ export default function StudentListPage() {
       aria-label={`Sort by ${label}`}
     >
       <span>{label}</span>
-      <span
-        className={`sortArrow${
-          sortColumn === column && sortDirection !== null
-            ? sortDirection === 'ASC'
-              ? ' asc'
-              : ' desc'
-            : ' inactive'
-        }`}
-        aria-hidden
-      />
+      <span className="sortIcon" aria-hidden>
+        {renderSortIcon(column)}
+      </span>
     </button>
   );
 
@@ -360,7 +468,7 @@ export default function StudentListPage() {
         <span className="studentIdCell">{s.student_id}</span>
       </div>,
       <div className="rowFlex studentCell">
-        <Avatar name={s.full_name} size="md" />
+        <StudentPhoto name={s.full_name} src={s.image_url} size="md" />
         <div className="tableCellStack studentCellStack">
           <button
             type="button"
@@ -368,7 +476,7 @@ export default function StudentListPage() {
             onClick={() => setSelected(s)}
             title={s.full_name}
           >
-            {truncateText(s.full_name, 15)}
+            {truncateText(s.full_name, 25)}
           </button>
           <div className="cellSubText">{s.gender}</div>
         </div>
@@ -410,6 +518,20 @@ export default function StudentListPage() {
           {orphanStatusLabel(s.orphan_status)}
         </span>
       </div>,
+      <div className="orphanStatusCell">
+        <span className={`orphanStatusBadge ${academicStatusClass(s.status)}`}>
+          {academicStatusLabel(s.status)}
+        </span>
+      </div>,
+      <div>
+        {s.annualResult ? (
+          <span className={`orphanStatusBadge ${s.annualResult === 'PASS' ? 'completed' : 'dropped'}`}>
+            {s.annualResult}
+          </span>
+        ) : (
+          <span className="cellSubText">-</span>
+        )}
+      </div>,
       <div>
         {s.sponsor_id ? (
           <button
@@ -417,7 +539,7 @@ export default function StudentListPage() {
             onClick={(e) => { e.stopPropagation(); openSponsor(s.sponsor_id!); }}
             title={getSponsorDisplayName(s) ?? '--'}
           >
-            {getSponsorDisplayName(s) ? (
+            {getSponsorDisplayName(s) ? ( 
               <Avatar name={getSponsorDisplayName(s) ?? ''} size="md" />
             ) : (
               <div className="avatar md">--</div>
@@ -440,27 +562,7 @@ export default function StudentListPage() {
           onClick={() => nav(`/students/edit/${s.student_id}`)}
           aria-label="Edit student"
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden
-          >
-            <path
-              d="M4 20h4.5L20.5 8l-4.5-4.5L4 15.5V20Z"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M14 4l6 6"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <FiEdit2 size={18} />
         </Button>
         <Button
           size="sm"
@@ -472,48 +574,7 @@ export default function StudentListPage() {
           }}
           aria-label={`Delete ${s.full_name}`}
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden
-          >
-            <path
-              d="M3 6h18"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M10 11v6"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M14 11v6"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <FiTrash2 size={18} />
         </Button>
       </div>,
     ];
@@ -526,35 +587,23 @@ export default function StudentListPage() {
           <h1>Student Management</h1>
         </div>
         <div className="student-list-actions">
-          <button type="button" className="btn btnGreen" aria-label="Import CSV">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M12 3v10" />
-              <path d="M8 9l4 4 4-4" />
-              <path d="M4 17v3h16v-3" />
-            </svg>
-            Import CSV
+          {/* <button type="button" className="btn btnGreen" onClick={downloadTemplate}>
+            <FiDownload size={18} />
+            &nbsp;Download Template
+          </button> */}
+          <button type="button" className="btn btnGreen" onClick={() => setShowImport(true)}>
+            <FiUpload size={18} />
+            &nbsp;Import Students
           </button>
           <button type="button" className="btn btnGreen" onClick={() => nav("/students/add")}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Add Student
+          <FiPlus size={18} />
+            &nbsp;Add Student
           </button>
         </div>
       </div>
 
-      <div className="student-stats-grid">
-        <div className="student-stat-card total">
+      <div className="student-stats-grid grid-cols-5">
+        <div className="reminderRecordCard total">
           <div className="stat-card-content">
             <div className="stat-card-label">Total Students</div>
             <div className="stat-card-value">{totalStudents}</div>
@@ -562,22 +611,10 @@ export default function StudentListPage() {
           </div>
          
           <div className="stat-card-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
+          <FiUsers />
           </div>
         </div>
-        <div className="student-stat-card boys">
+        <div className="reminderRecordCard boys">
           <div className="stat-card-content">
             <div className="stat-card-label">Boys</div>
             <div className="stat-card-value">{totalBoys}</div>
@@ -587,32 +624,11 @@ export default function StudentListPage() {
             className="stat-card-icon"
             aria-hidden="true"
           >
-            <svg viewBox="0 0 24 24" fill="none">
-              <circle
-                cx="10"
-                cy="14"
-                r="5.5"
-                stroke="currentColor"
-                strokeWidth="1.9"
-              ></circle>
-              <path
-                d="M13.8 10.2L20 4"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M16 4H20V8"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-            </svg>
+            <FaMars size={26} />
+            
           </div>
         </div>
-        <div className="student-stat-card girls">
+        <div className="reminderRecordCard girls">
           <div className="stat-card-content">
             <div className="stat-card-label">Girls</div>
             <div className="stat-card-value">{totalGirls}</div>
@@ -622,96 +638,38 @@ export default function StudentListPage() {
             className="stat-card-icon"
             aria-hidden="true"
           >
-            <svg viewBox="0 0 24 24" fill="none">
-              <circle
-                cx="12"
-                cy="9.5"
-                r="5.5"
-                stroke="currentColor"
-                strokeWidth="1.9"
-              ></circle>
-              <path
-                d="M12 15v5.5"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-              ></path>
-              <path
-                d="M9.2 18H14.8"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-              ></path>
-            </svg>
+          <FaVenus size={26} />
           </div>
         </div>
-        <div className="student-stat-card sponsored">
+        <div className="reminderRecordCard sponsored">
           <div className="stat-card-content">
             <div className="stat-card-label">Sponsored</div>
             <div className="stat-card-value">{totalSponsored}</div>
             <div className="stat-card-note">With sponsors</div>
           </div>
           <div className="stat-card-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 20.4C8.4 18.6 4.7 15.1 4.7 10.8c0-2.8 2-4.9 4.7-4.9 1.5 0 2.9.7 3.7 1.9.8-1.2 2.2-1.9 3.7-1.9 2.7 0 4.7 2.1 4.7 4.9 0 4.3-3.7 7.8-8.7 9.6Z"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M5 14.3c1.1-1.1 2.2-1.9 3.7-2.4"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-              />
-              <path
-                d="M19 14.3c-1.1-1.1-2.2-1.9-3.7-2.4"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-              />
-              <path
-                d="M12 10.9l1.2-1.2c1-1 1.8-1.6 2.8-1.6"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <MdVolunteerActivism size={30} />
           </div>
         </div>
-        <div className="student-stat-card orphans">
+        <div className="reminderRecordCard orphans">
           <div className="stat-card-content">
             <div className="stat-card-label">Orphans</div>
             <div className="stat-card-value">{totalOrphans}</div>
             <div className="stat-card-note">Full orphans</div>
           </div>
           <div className="stat-card-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 12h18M3 6h18M3 18h18"></path>
-              <circle cx="17" cy="12" r="3"></circle>
-              <circle cx="7" cy="12" r="3"></circle>
-            </svg>
+            <FiUser />
           </div>
         </div>
       </div>
 
-     <div className="student-filters-section">
+    <div className="student-filters-section">
   <p className="filters-name-tag">Filters</p>
 
   <div className="container-fluid">
 
     {/* Row 1 */}
-    <div className="row g-2">
+    <div className="row g-2 align-items-center">
 
       {/* Gender */}
       <div className="col-2">
@@ -746,6 +704,24 @@ export default function StudentListPage() {
         />
       </div>
 
+      {/* Academic Year */}
+      <div className="col-2">
+        <MultiSelectFilter
+          filterKey="academicYear"
+          label="All Academic Years"
+          value={pending.academic_year_id}
+          options={academicYearOptions}
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
+          onChange={(value) =>
+            setPending({
+              ...pending,
+              academic_year_id: value,
+            })
+          }
+        />
+      </div>
+
       {/* Class */}
       <div className="col-2">
         <MultiSelectFilter
@@ -763,6 +739,30 @@ export default function StudentListPage() {
           }
         />
       </div>
+
+      {/* Search */}
+      <div className="col-4">
+        <div className="filter-search-wrapper">
+          <LuSearch className="search-icon" size={18} />
+
+          <input
+            className="filter-search-input"
+            placeholder="Search students by name, ID..."
+            value={pending.search}
+            onChange={(e) =>
+              setPending({
+                ...pending,
+                search: e.target.value,
+              })
+            }
+          />
+        </div>
+      </div>
+
+    </div>
+
+    {/* Row 2 - Location */}
+    <div className="row g-2 mt-1 align-items-center">
 
       {/* State */}
       <div className="col-2">
@@ -786,170 +786,160 @@ export default function StudentListPage() {
         />
       </div>
 
-      {/* Search */}
-      <div className="col-4">
-        <div className="filter-search-wrapper">
-          <svg
-            className="search-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="M21 21l-4.35-4.35"></path>
-          </svg>
-
-          <input
-            className="filter-search-input"
-            placeholder="Search students by name, ID..."
-            value={pending.search}
-            onChange={(e) =>
+      {/* District */}
+      {stateHasSelection && (
+        <div className="col-2 filter-reveal">
+          <MultiSelectFilter
+            filterKey="district"
+            label="All Districts"
+            value={pending.dist_id}
+            options={districtOptions}
+            openFilter={openFilter}
+            setOpenFilter={setOpenFilter}
+            disabled={districtDisabled}
+            onChange={(value) =>
               setPending({
                 ...pending,
-                search: e.target.value,
+                dist_id: value,
+                mndl_id: "",
+                vil_id: "",
+                sch_id: "",
               })
             }
           />
         </div>
+      )}
+
+      {/* Mandal */}
+      {districtHasSelection && (
+        <div className="col-2 filter-reveal">
+          <MultiSelectFilter
+            filterKey="mandal"
+            label="All Mandals"
+            value={pending.mndl_id}
+            options={mandalOptions}
+            openFilter={openFilter}
+            setOpenFilter={setOpenFilter}
+            disabled={mandalDisabled}
+            onChange={(value) =>
+              setPending({
+                ...pending,
+                mndl_id: value,
+                vil_id: "",
+                sch_id: "",
+              })
+            }
+          />
+        </div>
+      )}
+
+      {/* Village */}
+      {mandalHasSelection && (
+        <div className="col-2 filter-reveal">
+          <MultiSelectFilter
+            filterKey="village"
+            label="All Villages"
+            value={pending.vil_id}
+            options={villageOptions}
+            openFilter={openFilter}
+            setOpenFilter={setOpenFilter}
+            disabled={villageDisabled}
+            onChange={(value) =>
+              setPending({
+                ...pending,
+                vil_id: value,
+                sch_id: "",
+              })
+            }
+          />
+        </div>
+      )}
+
+      {/* School */}
+      {villageHasSelection && (
+        <div className="col-2 filter-reveal">
+          <MultiSelectFilter
+            filterKey="school"
+            label="All Schools"
+            value={pending.sch_id}
+            options={schoolOptions}
+            openFilter={openFilter}
+            setOpenFilter={setOpenFilter}
+            disabled={schoolDisabled}
+            onChange={(value) =>
+              setPending({
+                ...pending,
+                sch_id: value,
+              })
+            }
+          />
+        </div>
+      )}
+
+    </div>
+
+    {/* Row 3 - Parent filters & Buttons */}
+    <div className="row g-2 mt-1 align-items-center">
+
+      {/* Parent Type */}
+      <div className="col-2">
+        <MultiSelectFilter
+          filterKey="parentType"
+          label="Parent Type"
+          value={pending.parent_type}
+          options={parentTypeOptions}
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
+          onChange={(value) =>
+            setPending({
+              ...pending,
+              parent_type: value,
+              parent_occupation: value === '' || value === 'orphan' ? '' : pending.parent_occupation,
+            })
+          }
+        />
       </div>
 
-    </div>
-
-    {/* Row 2 */}
-<div className="row g-2 mt-1">
-
-  {showDistrictFilter ? (
-    <div className="col-2">
-      <MultiSelectFilter
-        filterKey="district"
-        label="All Districts"
-        value={pending.dist_id}
-        options={districtOptions}
-        openFilter={openFilter}
-        setOpenFilter={setOpenFilter}
-        onChange={(value) =>
-          setPending({
-            ...pending,
-            dist_id: value,
-            mndl_id: "",
-            vil_id: "",
-            sch_id: "",
-          })
-        }
-      />
-    </div>
-  ) : (
-    <div className="col-2" />
-  )}
-
-  {showMandalFilter ? (
-    <div className="col-2">
-      <MultiSelectFilter
-        filterKey="mandal"
-        label="All Mandals"
-        value={pending.mndl_id}
-        options={mandalOptions}
-        openFilter={openFilter}
-        setOpenFilter={setOpenFilter}
-        onChange={(value) =>
-          setPending({
-            ...pending,
-            mndl_id: value,
-            vil_id: "",
-            sch_id: "",
-          })
-        }
-      />
-    </div>
-  ) : (
-    <div className="col-2" />
-  )}
-
-  {showVillageFilter ? (
-    <div className="col-2">
-      <MultiSelectFilter
-        filterKey="village"
-        label="All Villages"
-        value={pending.vil_id}
-        options={villageOptions}
-        openFilter={openFilter}
-        setOpenFilter={setOpenFilter}
-        onChange={(value) =>
-          setPending({
-            ...pending,
-            vil_id: value,
-            sch_id: "",
-          })
-        }
-      />
-    </div>
-  ) : (
-    <div className="col-2" />
-  )}
-
-  {showSchoolFilter ? (
-    <div className="col-2">
-      <MultiSelectFilter
-        filterKey="school"
-        label="All Schools"
-        value={pending.sch_id}
-        options={schoolOptions}
-        openFilter={openFilter}
-        setOpenFilter={setOpenFilter}
-        onChange={(value) =>
-          setPending({
-            ...pending,
-            sch_id: value,
-          })
-        }
-      />
-    </div>
-  ) : (
-    <div className="col-2" />
-  )}
-
-      {/* Empty Space */}
-      <div className="col-2 "></div>
+      {/* Parent Occupation */}
+      {showParentOccupation && (
+        <div className="col-2 filter-reveal">
+          <MultiSelectFilter
+            filterKey="parentOccupation"
+            label="Parent Occupation"
+            value={pending.parent_occupation}
+            options={parentOccupationOptions}
+            openFilter={openFilter}
+            setOpenFilter={setOpenFilter}
+            disabled={parentOccupationDisabled}
+            onChange={(value) =>
+              setPending({ ...pending, parent_occupation: value })
+            }
+          />
+        </div>
+      )}
 
       {/* Buttons */}
-      <div className="col-2 d-flex  justify-content-end   gap-2" >
-          <button
-            className="clearbtn"
-            onClick={() => {
-              setPending(defaults);
-              setApplied(defaults);
-              setPage(1);
-              setOpenFilter(null);
-            }}
-          ><img
-      src={closeIcon}
-      alt="Clear"
-      className="filterBtnIcon"
-    />
-            Clear
-          </button>
-     
+      <div className="filter-actions-group col-auto ms-auto d-flex justify-content-end gap-2 align-items-center">
 
-          
-          <button
-            className="gobtn"
-            onClick={() => {
-              setApplied({ ...pending });
-              setPage(1);
-              setOpenFilter(null);
-            }}
-          >
-            <img
-  src={arrowIcon}
-  alt="Clear"
-  className="filterBtnIcon"
-/>
-            Go
-           
-          </button>
+        <button
+          className="clearbtn"
+          onClick={() => {
+            setPending(defaults);
+            setApplied(defaults);
+            setPage(1);
+            setOpenFilter(null);
+          }}
+        >
+          <HiOutlineXMark className="filterBtnIcon" />
+          Clear
+        </button>
+        <button
+          className="gobtn"
+          onClick={() => { setApplied({ ...pending }); setPage(1); setOpenFilter(null); }}
+        >
+          <FiArrowRight className="filterBtnIcon" />
+          Go
+        </button>
       </div>
 
     </div>
@@ -958,10 +948,10 @@ export default function StudentListPage() {
 </div>
 
       <div
-        className={`student-table-section studentRecordsPanel ${hasSelection ? "bulkModeActive" : ""}`}
+        className={`panel studentRecordsPanel student-table-section ${hasSelection ? "bulkModeActive" : ""}`}
       >
-        <div className="table-header">
-          <h3 className="table-title">Student Records <span className="results-count">{total} results</span></h3>
+        <div className="sponsorRecordsHeader">
+          <h3 className="panelTitle">Student Records <span className="results-count" style={{ marginLeft: '10px' }}>{total} results</span></h3>
           {fetching ? <span className="table-updating">Updating...</span> : null}
         </div>
 
@@ -973,10 +963,27 @@ export default function StudentListPage() {
         >
           <div className="selectHeaderRow studentBulkToolbar">
             <div className="bulkToolbarInfo">
-              <span className="bulkSelectAllText">Select all on this page</span>
-              <span className="selected-count">
-                Selected {checked.length} of {total}
-              </span>
+              {allSelected ? (
+                <>
+                  <span className="selected-count">
+                    All {total} students matching this search are selected.
+                  </span>
+                  <button className="clearSelectionLink" onClick={() => { setChecked([]); setGlobalSelection(false); }}>
+                    Clear selection
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="selected-count">
+                    Selected {checked.length} of {total}
+                  </span>
+                  {showSelectAllLink ? (
+                    <button className="selectAllLink" onClick={selectAllMatchingStudents}>
+                      Select all {total} students matching this search
+                    </button>
+                  ) : null}
+                </>
+              )}
             </div>
             <div className="bulkToolbarActions">
               <button className="btn btnGreen" onClick={handleExportCsv}>
@@ -985,7 +992,7 @@ export default function StudentListPage() {
                   <path d="M8 11l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M4 17v3h16v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                Export CSV
+                      &nbsp;Export CSV
               </button>
               <button
                 className="btn btnRed"
@@ -1033,64 +1040,57 @@ export default function StudentListPage() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                Delete selected
+                  &nbsp;Delete selected
               </button>
             </div>
           </div>
         </div>
 
-        <DataTable
-          loading={loading}
-          loadingRowCount={Math.min(pageSize, 20)}
-          columns={[
-            { key: 'id', label: <div className="idSelectCell header"><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
-            { key: 'student', label: sortHeader('STUDENT', 'student_name'), width: '250px' },
-            { key: 'age', label: sortHeader('AGE', 'age'), width: '92px' },
-            { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
-            { key: 'school', label: 'SCHOOL', width: '235px' },
-            { key: 'guardian', label: 'GUARDIAN', width: '210px' },
-            { key: 'orphan', label: 'STATUS', width: '150px' },
-            { key: 'sponsor', label: 'SPONSOR', width: '120px' },
-            { key: 'actions', label: '', width: '100px' }
-          ]}
-          rows={rows}
-          onRowClick={(index) => setSelected(students[index] ?? null)}
-          rowClassName={(index) => {
-            const student = students[index];
-            return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
-          }}
-          footer={
-            <Pagination
-              total={total}
-              page={page}
-              pageSize={pageSize}
-              onChange={setPage}
-              onPageSizeChange={(nextPageSize) => {
-                setPageSize(nextPageSize);
-                setPage(1);
-              }}
-            />
-          }
-        />
+        <div className="studentTableOuter">
+          <DataTable
+            loading={loading}
+            loadingRowCount={Math.min(pageSize, 20)}
+            columns={[
+              { key: 'id', label: <div className={`idSelectCell header${allPageChecked ? ' isSelectedHeader' : ''}`}><input aria-label="Select all on this page" type="checkbox" checked={allPageChecked} onChange={togglePage} onClick={e => e.stopPropagation()} /><span className="sortableHeaderWrap">{sortHeader('ID', 'student_id')}</span></div>, width: '92px' },
+              { key: 'student', label: sortHeader('STUDENT', 'student_name'), width: '250px' },
+              { key: 'age', label: sortHeader('AGE', 'age'), width: '92px' },
+              { key: 'grade', label: sortHeader('CLASS', 'class_name'), width: '88px' },
+              { key: 'school', label: 'SCHOOL', width: '235px' },
+              { key: 'guardian', label: 'GUARDIAN', width: '210px' },
+              { key: 'orphan', label: 'STATUS', width: '150px' },
+              { key: 'acadStatus', label: 'ACAD STATUS', width: '140px' },
+              { key: 'result', label: 'RESULT', width: '110px' },
+              { key: 'sponsor', label: 'SPONSOR', width: '120px' },
+              { key: 'actions', label: '', width: '100px' }
+            ]}
+            rows={rows}
+            onRowClick={(index) => setSelected(students[index] ?? null)}
+            rowClassName={(index) => {
+              const student = students[index];
+              return `studentTableRow${student && checked.includes(student.student_id) ? ' isSelected' : ''}`;
+            }}
+            footer={
+              <Pagination
+                total={total}
+                page={page}
+                pageSize={pageSize}
+                onChange={setPage}
+                onPageSizeChange={(nextPageSize) => {
+                  setPageSize(nextPageSize);
+                  setPage(1);
+                }}
+              />
+            }
+          />
+        </div>
       </div>
       <StudentDetailModal student={selected} onClose={() => setSelected(null)} />
-      <Modal open={sponsorOpen} onClose={() => setSponsorOpen(false)} title={sponsorDetails?.sponsorName ?? 'Sponsor'} width={560} footer={<><Button variant="outline" onClick={() => setSponsorOpen(false)}>Close</Button></>}>
-        {sponsorDetails ? (
-          <div>
-          <h3 style={{ marginTop: 0 }}>{sponsorDetails.sponsorName}</h3>
-          <div className="sub">{sponsorDetails.type} - {sponsorDetails.nationality}</div>
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontWeight: 800 }}>{sponsorDetails.email}</div>
-            <div className="sub">{sponsorDetails.ph_no}</div>
-            <div className="sub" style={{ marginTop: 8 }}>{sponsorDetails.loc}</div>
-            <div style={{ marginTop: 12 }}><strong>Contribution:</strong> <div className="sub" style={{ marginTop: 6 }}>{sponsorDetails.contrib}</div></div>
-            <div style={{ marginTop: 12 }}><strong>Students Sponsored:</strong> <span className="strong">{sponsorDetails.students_count}</span></div>
-          </div>
-          </div>
-        ) : (
-          <div>No sponsor information available</div>
-        )}
-      </Modal>
+      <SponsorDetailsModal
+        open={sponsorOpen}
+        sponsor={sponsorDetails}
+        onClose={() => setSponsorOpen(false)}
+      />
+      <ImportModal open={showImport} onClose={() => { setShowImport(false); load(page, pageSize); }} />
 
       <ConfirmModal
         open={singleDelete !== null}
@@ -1105,7 +1105,7 @@ export default function StudentListPage() {
         onClose={() => setBulkOpen(false)}
         onConfirm={confirmBulkDelete}
         title="Delete Selected Students"
-        message={`Delete ${checked.length} selected students?`}
+        message={`Delete ${allSelected ? total : checked.length} selected students?`}
       />
     </div>
   );

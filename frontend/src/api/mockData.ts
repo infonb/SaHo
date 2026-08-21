@@ -9,27 +9,27 @@ export const delay = (ms = 450) => new Promise<void>((resolve) => setTimeout(res
 export const MOCK_STATES: StateMaster[] = [
   { st_id: 1, st_name: 'Telangana', created_at: '2024-01-01', updated_at: null },
   { st_id: 2, st_name: 'Andhra Pradesh', created_at: '2024-01-01', updated_at: null },
-];
+] as unknown as StateMaster[];
 export const MOCK_DISTRICTS: DistrictMaster[] = [
   { dist_id: 1, dist_name: 'Warangal', st_id: 1, created_at: '2024-01-01', updated_at: null },
   { dist_id: 2, dist_name: 'Karimnagar', st_id: 1, created_at: '2024-01-01', updated_at: null },
   { dist_id: 3, dist_name: 'Nalgonda', st_id: 1, created_at: '2024-01-01', updated_at: null },
-];
+] as unknown as DistrictMaster[];
 export const MOCK_MANDALS: MandalMaster[] = [
   { mndl_id: 1, mndl_name: 'Hanamkonda', dist_id: 1, created_at: '2024-01-01', updated_at: null },
   { mndl_id: 2, mndl_name: 'Jammikunta', dist_id: 2, created_at: '2024-01-01', updated_at: null },
   { mndl_id: 3, mndl_name: 'Miryalaguda', dist_id: 3, created_at: '2024-01-01', updated_at: null },
-];
+] as unknown as MandalMaster[];
 export const MOCK_VILLAGES: VillageMaster[] = [
   { vil_id: 1, vil_name: 'Dharmasagar', vil_pincode: 506001, mndl_id: 1, created_at: '2024-01-01', updated_at: null },
   { vil_id: 2, vil_name: 'Gangadhara', vil_pincode: 505122, mndl_id: 2, created_at: '2024-01-01', updated_at: null },
   { vil_id: 3, vil_name: 'Nereducharla', vil_pincode: 508112, mndl_id: 3, created_at: '2024-01-01', updated_at: null },
-];
+] as unknown as VillageMaster[];
 export const MOCK_SCHOOLS: SchoolMaster[] = [
   { sch_id: 1, sch_name: 'ZP High School Warangal', sch_address: 'Hanamkonda, Warangal, Telangana 506001', vil_id: 1, created_at: '2024-01-01', updated_at: null },
   { sch_id: 2, sch_name: "St. Joseph's High School", sch_address: 'Jammikunta, Karimnagar, Telangana 505122', vil_id: 2, created_at: '2024-01-01', updated_at: null },
   { sch_id: 3, sch_name: 'Kasturba Vidyalaya', sch_address: 'Nereducharla, Nalgonda, Telangana 508112', vil_id: 3, created_at: '2024-01-01', updated_at: null },
-];
+] as unknown as SchoolMaster[];
 export const MOCK_RELATIONSHIPS: RelationshipMaster[] = [
   { relationship_id: 1, relationship_name: 'Mother', relationship_code: 'MTH', description: null, is_active: true, created_at: '2024-01-01', updated_at: null },
   { relationship_id: 2, relationship_name: 'Father', relationship_code: 'FTH', description: null, is_active: true, created_at: '2024-01-01', updated_at: null },
@@ -177,7 +177,7 @@ export const buildStudentView = (s: Student): StudentView => {
   const sponsor = assignment ? MOCK_SPONSORS.find(sp => sp.sponsor_id === assignment.spn_id) : null;
   return {
     student_id: s.student_id, full_name: [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(' '), email: s.email, dob: s.dob, gender: s.gender, aadhaar_number: s.aadhaar_number, caste: s.caste, religion: s.religion, blood_group: s.blood_group, class_id: s.class_id, orphan_status: s.orphan_status, image_url: s.image_url, is_active: s.is_active, created_at: s.created_at, created_by: s.created_by,
-    sch_id: school.sch_id, sch_name: school.sch_name, sch_address: school.sch_address, vil_id: village.vil_id, vil_name: village.vil_name, mndl_id: mandal.mndl_id, mndl_name: mandal.mndl_name, dist_id: district.dist_id, dist_name: district.dist_name, st_id: state.st_id, st_name: state.st_name,
+    sch_id: school.sch_id ?? school.schId, sch_name: school.sch_name ?? school.schName, sch_address: school.sch_address ?? school.schAddress, vil_id: village.vil_id ?? village.vilId, vil_name: village.vil_name ?? village.vilName, mndl_id: mandal.mndl_id ?? mandal.mndlId, mndl_name: mandal.mndl_name ?? mandal.mndlName, dist_id: district.dist_id ?? district.distId, dist_name: district.dist_name ?? district.distName, st_id: state.st_id ?? state.stId, st_name: state.st_name ?? state.stName,
     guardian_id: guardian.guardian_id, guardian_full_name: [guardian.first_name, guardian.middle_name, guardian.last_name].filter(Boolean).join(' '), guardian_phone: guardian.phone_number, guardian_relation_name: rel.relationship_name, guardian_occ: guardian.occ,
     sponsor_id: sponsor?.sponsor_id ?? null,
     sponsorName: sponsor?.sponsorName ?? null,

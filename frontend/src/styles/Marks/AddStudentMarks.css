@@ -1,0 +1,353 @@
+.marksPage {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.marksCard {
+  background: #ffffff;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--r-lg, 14px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.marksSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.marksSectionTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text2, #334155);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.studentSearchRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.studentSearchRow .input {
+  flex: 1;
+}
+
+.studentSelectWrap {
+  max-width: 640px;
+}
+
+.studentSelectWrap .select {
+  width: 100%;
+}
+
+.studentInfoBox {
+  border: 1px solid var(--color-divider, #eef2f7);
+  background: var(--color-surface, #f8fafc);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.studentInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 20px;
+}
+
+.studentInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.studentInfoLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text3, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.studentInfoValue {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text1, #0f172a);
+}
+
+.marksTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.marksTable th {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text3, #64748b);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-divider, #eef2f7);
+  white-space: nowrap;
+}
+
+.marksTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-divider, #eef2f7);
+  font-size: 13px;
+  color: var(--color-text1, #0f172a);
+}
+
+.marksInput {
+  width: 100px;
+}
+
+.marksInputError {
+  border-color: #ef4444 !important;
+  background: #fef2f2 !important;
+}
+
+.marksResultPlaceholder {
+  color: var(--color-text3, #64748b);
+}
+
+.marksLoading {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text3, #64748b);
+  font-size: 13px;
+}
+
+.summaryBox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 40px;
+  border: 1px solid var(--color-divider, #eef2f7);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.summaryLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text3, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summaryValue {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text1, #0f172a);
+}
+
+.marksActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--color-divider, #eef2f7);
+}
+
+.marksEmptyCard {
+  background: #ffffff;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--r-lg, 14px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.marksEmptyCard h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text1, #0f172a);
+}
+
+.marksEmptyCard p {
+  margin: 0;
+  max-width: 640px;
+  font-size: 13px;
+  color: var(--color-text3, #64748b);
+  line-height: 1.55;
+}
+
+.classSelectGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+
+.classLoadAction {
+  display: flex;
+  align-items: flex-end;
+}
+
+.classLoadAction .btn,
+.classLoadAction .maxBtn {
+  width: 100%;
+}
+
+.classSheetHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.classSheetMeta {
+  font-size: 12px;
+  color: var(--color-text3, #64748b);
+  margin-top: 4px;
+}
+
+.classSheetDirty {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.classSheetActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.classSheetActions .studentSearchRow {
+  position: relative;
+}
+
+.classSearchIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text3, #64748b);
+  pointer-events: none;
+}
+
+.classGridWrap {
+  overflow: auto;
+  max-height: 560px;
+  border: 1px solid var(--color-divider, #eef2f7);
+  border-radius: 12px;
+}
+
+.classGridTable {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.classGridTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+  box-shadow: inset 0 -1px 0 var(--color-divider, #eef2f7);
+}
+
+.classGridTable .classGridStickyCell {
+  position: sticky;
+  left: 0;
+  background: #ffffff;
+  z-index: 1;
+}
+
+.classGridTable thead .classGridStickyCell {
+  z-index: 3;
+  background: #f8fafc;
+}
+
+.classSubjectHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.classSubjectHeader small {
+  font-weight: 600;
+  font-size: 10px;
+  color: var(--color-text3, #64748b);
+}
+
+.classCellInput {
+  width: 74px;
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.classStudentName {
+  font-weight: 700;
+  color: var(--color-text1, #0f172a);
+  white-space: nowrap;
+}
+
+.classRowIncomplete {
+  background: #fffbeb;
+}
+
+.classRowIncomplete td {
+  background: #fffbeb;
+}
+
+.classRowWarn {
+  font-size: 10px;
+  font-weight: 800;
+  color: #b45309;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.classSummaryValue {
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--color-text1, #0f172a);
+  white-space: nowrap;
+}
+
+.classGridActions {
+  align-items: center;
+}
+
+.classGridHint {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--color-text3, #64748b);
+}
+
+.classGridOutcomeHint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--color-text4, #94a3b8);
+}
+
+.outcomeSelect {
+  min-width: 120px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.outcomeLockedBadge {
+  font-size: 11px;
+  padding: 3px 8px;
+}

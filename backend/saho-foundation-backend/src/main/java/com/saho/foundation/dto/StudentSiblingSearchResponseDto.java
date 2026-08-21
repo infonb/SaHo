@@ -14,5 +14,6 @@ public class StudentSiblingSearchResponseDto {
     private Integer studentId;
     private String studentName;
     private Integer classId;
+    private String className;
     private String schoolName;
 }

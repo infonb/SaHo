@@ -2,13 +2,87 @@ import { apiClient } from './client';
 import { buildStudentView, delay, MOCK_GUARDIANS, MOCK_STUDENTS } from './mockData';
 import type { Guardian, Student, StudentFilters, StudentView } from '../types';
 
+const getStudentImageUrl = (student: any): string | null => {
+  const value =
+    student?.imageUrl ??
+    student?.imageURL ??
+    student?.image_url ??
+    student?.studentImageUrl ??
+    student?.student_image_url ??
+    student?.studentPhotoUrl ??
+    student?.student_photo_url ??
+    student?.photoUrl ??
+    student?.photoURL ??
+    student?.photo_url ??
+    student?.profileImageUrl ??
+    student?.profile_image_url ??
+    student?.profilePhotoUrl ??
+    student?.profile_photo_url ??
+    student?.fileUrl ??
+    student?.file_url ??
+    student?.filePath ??
+    student?.file_path ??
+    student?.image?.url ??
+    student?.image?.path ??
+    student?.photo?.url ??
+    student?.photo?.path ??
+    student?.profilePhoto?.url ??
+    student?.profilePhoto?.path ??
+    null;
+
+  return typeof value === 'string' && value.trim() ? value : null;
+};
+
 export interface StudentsResponse {
   pageNumber: number;
   pageSize: number;
   students: StudentView[];
   total: number;
+  boysCount: number;
+  girlsCount: number;
+  sponsoredCount: number;
+  orphansCount: number;
   hasMore: boolean;
 }
+
+export const getStudentIds = async (filters?: Partial<StudentFilters>): Promise<number[]> => {
+  const normalizeGenderValue = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed === 'Male') return '1';
+    if (trimmed === 'Female') return '2';
+    if (trimmed === 'Other') return '3';
+    return trimmed;
+  };
+
+  const genderValues = filters?.gender?.split(',').map(v => normalizeGenderValue(v)).filter(Boolean) ?? [];
+  const orphanValues = filters?.orphan_status?.split(',').map(v => v.trim()).filter(Boolean) ?? [];
+
+  if (genderValues.length > 1) {
+    const results = await Promise.all(genderValues.map(g => getStudentIds({ ...filters, gender: g })));
+    return [...new Set(results.flat())];
+  }
+
+  if (orphanValues.length > 1) {
+    const results = await Promise.all(orphanValues.map(o => getStudentIds({ ...filters, orphan_status: o })));
+    return [...new Set(results.flat())];
+  }
+
+  const params: any = {};
+  if (filters?.search?.trim()) params.search = filters.search.trim();
+  if (filters?.gender) params.gender = normalizeGenderValue(filters.gender);
+  if (filters?.class_id) params.classId = filters.class_id;
+  if (filters?.academic_year_id) params.academicYearId = filters.academic_year_id;
+  if (filters?.orphan_status) params.orphanStatus = filters.orphan_status;
+  if (filters?.parent_type) params.parentType = filters.parent_type;
+  if (filters?.parent_occupation) params.parentOccupation = filters.parent_occupation;
+  if (filters?.st_id) params.stId = filters.st_id;
+  if (filters?.dist_id) params.distId = filters.dist_id;
+  if (filters?.mndl_id) params.mndlId = filters.mndl_id;
+  if (filters?.vil_id) params.vilId = filters.vil_id;
+  if (filters?.sch_id) params.schId = filters.sch_id;
+  const res = await apiClient.get('/students/ids', { params });
+  return res.data as number[];
+};
 
 export const getStudents = async ({
   pageNumber = 1,
@@ -54,6 +128,10 @@ export const getStudents = async ({
       pageSize,
       students: pageStudents,
       total: students.length,
+      boysCount: students.filter(s => s.gender === 'Male').length,
+      girlsCount: students.filter(s => s.gender === 'Female').length,
+      sponsoredCount: students.filter(s => s.sponsor_id).length,
+      orphansCount: students.filter(s => s.orphan_status === '3').length,
       hasMore: start + pageSize < students.length,
     };
   }
@@ -78,6 +156,10 @@ export const getStudents = async ({
       pageSize,
       students: pageStudents,
       total: students.length,
+      boysCount: students.filter(s => s.gender === 'Male').length,
+      girlsCount: students.filter(s => s.gender === 'Female').length,
+      sponsoredCount: students.filter(s => s.sponsor_id).length,
+      orphansCount: students.filter(s => s.orphan_status === '3').length,
       hasMore: start + pageSize < students.length,
     };
   }
@@ -87,7 +169,10 @@ export const getStudents = async ({
     if (filters?.search?.trim()) params.search = filters.search.trim();
     if (filters?.gender) params.gender = normalizeGenderValue(filters.gender);
     if (filters?.class_id) params.classId = filters.class_id;
+    if (filters?.academic_year_id) params.academicYearId = filters.academic_year_id;
     if (filters?.orphan_status) params.orphanStatus = filters.orphan_status;
+    if (filters?.parent_type) params.parentType = filters.parent_type;
+    if (filters?.parent_occupation) params.parentOccupation = filters.parent_occupation;
     if (filters?.st_id) params.stId = filters.st_id;
     if (filters?.dist_id) params.distId = filters.dist_id;
     if (filters?.mndl_id) params.mndlId = filters.mndl_id;
@@ -108,7 +193,7 @@ export const getStudents = async ({
       blood_group: s.bloodGroup ?? null,
       class_id: s.className ? String(s.className) : (s.classId ? String(s.classId) : ''),
       orphan_status: s.orphanStatus ?? null,
-      image_url: s.imageUrl ?? null,
+      image_url: getStudentImageUrl(s),
       is_active: true,
       created_at: s.createdAt ?? new Date().toISOString(),
       created_by: s.createdBy ?? 'system',
@@ -136,6 +221,9 @@ export const getStudents = async ({
       mndl_name: s.mndlName ?? '',
       dist_name: s.distName ?? '',
       st_name: s.stName ?? '',
+      status: s.status ?? null,
+      admissionType: s.admissionType ?? null,
+      annualResult: s.annualResult ?? null,
     } as unknown as StudentView));
 
     const inferredTotal = Number(res.data?.total ?? res.data?.totalCount ?? (res.data?.students?.[0]?.totalCount ?? res.data?.students?.[0]?.total_count));
@@ -146,6 +234,10 @@ export const getStudents = async ({
       pageSize: res.data?.pageSize ?? pageSize,
       students,
       total: Number.isFinite(inferredTotal) ? inferredTotal : ((pageNumber - 1) * pageSize) + students.length + (hasMore ? 1 : 0),
+      boysCount: res.data?.boysCount ?? 0,
+      girlsCount: res.data?.girlsCount ?? 0,
+      sponsoredCount: res.data?.sponsoredCount ?? 0,
+      orphansCount: res.data?.orphansCount ?? 0,
       hasMore,
     };
   } catch (err) {
@@ -177,7 +269,10 @@ export const exportStudentsCsv = async ({
   if (filters?.search?.trim()) params.search = filters.search.trim();
   if (filters?.gender) params.gender = normalizeGenderValue(filters.gender);
   if (filters?.class_id) params.classId = filters.class_id;
+  if (filters?.academic_year_id) params.academicYearId = filters.academic_year_id;
   if (filters?.orphan_status) params.orphanStatus = filters.orphan_status;
+  if (filters?.parent_type) params.parentType = filters.parent_type;
+  if (filters?.parent_occupation) params.parentOccupation = filters.parent_occupation;
   if (filters?.st_id) params.stId = filters.st_id;
   if (filters?.dist_id) params.distId = filters.dist_id;
   if (filters?.mndl_id) params.mndlId = filters.mndl_id;
@@ -195,6 +290,63 @@ export const exportStudentsCsv = async ({
   return res.data as Blob;
 };
 
+export const getMyProfile = async (userId: number): Promise<StudentView | undefined> => {
+  try {
+    const res = await apiClient.get('/students/me', { params: { userId } });
+    const s: any = res.data;
+    const mapGender = (g: any) => (g === '1' ? 'Male' : g === '2' ? 'Female' : g === '3' ? 'Other' : g ?? 'Other');
+    const mapReligion = (r: any) => (r === '1' ? 'Hindu' : r === '2' ? 'Muslim' : r === '3' ? 'Christian' : r === '4' ? 'Buddhist' : r === '5' ? 'Jain' : r === '6' ? 'Sikh' : r === '7' ? 'Other' : r ?? null);
+    const mapOrphan = (o: any) => (o === '1' ? 'None' : o === '2' ? 'Single Parent' : o === '3' ? 'Orphan' : o ?? null);
+
+    console.log('Student Profile Response:', s);
+    return {
+      student_id: s.studentId ?? s.student_id,
+      studentName: s.studentName ?? s.fullName ?? s.full_name ?? s.name ?? '',
+      full_name: s.studentName ?? s.fullName ?? s.full_name ?? s.name ?? '',
+      email: s.emailId ?? s.email ?? '',
+      dob: s.dob ?? '',
+      gender: mapGender(s.gender),
+      aadhaar_number: s.aadhaarNumber ?? '',
+      caste: s.casteName ?? '',
+      religion: mapReligion(s.religion),
+      blood_group: s.bloodGroup ?? null,
+      class_id: s.className ?? (s.classId ? String(s.classId) : ''),
+      orphan_status: mapOrphan(s.orphanStatus),
+      image_url: getStudentImageUrl(s),
+      is_active: true,
+      created_at: '',
+      created_by: '',
+      modified_at: null,
+      modified_by: null,
+      sch_id: 0,
+      sch_name: s.schName ?? '',
+      sch_address: s.schAddress ?? '',
+      vil_id: 0,
+      vil_name: s.vilName ?? '',
+      mndl_id: 0,
+      mndl_name: s.mndlName ?? '',
+      dist_id: 0,
+      dist_name: s.distName ?? '',
+      st_id: 0,
+      st_name: s.stName ?? '',
+      guardian_id: 0,
+      guardian_full_name: s.guardianName ?? '',
+      guardian_phone: s.phoneNumber ?? '',
+      guardian_relation_name: s.guardianRelationName ?? '',
+      guardian_occ: s.occ ?? null,
+      sponsor_id: null,
+      sponsorName: null,
+      sponsor_type: null,
+      sibling_id: s.siblingId ?? null,
+      sibling_student_name: null,
+      sibling_student_id: null,
+    } as unknown as StudentView;
+  } catch (err) {
+    console.error('[studentApi] getMyProfile failed', userId, err);
+    return undefined;
+  }
+};
+
 export const getStudentById = async (id: number): Promise<StudentView | undefined> => {
   // Try backend first
   try {
@@ -207,7 +359,8 @@ export const getStudentById = async (id: number): Promise<StudentView | undefine
 
     const view = {
       student_id: s.studentId ?? s.student_id,
-      full_name: s.studentName ?? s.name ?? '',
+      studentName: s.studentName ?? s.fullName ?? s.full_name ?? s.name ?? '',
+      full_name: s.studentName ?? s.fullName ?? s.full_name ?? s.name ?? '',
       email: s.emailId ?? s.email ?? '',
       dob: s.dob ?? '',
       gender: mapGender(s.gender ?? s.gender_code ?? s.gender_label),
@@ -217,7 +370,7 @@ export const getStudentById = async (id: number): Promise<StudentView | undefine
       blood_group: s.bloodGroup ?? s.blood_group ?? null,
       class_id: s.className ?? s.class_id ?? (s.classId ? String(s.classId) : ''),
       orphan_status: mapOrphan(s.orphanStatus ?? s.orphan_status ?? s.orphan_status_code),
-      image_url: s.imageUrl ?? s.image_url ?? null,
+      image_url: getStudentImageUrl(s),
       is_active: true,
       created_at: s.createdAt ?? s.created_at ?? new Date().toISOString(),
       created_by: s.createdBy ?? s.created_by ?? 'system',
