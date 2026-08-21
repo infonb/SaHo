@@ -16,6 +16,7 @@ import com.saho.foundation.entity.SchoolMaster;
 import com.saho.foundation.entity.Student;
 import com.saho.foundation.entity.StudentAcademic;
 import com.saho.foundation.entity.StudentFamily;
+import com.saho.foundation.entity.StudentMarks;
 import com.saho.foundation.entity.User;
 import com.saho.foundation.enums.AdmissionType;
 import com.saho.foundation.enums.Gender;
@@ -31,6 +32,7 @@ import com.saho.foundation.repository.GuardianRepository;
 import com.saho.foundation.repository.RelationshipRepository;
 import com.saho.foundation.repository.SchoolRepository;
 import com.saho.foundation.repository.StudentAcademicRepository;
+import com.saho.foundation.repository.StudentMarksRepository;
 import com.saho.foundation.repository.StudentRepository;
 import com.saho.foundation.repository.UserRepository;
 import com.saho.foundation.service.iservices.StudentFamilyService;
@@ -83,6 +85,7 @@ public class StudentServiceImpl implements StudentService {
     private final SchoolRepository schoolRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final StudentMarksRepository studentMarksRepository;
 
     @Override
     @Transactional
@@ -179,6 +182,8 @@ public class StudentServiceImpl implements StudentService {
                 .stream()
                 .map(this::mapStudentListResponse)
                 .toList();
+
+        enrichAnnualResults(students);
 
         int resolvedTotalCount = 0;
         int resolvedBoysCount = 0;
@@ -682,6 +687,7 @@ public class StudentServiceImpl implements StudentService {
                 .rollNumber(student.getRollNumber())
                 .admissionType(student.getAdmissionType())
                 .status(student.getStatus())
+                .annualResult(student.getAnnualResult())
                 .remarks(student.getRemarks())
                 .academicIsActive(student.getAcademicIsActive())
                 .academicIsDeleted(student.getAcademicIsDeleted())
@@ -724,6 +730,35 @@ public class StudentServiceImpl implements StudentService {
                 .modifiedBy(student.getModifiedBy())
                 .academicDetails(student.getAcademicDetails())
                 .build();
+    }
+
+    private void enrichAnnualResults(List<StudentListResponseDto> students) {
+        List<Integer> academicIds = students.stream()
+                .map(StudentListResponseDto::getStudentAcademicId)
+                .filter(id -> id != null)
+                .distinct()
+                .toList();
+        if (academicIds.isEmpty()) {
+            return;
+        }
+        Map<Integer, List<StudentMarks>> marksByStudent = studentMarksRepository
+                .findByStudentAcademicIdInAndIsDeletedFalse(academicIds)
+                .stream()
+                .collect(Collectors.groupingBy(StudentMarks::getStudentAcademicId));
+        for (StudentListResponseDto student : students) {
+            if (student.getStudentAcademicId() == null) {
+                continue;
+            }
+            List<StudentMarks> rows = marksByStudent.getOrDefault(student.getStudentAcademicId(), List.of());
+            if (rows.isEmpty()) {
+                continue;
+            }
+            boolean allPresent = rows.stream().allMatch(r -> r.getResult() != null);
+            if (allPresent) {
+                boolean anyFail = rows.stream().anyMatch(r -> "FAIL".equals(r.getResult()));
+                student.setAnnualResult(anyFail ? "FAIL" : "PASS");
+            }
+        }
     }
 
     private void upsertStudentAcademic(

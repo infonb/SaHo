@@ -32,6 +32,7 @@ public class StudentListResponseDto {
     private String rollNumber;
     private String admissionType;
     private String status;
+    private String annualResult;
     private String remarks;
     private Boolean academicIsActive;
     private Boolean academicIsDeleted;

@@ -1,0 +1,137 @@
+/* StudentMarksPage — aligned with the SaHo Student Management design system */
+
+.marks-list-page {
+  padding-bottom: 32px;
+}
+
+/* --- Filter section --- */
+.marks-list-page .student-filters-section .select {
+  height: 40px;
+  border-radius: 12px;
+}
+
+.marks-list-page .student-filters-section .gobtn {
+  width: 100%;
+  height: 40px;
+  min-height: 40px;
+  padding: 6px 10px;
+  font-size: 12px !important;
+}
+
+.marks-list-page .student-filters-section .gobtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* --- Sheet panel --- */
+.marks-list-page .marksGridPanel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+  padding: 0;
+  overflow: hidden;
+}
+
+.marks-list-page .sponsorRecordsHeader {
+  flex-wrap: wrap;
+  row-gap: 12px;
+}
+
+.marks-list-page .sponsorRecordsHeader .panelTitle {
+  margin-bottom: 0;
+}
+
+.marks-list-page .sponsorRecordsHeader .filter-search-wrapper {
+  grid-column: auto;
+  width: 300px;
+  max-width: 100%;
+}
+
+.marks-list-page .sponsorRecordsHeader .filter-search-input {
+  height: 38px;
+  font-size: 13px;
+}
+
+.marks-list-page .tableWrap.classGridWrap {
+  border-color: #e2e8f0;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+/* --- Table (matches Student Management) --- */
+.marks-list-page .classGridTable thead th {
+  padding: 10px 12px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.marks-list-page .classGridTable td {
+  padding: 8px 12px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  border-top-color: #edf2f7;
+  text-align: center;
+}
+
+.marks-list-page .classGridTable th:nth-child(2),
+.marks-list-page .classGridTable td:nth-child(2),
+.marks-list-page .classGridTable th:nth-child(3),
+.marks-list-page .classGridTable td:nth-child(3) {
+  text-align: left;
+}
+
+.marks-list-page .classGridTable td:nth-child(2) {
+  padding-left: 18px;
+}
+
+.marks-list-page .classSubjectHeader {
+  align-items: center;
+}
+
+/* --- Row states --- */
+.marks-list-page .classGridTable tbody tr.studentTableRow:not(.isSelected):hover > td {
+  background-color: #f8fafc;
+  border-top-color: #e2e8f0;
+}
+
+.marks-list-page .classGridTable tbody tr.studentTableRow:not(.isSelected):hover > td.classGridStickyCell {
+  background-color: #f8fafc;
+}
+
+.marks-list-page .classGridTable tbody tr.classRowIncomplete > td,
+.marks-list-page .classGridTable tbody tr.classRowIncomplete > td.classGridStickyCell,
+.marks-list-page .classGridTable tbody tr.classRowIncomplete:hover > td,
+.marks-list-page .classGridTable tbody tr.classRowIncomplete:hover > td.classGridStickyCell {
+  background-color: #fffbeb;
+}
+
+/* --- Cells --- */
+.marks-list-page .classCellInput {
+  width: 74px;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.marks-list-page .outcomeSelect {
+  min-width: 130px;
+  font-size: 12px;
+}
+
+/* --- Save footer --- */
+.marks-list-page .marksActions {
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px 18px;
+  border-top: 1px solid #edf2f7;
+}
