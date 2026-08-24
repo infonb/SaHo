@@ -26,6 +26,8 @@ public class LocalIntentParser {
     private static final Pattern SCHOOL_MODULE_HINT = Pattern.compile("\\bschools?\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern REMINDER_MODULE_HINT = Pattern.compile("\\breminders?\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern ACTIVE_HINT = Pattern.compile("\\bactive\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern BOY_HINT = Pattern.compile("\\b(?:boy|boys)\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern GIRL_HINT = Pattern.compile("\\b(?:girl|girls)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern MALE_HINT = Pattern.compile("\\bmale\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern FEMALE_HINT = Pattern.compile("\\bfemale\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern OTHER_HINT = Pattern.compile("\\bother(?:s)?\\b", Pattern.CASE_INSENSITIVE);
@@ -48,6 +50,10 @@ public class LocalIntentParser {
     private static final Pattern BAR_HINT = Pattern.compile("\\bbar\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern SCHOOL_HINT = Pattern.compile("\\b(?:students?\\s+)?(?:studying in|studies in|study in|from)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern CLASS_HINT = Pattern.compile("\\bclass\\s+([a-z0-9][a-z0-9\\-]*)\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern VILLAGE_HINT = Pattern.compile("\\bvillages?\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MANDAL_HINT = Pattern.compile("\\bmandals?\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern DISTRICT_COUNT_HINT = Pattern.compile("\\bdistricts?\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern STATE_COUNT_HINT = Pattern.compile("\\b(?:states?|state\\s+wise)\\b", Pattern.CASE_INSENSITIVE);
 
     public Optional<IntentDTO> parse(String message) {
         if (!StringUtils.hasText(message)) {
@@ -61,12 +67,24 @@ public class LocalIntentParser {
             filters.put("status", "active");
         }
 
+        if (BOY_HINT.matcher(normalized).find()) {
+            filters.put("gender", "male");
+            filters.put("countTarget", "boy students");
+        }
+
+        if (GIRL_HINT.matcher(normalized).find()) {
+            filters.put("gender", "female");
+            filters.put("countTarget", "girl students");
+        }
+
         if (MALE_HINT.matcher(normalized).find()) {
             filters.put("gender", "male");
+            filters.putIfAbsent("countTarget", "male students");
         }
 
         if (FEMALE_HINT.matcher(normalized).find()) {
             filters.put("gender", "female");
+            filters.putIfAbsent("countTarget", "female students");
         }
 
         if (OTHER_HINT.matcher(normalized).find()) {
@@ -151,6 +169,11 @@ public class LocalIntentParser {
         String classValue = extractClassValue(normalized);
         if (StringUtils.hasText(classValue)) {
             filters.put("class", classValue);
+        }
+
+        String countTarget = extractCountTarget(normalized);
+        if (StringUtils.hasText(countTarget)) {
+            filters.put("countTarget", countTarget);
         }
 
         boolean countIntent = COUNT_HINT.matcher(normalized).find();
@@ -564,6 +587,42 @@ public class LocalIntentParser {
 
         String firstToken = candidate.split("\\s+")[0];
         return StringUtils.hasText(firstToken) ? firstToken : null;
+    }
+
+    private String extractCountTarget(String normalized) {
+        if (VILLAGE_HINT.matcher(normalized).find()) {
+            return "villages";
+        }
+
+        if (MANDAL_HINT.matcher(normalized).find()) {
+            return "mandals";
+        }
+
+        if (DISTRICT_COUNT_HINT.matcher(normalized).find()) {
+            return "districts";
+        }
+
+        if (STATE_COUNT_HINT.matcher(normalized).find()) {
+            return "states";
+        }
+
+        if (BOY_HINT.matcher(normalized).find()) {
+            return "boy students";
+        }
+
+        if (GIRL_HINT.matcher(normalized).find()) {
+            return "girl students";
+        }
+
+        if (MALE_HINT.matcher(normalized).find()) {
+            return "male students";
+        }
+
+        if (FEMALE_HINT.matcher(normalized).find()) {
+            return "female students";
+        }
+
+        return null;
     }
 
     private String extractReminderStatus(String normalized) {

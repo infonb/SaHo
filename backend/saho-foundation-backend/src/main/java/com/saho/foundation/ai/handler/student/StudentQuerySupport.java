@@ -32,6 +32,7 @@ public class StudentQuerySupport {
         "classid",
         "class",
         "classname",
+        "counttarget",
         "schname",
         "school",
         "orphan",
@@ -58,6 +59,7 @@ public class StudentQuerySupport {
             normalizedFilters.get("class"),
             normalizedFilters.get("classname")
         );
+        String countTarget = normalizeText(normalizedFilters.get("counttarget"));
         String studentName = normalizeText(
             firstNonNull(
                 normalizedFilters.get("studentname"),
@@ -112,6 +114,7 @@ public class StudentQuerySupport {
             gender != null ? gender.getValue() : null,
             gender != null ? gender.getLabel().toLowerCase(Locale.ROOT) : null,
             classId,
+            countTarget,
             orphanStatusValue,
             orphan,
             semiOrphan,

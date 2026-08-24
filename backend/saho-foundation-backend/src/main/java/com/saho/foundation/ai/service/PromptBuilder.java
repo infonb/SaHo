@@ -80,9 +80,10 @@ public class PromptBuilder {
           semi orphan, semi orphans, semi-orphan, semi-orphan students, single parent, single parents, single parent student, single parent students, students with single parent.
         - When the user asks about orphan students plus gender, include both filters.
         - Map gender words to these values:
-        male -> "male"
-        female, girl, girls -> "female"
-        other, others -> "other"
+          male, man, men, boy, boys -> "male"
+          female, woman, women, girl, girls -> "female"
+          other, others -> "other"
+        - For count questions about boys, girls, districts, villages, mandals, or states, keep module "students", action "count", and include a countTarget filter such as "boy students", "girl students", "districts", "villages", "mandals", or "states".
         - Examples:
           "Show Rahul" -> {"module":"students","action":"search","filters":{"studentName":"Rahul"},"responseType":"table","reportType":null}
           "Find student Rahul" -> {"module":"students","action":"details","filters":{"studentName":"Rahul"},"responseType":"card","reportType":null}
@@ -154,6 +155,13 @@ public class PromptBuilder {
           "Number of single parent students" -> {"module":"students","action":"count","filters":{"semiOrphan":true},"responseType":"text","reportType":null}
           "Students with single parent" -> {"module":"students","action":"count","filters":{"semiOrphan":true},"responseType":"text","reportType":null}
           "How many orphan girls are there?" -> {"module":"students","action":"count","filters":{"gender":"female","orphan":true},"responseType":"text","reportType":null}
+          "How many boy students are there?" -> {"module":"students","action":"count","filters":{"gender":"male","countTarget":"boy students"},"responseType":"text","reportType":null}
+          "Count of girl students" -> {"module":"students","action":"count","filters":{"gender":"female","countTarget":"girl students"},"responseType":"text","reportType":null}
+          "How many districts are there?" -> {"module":"students","action":"count","filters":{"countTarget":"districts"},"responseType":"text","reportType":null}
+          "How many villages are there?" -> {"module":"students","action":"count","filters":{"countTarget":"villages"},"responseType":"text","reportType":null}
+          "How many mandals are there?" -> {"module":"students","action":"count","filters":{"countTarget":"mandals"},"responseType":"text","reportType":null}
+          "State wise count" -> {"module":"students","action":"count","filters":{"countTarget":"states"},"responseType":"text","reportType":null}
+          "Total how many states are there" -> {"module":"students","action":"count","filters":{"countTarget":"states"},"responseType":"text","reportType":null}
           "Show all students" -> {"module":"students","action":"search","filters":{},"responseType":"table","reportType":null}
           "List students" -> {"module":"students","action":"search","filters":{},"responseType":"table","reportType":null}
           "Display students" -> {"module":"students","action":"search","filters":{},"responseType":"table","reportType":null}

@@ -42,6 +42,8 @@ public interface StudentRepository extends JpaRepository<Student, Integer>, Stud
 
     long countByOrphanStatusAndIsDeletedFalse(String orphanStatus);
 
+    long countByGenderAndIsDeletedFalse(String gender);
+
     @Procedure(procedureName = "createorupdatestudent_v2")
     void createOrUpdateStudentV2(
             @Param("p_student_id") Integer studentId,

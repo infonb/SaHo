@@ -29,7 +29,9 @@ import com.saho.foundation.exception.DuplicateResourceException;
 import com.saho.foundation.exception.ResourceNotFoundException;
 import com.saho.foundation.repository.AcademicYearRepository;
 import com.saho.foundation.repository.ClassRepository;
+import com.saho.foundation.repository.DistrictRepository;
 import com.saho.foundation.repository.GuardianRepository;
+import com.saho.foundation.repository.MandalRepository;
 import com.saho.foundation.repository.RelationshipRepository;
 import com.saho.foundation.repository.SchoolRepository;
 import com.saho.foundation.repository.SponsorRepository;
@@ -37,7 +39,9 @@ import com.saho.foundation.repository.StudentAcademicRepository;
 import com.saho.foundation.repository.StudentMarksRepository;
 import com.saho.foundation.repository.StudentRepository;
 import com.saho.foundation.repository.StudentSponsorRepository;
+import com.saho.foundation.repository.StateRepository;
 import com.saho.foundation.repository.UserRepository;
+import com.saho.foundation.repository.VillageRepository;
 import com.saho.foundation.service.iservices.StudentFamilyService;
 import com.saho.foundation.service.iservices.StudentService;
 import lombok.RequiredArgsConstructor;
@@ -96,6 +100,10 @@ public class StudentServiceImpl implements StudentService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final StudentMarksRepository studentMarksRepository;
+    private final DistrictRepository districtRepository;
+    private final MandalRepository mandalRepository;
+    private final VillageRepository villageRepository;
+    private final StateRepository stateRepository;
 
     @Override
     @Transactional
@@ -605,6 +613,8 @@ public class StudentServiceImpl implements StudentService {
                 null,
                 null,
                 null,
+                null,
+                null,
                 "student_id",
                 "ASC"
         );
@@ -637,6 +647,8 @@ public class StudentServiceImpl implements StudentService {
                 studentName,
                 1,
                 1,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -686,6 +698,39 @@ public class StudentServiceImpl implements StudentService {
             return 0L;
         }
         return studentRepository.countByOrphanStatusAndIsDeletedFalse(orphanStatus);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countStudentsByGender(String gender) {
+        if (!StringUtils.hasText(gender)) {
+            return 0L;
+        }
+        return studentRepository.countByGenderAndIsDeletedFalse(gender.trim());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countVillages() {
+        return villageRepository.countByIsDeletedFalse();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countMandals() {
+        return mandalRepository.countByIsDeletedFalse();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countDistricts() {
+        return districtRepository.countByIsDeletedFalse();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countStates() {
+        return stateRepository.countByIsDeletedFalse();
     }
 
     private StudentResponseDto mapToResponseDto(Student student) {

@@ -131,6 +131,16 @@ public interface StudentService {
 
     long countStudentsByOrphanStatus(String orphanStatus);
 
+    long countStudentsByGender(String gender);
+
+    long countVillages();
+
+    long countMandals();
+
+    long countDistricts();
+
+    long countStates();
+
     StudentResponseDto updateStudent(Integer studentId, StudentRequestDto requestDto);
 
     void deleteStudent(Integer studentId);

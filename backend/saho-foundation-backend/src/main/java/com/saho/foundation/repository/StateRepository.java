@@ -13,5 +13,7 @@ public interface StateRepository extends JpaRepository<StateMaster, Integer>, Jp
 
     List<StateMaster> findByIsDeletedFalse();
 
+    long countByIsDeletedFalse();
+
     Optional<StateMaster> findByStNameIgnoreCase(String stName);
 }

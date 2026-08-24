@@ -14,4 +14,6 @@ public interface VillageRepository extends JpaRepository<VillageMaster, Integer>
     List<VillageMaster> findByMndlId(Integer mndlId);
 
     Optional<VillageMaster> findByVilNameIgnoreCase(String vilName);
+
+    long countByIsDeletedFalse();
 }

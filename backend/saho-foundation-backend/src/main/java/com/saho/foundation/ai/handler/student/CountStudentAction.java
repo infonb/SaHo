@@ -52,6 +52,31 @@ public class CountStudentAction implements StudentAction {
                 return responseBuilder.studentCount(count, buildCountLabel(context));
             }
 
+            if (isGenderCount(context)) {
+                long count = studentService.countStudentsByGender(context.genderValue());
+                return responseBuilder.studentCount(count, buildCountLabel(context));
+            }
+
+            if (isVillageCount(context)) {
+                long count = studentService.countVillages();
+                return responseBuilder.studentCount(count, buildCountLabel(context));
+            }
+
+            if (isMandalCount(context)) {
+                long count = studentService.countMandals();
+                return responseBuilder.studentCount(count, buildCountLabel(context));
+            }
+
+            if (isDistrictCount(context)) {
+                long count = studentService.countDistricts();
+                return responseBuilder.studentCount(count, buildCountLabel(context));
+            }
+
+            if (isStateCount(context)) {
+                long count = studentService.countStates();
+                return responseBuilder.studentCount(count, buildCountLabel(context));
+            }
+
             List<StudentListResponseDto> students = resolveStudents(context);
 
             log.info("Total students fetched: {}", students.size());
@@ -69,6 +94,10 @@ public class CountStudentAction implements StudentAction {
     }
 
     private String buildCountLabel(StudentActionContext context) {
+        if (StringUtils.hasText(context.countTarget())) {
+            return context.countTarget().trim();
+        }
+
         List<String> parts = new ArrayList<>();
 
         if ("active".equals(context.status())) {
@@ -95,6 +124,51 @@ public class CountStudentAction implements StudentAction {
 
         parts.add("students");
         return String.join(" ", parts);
+    }
+
+    private boolean isGenderCount(StudentActionContext context) {
+        return StringUtils.hasText(context.genderValue())
+            && !StringUtils.hasText(context.studentName())
+            && !StringUtils.hasText(context.sponsorName())
+            && !StringUtils.hasText(context.schoolName())
+            && !StringUtils.hasText(context.districtName())
+            && !StringUtils.hasText(context.stateName())
+            && !StringUtils.hasText(context.classId())
+            && !context.orphan()
+            && !context.semiOrphan()
+            && !context.sponsored();
+    }
+
+    private boolean isVillageCount(StudentActionContext context) {
+        if (StringUtils.hasText(context.countTarget())) {
+            return "villages".equalsIgnoreCase(context.countTarget().trim())
+                || "village".equalsIgnoreCase(context.countTarget().trim());
+        }
+        return false;
+    }
+
+    private boolean isMandalCount(StudentActionContext context) {
+        if (StringUtils.hasText(context.countTarget())) {
+            return "mandals".equalsIgnoreCase(context.countTarget().trim())
+                || "mandal".equalsIgnoreCase(context.countTarget().trim());
+        }
+        return false;
+    }
+
+    private boolean isDistrictCount(StudentActionContext context) {
+        if (StringUtils.hasText(context.countTarget())) {
+            return "districts".equalsIgnoreCase(context.countTarget().trim())
+                || "district".equalsIgnoreCase(context.countTarget().trim());
+        }
+        return false;
+    }
+
+    private boolean isStateCount(StudentActionContext context) {
+        if (StringUtils.hasText(context.countTarget())) {
+            return "states".equalsIgnoreCase(context.countTarget().trim())
+                || "state".equalsIgnoreCase(context.countTarget().trim());
+        }
+        return false;
     }
 
     private boolean isPureOrphanCount(StudentActionContext context) {

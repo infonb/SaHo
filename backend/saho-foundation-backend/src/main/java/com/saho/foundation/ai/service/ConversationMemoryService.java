@@ -114,7 +114,7 @@ public class ConversationMemoryService {
             return !hasExplicitCurrentModuleMention || hasExplicitPreviousModuleMention;
         }
 
-        return followUpHint || !hasExplicitCurrentModuleMention;
+        return followUpHint;
     }
 
     private boolean hasExplicitModuleMention(String normalizedMessage, String module) {

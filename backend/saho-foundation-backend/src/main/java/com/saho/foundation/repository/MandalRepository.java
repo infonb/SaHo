@@ -14,4 +14,6 @@ public interface MandalRepository extends JpaRepository<MandalMaster, Integer>, 
     List<MandalMaster> findByDistId(Integer distId);
 
     Optional<MandalMaster> findByMndlNameIgnoreCaseAndDistId(String mndlName, Integer distId);
+
+    long countByIsDeletedFalse();
 }

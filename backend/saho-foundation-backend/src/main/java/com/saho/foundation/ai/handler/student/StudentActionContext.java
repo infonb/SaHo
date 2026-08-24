@@ -27,6 +27,7 @@ public record StudentActionContext(
     String genderValue,
     String genderLabel,
     String classId,
+    String countTarget,
     String orphanStatusValue,
 
     boolean orphan,

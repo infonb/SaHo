@@ -13,5 +13,7 @@ public interface DistrictRepository extends JpaRepository<DistrictMaster, Intege
 
     List<DistrictMaster> findByStId(Integer stId);
 
+    long countByIsDeletedFalse();
+
     Optional<DistrictMaster> findByDistNameIgnoreCaseAndStId(String distName, Integer stId);
 }
